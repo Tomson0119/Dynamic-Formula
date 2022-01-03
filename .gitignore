@@ -2,11 +2,6 @@
 # Created by https://www.toptal.com/developers/gitignore/api/c++,visualstudio
 # Edit at https://www.toptal.com/developers/gitignore?templates=c++,visualstudio
 
-# 허용파일
-!DX12App/Models
-!DX12App/Resources
-!DX12App/Shaders
-
 ### C++ ###
 # Prerequisites
 *.d
@@ -397,5 +392,10 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# 허용파일
+!DX12App/Models/*
+!DX12App/Resources/*
+!DX12App/Shaders/*
 
 # End of https://www.toptal.com/developers/gitignore/api/c++,visualstudio
