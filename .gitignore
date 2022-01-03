@@ -398,4 +398,6 @@ MigrationBackup/
 !DX12App/Resources/*
 !DX12App/Shaders/*
 
+#물리엔진 추적하지 않음
+DX12App/bullet3-master
 # End of https://www.toptal.com/developers/gitignore/api/c++,visualstudio
