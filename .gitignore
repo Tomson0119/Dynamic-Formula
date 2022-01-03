@@ -3,9 +3,9 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=c++,visualstudio
 
 # 허용파일
-!/Models
-!/Resources
-!/Shaders
+!DX12App/Models
+!DX12App/Resources
+!DX12App/Shaders
 
 ### C++ ###
 # Prerequisites
