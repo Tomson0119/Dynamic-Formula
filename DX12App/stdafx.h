@@ -1,5 +1,8 @@
 #pragma once
 
+#define BT_NO_SIMD_OPERATOR_OVERLOADS
+#define NOMINMAX
+
 #ifndef _DEBUG
 #define _DEBUG
 #else
@@ -50,6 +53,9 @@
 #include <cmath>
 #include <chrono>
 
+
+#include "btBulletDynamicsCommon.h"
+#include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
 
 #include "d3dExtension.h"
 #include "dxException.h"
