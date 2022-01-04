@@ -266,13 +266,188 @@ void TerrainPlayer::OnCameraUpdate(float elapsedTime)
 
 PhysicsPlayer::PhysicsPlayer() : Player()
 {
+
 }
 
-void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& mesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld)
+void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
-	XMFLOAT3 vehicleExtents = mesh.get()->mOOBB.Extents;
-	//auto wheelExtents = pWheelMesh.get()[0].GetBoundingBox().Extents;
-	XMFLOAT3 wheelExtents = {0.1f, 0.1f, 0.1f};
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	{
+		m_gVehicleSteering -= m_steeringIncrement * 2 * Elapsed;
+		if (m_gVehicleSteering < -m_steeringClamp * Elapsed)
+			m_gVehicleSteering = -m_steeringClamp * Elapsed;
+	}
+	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	{
+		m_gVehicleSteering += m_steeringIncrement * 2 * Elapsed;
+		if (m_gVehicleSteering > m_steeringClamp * Elapsed)
+			m_gVehicleSteering = m_steeringClamp * Elapsed;
+	}
+	if (GetAsyncKeyState(VK_UP) & 0x8000)
+	{
+		m_gEngineForce = m_maxEngineForce * Elapsed;
+	}
+	if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+	{
+		m_gEngineForce = -m_maxEngineForce * Elapsed;
+	}
+	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+	{
+		m_gBreakingForce = 20.0f;
+
+		mVehicle->getWheelInfo(2).m_frictionSlip = 20;
+		mVehicle->getWheelInfo(3).m_frictionSlip = 20;
+	}
+	else
+	{
+		m_gBreakingForce = 0.0f;
+
+		for (int i = 0; i < 4; ++i)
+			mVehicle->getWheelInfo(i).m_frictionSlip = 500;
+	}
+}
+
+
+Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
+{
+	if (mCamera && cameraMode == (int)mCamera->GetMode())
+		return nullptr;
+
+	mCamera = Player::ChangeCameraMode(cameraMode);
+
+	switch (mCamera->GetMode())
+	{
+	case CameraMode::FIRST_PERSON_CAMERA:
+		mFriction = 50.0f;
+		mGravity = { 0.0f, -9.8f, 0.0f };
+		mMaxVelocityXZ = 25.5f;
+		mMaxVelocityY = 40.0f;
+
+		mCamera->SetOffset(0.0f, 2.0f, 0.0f);
+		mCamera->SetTimeLag(0.0f);
+		break;
+
+	case CameraMode::THIRD_PERSON_CAMERA:
+		mFriction = 50.0f;
+		mGravity = { 0.0f, -9.8f, 0.0f };
+		mMaxVelocityXZ = 25.5f;
+		mMaxVelocityY = 40.0f;
+
+		mCamera->SetOffset(0.0f, 5.0f, -10.0f);
+		mCamera->SetTimeLag(0.25f);
+		break;
+
+	case CameraMode::TOP_DOWN_CAMERA:
+		mFriction = 50.0f;
+		mGravity = { 0.0f, -9.8f, 0.0f };
+		mMaxVelocityXZ = 25.5f;
+		mMaxVelocityY = 40.0f;
+
+		mCamera->SetOffset(-50.0f, 50.0f, -50.0f);
+		mCamera->SetTimeLag(0.25f);
+		break;
+	}
+
+	mCamera->SetPosition(Vector3::Add(mPosition, mCamera->GetOffset()));
+	mCamera->Update(1.0f);
+
+	return mCamera;
+}
+
+
+void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
+{
+	XMFLOAT3 cameraPos = mCamera->GetPosition();
+	
+	mCamera->SetPosition(cameraPos);
+
+	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
+		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
+}
+
+
+void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
+{
+	mPosition.x = mWorld(3, 0);
+	mPosition.y = mWorld(3, 1);
+	mPosition.z = mWorld(3, 2);
+}
+
+void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
+{
+	if (m_gVehicleSteering > 0)
+	{
+		m_gVehicleSteering -= m_steeringIncrement;
+		if (m_gVehicleSteering < 0)
+		{
+			m_gVehicleSteering = 0;
+		}
+	}
+
+	else if (m_gVehicleSteering < 0)
+	{
+		m_gVehicleSteering += m_steeringIncrement;
+		if (m_gVehicleSteering > 0)
+		{
+			m_gVehicleSteering = 0;
+		}
+	}
+
+	m_gBreakingForce = 0.0f;
+
+	if (m_gEngineForce > 0.0f)
+	{
+		m_gEngineForce -= 100.0f;
+		if (m_gEngineForce < 0.0f)
+			m_gEngineForce = 0.0f;
+	}
+
+	int wheelIndex = 2;
+	mVehicle->applyEngineForce(m_gEngineForce, wheelIndex);
+	mVehicle->setBrake(m_gBreakingForce, wheelIndex);
+	wheelIndex = 3;
+	mVehicle->applyEngineForce(m_gEngineForce, wheelIndex);
+	mVehicle->setBrake(m_gBreakingForce, wheelIndex);
+
+	wheelIndex = 0;
+	mVehicle->setSteeringValue(m_gVehicleSteering, wheelIndex);
+	wheelIndex = 1;
+	mVehicle->setSteeringValue(m_gVehicleSteering, wheelIndex);
+
+	btScalar m[16];
+	btTransform btMat;
+	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
+	btMat.getOpenGLMatrix(m);
+
+	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+
+	OnPlayerUpdate(elapsedTime);
+
+	if (mCamera) {
+		OnCameraUpdate(elapsedTime);
+		mCamera->UpdateViewMatrix();
+	}
+
+	for (int i = 0; i < 4; ++i)
+	{
+		btTransform wheelTransform = mVehicle->getWheelTransformWS(i);
+		mWheel[i]->UpdateRigidBody(elapsedTime, wheelTransform);
+	}
+
+	mLook = Vector3::Normalize(mLook);
+	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
+	mRight = Vector3::Cross(mUp, mLook);
+
+	if (mChild) mChild->Update(elapsedTime, &mWorld);
+	if (mSibling) mSibling->Update(elapsedTime, parent);
+}
+
+void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld)
+{
+	GameObject::SetMesh(bodyMesh);
+
+	XMFLOAT3 vehicleExtents = bodyMesh.get()->mOOBB.Extents;
+	XMFLOAT3 wheelExtents = wheelMesh.get()->mOOBB.Extents;
 
 	btCollisionShape* chassisShape = new btBoxShape(btVector3(vehicleExtents.x, vehicleExtents.y, vehicleExtents.z));
 
@@ -330,5 +505,21 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& mesh, std::shared_ptr<b
 		wheel.m_frictionSlip = wheelFriction;
 		wheel.m_rollInfluence = rollInfluence;
 	}
+}
 
+WheelObject::WheelObject() : GameObject()
+{
+}
+
+void WheelObject::UpdateRigidBody(float Elapsed, btTransform wheelTransform)
+{
+	btScalar m[16];
+	wheelTransform.getOpenGLMatrix(m);
+	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+
+	mPosition.x = mWorld(3, 0);
+	mPosition.y = mWorld(3, 1);
+	mPosition.z = mWorld(3, 2);
+
+	mLook = XMFLOAT3(mWorld._31, mWorld._32, mWorld._33);
 }

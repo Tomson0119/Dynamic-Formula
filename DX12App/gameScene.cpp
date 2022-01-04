@@ -22,7 +22,7 @@ void GameScene::OnResize(float aspect)
 		mPlayerCamera->SetLens(aspect);
 }
 
-void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect)
+void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	mMainCamera = make_unique<Camera>();
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
@@ -50,7 +50,7 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	BuildComputeRootSignature(device);
 	BuildShadersAndPSOs(device, cmdList);
 	BuildTextures(device, cmdList);
-	BuildGameObjects(device, cmdList);
+	BuildGameObjects(device, cmdList, dynamicsWorld);
 	BuildConstantBuffers(device);
 	BuildDescriptorHeap(device);
 }
@@ -303,7 +303,7 @@ void GameScene::BuildTextures(ID3D12Device* device, ID3D12GraphicsCommandList* c
 	mPipelines[Layer::Reflected]->AppendTexture(copyCarTex);
 }
 
-void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	// terrain
 	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(1.0f, 1.0f, 1.0f));
@@ -384,12 +384,24 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 
 	// car
 	auto carMesh = make_shared<Mesh>();
-	carMesh->LoadFromObj(device, cmdList, L"Models\\PoliceCar.obj");
+	carMesh->LoadFromObj(device, cmdList, L"Models\\Car_Body.obj");
 
-	auto carObj = make_shared<TerrainPlayer>(terrain.get());
-	carObj->SetMesh(carMesh);
+	auto wheelMesh = make_shared<Mesh>();
+	wheelMesh->LoadFromObj(device, cmdList, L"Models\\Car_Wheel.obj");
+
+	auto carObj = make_shared<PhysicsPlayer>();
+	carObj->SetMesh(carMesh, wheelMesh, dynamicsWorld);
 	carObj->SetSRVIndex(0);
 	carObj->SetPosition(mRoomCenter);	
+
+	for (int i = 0; i < 4; ++i)
+	{
+		auto wheelObj = make_shared<WheelObject>();
+		wheelObj->SetMesh(wheelMesh);
+		wheelObj->SetSRVIndex(0);
+		carObj->SetWheel(wheelObj, i);
+		mPipelines[Layer::Default]->AppendObject(wheelObj);
+	}
 	mPlayer = carObj.get();
 	mPipelines[Layer::Default]->AppendObject(carObj);
 
@@ -593,7 +605,7 @@ void GameScene::OnPreciseKeyInput(float elapsed)
 {
 	bool player_active = (mCurrentCamera == mPlayerCamera.get());
 
-	if (GetAsyncKeyState('W') & 0x8000)
+	/*if (GetAsyncKeyState('W') & 0x8000)
 	{
 		if (player_active) {
 			mPlayer->Walk(500.0f * elapsed);
@@ -634,7 +646,9 @@ void GameScene::OnPreciseKeyInput(float elapsed)
 	{
 		if (!player_active)
 			mCurrentCamera->Upward(-100.0f * elapsed);
-	}
+	}*/
+	
+	mPlayer->OnPreciseKeyInput(elapsed);
 }
 
 void GameScene::Update(ID3D12Device* device, const GameTimer& timer)

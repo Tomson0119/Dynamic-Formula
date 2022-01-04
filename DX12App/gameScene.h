@@ -23,7 +23,7 @@ public:
 
 	void OnResize(float aspect);
 
-	void BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect);
+	void BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 	
 	void UpdateLight(float elapsed);
 	void UpdateLightConstants();
@@ -52,7 +52,7 @@ private:
 	void BuildRootSignature(ID3D12Device* device);
 	void BuildComputeRootSignature(ID3D12Device* device);
 	void BuildTextures(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
-	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
+	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 	void BuildConstantBuffers(ID3D12Device* device);
 	void BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap(ID3D12Device* device);

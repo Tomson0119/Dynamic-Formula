@@ -45,7 +45,7 @@ void GameObject::Draw(ID3D12GraphicsCommandList* cmdList)
 
 void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 {
-	mWorld(0, 0) = mScaling.x * mRight.x; 
+	mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;	
 	mWorld(0, 2) = mRight.z;
 

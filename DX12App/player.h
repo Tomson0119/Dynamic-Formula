@@ -17,6 +17,8 @@ public:
 	void Strafe(float dist, bool updateVelocity=true);
 	void Upward(float dist, bool updateVelocity=true);
 
+	virtual void OnPreciseKeyInput(float Elapsed) { };
+
 	void Move(XMFLOAT3& shift, bool updateVelocity);
 
 	virtual void RotateY(float angle) override;
@@ -73,30 +75,41 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
+
+class WheelObject : public GameObject
+{
+public:
+	WheelObject();
+	void UpdateRigidBody(float Elapsed, btTransform wheelTransform);
+};
+
 class PhysicsPlayer : public Player
 {
 public:
 	PhysicsPlayer();
+	virtual void OnCameraUpdate(float elapsedTime);
+	virtual void OnPlayerUpdate(float elapsedTime);
+	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
+	virtual void OnPreciseKeyInput(float Elapsed);
+	virtual void UpdateTransform(XMFLOAT4X4* parent) { }
+	virtual Camera* ChangeCameraMode(int cameraMode);
 
-	void SetMesh(const std::shared_ptr<Mesh>& mesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld);
+	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld);
+	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
 
 private:
+	std::shared_ptr<WheelObject> mWheel[4];
 	btRaycastVehicle::btVehicleTuning mTuning;
 	btVehicleRaycaster* mVehicleRayCaster;
 	btRaycastVehicle* mVehicle;
 	btRigidBody* mBtRigidBody;
 
 	float m_gEngineForce = 0.f;
-
-	float m_defaultBreakingForce = 10.f;
 	float m_gBreakingForce = 0.f;
 
 	float m_maxEngineForce = 4000.f;
-	float m_EngineForceIncrement = 5.0f;
 
 	float m_gVehicleSteering = 0.f;
 	float m_steeringIncrement = 0.01f;
 	float m_steeringClamp = 0.1f;
-	float m_wheelRadius = 0.5f;
-	float m_wheelWidth = 0.4f;
 };
