@@ -20,6 +20,9 @@ bool D3DFramework::InitFramework()
 	if (!InitDirect3D())
 		return false;
 
+	if (!InitBulletPhysics())
+		return false;
+
 	return true;
 }
 
@@ -67,6 +70,22 @@ bool D3DFramework::InitDirect3D()
 	CreateSwapChain();
 
 	OnResize();
+
+	return true;
+}
+
+bool D3DFramework::InitBulletPhysics()
+{
+	mBtCollisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
+
+	mBtDispatcher = std::make_unique<btCollisionDispatcher>(mBtCollisionConfiguration.get());
+
+	mBtOverlappingPairCache = std::make_unique<btDbvtBroadphase>();
+
+	mBtSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
+
+	mBtDynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(mBtDispatcher.get(), mBtOverlappingPairCache.get(), mBtSolver.get(), mBtCollisionConfiguration.get());
+	mBtDynamicsWorld->setGravity(btVector3(0, -10, 0));
 
 	return true;
 }

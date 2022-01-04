@@ -22,6 +22,7 @@ public:
 
 private:
 	bool InitDirect3D();
+	bool InitBulletPhysics();
 
 	void CreateD3DDevice();
 	void CreateCommandObjects();
@@ -97,4 +98,13 @@ protected:
 	DXGI_FORMAT mDepthStencilBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	std::wstring mWndCaption = L"D3D12 App";
+
+	// 물리엔진 인터페이스
+	std::unique_ptr<btDefaultCollisionConfiguration> mBtCollisionConfiguration;
+	std::unique_ptr<btCollisionDispatcher> mBtDispatcher;
+	std::unique_ptr<btBroadphaseInterface> mBtOverlappingPairCache;
+	std::unique_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
+	std::unique_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
+	btAlignedObjectArray<btCollisionShape*> m_btCollisionShapes;
+
 };
