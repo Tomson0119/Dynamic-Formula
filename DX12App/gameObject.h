@@ -88,6 +88,8 @@ protected:
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 
+	btRigidBody* mBtRigidBody;
+
 	UINT mSrvIndex = 0;
 	Material mMaterial = {};
 	std::vector<std::shared_ptr<Mesh>> mMeshes;
@@ -120,7 +122,7 @@ public:
 	virtual ~TerrainObject();
 
 	void BuildHeightMap(const std::wstring& path);
-	void BuildTerrainMesh(ID3D12Device* device,	ID3D12GraphicsCommandList* cmdList, int blockWidth, int blockDepth);
+	void BuildTerrainMesh(ID3D12Device* device,	ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld,int blockWidth, int blockDepth);
 
 public:
 	float GetHeight(float x, float z) const;
@@ -138,10 +140,14 @@ public:
 private:
 	std::unique_ptr<HeightMapImage> mHeightMapImage;
 
+	float* mHeightmapData = NULL;
+
 	int mWidth = 0;
 	int mDepth = 0;
 
 	XMFLOAT3 mTerrainScale = { 1.0f,1.0f,1.0f };
+
+	std::shared_ptr<btHeightfieldTerrainShape> mTerrainShape;
 };
 
 

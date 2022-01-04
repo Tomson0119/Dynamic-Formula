@@ -468,6 +468,13 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 		for (int x = xStart; x < (xStart + width); x+=increasement)
 		{
 			vertices[k].Position = XMFLOAT3((x * mScale.x), GetHeight(x, z, context), (z * mScale.z));
+
+			if (vertices[k].Position.y > mMaxHeight)
+				mMaxHeight = vertices[k].Position.y;
+
+			if (vertices[k].Position.y < mMinHeight)
+				mMinHeight = vertices[k].Position.y;
+
 			vertices[k].Normal = context->GetNormal(x, z);
 			vertices[k].TexCoord0 = XMFLOAT2((float)x / float(heightmapWidth - 1), float(heightmapDepth - 1 - z) / float(heightmapDepth - 1));
 			vertices[k++].TexCoord1 = XMFLOAT2((float)x / float(mScale.x * 0.5f), (float)z / float(mScale.z * 0.5f));

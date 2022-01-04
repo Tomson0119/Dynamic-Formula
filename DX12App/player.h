@@ -102,7 +102,6 @@ private:
 	btRaycastVehicle::btVehicleTuning mTuning;
 	btVehicleRaycaster* mVehicleRayCaster;
 	btRaycastVehicle* mVehicle;
-	btRigidBody* mBtRigidBody;
 
 	float m_gEngineForce = 0.f;
 	float m_gBreakingForce = 0.f;

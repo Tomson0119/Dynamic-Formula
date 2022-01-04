@@ -135,12 +135,16 @@ public:
 	virtual ~HeightMapPatchListMesh() { }
 
 	float GetHeight(int x, int z, HeightMapImage* context) const;
+	std::pair<float, float> GetMinMax() { return std::pair<float, float>(mMinHeight, mMaxHeight); }; // min, max
 
 private:
 	XMFLOAT3 mScale = {};
 
 	int mWidth = 0;
 	int mDepth = 0;
+
+	float mMinHeight = FLT_MAX;
+	float mMaxHeight = -FLT_MAX;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
