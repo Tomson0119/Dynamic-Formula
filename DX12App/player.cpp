@@ -333,7 +333,7 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityXZ = 25.5f;
 		mMaxVelocityY = 40.0f;
 
-		mCamera->SetOffset(0.0f, 5.0f, -10.0f);
+		mCamera->SetOffset(0.0f, 20.0f, -50.0f);
 		mCamera->SetTimeLag(0.25f);
 		break;
 
@@ -362,7 +362,7 @@ void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 	mCamera->SetPosition(cameraPos);
 
 	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
-		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
+		mCamera->LookAt(mCamera->GetPosition(), XMFLOAT3(GetPosition().x, GetPosition().y, GetPosition().z), XMFLOAT3(0.0f, 1.0f, 0.0f));
 }
 
 

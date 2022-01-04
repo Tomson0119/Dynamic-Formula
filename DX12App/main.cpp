@@ -18,7 +18,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int mCmdShow)
 	try
 	{
 		GameFramework app;
-		app.SetResolution(1000, 800);
+		app.SetResolution(1920, 1080);
 
 		if (!app.InitFramework())
 			return 0;		
