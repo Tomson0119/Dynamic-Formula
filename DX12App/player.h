@@ -69,3 +69,34 @@ public:
 	virtual void OnPlayerUpdate(float elapsedTime) override;
 	virtual void OnCameraUpdate(float elapsedTime) override;
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+//
+class PhysicsPlayer : public Player
+{
+public:
+	PhysicsPlayer();
+
+	void SetMesh(const std::shared_ptr<Mesh>& mesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld);
+
+private:
+	btRaycastVehicle::btVehicleTuning mTuning;
+	btVehicleRaycaster* mVehicleRayCaster;
+	btRaycastVehicle* mVehicle;
+	btRigidBody* mBtRigidBody;
+
+	float m_gEngineForce = 0.f;
+
+	float m_defaultBreakingForce = 10.f;
+	float m_gBreakingForce = 0.f;
+
+	float m_maxEngineForce = 4000.f;
+	float m_EngineForceIncrement = 5.0f;
+
+	float m_gVehicleSteering = 0.f;
+	float m_steeringIncrement = 0.01f;
+	float m_steeringClamp = 0.1f;
+	float m_wheelRadius = 0.5f;
+	float m_wheelWidth = 0.4f;
+};
