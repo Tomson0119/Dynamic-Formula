@@ -450,7 +450,6 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 	GameObject::SetMesh(bodyMesh);
 
 	bodyMesh.get()->mOOBB.Extents = { 10.0f, 4.0f, 14.0f};
-	wheelMesh.get()->mOOBB.Extents = {1.0f, 3.0f, 3.0f};
 
 	XMFLOAT3 vehicleExtents = bodyMesh.get()->mOOBB.Extents;
 	XMFLOAT3 wheelExtents = wheelMesh.get()->mOOBB.Extents;
@@ -485,21 +484,21 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 
 	// ¾Õ¹ÙÄû
 	bool isFrontWheel = true;
-	float connectionHeight = -0.5f;
+	float connectionHeight = -0.9f;
 
-	btVector3 connectionPointCS0(vehicleExtents.x, connectionHeight, vehicleExtents.z - 2.2f);
+	btVector3 connectionPointCS0(vehicleExtents.x - 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
 	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
 
-	connectionPointCS0 = btVector3(-vehicleExtents.x, connectionHeight, vehicleExtents.z - 2.2f);
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
 	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
 
 	// µÞ¹ÙÄû
 	isFrontWheel = false;
 
-	connectionPointCS0 = btVector3(-vehicleExtents.x, connectionHeight, -vehicleExtents.z + 2.2f);
+	connectionPointCS0 = btVector3(vehicleExtents.x - 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
 	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
 
-	connectionPointCS0 = btVector3(vehicleExtents.x, connectionHeight, -vehicleExtents.z + 2.2f);
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
 	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
 
 	for (int i = 0; i < mVehicle->getNumWheels(); i++)
