@@ -161,8 +161,10 @@ struct CameraConstants
 
 struct Material
 {
-	XMFLOAT4 Color;
-	XMFLOAT3 Frenel;
+	XMFLOAT3 Ambient;
+	XMFLOAT4 Diffuse;
+	XMFLOAT3 Specular;
+	XMFLOAT3 Emission;
 	float Roughness;
 };
 

@@ -77,6 +77,7 @@ void Mesh::LoadFromObj(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
 	std::vector<XMFLOAT2> texcoords;
+	std::vector<Material> mats;
 	
 	struct UINT3
 	{
@@ -94,7 +95,20 @@ void Mesh::LoadFromObj(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 
 		ss >> type;
 
-		if (type == "v")
+		if (type == "mtllib")
+		{			
+			std::wstring mtl_path = L"";
+			std::wstring::size_type n = path.find('\\');
+			if (n != std::wstring::npos)
+				mtl_path = path.substr(0, n + 1);
+
+			std::string mtlname;
+			ss >> mtlname;
+			mtl_path += std::wstring(mtlname.begin(), mtlname.end());
+
+			LoadMaterialFromMtl(mats, mtl_path);
+		}
+		else if (type == "v")
 		{
 			XMFLOAT3 pos;
 			ss >> pos.x >> pos.y >> pos.z;
@@ -164,6 +178,18 @@ void Mesh::LoadFromObj(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(Vertex), sizeof(UINT),
 		D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
 		vertices.data(), (UINT)vertices.size(), indices.data(), (UINT)indices.size());
+}
+
+void Mesh::LoadMaterialFromMtl(std::vector<Material>& mats, const std::wstring& filename)
+{
+	std::ifstream mtl_file{ filename };
+
+	std::string info;
+	while (std::getline(mtl_file, info))
+	{
+		info += '\n';
+		OutputDebugStringA(info.c_str());
+	}
 }
 
 

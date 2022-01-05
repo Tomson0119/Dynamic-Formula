@@ -29,7 +29,9 @@ public:
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		const std::wstring& path);
-	
+
+	void LoadMaterialFromMtl(std::vector<Material>& mats, const std::wstring& filename);
+
 protected:
 	ComPtr<ID3D12Resource> mVertexBufferGPU;
 	ComPtr<ID3D12Resource> mIndexBufferGPU;
