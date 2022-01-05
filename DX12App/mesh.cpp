@@ -127,18 +127,18 @@ void Mesh::LoadFromObj(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 		}
 	}
 
-	auto minX = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); });
-	auto maxX = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); });
+	/*auto minX = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); })->x;
+	auto maxX = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); })->x;
 
-	auto minY = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); });
-	auto maxY = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); });
+	auto minY = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); })->y;
+	auto maxY = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); })->y;
 
-	auto minZ = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); });
-	auto maxZ = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); });
+	auto minZ = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); })->z;
+	auto maxZ = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); })->z;
 
 
-	mOOBB.Center = { (maxX->x + minX->x) / 2, (maxY->y + minY->y) / 2, (maxZ->z + minZ->z) / 2 };
-	mOOBB.Extents = { (maxX->x - minX->x) / 2, (maxY->y - minY->y) / 2, (maxZ->z - minZ->z) / 2 };
+	mOOBB.Center = { (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2 };
+	mOOBB.Extents = { (maxX - minX) / 2, (maxY - minY) / 2, (maxZ - minZ) / 2 };*/
 
 	std::vector<Vertex> vertices;
 	std::vector<UINT> indices;

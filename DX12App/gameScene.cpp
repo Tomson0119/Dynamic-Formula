@@ -306,10 +306,11 @@ void GameScene::BuildTextures(ID3D12Device* device, ID3D12GraphicsCommandList* c
 void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	// terrain
-	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(1.0f, 0.1f, 1.0f));
+	auto terrain = make_shared<TerrainObject>(512, 512, XMFLOAT3(8.0f, 1.0f, 8.0f));
 	terrain->SetSRVIndex(0);
-	terrain->BuildHeightMap(L"Resources\\heightmap.raw");
-	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 45, 45);
+	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
+	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
+	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 33, 33);
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 	// billboards
@@ -390,7 +391,7 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	wheelMesh->LoadFromObj(device, cmdList, L"Models\\Car_Wheel.obj");
 
 	auto carObj = make_shared<PhysicsPlayer>();
-	carObj->SetPosition(XMFLOAT3(500.0f, 100.0f, 500.0f));
+	carObj->SetPosition(XMFLOAT3(500.0f, 300.0f, 500.0f));
 	carObj->SetMesh(carMesh, wheelMesh, dynamicsWorld);
 	carObj->SetSRVIndex(0);
 
@@ -540,7 +541,7 @@ void GameScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
 void GameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
 	// 마우스로 화면 돌리는 기능
-	/*if ((buttonState & MK_LBUTTON) && GetCapture())
+	if ((buttonState & MK_LBUTTON) && GetCapture())
 	{
 		float dx = static_cast<float>(x - mLastMousePos.x);
 		float dy = static_cast<float>(y - mLastMousePos.y);
@@ -557,7 +558,7 @@ void GameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 		{
 			mPlayer->RotateY(0.25f * dx);
 		}
-	}*/
+	}
 }
 
 void GameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
