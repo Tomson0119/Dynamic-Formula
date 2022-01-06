@@ -413,6 +413,18 @@ void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
 	mPosition.x = mWorld(3, 0);
 	mPosition.y = mWorld(3, 1);
 	mPosition.z = mWorld(3, 2);
+
+	mLook.x = mWorld(2, 0);
+	mLook.y = mWorld(2, 1);
+	mLook.z = mWorld(2, 2);
+
+	mUp.x = mWorld(1, 0);
+	mUp.y = mWorld(1, 1);
+	mUp.z = mWorld(1, 2);
+
+	mRight.x = mWorld(0, 0);
+	mRight.y = mWorld(0, 1);
+	mRight.z = mWorld(0, 2);
 }
 
 void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
