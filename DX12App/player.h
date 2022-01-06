@@ -103,12 +103,18 @@ private:
 	btVehicleRaycaster* mVehicleRayCaster;
 	btRaycastVehicle* mVehicle;
 
-	float m_gEngineForce = 0.f;
-	float m_gBreakingForce = 0.f;
+	bool mBoosterOn = false;
 
-	float m_maxEngineForce = 4000.f;
+	float mEngineForce = 0.f;
+	float mBreakingForce = 0.f;
 
-	float m_gVehicleSteering = 0.f;
-	float m_steeringIncrement = 0.01f;
-	float m_steeringClamp = 0.1f;
+	float mMaxEngineForce = 6000.f;
+	float mBoosterEngineForce = 10000.f;
+
+	float mVehicleSteering = 0.f;
+	float mSteeringIncrement = 0.01f;
+	float mSteeringClamp = 0.1f;
+
+	float mCurrentSpeed = 0.0f;
+	float mMaxSpeed = 500.0f;
 };

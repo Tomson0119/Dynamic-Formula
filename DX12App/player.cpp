@@ -271,81 +271,95 @@ PhysicsPlayer::PhysicsPlayer() : Player()
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
-	if (m_gVehicleSteering > 0)
+	if (mVehicleSteering > 0)
 	{
-		m_gVehicleSteering -= m_steeringIncrement;
-		if (m_gVehicleSteering < 0)
+		mVehicleSteering -= mSteeringIncrement;
+		if (mVehicleSteering < 0)
 		{
-			m_gVehicleSteering = 0;
+			mVehicleSteering = 0;
 		}
 	}
 
-	else if (m_gVehicleSteering < 0)
+	else if (mVehicleSteering < 0)
 	{
-		m_gVehicleSteering += m_steeringIncrement;
-		if (m_gVehicleSteering > 0)
+		mVehicleSteering += mSteeringIncrement;
+		if (mVehicleSteering > 0)
 		{
-			m_gVehicleSteering = 0;
+			mVehicleSteering = 0;
 		}
 	}
 
-	m_gBreakingForce = 0.0f;
-
-	if (m_gEngineForce > 0.0f)
-	{
-		m_gEngineForce -= 100.0f;
-		if (m_gEngineForce < 0.0f)
-			m_gEngineForce = 0.0f;
-	}
-
+	mBreakingForce = 0.0f;
 
 	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 	{
-		m_gVehicleSteering -= m_steeringIncrement * 2;
-		if (m_gVehicleSteering < -m_steeringClamp)
-			m_gVehicleSteering = -m_steeringClamp;
+		mVehicleSteering -= mSteeringIncrement * 2;
+		if (mVehicleSteering < -mSteeringClamp)
+			mVehicleSteering = -mSteeringClamp;
 	}
 	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 	{
-		m_gVehicleSteering += m_steeringIncrement * 2;
-		if (m_gVehicleSteering > m_steeringClamp)
-			m_gVehicleSteering = m_steeringClamp;
+		mVehicleSteering += mSteeringIncrement * 2;
+		if (mVehicleSteering > mSteeringClamp)
+			mVehicleSteering = mSteeringClamp;
 	}
 	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
-		m_gEngineForce = m_maxEngineForce;
+		if (mMaxSpeed > mCurrentSpeed)
+			mEngineForce = mMaxEngineForce;
+		else
+			mEngineForce = 0.0f;
 	}
 	if (GetAsyncKeyState(VK_DOWN) & 0x8000)
 	{
-		m_gEngineForce = -m_maxEngineForce;
+		if (mMaxSpeed < mCurrentSpeed)
+			mEngineForce = -mMaxEngineForce;
+		else
+			mEngineForce = 0.0f;
+	}
+	if (GetAsyncKeyState('Z') & 0x8000)
+	{
+		mBoosterOn = 1 - mBoosterOn;
+
+		if (mBoosterOn)
+			mMaxSpeed = 700.0f;
+		else
+			mMaxSpeed = 600.0f;
 	}
 	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
 	{
-		m_gBreakingForce = 20.0f;
+		mBreakingForce = 15.0f;
 
-		mVehicle->getWheelInfo(2).m_frictionSlip = 20;
-		mVehicle->getWheelInfo(3).m_frictionSlip = 20;
+		mVehicle->getWheelInfo(2).m_frictionSlip = 15;
+		mVehicle->getWheelInfo(3).m_frictionSlip = 15;
 	}
 	else
 	{
-		m_gBreakingForce = 0.0f;
+		mBreakingForce = 0.0f;
 
-		for (int i = 0; i < 4; ++i)
-			mVehicle->getWheelInfo(i).m_frictionSlip = 500;
+		for (int i = 2; i < 4; ++i)
+		{
+			if(mVehicle->getWheelInfo(i).m_frictionSlip < 30)
+				mVehicle->getWheelInfo(i).m_frictionSlip += 1;
+		}
 	}
 
+	if (mBoosterOn)
+		mEngineForce = mBoosterEngineForce;
+
+	mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
 
 	int wheelIndex = 2;
-	mVehicle->applyEngineForce(m_gEngineForce, wheelIndex);
-	mVehicle->setBrake(m_gBreakingForce, wheelIndex);
+	mVehicle->applyEngineForce(mEngineForce, wheelIndex);
+	mVehicle->setBrake(mBreakingForce, wheelIndex);
 	wheelIndex = 3;
-	mVehicle->applyEngineForce(m_gEngineForce, wheelIndex);
-	mVehicle->setBrake(m_gBreakingForce, wheelIndex);
+	mVehicle->applyEngineForce(mEngineForce, wheelIndex);
+	mVehicle->setBrake(mBreakingForce, wheelIndex);
 
 	wheelIndex = 0;
-	mVehicle->setSteeringValue(m_gVehicleSteering, wheelIndex);
+	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	wheelIndex = 1;
-	mVehicle->setSteeringValue(m_gVehicleSteering, wheelIndex);
+	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 
 }
 
@@ -488,7 +502,7 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 
 	float wheelWidth = wheelExtents.x;
 	float wheelRadius = wheelExtents.z;
-	float wheelFriction = 500;  //BT_LARGE_FLOAT;
+	float wheelFriction = 30;  //BT_LARGE_FLOAT;
 	float suspensionStiffness = 20.f;
 	float suspensionDamping = 2.3f;
 	float suspensionCompression = 4.4f;
