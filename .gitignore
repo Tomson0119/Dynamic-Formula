@@ -393,10 +393,8 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-# 허용파일
-!DX12App/Models/*
-!DX12App/Resources/*
-!DX12App/Shaders/*
+# 재질파일
+*.mtl
 
 #물리엔진 추적하지 않음
 DX12App/bullet3-master
