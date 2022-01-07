@@ -271,6 +271,8 @@ PhysicsPlayer::PhysicsPlayer() : Player()
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
+	mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
+
 	if (mVehicleSteering > 0)
 	{
 		mVehicleSteering -= mSteeringIncrement;
@@ -322,32 +324,30 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		mBoosterOn = 1 - mBoosterOn;
 
 		if (mBoosterOn)
-			mMaxSpeed = 700.0f;
+			mMaxSpeed = 1200.0f;
 		else
-			mMaxSpeed = 600.0f;
+			mMaxSpeed = 1000.0f;
 	}
 	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
 	{
-		mBreakingForce = 15.0f;
-
-		mVehicle->getWheelInfo(2).m_frictionSlip = 15;
-		mVehicle->getWheelInfo(3).m_frictionSlip = 15;
+		for (int i = 2; i < 4; ++i)
+		{
+			if(i < 2)
+				mVehicle->getWheelInfo(i).m_frictionSlip = 5.0f;
+			else
+				mVehicle->getWheelInfo(i).m_frictionSlip = 3.9f;
+		}
 	}
 	else
 	{
-		mBreakingForce = 0.0f;
-
-		for (int i = 2; i < 4; ++i)
+		for (int i = 0; i < 4; ++i)
 		{
-			if(mVehicle->getWheelInfo(i).m_frictionSlip < 30)
-				mVehicle->getWheelInfo(i).m_frictionSlip += 1;
+			mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
 		}
 	}
 
-	if (mBoosterOn)
+	if (mBoosterOn && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
-
-	mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
 
 	int wheelIndex = 2;
 	mVehicle->applyEngineForce(mEngineForce, wheelIndex);
@@ -357,6 +357,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	mVehicle->setBrake(mBreakingForce, wheelIndex);
 
 	wheelIndex = 0;
+
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	wheelIndex = 1;
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
@@ -502,7 +503,7 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 
 	float wheelWidth = wheelExtents.x;
 	float wheelRadius = wheelExtents.z;
-	float wheelFriction = 30;  //BT_LARGE_FLOAT;
+	float wheelFriction = 26.0f;
 	float suspensionStiffness = 20.f;
 	float suspensionDamping = 2.3f;
 	float suspensionCompression = 4.4f;
