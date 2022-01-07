@@ -266,13 +266,228 @@ void TerrainPlayer::OnCameraUpdate(float elapsedTime)
 
 PhysicsPlayer::PhysicsPlayer() : Player()
 {
+
 }
 
-void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& mesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld)
+void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
-	XMFLOAT3 vehicleExtents = mesh.get()->mOOBB.Extents;
-	//auto wheelExtents = pWheelMesh.get()[0].GetBoundingBox().Extents;
-	XMFLOAT3 wheelExtents = {0.1f, 0.1f, 0.1f};
+	mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
+	
+	if (mBoosterLeft > 0.0f)
+	{
+		mMaxSpeed = 1200.0f;
+		mBoosterLeft -= Elapsed;
+	}
+	
+	if(mBoosterLeft < 0.0f)
+	{
+		mMaxSpeed = 1000.0f;
+		mBoosterLeft = 0.0f;
+	}
+
+	if (mVehicleSteering > 0)
+	{
+		mVehicleSteering -= mSteeringIncrement;
+		if (mVehicleSteering < 0)
+		{
+			mVehicleSteering = 0;
+		}
+	}
+
+	else if (mVehicleSteering < 0)
+	{
+		mVehicleSteering += mSteeringIncrement;
+		if (mVehicleSteering > 0)
+		{
+			mVehicleSteering = 0;
+		}
+	}
+
+	mBreakingForce = 0.0f;
+
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	{
+		mVehicleSteering -= mSteeringIncrement * 2;
+		if (mVehicleSteering < -mSteeringClamp)
+			mVehicleSteering = -mSteeringClamp;
+	}
+	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	{
+		mVehicleSteering += mSteeringIncrement * 2;
+		if (mVehicleSteering > mSteeringClamp)
+			mVehicleSteering = mSteeringClamp;
+	}
+	if (GetAsyncKeyState(VK_UP) & 0x8000)
+	{
+		if (mMaxSpeed > mCurrentSpeed)
+			mEngineForce = mMaxEngineForce;
+		else
+			mEngineForce = 0.0f;
+	}
+	if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+	{
+		if (mMaxSpeed < mCurrentSpeed)
+			mEngineForce = -mMaxEngineForce;
+		else
+			mEngineForce = 0.0f;
+	}
+	if (GetAsyncKeyState('Z') & 0x8000)
+	{
+		if (mBoosterLeft == 0.0f)
+			mBoosterLeft = mBoosterTime;
+	}
+	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+	{
+		for (int i = 2; i < 4; ++i)
+		{
+			if(i < 2)
+				mVehicle->getWheelInfo(i).m_frictionSlip = 5.0f;
+			else
+				mVehicle->getWheelInfo(i).m_frictionSlip = 3.9f;
+		}
+	}
+	else
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
+		}
+	}
+
+	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
+		mEngineForce = mBoosterEngineForce;
+
+	int wheelIndex = 2;
+	mVehicle->applyEngineForce(mEngineForce, wheelIndex);
+	mVehicle->setBrake(mBreakingForce, wheelIndex);
+	wheelIndex = 3;
+	mVehicle->applyEngineForce(mEngineForce, wheelIndex);
+	mVehicle->setBrake(mBreakingForce, wheelIndex);
+
+	wheelIndex = 0;
+
+	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
+	wheelIndex = 1;
+	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
+
+}
+
+
+Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
+{
+	if (mCamera && cameraMode == (int)mCamera->GetMode())
+		return nullptr;
+
+	mCamera = Player::ChangeCameraMode(cameraMode);
+
+	switch (mCamera->GetMode())
+	{
+	case CameraMode::FIRST_PERSON_CAMERA:
+		mFriction = 50.0f;
+		mGravity = { 0.0f, -9.8f, 0.0f };
+		mMaxVelocityXZ = 25.5f;
+		mMaxVelocityY = 40.0f;
+
+		mCamera->SetOffset(0.0f, 2.0f, 0.0f);
+		mCamera->SetTimeLag(0.0f);
+		break;
+
+	case CameraMode::THIRD_PERSON_CAMERA:
+		mFriction = 50.0f;
+		mGravity = { 0.0f, -9.8f, 0.0f };
+		mMaxVelocityXZ = 25.5f;
+		mMaxVelocityY = 40.0f;
+
+		mCamera->SetOffset(0.0f, 20.0f, -50.0f);
+		mCamera->SetTimeLag(0.25f);
+		break;
+
+	case CameraMode::TOP_DOWN_CAMERA:
+		mFriction = 50.0f;
+		mGravity = { 0.0f, -9.8f, 0.0f };
+		mMaxVelocityXZ = 25.5f;
+		mMaxVelocityY = 40.0f;
+
+		mCamera->SetOffset(-50.0f, 50.0f, -50.0f);
+		mCamera->SetTimeLag(0.25f);
+		break;
+	}
+
+	mCamera->SetPosition(Vector3::Add(mPosition, mCamera->GetOffset()));
+	mCamera->Update(1.0f);
+
+	return mCamera;
+}
+
+
+void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
+{
+	XMFLOAT3 cameraPos = mCamera->GetPosition();
+	
+	mCamera->SetPosition(cameraPos);
+
+	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
+		mCamera->LookAt(mCamera->GetPosition(), XMFLOAT3(GetPosition().x, GetPosition().y, GetPosition().z), XMFLOAT3(0.0f, 1.0f, 0.0f));
+}
+
+
+void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
+{
+	mPosition.x = mWorld(3, 0);
+	mPosition.y = mWorld(3, 1);
+	mPosition.z = mWorld(3, 2);
+
+	mLook.x = mWorld(2, 0);
+	mLook.y = mWorld(2, 1);
+	mLook.z = mWorld(2, 2);
+
+	mUp.x = mWorld(1, 0);
+	mUp.y = mWorld(1, 1);
+	mUp.z = mWorld(1, 2);
+
+	mRight.x = mWorld(0, 0);
+	mRight.y = mWorld(0, 1);
+	mRight.z = mWorld(0, 2);
+}
+
+void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
+{
+	btScalar m[16];
+	btTransform btMat;
+	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
+	btMat.getOpenGLMatrix(m);
+
+	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+
+	OnPlayerUpdate(elapsedTime);
+
+	if (mCamera) {
+		OnCameraUpdate(elapsedTime);
+		mCamera->UpdateViewMatrix();
+	}
+
+	for (int i = 0; i < 4; ++i)
+	{
+		btTransform wheelTransform = mVehicle->getWheelTransformWS(i);
+		mWheel[i]->UpdateRigidBody(elapsedTime, wheelTransform);
+	}
+
+	mLook = Vector3::Normalize(mLook);
+	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
+	mRight = Vector3::Cross(mUp, mLook);
+
+	if (mChild) mChild->Update(elapsedTime, &mWorld);
+	if (mSibling) mSibling->Update(elapsedTime, parent);
+}
+
+void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld)
+{
+	GameObject::SetMesh(bodyMesh);
+
+	bodyMesh.get()->mOOBB.Extents = { 10.0f, 4.0f, 14.0f};
+
+	XMFLOAT3 vehicleExtents = bodyMesh.get()->mOOBB.Extents;
+	XMFLOAT3 wheelExtents = wheelMesh.get()->mOOBB.Extents;
 
 	btCollisionShape* chassisShape = new btBoxShape(btVector3(vehicleExtents.x, vehicleExtents.y, vehicleExtents.z));
 
@@ -288,7 +503,6 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& mesh, std::shared_ptr<b
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
 	btDynamicsWorld->addVehicle(mVehicle);
 
-	float connectionHeight = 0.0f;
 
 	mVehicle->setCoordinateSystem(0, 1, 2);
 
@@ -297,7 +511,7 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& mesh, std::shared_ptr<b
 
 	float wheelWidth = wheelExtents.x;
 	float wheelRadius = wheelExtents.z;
-	float wheelFriction = 500;  //BT_LARGE_FLOAT;
+	float wheelFriction = 26.0f;
 	float suspensionStiffness = 20.f;
 	float suspensionDamping = 2.3f;
 	float suspensionCompression = 4.4f;
@@ -305,20 +519,21 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& mesh, std::shared_ptr<b
 
 	// ¾Õ¹ÙÄû
 	bool isFrontWheel = true;
+	float connectionHeight = -0.9f;
 
-	btVector3 connectionPointCS0(vehicleExtents.x - (0.3 * wheelWidth), connectionHeight, vehicleExtents.z - wheelRadius);
+	btVector3 connectionPointCS0(vehicleExtents.x - 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
 	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
 
-	connectionPointCS0 = btVector3(-vehicleExtents.x + (0.3 * wheelWidth), connectionHeight, vehicleExtents.z - wheelRadius);
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
 	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
 
 	// µÞ¹ÙÄû
 	isFrontWheel = false;
 
-	connectionPointCS0 = btVector3(-vehicleExtents.x + (0.3 * wheelWidth), connectionHeight, -vehicleExtents.z + wheelRadius);
+	connectionPointCS0 = btVector3(vehicleExtents.x - 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
 	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
 
-	connectionPointCS0 = btVector3(vehicleExtents.x - (0.3 * wheelWidth), connectionHeight, -vehicleExtents.z + wheelRadius);
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
 	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
 
 	for (int i = 0; i < mVehicle->getNumWheels(); i++)
@@ -330,5 +545,21 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& mesh, std::shared_ptr<b
 		wheel.m_frictionSlip = wheelFriction;
 		wheel.m_rollInfluence = rollInfluence;
 	}
+}
 
+WheelObject::WheelObject() : GameObject()
+{
+}
+
+void WheelObject::UpdateRigidBody(float Elapsed, btTransform wheelTransform)
+{
+	btScalar m[16];
+	wheelTransform.getOpenGLMatrix(m);
+	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+
+	mPosition.x = mWorld(3, 0);
+	mPosition.y = mWorld(3, 1);
+	mPosition.z = mWorld(3, 2);
+
+	mLook = XMFLOAT3(mWorld._31, mWorld._32, mWorld._33);
 }

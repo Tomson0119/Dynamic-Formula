@@ -24,7 +24,7 @@ bool GameFramework::InitFramework()
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
 	mScenes.push(make_unique<GameScene>());
-	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect());
+	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
 
 	// Command List를 닫고 Queue에 명령어를 싣는다.
 	ThrowIfFailed(mCommandList->Close());
@@ -90,6 +90,8 @@ void GameFramework::OnPreciseKeyInput()
 
 void GameFramework::Update()
 {
+	mBtDynamicsWorld->stepSimulation(mTimer.ElapsedTime());
+
 	D3DFramework::UpdateFrameStates();
 	
 	OnPreciseKeyInput();
