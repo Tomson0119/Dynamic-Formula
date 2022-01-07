@@ -103,13 +103,14 @@ private:
 	btVehicleRaycaster* mVehicleRayCaster;
 	btRaycastVehicle* mVehicle;
 
-	bool mBoosterOn = false;
+	float mBoosterLeft = 0.0f;
+	float mBoosterTime = 2.0f;
 
 	float mEngineForce = 0.f;
 	float mBreakingForce = 0.f;
 
 	float mMaxEngineForce = 8000.f;
-	float mBoosterEngineForce = 12000.f;
+	float mBoosterEngineForce = 30000.f;
 
 	float mVehicleSteering = 0.f;
 	float mSteeringIncrement = 0.01f;

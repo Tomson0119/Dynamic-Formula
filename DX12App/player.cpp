@@ -272,6 +272,18 @@ PhysicsPlayer::PhysicsPlayer() : Player()
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
 	mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
+	
+	if (mBoosterLeft > 0.0f)
+	{
+		mMaxSpeed = 1200.0f;
+		mBoosterLeft -= Elapsed;
+	}
+	
+	if(mBoosterLeft < 0.0f)
+	{
+		mMaxSpeed = 1000.0f;
+		mBoosterLeft = 0.0f;
+	}
 
 	if (mVehicleSteering > 0)
 	{
@@ -321,12 +333,8 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState('Z') & 0x8000)
 	{
-		mBoosterOn = 1 - mBoosterOn;
-
-		if (mBoosterOn)
-			mMaxSpeed = 1200.0f;
-		else
-			mMaxSpeed = 1000.0f;
+		if (mBoosterLeft == 0.0f)
+			mBoosterLeft = mBoosterTime;
 	}
 	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
 	{
@@ -346,7 +354,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		}
 	}
 
-	if (mBoosterOn && mMaxSpeed < mCurrentSpeed)
+	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
 
 	int wheelIndex = 2;
