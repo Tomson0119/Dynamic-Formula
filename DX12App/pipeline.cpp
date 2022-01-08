@@ -241,7 +241,7 @@ SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* 
 	: Pipeline()
 {
 	auto skyboxTex = std::make_shared<Texture>();
-	skyboxTex->LoadTextureFromDDS(device, cmdList, L"Resources\\skyboxarray.dds");
+	skyboxTex->LoadTextureFromDDS(device, cmdList, L"Resources\\SkyBox_Desert.dds");
 	skyboxTex->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2DARRAY);
 	mTextures.push_back(skyboxTex);
 
