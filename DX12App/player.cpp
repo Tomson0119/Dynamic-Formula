@@ -497,11 +497,11 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 
 	mBtRigidBody = BulletHelper::CreateRigidBody(1000.0f, btCarTransform, chassisShape, btDynamicsWorld);
 
-	mVehicleRayCaster = new btDefaultVehicleRaycaster(btDynamicsWorld.get());
-	mVehicle = new btRaycastVehicle(mTuning, mBtRigidBody, mVehicleRayCaster);
+	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(btDynamicsWorld.get());
+	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
-	btDynamicsWorld->addVehicle(mVehicle);
+	btDynamicsWorld->addVehicle(mVehicle.get());
 
 
 	mVehicle->setCoordinateSystem(0, 1, 2);

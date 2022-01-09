@@ -105,6 +105,5 @@ protected:
 	std::shared_ptr<btBroadphaseInterface> mBtOverlappingPairCache;
 	std::shared_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
 	std::shared_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
-	btAlignedObjectArray<btCollisionShape*> m_btCollisionShapes;
 
 };

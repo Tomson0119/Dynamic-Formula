@@ -100,8 +100,8 @@ public:
 private:
 	std::shared_ptr<WheelObject> mWheel[4];
 	btRaycastVehicle::btVehicleTuning mTuning;
-	btVehicleRaycaster* mVehicleRayCaster;
-	btRaycastVehicle* mVehicle;
+	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
+	std::shared_ptr<btRaycastVehicle> mVehicle;
 
 	float mBoosterLeft = 0.0f;
 	float mBoosterTime = 2.0f;

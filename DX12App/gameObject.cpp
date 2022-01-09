@@ -251,6 +251,7 @@ TerrainObject::TerrainObject(int width, int depth, const XMFLOAT3& scale)
 
 TerrainObject::~TerrainObject()
 {
+	delete mHeightmapData;
 }
 
 void TerrainObject::BuildHeightMap(const std::wstring& path)
