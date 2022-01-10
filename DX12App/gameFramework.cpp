@@ -97,7 +97,7 @@ void GameFramework::Update()
 	OnPreciseKeyInput();
 
 	//mCamera->Update(mTimer.ElapsedTime());
-	mScenes.top()->Update(mD3dDevice.Get(), mTimer);
+	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mBtDynamicsWorld, mTimer);
 }
 
 void GameFramework::Draw()

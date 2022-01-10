@@ -612,61 +612,23 @@ void GameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void GameScene::OnPreciseKeyInput(float elapsed)
+void GameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed)
 {
 	bool player_active = (mCurrentCamera == mPlayerCamera.get());
 
-	/*if (GetAsyncKeyState('W') & 0x8000)
+	if (GetAsyncKeyState('X') & 0x8000)
 	{
-		if (player_active) {
-			mPlayer->Walk(500.0f * elapsed);
-		}
-		else
-			mCurrentCamera->Walk(100.0f * elapsed);
+		AppendMissileObject(device, cmdList, dynamicsWorld);
 	}
-	if (GetAsyncKeyState('A') & 0x8000)
-	{
-		if (player_active) {
-			mPlayer->Strafe(-500.0f * elapsed);
-		}
-		else
-			mCurrentCamera->Strafe(-100.0f * elapsed);
-	}
-	if (GetAsyncKeyState('S') & 0x8000)
-	{
-		if (player_active) {
-			mPlayer->Walk(-500.0f * elapsed);
-		}
-		else
-			mCurrentCamera->Walk(-100.0f * elapsed);
-	}
-	if (GetAsyncKeyState('D') & 0x8000)
-	{
-		if (player_active) {
-			mPlayer->Strafe(500.0f * elapsed);
-		}
-		else
-			mCurrentCamera->Strafe(100.0f * elapsed);
-	}
-	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
-	{
-		if (!player_active)
-			mCurrentCamera->Upward(100.0f * elapsed);
-	}
-	if (GetAsyncKeyState(VK_LSHIFT) & 0x8000)
-	{
-		if (!player_active)
-			mCurrentCamera->Upward(-100.0f * elapsed);
-	}*/
 	
 	mPlayer->OnPreciseKeyInput(elapsed);
 }
 
-void GameScene::Update(ID3D12Device* device, const GameTimer& timer)
+void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, const GameTimer& timer)
 {
 	float elapsed = timer.ElapsedTime();
 
-	OnPreciseKeyInput(elapsed);
+	OnPreciseKeyInput(device, cmdList, dynamicsWorld, elapsed);
 
 	UpdateLight(elapsed);
 	mCurrentCamera->Update(elapsed);
@@ -675,6 +637,7 @@ void GameScene::Update(ID3D12Device* device, const GameTimer& timer)
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mCurrentCamera);
 
+	UpdateMissileObject(device);
 	mReflectedPlayer->SetWorld(mPlayer->GetWorld());
 	
 	//CreateAndAppendDustBillboard(device);
@@ -861,6 +824,43 @@ void GameScene::DeleteTimeOverBillboards(ID3D12Device* device)
 		}
 	}
 	if (flag) mPipelines[Layer::Billboard]->ResetPipeline(device);
+}
+
+void GameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+{
+	mMissileMesh = std::make_shared<Mesh>();
+	mMissileMesh->LoadFromObj(device, cmdList, L"Models\\Car_Wheel_R.obj");
+	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
+	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), dynamicsWorld);
+
+	mMissileObjects.push_back(missile);
+	mPipelines[Layer::Default]->AppendObject(missile);
+	mPipelines[Layer::Default]->ResetPipeline(device);
+}
+
+void GameScene::UpdateMissileObject(ID3D12Device* device)
+{
+	bool flag = false;
+	for (auto i = mMissileObjects.begin(); i < mMissileObjects.end();)
+	{
+		if (i->get()->GetDuration() < 0.0f)
+		{
+			flag = true;
+			auto& defaultObjects = mPipelines[Layer::Default]->GetRenderObjects();
+			for (int j = 0; j < defaultObjects.size(); ++j)
+			{
+				if (*i == defaultObjects[j])
+				{
+					mPipelines[Layer::Default]->DeleteObject(j);
+				}
+			}
+
+			i = mMissileObjects.erase(i);
+		}
+		else
+			++i;
+	}
+	if (flag) mPipelines[Layer::Default]->ResetPipeline(device);
 }
 
 

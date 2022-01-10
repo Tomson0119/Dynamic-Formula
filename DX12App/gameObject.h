@@ -214,3 +214,19 @@ private:
 	D3D12_VIEWPORT mViewPort;
 	D3D12_RECT mScissorRect;
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class MissileObject : public GameObject
+{
+public:
+	MissileObject();
+	~MissileObject();
+	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
+	void SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	float GetDuration() { return mDuration; }
+private:
+	float mDuration = 3.0f;
+};

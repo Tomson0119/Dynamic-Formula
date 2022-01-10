@@ -40,7 +40,7 @@ public:
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
 	virtual void OnPlayerUpdate(float elapsedTime) { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
-
+	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
 protected:
 	XMFLOAT3 mVelocity = {};
 	XMFLOAT3 mGravity = {};
@@ -93,6 +93,7 @@ public:
 	virtual void OnPreciseKeyInput(float Elapsed);
 	virtual void UpdateTransform(XMFLOAT4X4* parent) { }
 	virtual Camera* ChangeCameraMode(int cameraMode);
+	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
 
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld);
 	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }

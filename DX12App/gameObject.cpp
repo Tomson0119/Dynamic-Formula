@@ -490,3 +490,55 @@ void DynamicCubeMapObject::PreDraw(ID3D12GraphicsCommandList* cmdList, ID3D12Res
 		rtvResource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
+MissileObject::MissileObject()
+{
+}
+
+MissileObject::~MissileObject()
+{
+}
+
+void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+{
+	GameObject::SetMesh(mesh);
+	auto missileExtents = btVector3(mMeshes[0]->mOOBB.Extents.x, mMeshes[0]->mOOBB.Extents.y, mMeshes[0]->mOOBB.Extents.z);
+	btCollisionShape* missileShape = new btBoxShape(missileExtents);
+
+	btVector3 bulletPosition = 10 * forward;
+
+	btTransform btMissileTransform;
+	btMissileTransform.setIdentity();
+	btMissileTransform.setOrigin(btVector3(position.x + bulletPosition.x(), position.y + bulletPosition.y(), position.z + bulletPosition.z()));
+
+	mBtRigidBody = BulletHelper::CreateRigidBody(10.0f, btMissileTransform, missileShape, dynamicsWorld);
+
+	mBtRigidBody->setLinearVelocity(forward * 500.0f);
+}
+
+void MissileObject::Update(float elapsedTime, XMFLOAT4X4* parent)
+{
+	btScalar m[16];
+	btTransform btMat;
+	mBtRigidBody->getMotionState()->getWorldTransform(btMat);
+	btMat.getOpenGLMatrix(m);
+
+	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+
+	mPosition.x = mWorld(3, 0);
+	mPosition.y = mWorld(3, 1);
+	mPosition.z = mWorld(3, 2);
+
+	mLook.x = mWorld(2, 0);
+	mLook.y = mWorld(2, 1);
+	mLook.z = mWorld(2, 2);
+
+	mUp.x = mWorld(1, 0);
+	mUp.y = mWorld(1, 1);
+	mUp.z = mWorld(1, 2);
+
+	mRight.x = mWorld(0, 0);
+	mRight.y = mWorld(0, 1);
+	mRight.z = mWorld(0, 2);
+
+	mDuration -= elapsedTime;
+}

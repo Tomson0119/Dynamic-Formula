@@ -60,7 +60,7 @@ public:
 
 	void UpdateConstants();
 
-	const std::vector<std::shared_ptr<GameObject>>& GetRenderObjects() const { return mRenderObjects; }
+	std::vector<std::shared_ptr<GameObject>>& GetRenderObjects() { return mRenderObjects; }
 
 protected:
 	ComPtr<ID3D12PipelineState> mPSO[2];

@@ -326,7 +326,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState(VK_DOWN) & 0x8000)
 	{
-		if (mMaxSpeed < mCurrentSpeed)
+		if (-mMaxSpeed < mCurrentSpeed)
 			mEngineForce = -mMaxEngineForce;
 		else
 			mEngineForce = 0.0f;

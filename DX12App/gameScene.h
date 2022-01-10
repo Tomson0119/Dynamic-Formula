@@ -30,7 +30,7 @@ public:
 	void UpdateCameraConstant(int idx, Camera* camera);
 	void UpdateConstants(const GameTimer& timer);
 	
-	void Update(ID3D12Device* device, const GameTimer& timer);
+	void Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, const GameTimer& timer);
 
 	void SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
 	void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer);
@@ -43,7 +43,7 @@ public:
 	void OnProcessMouseMove(WPARAM buttonState, int x, int y);
 	void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	void OnPreciseKeyInput(float elapsed);
+	void OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed);
 
 	XMFLOAT4 GetFrameColor() const { return mFrameColor; }
 	ID3D12RootSignature* GetRootSignature() const { return mRootSignature.Get(); }
@@ -63,6 +63,9 @@ private:
 	void CreateAndAppendDustBillboard(ID3D12Device* device);
 	void CreateAndAppendFlameBillboard(ID3D12Device* device, GameObject* box);
 	void DeleteTimeOverBillboards(ID3D12Device* device);
+
+	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	void UpdateMissileObject(ID3D12Device* device);
 
 private:
 	XMFLOAT4 mFrameColor = (XMFLOAT4)Colors::LightSkyBlue;
@@ -90,9 +93,11 @@ private:
 	
 	Player* mPlayer = nullptr;
 	GameObject* mReflectedPlayer = nullptr;
+	std::vector<std::shared_ptr<MissileObject>> mMissileObjects;
 
 	std::shared_ptr<Billboard> mFlameBillboard;
 	std::shared_ptr<Billboard> mDustBillboard;
+	std::shared_ptr<Mesh> mMissileMesh;
 	std::chrono::high_resolution_clock::time_point mPrevTime;
 
 	const XMFLOAT3 mRoomCenter = { -1024, 0, 1024 };
