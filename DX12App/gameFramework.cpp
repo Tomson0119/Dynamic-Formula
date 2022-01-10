@@ -110,6 +110,8 @@ void GameFramework::Draw()
 
 	mCommandList->SetGraphicsRootSignature(mScenes.top()->GetRootSignature());
 
+	Update();
+
 	mScenes.top()->PreRender(mCommandList.Get());
 
 	mCommandList->RSSetViewports(1, &mViewPort);

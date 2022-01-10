@@ -66,7 +66,6 @@ void D3DFramework::Run()
 			mTimer.Tick();
 			
 			if (!mPaused) {
-				Update();
 				Draw();
 			}
 			else

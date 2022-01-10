@@ -637,7 +637,7 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mCurrentCamera);
 
-	UpdateMissileObject(device);
+	UpdateMissileObject(device, dynamicsWorld);
 	mReflectedPlayer->SetWorld(mPlayer->GetWorld());
 	
 	//CreateAndAppendDustBillboard(device);
@@ -828,8 +828,7 @@ void GameScene::DeleteTimeOverBillboards(ID3D12Device* device)
 
 void GameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
-	mMissileMesh = std::make_shared<Mesh>();
-	mMissileMesh->LoadFromObj(device, cmdList, L"Models\\Car_Wheel_R.obj");
+	mMissileMesh = std::make_shared<BoxMesh>(device, cmdList, 5, 5, 5);
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
 	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), dynamicsWorld);
 
@@ -838,7 +837,7 @@ void GameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::Default]->ResetPipeline(device);
 }
 
-void GameScene::UpdateMissileObject(ID3D12Device* device)
+void GameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	bool flag = false;
 	for (auto i = mMissileObjects.begin(); i < mMissileObjects.end();)
@@ -846,6 +845,7 @@ void GameScene::UpdateMissileObject(ID3D12Device* device)
 		if (i->get()->GetDuration() < 0.0f)
 		{
 			flag = true;
+			dynamicsWorld->removeRigidBody(i->get()->GetRigidBody());
 			auto& defaultObjects = mPipelines[Layer::Default]->GetRenderObjects();
 			for (int j = 0; j < defaultObjects.size(); ++j)
 			{

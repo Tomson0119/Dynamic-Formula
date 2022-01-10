@@ -79,6 +79,8 @@ public:
 
 	BoundingOrientedBox GetBoundingBox() const { return mOOBB; }	
 	
+	btRigidBody* GetRigidBody() { return mBtRigidBody; }
+
 protected:
 	XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
 	XMFLOAT3 mRight = { 1.0f, 0.0f, 0.0f };
