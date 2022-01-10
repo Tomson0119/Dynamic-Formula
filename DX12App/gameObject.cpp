@@ -510,9 +510,10 @@ void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLO
 	btMissileTransform.setIdentity();
 	btMissileTransform.setOrigin(btVector3(position.x + bulletPosition.x(), position.y + bulletPosition.y(), position.z + bulletPosition.z()));
 
-	mBtRigidBody = BulletHelper::CreateRigidBody(10.0f, btMissileTransform, missileShape, dynamicsWorld);
+	mBtRigidBody = BulletHelper::CreateRigidBody(1.0f, btMissileTransform, missileShape, dynamicsWorld);
 
-	mBtRigidBody->setLinearVelocity(forward * 500.0f);
+	mBtRigidBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
+	mBtRigidBody->setLinearVelocity(forward * 1000.0f);
 }
 
 void MissileObject::Update(float elapsedTime, XMFLOAT4X4* parent)

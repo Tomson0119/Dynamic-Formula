@@ -104,4 +104,6 @@ private:
 
 	bool mLODSet = false;
 	bool mOutside = false;
+
+	float mMissileInterval = 0.0f;
 };

@@ -616,9 +616,17 @@ void GameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandLis
 {
 	bool player_active = (mCurrentCamera == mPlayerCamera.get());
 
-	if (GetAsyncKeyState('X') & 0x8000)
+	if (mMissileInterval < 0.0f)
 	{
-		AppendMissileObject(device, cmdList, dynamicsWorld);
+		if (GetAsyncKeyState('X') & 0x8000)
+		{
+			mMissileInterval = 1.0f;
+			AppendMissileObject(device, cmdList, dynamicsWorld);
+		}
+	}
+	else
+	{
+		mMissileInterval -= elapsed;
 	}
 	
 	mPlayer->OnPreciseKeyInput(elapsed);
