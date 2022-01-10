@@ -119,4 +119,6 @@ private:
 
 	float mCurrentSpeed = 0.0f;
 	float mMaxSpeed = 1000.0f;
+
+	float mAspectCoefficient = 1.0f;
 };

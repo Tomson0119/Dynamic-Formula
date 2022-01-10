@@ -43,15 +43,15 @@ void Camera::SetLens(float aspect)
 void Camera::SetLens(float fovY, float aspect, float zn, float zf)
 {
 	mNearWindow.y = 2.0f * tanf(fovY * 0.5f) * zn;
-	mNearWindow.x = aspect * mNearWindow.y;
+	mNearWindow.x = aspect * mNearWindow.y * mAspectCoefficient;
 
 	mFarWindow.y = 2.0f * tanf(fovY * 0.5f) * zf;
-	mFarWindow.x = aspect * mFarWindow.y;
+	mFarWindow.x = aspect * mFarWindow.y * mAspectCoefficient;
 
 	mFov.x = 2.0f * atan(mNearWindow.x * 0.5f / mNearZ);
 	mFov.y = fovY;
 
-	mAspect = aspect;
+	mAspect = aspect * mAspectCoefficient;
 	mNearZ = zn;
 	mFarZ = zf;
 

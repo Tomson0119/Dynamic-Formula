@@ -471,10 +471,28 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 		btTransform wheelTransform = mVehicle->getWheelTransformWS(i);
 		mWheel[i]->UpdateRigidBody(elapsedTime, wheelTransform);
 	}
-
+	
 	mLook = Vector3::Normalize(mLook);
 	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
 	mRight = Vector3::Cross(mUp, mLook);
+
+	if (mBoosterLeft > 0.0f)
+	{
+		if (mAspectCoefficient < 1.0005f)
+			mAspectCoefficient += elapsedTime * 5.0f;
+		else
+			mAspectCoefficient = 1.0005f;
+	}
+	else
+	{
+		if (mAspectCoefficient > 1.0f)
+			mAspectCoefficient -= elapsedTime * 5.0f;
+		else
+			mAspectCoefficient = 1.0f;
+	}
+
+	mCamera->SetAspectCoefficient(mAspectCoefficient);
+	mCamera->SetLens(mCamera->GetAspect());
 
 	if (mChild) mChild->Update(elapsedTime, &mWorld);
 	if (mSibling) mSibling->Update(elapsedTime, parent);
