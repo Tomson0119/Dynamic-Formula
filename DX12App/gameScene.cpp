@@ -29,7 +29,7 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 
 	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	mMainLight.Lights[0].SetInfo(
-		XMFLOAT3(0.6f, 0.6f, 0.6f),
+		XMFLOAT3(10.0f, 10.0f, 10.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(1.0f, 0.75f, -1.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
