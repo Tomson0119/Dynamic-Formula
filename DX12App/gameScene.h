@@ -50,7 +50,6 @@ public:
 
 private:
 	void BuildRootSignature(ID3D12Device* device);
-	void BuildTextures(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void BuildConstantBuffers(ID3D12Device* device);
 	void BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);

@@ -46,7 +46,6 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 
 	BuildRootSignature(device);
 	BuildShadersAndPSOs(device, cmdList);
-	BuildTextures(device, cmdList);
 	BuildGameObjects(device, cmdList);
 	BuildConstantBuffers(device);
 	BuildDescriptorHeap(device);
@@ -127,14 +126,6 @@ void GameScene::BuildDescriptorHeap(ID3D12Device* device)
 {
 	for (const auto& [_, pso] : mPipelines)
 		pso->BuildDescriptorHeap(device, 3, 4, 5);
-}
-
-void GameScene::BuildTextures(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
-{
-	/*auto tileTex = make_shared<Texture>();
-	tileTex->LoadTextureFromDDS(device, cmdList, L"Resources\\tile.dds");
-	tileTex->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
-	mPipelines[Layer::Default]->AppendTexture(tileTex);*/
 }
 
 void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
