@@ -125,7 +125,7 @@ void GameScene::BuildComputeRootSignature(ID3D12Device* device)
 void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
 	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
-	//auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
+	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(device, cmdList);
@@ -140,8 +140,8 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
 	mPipelines[Layer::Terrain]->BuildPipeline(device, mRootSignature.Get(), terrainShader.get());
 
-	/*mPipelines[Layer::Color] = make_unique<Pipeline>();
-	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());*/
+	mPipelines[Layer::Color] = make_unique<Pipeline>();
+	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
 }
 
 void GameScene::BuildConstantBuffers(ID3D12Device* device)
@@ -200,13 +200,13 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 			wheelObj->LoadModel(device, cmdList, L"Models\\Car_Wheel_R.obj");
 
 		carObj->SetWheel(wheelObj, i);
-		mPipelines[Layer::Default]->AppendObject(wheelObj);
+		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
 	carObj->BuildRigidBody(dynamicsWorld);
 	mPlayer = carObj.get();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 
-	mPipelines[Layer::Default]->AppendObject(carObj);
+	mPipelines[Layer::Color]->AppendObject(carObj);
 }
 
 void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
@@ -345,7 +345,7 @@ void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCB
 	SetCBV(cmdList, cameraCBIndex);
 
 	for (const auto& [layer, pso] : mPipelines) {
-		pso->SetAndDraw(cmdList, (bool)mLODSet);	
+		pso->SetAndDraw(cmdList, (bool)mLODSet);
 	}
 }
 
@@ -356,8 +356,8 @@ void GameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandL
 	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), dynamicsWorld);
 
 	mMissileObjects.push_back(missile);
-	mPipelines[Layer::Default]->AppendObject(missile);
-	mPipelines[Layer::Default]->ResetPipeline(device);
+	mPipelines[Layer::Color]->AppendObject(missile);
+	mPipelines[Layer::Color]->ResetPipeline(device);
 }
 
 void GameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
