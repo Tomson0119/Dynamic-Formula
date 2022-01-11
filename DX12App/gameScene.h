@@ -56,13 +56,6 @@ private:
 	void BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap(ID3D12Device* device);
 
-	void BuildRoomObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
-
-	void CollisionProcess(ID3D12Device* device);
-	void CreateAndAppendDustBillboard(ID3D12Device* device);
-	void CreateAndAppendFlameBillboard(ID3D12Device* device, GameObject* box);
-	void DeleteTimeOverBillboards(ID3D12Device* device);
-
 	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 	void UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 

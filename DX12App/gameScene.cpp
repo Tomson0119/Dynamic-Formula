@@ -126,6 +126,7 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 {
 	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
 	//auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
+	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(device, cmdList);
 	mPipelines[Layer::SkyBox]->BuildPipeline(device, mRootSignature.Get());
@@ -133,6 +134,11 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	//mPipelines[Layer::Default]->SetCullClockwise();
 	mPipelines[Layer::Default]->BuildPipeline(device, mRootSignature.Get(), defaultShader.get());
+
+	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
+	mPipelines[Layer::Terrain]->SetWiredFrame(true);
+	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
+	mPipelines[Layer::Terrain]->BuildPipeline(device, mRootSignature.Get(), terrainShader.get());
 
 	/*mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());*/
@@ -167,6 +173,38 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	grid->LoadTexture(device, cmdList, L"Resources\\tile.dds");
 	grid->Rotate(90.0f, 0.0f, 0.0f);
 	mPipelines[Layer::Default]->AppendObject(grid);
+
+	auto terrain = make_shared<TerrainObject>(512, 512, XMFLOAT3(8.0f, 1.0f, 8.0f));
+	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
+	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
+	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 33, 33);
+	terrain->LoadTexture(device, cmdList, L"Resources\\terrainTexture.dds");
+	terrain->LoadTexture(device, cmdList, L"Resources\\rocky.dds");
+	terrain->LoadTexture(device, cmdList, L"Resources\\road.dds");
+	terrain->LoadTexture(device, cmdList, L"Resources\\heightmap.dds");
+	terrain->LoadTexture(device, cmdList, L"Resources\\normalmap.dds");
+
+	mPipelines[Layer::Terrain]->AppendObject(terrain);
+
+
+	auto carObj = make_shared<PhysicsPlayer>();
+	carObj->SetPosition(XMFLOAT3(500.0f, 10.0f, 500.0f));
+	carObj->LoadModel(device, cmdList, L"Models\\Car_Body.obj");
+
+	for (int i = 0; i < 4; ++i)
+	{
+		auto wheelObj = make_shared<WheelObject>();
+
+		if (i % 2 == 0)
+			wheelObj->LoadModel(device, cmdList, L"Models\\Car_Wheel_L.obj");
+		else
+			wheelObj->LoadModel(device, cmdList, L"Models\\Car_Wheel_R.obj");
+
+		carObj->SetWheel(wheelObj, i);
+		mPipelines[Layer::Default]->AppendObject(wheelObj);
+	}
+	mPlayer = carObj.get();
+	mPipelines[Layer::Default]->AppendObject(carObj);
 }
 
 void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
@@ -210,8 +248,6 @@ void GameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void GameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed)
 {
-	bool player_active = (mCurrentCamera == mPlayerCamera.get());
-
 	if (mMissileInterval < 0.0f)
 	{
 		if (GetAsyncKeyState('X') & 0x8000)
@@ -238,15 +274,11 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	mMainCamera->Update(elapsed);
 
 	for (const auto& [_, pso] : mPipelines)
-		pso->Update(elapsed, mCurrentCamera);
+		pso->Update(elapsed, mMainCamera.get());
 
 	UpdateMissileObject(device, dynamicsWorld);
 	mReflectedPlayer->SetWorld(mPlayer->GetWorld());
 	
-	//CreateAndAppendDustBillboard(device);
-	//CollisionProcess(device);
-	//DeleteTimeOverBillboards(device);
-
 	UpdateConstants(timer);
 }
 
