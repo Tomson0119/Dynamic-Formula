@@ -27,7 +27,7 @@ void GameObject::LoadModel(
 	const std::wstring& path)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	assert(in_file.is_open() && L"No such file in path [" + path + L"]");
+	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
