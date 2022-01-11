@@ -78,19 +78,27 @@ void Pipeline::BuildPipeline(
 
 void Pipeline::BuildConstantBuffer(ID3D12Device* device)
 {
-	if(mRenderObjects.size() > 0)
-		mObjectCB = std::make_unique<ConstantBuffer<ObjectConstants>>(device, (UINT)mRenderObjects.size());
+	mObjectCB = std::make_unique<ConstantBuffer<ObjectConstants>>(device, (UINT)mRenderObjects.size());
+
+	UINT matCount = 0;
+	for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
+	mMaterialCB = std::make_unique<ConstantBuffer<MaterialConstants>>(device, matCount);
 }
 
-void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT cbvIndex, UINT srvIndex)
+void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex)
 {
+	UINT numDescriptors = (UINT)mRenderObjects.size();
+	for (const auto& obj : mRenderObjects)
+		numDescriptors += obj->GetTextureCount();
+
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
-			(UINT)mTextures.size() + (UINT)mRenderObjects.size(),
+			numDescriptors,
 			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
 		IID_PPV_ARGS(&mCbvSrvDescriptorHeap)));
 
+	mRootParamMatIndex = matIndex;
 	mRootParamCBVIndex = cbvIndex;
 	mRootParamSRVIndex = srvIndex;
 
@@ -100,43 +108,47 @@ void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT cbvIndex, UINT srv
 
 void Pipeline::BuildCBV(ID3D12Device* device)
 {
-	if (mObjectCB == nullptr) return;
-
 	UINT stride = mObjectCB->GetByteSize();
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+	cbvDesc.BufferLocation = mObjectCB->GetGPUVirtualAddress(0);
 	cbvDesc.SizeInBytes = stride;
-	for (int i = 0; i < mRenderObjects.size(); i++)
+
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+	for (const auto& obj : mRenderObjects)
 	{
-		cbvDesc.BufferLocation = mObjectCB->GetGPUVirtualAddress(0) + (stride * i);
-		
-		D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-		cpuHandle.ptr += i * gCbvSrvUavDescriptorSize;
-		device->CreateConstantBufferView(&cbvDesc, cpuHandle);
+		device->CreateConstantBufferView(&cbvDesc, cpuHandle);		
+		obj->SetCBVAddress(gpuHandle);
+
+		cbvDesc.BufferLocation += stride;
+		cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+		gpuHandle.ptr += gCbvSrvUavDescriptorSize;
 	}
 }
 
 void Pipeline::BuildSRV(ID3D12Device* device)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	cpuHandle.ptr += mRenderObjects.size() * gCbvSrvUavDescriptorSize;
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
-	for (int i = 0; i < mTextures.size(); i++)
+	cpuHandle.ptr += mRenderObjects.size() * gCbvSrvUavDescriptorSize;
+	gpuHandle.ptr += mRenderObjects.size() * gCbvSrvUavDescriptorSize;
+
+	for (const auto& obj : mRenderObjects)
 	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = mTextures[i]->ShaderResourceView();
-		device->CreateShaderResourceView(mTextures[i]->GetResource(), &srvDesc, cpuHandle);
-		cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+		obj->SetSRVAddress(gpuHandle);
+		obj->BuildSRV(device, cpuHandle);
+
+		cpuHandle.ptr += obj->GetTextureCount() * gCbvSrvUavDescriptorSize;
+		gpuHandle.ptr += obj->GetTextureCount() * gCbvSrvUavDescriptorSize;
 	}
 }
 
 void Pipeline::AppendObject(const std::shared_ptr<GameObject>& obj)
 {
 	mRenderObjects.push_back(obj);
-}
-
-void Pipeline::AppendTexture(const std::shared_ptr<Texture>& tex)
-{
-	mTextures.push_back(tex);
 }
 
 void Pipeline::DeleteObject(int idx)
@@ -147,7 +159,7 @@ void Pipeline::DeleteObject(int idx)
 void Pipeline::ResetPipeline(ID3D12Device* device)
 {
 	BuildConstantBuffer(device);
-	BuildDescriptorHeap(device, mRootParamCBVIndex, mRootParamSRVIndex);
+	BuildDescriptorHeap(device, mRootParamMatIndex, mRootParamCBVIndex, mRootParamSRVIndex);
 }
 
 void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
@@ -163,20 +175,23 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 			cmdList->SetPipelineState(mPSO[0].Get());
 	}
 
+	Draw(cmdList);
+}
+
+void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
+{
+	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
-		auto gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-		gpuHandle.ptr += i * gCbvSrvUavDescriptorSize;
-		cmdList->SetGraphicsRootDescriptorTable(mRootParamCBVIndex, gpuHandle);
+		mRenderObjects[i]->Draw(
+			cmdList,
+			mRootParamMatIndex,
+			mRootParamCBVIndex,
+			mRootParamSRVIndex,
+			mMaterialCB->GetGPUVirtualAddress(matOffset), 
+			mMaterialCB->GetByteSize(), isSO);
 
-		if (mTextures.size() > 0)
-		{
-			gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-			gpuHandle.ptr += (mRenderObjects.size() + mRenderObjects[i]->GetSRVIndex()) * gCbvSrvUavDescriptorSize;
-			cmdList->SetGraphicsRootDescriptorTable(mRootParamSRVIndex, gpuHandle);
-		}
-
-		mRenderObjects[i]->Draw(cmdList);
+		matOffset += mRenderObjects[i]->GetMeshCount();
 	}
 }
 
@@ -230,8 +245,12 @@ void Pipeline::Update(const float elapsed, Camera* camera)
 
 void Pipeline::UpdateConstants()
 {
-	for (int i = 0; i < mRenderObjects.size(); i++)
+	UINT matOffset = 0;
+	for (int i = 0; i < mRenderObjects.size(); i++) {
 		mObjectCB->CopyData(i, mRenderObjects[i]->GetObjectConstants());
+		mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);		
+		matOffset += mRenderObjects[i]->GetMeshCount();
+	}
 }
 
 
@@ -240,15 +259,12 @@ void Pipeline::UpdateConstants()
 SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 	: Pipeline()
 {
-	auto skyboxTex = std::make_shared<Texture>();
-	skyboxTex->LoadTextureFromDDS(device, cmdList, L"Resources\\SkyBox_Desert.dds");
-	skyboxTex->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2DARRAY);
-	mTextures.push_back(skyboxTex);
-
 	auto boxMesh = std::make_shared<BoxMesh>(device, cmdList, 20.0f, 20.0f, 20.0f);
+	boxMesh->SetSrvIndex(0);
+
 	auto skyboxObj = std::make_shared<GameObject>();
 	skyboxObj->SetMesh(boxMesh);
-	skyboxObj->SetSRVIndex(0);
+	skyboxObj->LoadTexture(device, cmdList, L"Resources\\skyboxarray.dds", D3D12_SRV_DIMENSION_TEXTURE2DARRAY);
 	mRenderObjects.push_back(skyboxObj);
 }
 
@@ -330,38 +346,10 @@ void StreamOutputPipeline::SetAndDraw(
 	cmdList->OMSetStencilRef(mStencilRef);
 	
 	cmdList->SetPipelineState(mPSO[1].Get());
-	for (int i = 0; i < mRenderObjects.size(); i++)
-	{
-		auto gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-		gpuHandle.ptr += i * gCbvSrvUavDescriptorSize;
-		cmdList->SetGraphicsRootDescriptorTable(mRootParamCBVIndex, gpuHandle);
-
-		if (mTextures.size() > 0)
-		{
-			gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-			gpuHandle.ptr += (mRenderObjects.size() + mRenderObjects[i]->GetSRVIndex()) * gCbvSrvUavDescriptorSize;
-			cmdList->SetGraphicsRootDescriptorTable(mRootParamSRVIndex, gpuHandle);
-		}
-
-		mRenderObjects[i]->ExecuteSO(cmdList);
-	}
+	Pipeline::Draw(cmdList, true);
 
 	cmdList->SetPipelineState(mPSO[0].Get()); // Draw
-	for (int i = 0; i < mRenderObjects.size(); i++)
-	{
-		auto gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-		gpuHandle.ptr += i * gCbvSrvUavDescriptorSize;
-		cmdList->SetGraphicsRootDescriptorTable(mRootParamCBVIndex, gpuHandle);
-
-		if (mTextures.size() > 0)
-		{
-			gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-			gpuHandle.ptr += (mRenderObjects.size() + mRenderObjects[i]->GetSRVIndex()) * gCbvSrvUavDescriptorSize;
-			cmdList->SetGraphicsRootDescriptorTable(mRootParamSRVIndex, gpuHandle);
-		}
-
-		mRenderObjects[i]->Draw(cmdList);
-	}
+	Pipeline::Draw(cmdList, false);
 }
 
 void StreamOutputPipeline::BuildSOPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader)

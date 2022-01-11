@@ -51,8 +51,7 @@ public:
 private:
 	void BuildRootSignature(ID3D12Device* device);
 	void BuildComputeRootSignature(ID3D12Device* device);
-	void BuildTextures(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
-	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld);
 	void BuildConstantBuffers(ID3D12Device* device);
 	void BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap(ID3D12Device* device);
@@ -70,10 +69,10 @@ private:
 private:
 	XMFLOAT4 mFrameColor = (XMFLOAT4)Colors::LightSkyBlue;
 
-	Camera* mCurrentCamera = nullptr;
 	std::unique_ptr<Camera> mMainCamera;
-	std::unique_ptr<Camera> mPlayerCamera;
 	POINT mLastMousePos{};
+
+	float mCameraRadius = 30.0f;
 
 	LightConstants mMainLight;
 
@@ -83,11 +82,7 @@ private:
 
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
-	
-	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
-	std::unique_ptr<DynamicCubeRenderer> mCubeMapRenderer;
 
-	std::unique_ptr<ComputePipeline> mComputePipeline;
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 	
