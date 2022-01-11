@@ -9,6 +9,7 @@ enum class Layer : int
 	Terrain,
 	NormalMapped,
 	Default,
+	Color,
 	Mirror,
 	Reflected,
 	Billboard,
@@ -32,7 +33,7 @@ public:
 		ID3D12RootSignature* rootSig,
 		Shader* shader=nullptr);
 
-	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT cbvIndex, UINT srvIndex);
+	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex);
 
 	void BuildConstantBuffer(ID3D12Device* device);
 	void BuildCBV(ID3D12Device* device);
@@ -50,13 +51,13 @@ public:
 		UINT8 rtWriteMask);
 
 	void AppendObject(const std::shared_ptr<GameObject>& obj);
-	void AppendTexture(const std::shared_ptr<Texture>& tex);
 
 	void DeleteObject(int idx);
 	void ResetPipeline(ID3D12Device* device);
 
 	virtual void Update(const float elapsed, Camera* camera=nullptr);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true);
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
 
 	void UpdateConstants();
 
@@ -76,9 +77,11 @@ protected:
 	D3D12_PRIMITIVE_TOPOLOGY_TYPE mPrimitive = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
 	std::unique_ptr<ConstantBuffer<ObjectConstants>> mObjectCB;
+	std::unique_ptr<ConstantBuffer<MaterialConstants>> mMaterialCB;
+
 	std::vector<std::shared_ptr<GameObject>> mRenderObjects;
-	std::vector<std::shared_ptr<Texture>> mTextures;
 	
+	UINT mRootParamMatIndex = 0;
 	UINT mRootParamCBVIndex = 0;
 	UINT mRootParamSRVIndex = 0;
 
