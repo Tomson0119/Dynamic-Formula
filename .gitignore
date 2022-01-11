@@ -393,8 +393,10 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-# 재질 파일
+# 리소스 파일
 *.mtl
+*.dds
+*.raw
 
 #물리엔진 추적하지 않음
 DX12App/bullet3-master
