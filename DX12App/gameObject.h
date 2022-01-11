@@ -13,21 +13,42 @@ public:
 	GameObject();
 	virtual ~GameObject();
 
-	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
-	virtual void ExecuteSO(ID3D12GraphicsCommandList* cmdList);
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList);
-	virtual void UpdateTransform(XMFLOAT4X4* parent);
+	void BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
 
+	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
+	virtual void UpdateTransform(XMFLOAT4X4* parent);
+	virtual void Draw(
+		ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset, bool isSO=false);
+	
 	void UpdateBoudingBox();
 	void Animate(float elapsedTime);
+
+	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
+
+public:
+	void LoadModel(
+		ID3D12Device* device, 
+		ID3D12GraphicsCommandList* cmdList, 
+		const std::wstring& path);
+	void LoadMaterial(
+		ID3D12Device* device, 
+		ID3D12GraphicsCommandList* cmdList,
+		std::unordered_map<std::string, MatInfo>& mats, 
+		const std::wstring& path);
+	void LoadTexture(
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		const std::wstring& path,
+		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
 
 public:
 	virtual void SetChild(GameObject* child);
 	virtual void SetPosition(float x, float y, float z);
 	virtual void SetPosition(const XMFLOAT3& pos);
-	virtual void SetMaterial(XMFLOAT4 color, XMFLOAT3 frenel, float roughness);
 
-	void SetSRVIndex(UINT idx) { mSrvIndex = idx; }
+	//void SetSRVIndex(UINT idx) { mSrvIndex = idx; }
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
 
@@ -36,6 +57,9 @@ public:
 
 	void SetReflected(XMFLOAT4& plane);
 	void SetWorld(XMFLOAT4X4 world) { mWorld = world; }
+
+	void SetCBVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mCbvGPUAddress = gpuHandle; }
+	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
 
 public:
 	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtvResource, GameScene* scene) { }
@@ -72,7 +96,9 @@ public:
 
 	XMFLOAT4X4 GetWorld() const { return mWorld; }
 
-	UINT GetSRVIndex() const { return mSrvIndex; }
+	//UINT GetSRVIndex() const { return mSrvIndex; }
+	UINT GetMeshCount() const { return (UINT)mMeshes.size(); }
+	UINT GetTextureCount() const { return (UINT)mTextures.size(); }
 
 	virtual ULONG GetCubeMapSize() const { return 0; }	
 	virtual ObjectConstants GetObjectConstants();
@@ -89,10 +115,11 @@ protected:
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 
 	btRigidBody* mBtRigidBody;
-
-	UINT mSrvIndex = 0;
-	Material mMaterial = {};
 	std::vector<std::shared_ptr<Mesh>> mMeshes;
+	std::vector<std::unique_ptr<Texture>> mTextures;
+
+	D3D12_GPU_DESCRIPTOR_HANDLE mCbvGPUAddress{};
+	D3D12_GPU_DESCRIPTOR_HANDLE mSrvGPUAddress{};
 
 	BoundingOrientedBox mOOBB = { };
 

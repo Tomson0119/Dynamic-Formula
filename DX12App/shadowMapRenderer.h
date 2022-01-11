@@ -11,7 +11,7 @@ public:
 	virtual ~ShadowMapRenderer();
 
 	virtual void BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader=nullptr) override;
-	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT cbvIndex, UINT srvIndex) override;
+	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex) override;
 	
 	void UpdateDepthCamera(LightConstants& lightCnst);
 	void PreRender(ID3D12GraphicsCommandList* cmdList, GameScene* scene);
@@ -51,6 +51,7 @@ private:
 
 	std::vector<std::unique_ptr<Camera>> mDepthCamera;
 	std::vector<Pipeline*> mShadowTargetPSOs;
+	std::vector<std::unique_ptr<Texture>> mShadowMaps;
 
 	const XMFLOAT4X4 mToTexture =
 	{

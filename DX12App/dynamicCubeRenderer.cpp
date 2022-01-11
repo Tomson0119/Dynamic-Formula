@@ -23,7 +23,7 @@ void DynamicCubeRenderer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene*
 {
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
-		mRenderObjects[i]->PreDraw(cmdList, mTextures[i]->GetResource(), scene);
+		mRenderObjects[i]->PreDraw(cmdList, mCubeMaps[i]->GetResource(), scene);
 	}
 }
 
@@ -42,12 +42,12 @@ void DynamicCubeRenderer::CreateTexture(ID3D12Device* device, const std::shared_
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_GENERIC_READ, &clearValue);
 
-	mTextures.push_back(std::move(textureCube));
+	mCubeMaps.push_back(std::move(textureCube));
 }
 
-void DynamicCubeRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT cbvIndex, UINT srvIndex)
+void DynamicCubeRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex)
 {
-	Pipeline::BuildDescriptorHeap(device, cbvIndex, srvIndex);
+	Pipeline::BuildDescriptorHeap(device, matIndex, cbvIndex, srvIndex);
 
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
@@ -71,6 +71,6 @@ void DynamicCubeRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT cbvInde
 		rtvHandle.ptr += i * gRtvDescriptorSize * 6;
 		dsvHandle.ptr += i * gDsvDescriptorSize;
 
-		mRenderObjects[i]->BuildDsvRtvView(device, mTextures[i]->GetResource(), rtvHandle, dsvHandle);
+		mRenderObjects[i]->BuildDsvRtvView(device, mCubeMaps[i]->GetResource(), rtvHandle, dsvHandle);
 	}
 }

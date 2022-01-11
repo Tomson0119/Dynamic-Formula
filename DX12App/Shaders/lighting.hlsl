@@ -4,6 +4,17 @@
 #define SPOT_LIGHT        2
 #define DIRECTIONAL_LIGHT 3
 
+struct Material
+{
+    float3 Ambient;
+    float  padding0;
+    float4 Diffuse;
+    float3 Specular;
+    float  Exponent;
+    float3 Emission;
+    float  IOR;
+};
+
 struct Light
 {
     float3 Diffuse;
@@ -14,13 +25,6 @@ struct Light
     float  padding2;
     float  Range;
     int    Type;
-};
-
-struct Material
-{
-    float4 Diffuse;
-    float3 Fresnel;
-    float Roughness;
 };
 
 float Pow5(float x)
@@ -34,30 +38,30 @@ float3 CalcReflectPercent(float3 fresnel, float3 h, float3 l)
     return (fresnel + (1.0f - fresnel) * Pow5(oneMinusCosine));
 }
 
-float3 PhongModelLighting(float3 lightDiff, float3 lightVec, float3 normal, float3 view, Material mat)
+float3 BlinnPhongModelLighting(float3 lightDiff, float3 lightVec, float3 normal, float3 view, Material mat)
 {
-    const float shininess = 1.0f - mat.Roughness;
-    const float m = shininess * 256.0f;
+    const float m = mat.Exponent;
+    const float f = ((mat.IOR - 1) * (mat.IOR - 1)) / ((mat.IOR + 1) * (mat.IOR + 1));
+    const float3 fresnel0 = float3(f, f, f);
     
     float3 halfVec = normalize(view + lightVec);
     
-    float roughness = (m + 8.0f) / 8.0f * pow(saturate(dot(halfVec, normal)), m);
-    float3 fresnel = CalcReflectPercent(mat.Fresnel, halfVec, lightVec);    
+    float roughness = (m + 8.0f) * pow(saturate(dot(halfVec, normal)), m) / 8.0f;
+    float3 fresnel = CalcReflectPercent(fresnel0, halfVec, lightVec);
     float3 specular = fresnel * roughness;
+    specular = specular / (specular + 1.0f);
     
-    float3 matDiffuse = mat.Diffuse.rgb;
-    
-    return (matDiffuse + specular) * lightDiff;
+    return (mat.Diffuse.rgb + specular * mat.Specular) * lightDiff;
 }
 
 float3 ComputeDirectLight(Light light, Material mat, float3 normal, float3 view)
 {
     float3 lightVec = normalize(light.Direction);
     
-    float cosValue = max(dot(normal, lightVec), 0.0f);
-    float3 lightDiffuse = light.Diffuse * cosValue;
+    float irradiance = max(dot(normal, lightVec), 0.0f);
+    float3 lightDiffuse = light.Diffuse * irradiance;
     
-    return PhongModelLighting(lightDiffuse, lightVec, normal, view, mat);
+    return BlinnPhongModelLighting(lightDiffuse, lightVec, normal, view, mat);
 }
 
 float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat, 
@@ -71,13 +75,13 @@ float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat,
     for (i = 0; i < NUM_LIGHTS; ++i)
     {        
         if (lights[i].Type == DIRECTIONAL_LIGHT)
-            result += shadowFactor[i] * ComputeDirectLight(lights[i], mat, normal, view);
+            result += ComputeDirectLight(lights[i], mat, normal, view);
         else if(lights[i].Type == SPOT_LIGHT)
             ;
         else
             ;
     }
     
-    return float4(result, 0.0f);
+    return float4(result + mat.Emission, 0.0f);
 }
 
