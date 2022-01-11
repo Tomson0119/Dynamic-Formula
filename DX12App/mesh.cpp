@@ -107,7 +107,7 @@ void Mesh::LoadMesh(
 			{
 				temp_indices.back().push_back({ v - 1, vn - 1, vt - 1 });
 			}
-			last_pos = file.tellg();
+			last_pos = (int)file.tellg();
 		}
 		else if (type == "usemtl") 
 		{
@@ -553,7 +553,7 @@ void ParticleMesh::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 		D3D12_RANGE d3dReadRange = { 0, 0 };
 		mQueryBuffer->Map(0, &d3dReadRange, (void**)&mQueryStatistics);
 		UINT64 count = mQueryStatistics->NumPrimitivesWritten;
-		if (count > 0) mVerticesCount = count;
+		if (count > 0) mVerticesCount = (UINT)count;
 		mQueryBuffer->Unmap(0, NULL);
 	}
 	else
