@@ -22,7 +22,7 @@ void GameScene::OnResize(float aspect)
 		mPlayerCamera->SetLens(aspect);
 }
 
-void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect)
+void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	mMainCamera = make_unique<Camera>();
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
@@ -50,7 +50,7 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	BuildComputeRootSignature(device);
 	BuildShadersAndPSOs(device, cmdList);
 	BuildTextures(device, cmdList);
-	BuildGameObjects(device, cmdList);
+	BuildGameObjects(device, cmdList, dynamicsWorld);
 	BuildConstantBuffers(device);
 	BuildDescriptorHeap(device);
 }
@@ -303,13 +303,14 @@ void GameScene::BuildTextures(ID3D12Device* device, ID3D12GraphicsCommandList* c
 	mPipelines[Layer::Reflected]->AppendTexture(copyCarTex);
 }
 
-void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	// terrain
-	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(1.0f, 1.0f, 1.0f));
+	auto terrain = make_shared<TerrainObject>(512, 512, XMFLOAT3(8.0f, 1.0f, 8.0f));
 	terrain->SetSRVIndex(0);
-	terrain->BuildHeightMap(L"Resources\\heightmap.raw");
-	terrain->BuildTerrainMesh(device, cmdList, 45, 45);
+	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
+	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
+	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 33, 33);
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 	// billboards
@@ -384,12 +385,33 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 
 	// car
 	auto carMesh = make_shared<Mesh>();
-	carMesh->LoadFromObj(device, cmdList, L"Models\\PoliceCar.obj");
+	carMesh->LoadFromObj(device, cmdList, L"Models\\Car_Body.obj");
 
-	auto carObj = make_shared<TerrainPlayer>(terrain.get());
-	carObj->SetMesh(carMesh);
+	auto wheelRMesh = make_shared<Mesh>();
+	wheelRMesh->LoadFromObj(device, cmdList, L"Models\\Car_Wheel_R.obj");
+
+	auto wheelLMesh = make_shared<Mesh>();
+	wheelLMesh->LoadFromObj(device, cmdList, L"Models\\Car_Wheel_L.obj");
+
+
+	auto carObj = make_shared<PhysicsPlayer>();
+	carObj->SetPosition(XMFLOAT3(500.0f, 10.0f, 500.0f));
+	carObj->SetMesh(carMesh, wheelLMesh, dynamicsWorld);
 	carObj->SetSRVIndex(0);
-	carObj->SetPosition(mRoomCenter);	
+
+	for (int i = 0; i < 4; ++i)
+	{
+		auto wheelObj = make_shared<WheelObject>();
+
+		if(i % 2 == 0)
+			wheelObj->SetMesh(wheelLMesh);
+		else
+			wheelObj->SetMesh(wheelRMesh);
+
+		wheelObj->SetSRVIndex(0);
+		carObj->SetWheel(wheelObj, i); 
+		mPipelines[Layer::Default]->AppendObject(wheelObj);
+	}
 	mPlayer = carObj.get();
 	mPipelines[Layer::Default]->AppendObject(carObj);
 
@@ -527,6 +549,7 @@ void GameScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
 
 void GameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
+	// 마우스로 화면 돌리는 기능
 	if ((buttonState & MK_LBUTTON) && GetCapture())
 	{
 		float dx = static_cast<float>(x - mLastMousePos.x);
@@ -593,7 +616,7 @@ void GameScene::OnPreciseKeyInput(float elapsed)
 {
 	bool player_active = (mCurrentCamera == mPlayerCamera.get());
 
-	if (GetAsyncKeyState('W') & 0x8000)
+	/*if (GetAsyncKeyState('W') & 0x8000)
 	{
 		if (player_active) {
 			mPlayer->Walk(500.0f * elapsed);
@@ -634,7 +657,9 @@ void GameScene::OnPreciseKeyInput(float elapsed)
 	{
 		if (!player_active)
 			mCurrentCamera->Upward(-100.0f * elapsed);
-	}
+	}*/
+	
+	mPlayer->OnPreciseKeyInput(elapsed);
 }
 
 void GameScene::Update(ID3D12Device* device, const GameTimer& timer)
