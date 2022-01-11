@@ -440,8 +440,6 @@ ObjectConstants GameObject::GetObjectConstants()
 		objCnst.World = Matrix4x4::Transpose(Matrix4x4::Multiply(mWorld, mReflectMatrix));
 	else
 		objCnst.World = Matrix4x4::Transpose(mWorld);
-
-	//objCnst.Mat = mMaterial;
 	return objCnst;
 }
 
@@ -451,7 +449,6 @@ ObjectConstants GameObject::GetObjectConstants()
 TerrainObject::TerrainObject(int width, int depth, const XMFLOAT3& scale)
 	: GameObject(), mWidth(width), mDepth(depth), mTerrainScale(scale)
 {
-	//mMaterial = { XMFLOAT4(0.7f,0.7f,0.7f,1.0f),XMFLOAT3(0.1f,0.1f,0.1f),0.25f };
 }
 
 TerrainObject::~TerrainObject()
