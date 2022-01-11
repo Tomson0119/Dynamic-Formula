@@ -11,11 +11,11 @@ struct MatInfo
 	XMFLOAT4X4 TexTransform;
 	XMFLOAT2 TexOffset;
 	XMFLOAT2 TexScale;
-	UINT SrvIndex;
+	int SrvIndex;
 
 	MatInfo()
 		: Mat{},
-		  SrvIndex(0)
+		  SrvIndex(-1)
 	{
 		TexTransform = Matrix4x4::Identity4x4();
 		TexScale = { 1.0f, 1.0f };
