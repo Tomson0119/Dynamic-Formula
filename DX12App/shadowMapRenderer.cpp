@@ -58,13 +58,13 @@ void ShadowMapRenderer::CreateTexture(ID3D12Device* device)
 			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 			D3D12_RESOURCE_STATE_COMMON, &clearValue);
 
-		mTextures.push_back(std::move(shadowMap));
+		mShadowMaps.push_back(std::move(shadowMap));
 	}
 }
 
-void ShadowMapRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT cbvIndex, UINT srvIndex)
+void ShadowMapRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex)
 {
-	Pipeline::BuildDescriptorHeap(device, cbvIndex, srvIndex);
+	Pipeline::BuildDescriptorHeap(device, matIndex, cbvIndex, srvIndex);
 
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(1,
@@ -117,7 +117,7 @@ void ShadowMapRenderer::BuildDescriptorViews(ID3D12Device* device)
 		rtvCPUHandle.ptr += gRtvDescriptorSize;
 
 		device->CreateRenderTargetView(
-			mTextures[i]->GetResource(), 
+			mShadowMaps[i]->GetResource(),
 			&rtvDesc, 
 			mRtvCPUDescriptorHandles[i]);
 	}
@@ -163,7 +163,7 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, GameScene*
 	for (int i = 0; i < (int)mMapCount; i++)
 	{
 		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-			mTextures[i]->GetResource(),
+			mShadowMaps[i]->GetResource(),
 			D3D12_RESOURCE_STATE_COMMON,
 			D3D12_RESOURCE_STATE_RENDER_TARGET));
 
@@ -176,7 +176,7 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, GameScene*
 		RenderPipelines(cmdList);
 
 		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-			mTextures[i]->GetResource(), 
+			mShadowMaps[i]->GetResource(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, 
 			D3D12_RESOURCE_STATE_COMMON));
 	}

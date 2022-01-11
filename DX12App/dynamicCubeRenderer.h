@@ -12,7 +12,7 @@ public :
 	DynamicCubeRenderer();
 	virtual ~DynamicCubeRenderer();
 
-	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT cbvIndex, UINT srvIndex);
+	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex);
 
 	void AppendObject(ID3D12Device* device, const std::shared_ptr<DynamicCubeMapObject> obj);
 	void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene);
@@ -25,4 +25,6 @@ private:
 
 	ComPtr<ID3D12DescriptorHeap> mRtvDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mDsvDescriptorHeap;
+
+	std::vector<std::unique_ptr<Texture>> mCubeMaps;
 };
