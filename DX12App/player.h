@@ -82,11 +82,6 @@ public:
 	WheelObject();
 	virtual ~WheelObject();
 
-	virtual void LoadModel(
-		ID3D12Device* device,
-		ID3D12GraphicsCommandList* cmdList,
-		const std::wstring& path);
-
 	void UpdateRigidBody(float Elapsed, btTransform wheelTransform);
 };
 
@@ -104,17 +99,12 @@ public:
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
 
-	virtual void LoadModel(
-		ID3D12Device* device,
-		ID3D12GraphicsCommandList* cmdList,
-		const std::wstring& path);
-
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
-	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
+	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
 	void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 
 private:
-	std::shared_ptr<WheelObject> mWheel[4];
+	WheelObject* mWheel[4];
 	btRaycastVehicle::btVehicleTuning mTuning;
 	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::shared_ptr<btRaycastVehicle> mVehicle;
