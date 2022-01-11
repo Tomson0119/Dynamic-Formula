@@ -190,7 +190,6 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	auto carObj = make_shared<PhysicsPlayer>();
 	carObj->SetPosition(XMFLOAT3(500.0f, 10.0f, 500.0f));
 	carObj->LoadModel(device, cmdList, L"Models\\Car_Body.obj");
-
 	for (int i = 0; i < 4; ++i)
 	{
 		auto wheelObj = make_shared<WheelObject>();
@@ -203,6 +202,7 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Default]->AppendObject(wheelObj);
 	}
+	carObj->BuildRigidBody(dynamicsWorld);
 	mPlayer = carObj.get();
 	mPipelines[Layer::Default]->AppendObject(carObj);
 }

@@ -504,8 +504,80 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 
 void PhysicsPlayer::LoadModel(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
 {
-	GameObject::LoadModel(device, cmdList, path);
-	// set vehicle mesh;;
+	std::ifstream in_file{ path, std::ios::binary };
+	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+
+	std::vector<XMFLOAT3> positions;
+	std::vector<XMFLOAT3> normals;
+	std::vector<XMFLOAT2> texcoords;
+	std::unordered_map<std::string, MatInfo> mats;
+
+	std::string info;
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+		std::string type;
+
+		ss >> type;
+
+		if (type == "mtllib")
+		{
+			std::string mtlname;
+			ss >> mtlname;
+
+			std::wstring mtl_path = L"";
+			std::wstring::size_type n = path.find('\\');
+			if (n != std::wstring::npos)
+				mtl_path = path.substr(0, n + 1);
+
+			mtl_path += std::wstring(mtlname.begin(), mtlname.end());
+
+			LoadMaterial(device, cmdList, mats, mtl_path);
+		}
+		else if (type == "v")
+		{
+			XMFLOAT3 pos;
+			ss >> pos.x >> pos.y >> pos.z;
+			pos.z *= -1.0f;
+			positions.push_back(pos);
+		}
+		else if (type == "vt")
+		{
+			XMFLOAT2 tex;
+			ss >> tex.x >> tex.y;
+			//tex.y = 1.0f - tex.y;
+			texcoords.push_back(tex);
+		}
+		else if (type == "vn")
+		{
+			XMFLOAT3 norm;
+			ss >> norm.x >> norm.y >> norm.z;
+			norm.z *= -1.0f;
+			normals.push_back(norm);
+		}
+		else if (type == "usemtl")
+		{
+			std::string mtl_name;
+			ss >> mtl_name;
+
+			auto new_mesh = std::make_shared<Mesh>();
+			new_mesh->LoadMesh(
+				device, cmdList, in_file,
+				positions, normals, texcoords, mats[mtl_name]);
+			mMeshes.push_back(new_mesh);
+		}
+	}
+	auto minX = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); })->x;
+	auto maxX = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); })->x;
+
+	auto minY = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); })->y;
+	auto maxY = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); })->y;
+
+	auto minZ = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); })->z;
+	auto maxZ = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); })->z;
+
+	mOOBB.Center = { (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2 };
+	mOOBB.Extents = { (maxX - minX) / 2, (maxY - minY) / 2, (maxZ - minZ) / 2 };
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld)
@@ -575,12 +647,156 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 	}
 }
 
+void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+{
+	mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
+
+	XMFLOAT3 vehicleExtents = mOOBB.Extents;
+	XMFLOAT3 wheelExtents = mWheel[0]->GetBoundingBox().Extents;
+
+	btCollisionShape* chassisShape = new btBoxShape(btVector3(vehicleExtents.x, vehicleExtents.y, vehicleExtents.z));
+
+	btTransform btCarTransform;
+	btCarTransform.setIdentity();
+	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
+
+	mBtRigidBody = BulletHelper::CreateRigidBody(1000.0f, btCarTransform, chassisShape, dynamicsWorld);
+
+	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld.get());
+	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
+
+	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
+	dynamicsWorld->addVehicle(mVehicle.get());
+
+
+	mVehicle->setCoordinateSystem(0, 1, 2);
+
+	btVector3 wheelDirectionCS0(0, -1, 0);
+	btVector3 wheelAxleCS(-1, 0, 0);
+
+	float wheelWidth = wheelExtents.x;
+	float wheelRadius = wheelExtents.z;
+	float wheelFriction = 26.0f;
+	float suspensionStiffness = 20.f;
+	float suspensionDamping = 2.3f;
+	float suspensionCompression = 4.4f;
+	float rollInfluence = 0.01f;  //1.0f;
+
+	// ¾Õ¹ÙÄû
+	bool isFrontWheel = true;
+	float connectionHeight = -0.9f;
+
+	btVector3 connectionPointCS0(vehicleExtents.x - 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+
+	// µÞ¹ÙÄû
+	isFrontWheel = false;
+
+	connectionPointCS0 = btVector3(vehicleExtents.x - 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+
+	for (int i = 0; i < mVehicle->getNumWheels(); i++)
+	{
+		btWheelInfo& wheel = mVehicle->getWheelInfo(i);
+		wheel.m_suspensionStiffness = suspensionStiffness;
+		wheel.m_wheelsDampingRelaxation = suspensionDamping;
+		wheel.m_wheelsDampingCompression = suspensionCompression;
+		wheel.m_frictionSlip = wheelFriction;
+		wheel.m_rollInfluence = rollInfluence;
+	}
+}
+
 WheelObject::WheelObject() : GameObject()
 {
 }
 
 WheelObject::~WheelObject()
 {
+}
+
+void WheelObject::LoadModel(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
+{
+	std::ifstream in_file{ path, std::ios::binary };
+	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+
+	std::vector<XMFLOAT3> positions;
+	std::vector<XMFLOAT3> normals;
+	std::vector<XMFLOAT2> texcoords;
+	std::unordered_map<std::string, MatInfo> mats;
+
+	std::string info;
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+		std::string type;
+
+		ss >> type;
+
+		if (type == "mtllib")
+		{
+			std::string mtlname;
+			ss >> mtlname;
+
+			std::wstring mtl_path = L"";
+			std::wstring::size_type n = path.find('\\');
+			if (n != std::wstring::npos)
+				mtl_path = path.substr(0, n + 1);
+
+			mtl_path += std::wstring(mtlname.begin(), mtlname.end());
+
+			LoadMaterial(device, cmdList, mats, mtl_path);
+		}
+		else if (type == "v")
+		{
+			XMFLOAT3 pos;
+			ss >> pos.x >> pos.y >> pos.z;
+			pos.z *= -1.0f;
+			positions.push_back(pos);
+		}
+		else if (type == "vt")
+		{
+			XMFLOAT2 tex;
+			ss >> tex.x >> tex.y;
+			//tex.y = 1.0f - tex.y;
+			texcoords.push_back(tex);
+		}
+		else if (type == "vn")
+		{
+			XMFLOAT3 norm;
+			ss >> norm.x >> norm.y >> norm.z;
+			norm.z *= -1.0f;
+			normals.push_back(norm);
+		}
+		else if (type == "usemtl")
+		{
+			std::string mtl_name;
+			ss >> mtl_name;
+
+			auto new_mesh = std::make_shared<Mesh>();
+			new_mesh->LoadMesh(
+				device, cmdList, in_file,
+				positions, normals, texcoords, mats[mtl_name]);
+			mMeshes.push_back(new_mesh);
+		}
+	}
+	auto minX = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); })->x;
+	auto maxX = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); })->x;
+
+	auto minY = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); })->y;
+	auto maxY = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); })->y;
+
+	auto minZ = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); })->z;
+	auto maxZ = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); })->z;
+
+	mOOBB.Center = { (maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2 };
+	mOOBB.Extents = { (maxX - minX) / 2, (maxY - minY) / 2, (maxZ - minZ) / 2 };
+
 }
 
 void WheelObject::UpdateRigidBody(float Elapsed, btTransform wheelTransform)
