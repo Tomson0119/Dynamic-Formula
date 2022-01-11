@@ -53,7 +53,7 @@ float4 PS(VertexOut pin) : SV_Target
     float3 normalW = mul(normalT, float3x3(T, B, N));
     
     float3 view = normalize(gCameraPos - pin.PosW);
-    float4 ambient = gAmbient * diffuse;
+    float4 ambient = gAmbient * float4(gMat.Ambient, 1.0f) * diffuse;
     
     float shadowFactor[3] = { 1.0f, 1.0f, 1.0f };
     for (int i = 0; i < 1; i++)
@@ -61,11 +61,10 @@ float4 PS(VertexOut pin) : SV_Target
         shadowFactor[i] = CalcShadowFactor(pin.PosS);
     }
     
-    Material mat = { diffuse, gMat.Fresnel, gMat.Roughness };
-    float4 directLight = ComputeLighting(gLights, mat, normalW, view, shadowFactor);
+    float4 directLight = ComputeLighting(gLights, gMat, normalW, view, shadowFactor);
     
     float4 result = ambient + directLight;
-    result.a = diffuse.a;
+    result.a = gMat.Diffuse.a;
     
     return result;
 }

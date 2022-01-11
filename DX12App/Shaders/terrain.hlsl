@@ -202,17 +202,16 @@ float4 PS(DsOut din) : SV_Target
         }
         
         float3 view = normalize(gCameraPos - din.PosW);
-        float4 ambient = gAmbient * diffuse;
+        float4 ambient = gAmbient * float4(gMat.Ambient, 1.0f) * diffuse;
         
         float shadowFactor[3] = { 1.0f, 1.0f, 1.0f };
-        for (int i = 0; i < 1;i++)
+        for (int i = 0; i < 3; i++)
             shadowFactor[i] = CalcShadowFactor(din.PosS);
         
-        Material mat = { diffuse, gMat.Fresnel, gMat.Roughness };
-        float4 directLight = ComputeLighting(gLights, mat, normalize(din.NormalW), view, shadowFactor);
+        float4 directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactor);
     
         result = ambient + directLight;
-        result.a = diffuse.a;
+        result.a = gMat.Diffuse.a;
     }
     return result;
 }
