@@ -269,6 +269,10 @@ PhysicsPlayer::PhysicsPlayer() : Player()
 
 }
 
+PhysicsPlayer::~PhysicsPlayer()
+{
+}
+
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
 	mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
@@ -498,11 +502,17 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 	if (mSibling) mSibling->Update(elapsedTime, parent);
 }
 
+void PhysicsPlayer::LoadModel(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
+{
+	GameObject::LoadModel(device, cmdList, path);
+	// set vehicle mesh;;
+}
+
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld)
 {
 	GameObject::SetMesh(bodyMesh);
 
-	bodyMesh.get()->mOOBB.Extents = { 10.0f, 4.0f, 14.0f};
+	bodyMesh.get()->mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
 
 	XMFLOAT3 vehicleExtents = bodyMesh.get()->mOOBB.Extents;
 	XMFLOAT3 wheelExtents = wheelMesh.get()->mOOBB.Extents;
@@ -566,6 +576,10 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 }
 
 WheelObject::WheelObject() : GameObject()
+{
+}
+
+WheelObject::~WheelObject()
 {
 }
 
