@@ -204,6 +204,8 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	}
 	carObj->BuildRigidBody(dynamicsWorld);
 	mPlayer = carObj.get();
+	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
+
 	mPipelines[Layer::Default]->AppendObject(carObj);
 }
 
@@ -277,7 +279,6 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 		pso->Update(elapsed, mMainCamera.get());
 
 	UpdateMissileObject(device, dynamicsWorld);
-	mReflectedPlayer->SetWorld(mPlayer->GetWorld());
 	
 	UpdateConstants(timer);
 }

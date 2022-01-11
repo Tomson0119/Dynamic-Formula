@@ -80,7 +80,6 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 	
 	Player* mPlayer = nullptr;
-	GameObject* mReflectedPlayer = nullptr;
 	std::vector<std::shared_ptr<MissileObject>> mMissileObjects;
 
 	std::shared_ptr<Billboard> mFlameBillboard;
