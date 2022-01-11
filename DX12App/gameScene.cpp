@@ -29,7 +29,7 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 
 	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	mMainLight.Lights[0].SetInfo(
-		XMFLOAT3(10.0f, 10.0f, 10.0f),
+		XMFLOAT3(0.6f, 0.6f, 0.6f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(1.0f, 0.75f, -1.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
@@ -174,10 +174,10 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	grid->Rotate(90.0f, 0.0f, 0.0f);
 	mPipelines[Layer::Default]->AppendObject(grid);
 
-	auto terrain = make_shared<TerrainObject>(512, 512, XMFLOAT3(8.0f, 1.0f, 8.0f));
+	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
 	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 33, 33);
+	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 45, 45);
 	terrain->LoadTexture(device, cmdList, L"Resources\\terrainTexture.dds");
 	terrain->LoadTexture(device, cmdList, L"Resources\\rocky.dds");
 	terrain->LoadTexture(device, cmdList, L"Resources\\road.dds");
