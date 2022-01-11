@@ -199,14 +199,16 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 		else
 			wheelObj->LoadModel(device, cmdList, L"Models\\Car_Wheel_R.obj");
 
-		carObj->SetWheel(wheelObj, i);
+		carObj->SetWheel(wheelObj.get(), i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
 	carObj->BuildRigidBody(dynamicsWorld);
+	mPipelines[Layer::Color]->AppendObject(carObj);
+
+	float aspect = mMainCamera->GetAspect();
 	mPlayer = carObj.get();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-
-	mPipelines[Layer::Color]->AppendObject(carObj);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
 }
 
 void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
@@ -263,7 +265,7 @@ void GameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandLis
 		mMissileInterval -= elapsed;
 	}
 	
-	mPlayer->OnPreciseKeyInput(elapsed);
+	if(mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 }
 
 void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, const GameTimer& timer)
