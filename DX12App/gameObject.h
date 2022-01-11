@@ -28,7 +28,7 @@ public:
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
 
 public:
-	void LoadModel(
+	virtual void LoadModel(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		const std::wstring& path);
