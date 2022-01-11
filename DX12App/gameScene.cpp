@@ -65,7 +65,7 @@ void GameScene::BuildRootSignature(ID3D12Device* device)
 	parameters[3] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 3, D3D12_SHADER_VISIBILITY_ALL);	 // MaterialCB
 	parameters[4] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);			     // Object,  CBV
 	parameters[5] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);				 // Texture, SRV
-	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap 																	   
+	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap
     
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[5];
 	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_ANISOTROPIC, D3D12_TEXTURE_ADDRESS_MODE_WRAP);
@@ -371,12 +371,12 @@ void GameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDisc
 		{
 			flag = true;
 			dynamicsWorld->removeRigidBody(i->get()->GetRigidBody());
-			auto& defaultObjects = mPipelines[Layer::Default]->GetRenderObjects();
+			auto& defaultObjects = mPipelines[Layer::Color]->GetRenderObjects();
 			for (int j = 0; j < defaultObjects.size(); ++j)
 			{
 				if (*i == defaultObjects[j])
 				{
-					mPipelines[Layer::Default]->DeleteObject(j);
+					mPipelines[Layer::Color]->DeleteObject(j);
 				}
 			}
 
@@ -385,7 +385,7 @@ void GameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDisc
 		else
 			++i;
 	}
-	if (flag) mPipelines[Layer::Default]->ResetPipeline(device);
+	if (flag) mPipelines[Layer::Color]->ResetPipeline(device);
 }
 
 
