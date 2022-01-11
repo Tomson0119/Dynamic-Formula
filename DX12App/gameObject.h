@@ -48,7 +48,6 @@ public:
 	virtual void SetPosition(float x, float y, float z);
 	virtual void SetPosition(const XMFLOAT3& pos);
 
-	//void SetSRVIndex(UINT idx) { mSrvIndex = idx; }
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
 

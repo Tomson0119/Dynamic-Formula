@@ -89,6 +89,16 @@ void GameObject::LoadModel(
 			mMeshes.push_back(new_mesh);
 		}
 	}
+
+	const auto& [min_x, max_x] = std::minmax_element(positions.begin(), positions.end(), 
+		[](const XMFLOAT3& a, const XMFLOAT3& b) { return (a.x < b.x); });
+	const auto& [min_y, max_y] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) {return (a.y < b.y); });
+	const auto& [min_z, max_z] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) {return (a.z < b.z); });
+
+	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
+	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
 }
 
 void GameObject::LoadMaterial(
@@ -102,10 +112,10 @@ void GameObject::LoadMaterial(
 	std::string info;
 	std::string mat_name;
 
-	std::unordered_map<std::string, UINT> tex_names;
+	std::unordered_map<std::string, int> tex_names;
 	XMFLOAT2 tex_offset = { 0.0f,0.0f };
 	XMFLOAT2 tex_scale = { 1.0f,1.0f };
-	UINT tex_index = 0;
+	int tex_index = 0;
 
 	while (std::getline(mtl_file, info))
 	{
@@ -234,14 +244,18 @@ void GameObject::Draw(
 	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
 	
 	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
-	for (int i = 0;i<mMeshes.size();i++) 
+	for (int i = 0; i < mMeshes.size(); i++)
 	{
 		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
 
-		srvGpuHandle = mSrvGPUAddress;
-		srvGpuHandle.ptr += mMeshes[i]->GetSrvIndex() * gCbvSrvUavDescriptorSize;
+		int srvIndex = mMeshes[i]->GetSrvIndex();
 
-		cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
 		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
 		mMeshes[i]->Draw(cmdList, isSO);
 
