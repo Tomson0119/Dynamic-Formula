@@ -1,15 +1,16 @@
 #include "stdafx.h"
 #include "mesh.h"
-
+#include "texture.h"
 
 Mesh::Mesh()
 {
-
-}
-
-Mesh::Mesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
-{
-	LoadFromObj(device, cmdList, path);
+	mMaterial.Mat.Ambient = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	mMaterial.Mat.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	mMaterial.Mat.Specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	mMaterial.Mat.Emission = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	mMaterial.Mat.Exponent = 100.0f;
+	mMaterial.Mat.IOR = 1.45f;
+	mMaterial.SrvIndex = 0;
 }
 
 void Mesh::CreateResourceInfo(
@@ -68,17 +69,17 @@ void Mesh::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 	}
 }
 
-void Mesh::LoadFromObj(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
+void Mesh::LoadMesh(
+	ID3D12Device* device, 
+	ID3D12GraphicsCommandList* cmdList,
+	std::ifstream& file,
+	const std::vector<XMFLOAT3>& positions,
+	const std::vector<XMFLOAT3>& normals,
+	const std::vector<XMFLOAT2>& texcoords,
+	const MatInfo& mat)
 {
-	std::ifstream file{ path, std::ios::binary };
-	
-	assert(file.is_open() && "No such file in directory.");
+	mMaterial = mat;
 
-	std::vector<XMFLOAT3> positions;
-	std::vector<XMFLOAT3> normals;
-	std::vector<XMFLOAT2> texcoords;
-	std::vector<Material> mats;
-	
 	struct UINT3
 	{
 		UINT vertIndex;
@@ -87,72 +88,33 @@ void Mesh::LoadFromObj(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	};
 	std::vector<std::vector<UINT3>> temp_indices;
 
+	int last_pos = 0;
 	std::string info;
 	while (std::getline(file, info))
-	{
+	{		
 		std::stringstream ss(info);
 		std::string type;
 
 		ss >> type;
 
-		if (type == "mtllib")
-		{			
-			std::wstring mtl_path = L"";
-			std::wstring::size_type n = path.find('\\');
-			if (n != std::wstring::npos)
-				mtl_path = path.substr(0, n + 1);
-
-			std::string mtlname;
-			ss >> mtlname;
-			mtl_path += std::wstring(mtlname.begin(), mtlname.end());
-
-			LoadMaterialFromMtl(mats, mtl_path);
-		}
-		else if (type == "v")
-		{
-			XMFLOAT3 pos;
-			ss >> pos.x >> pos.y >> pos.z;
-			positions.push_back(pos);
-		}
-		else if (type == "vt")
-		{
-			XMFLOAT2 tex;
-			ss >> tex.x >> tex.y;
-			tex.x = -0.5f * tex.x + 0.5f;
-			tex.y = 1 - tex.y; // reverse v coordinate..
-			texcoords.push_back(tex);
-		}
-		else if (type == "vn")
-		{
-			XMFLOAT3 norm;
-			ss >> norm.x >> norm.y >> norm.z;
-			normals.push_back(norm);
-		}
-		else if (type == "f")
+		if (type == "f")
 		{
 			char ignore[2];
 			UINT v, vt, vn;
-			
+
 			temp_indices.push_back({});
 			while (ss >> v >> ignore[0] >> vt >> ignore[1] >> vn)
 			{
-				temp_indices.back().push_back({ v-1, vn-1, vt-1 });
+				temp_indices.back().push_back({ v - 1, vn - 1, vt - 1 });
 			}
+			last_pos = file.tellg();
+		}
+		else if (type == "usemtl") 
+		{
+			file.seekg(last_pos);
+			break;
 		}
 	}
-
-	auto minX = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); });
-	auto maxX = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.x < right.x); });
-
-	auto minY = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); });
-	auto maxY = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.y < right.y); });
-
-	auto minZ = std::min_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); });
-	auto maxZ = std::max_element(positions.begin(), positions.end(), [](XMFLOAT3 left, XMFLOAT3 right) { return (left.z < right.z); });
-
-
-	mOOBB.Center = { (maxX->x + minX->x) / 2, (maxY->y + minY->y) / 2, (maxZ->z + minZ->z) / 2 };
-	mOOBB.Extents = { (maxX->x - minX->x) / 2, (maxY->y - minY->y) / 2, (maxZ->z - minZ->z) / 2 };
 
 	std::vector<Vertex> vertices;
 	std::vector<UINT> indices;
@@ -165,6 +127,12 @@ void Mesh::LoadFromObj(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 			v.Position = positions[curr_face[i].vertIndex];
 			v.Normal = normals[curr_face[i].normIndex];
 			v.TexCoord = texcoords[curr_face[i].texIndex];
+			v.TexCoord.x /= mat.TexScale.x;
+			v.TexCoord.x += mat.TexOffset.x;
+			v.TexCoord.y /= mat.TexScale.y;
+			v.TexCoord.y += mat.TexOffset.y;
+			v.TexCoord.y = 1.0f - v.TexCoord.y;
+			
 			vertices.push_back(v);
 
 			if (i > 0 && indices.size() % 3 == 0)
@@ -175,21 +143,18 @@ void Mesh::LoadFromObj(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 			indices.push_back(k++);
 		}
 	}
+	std::reverse(indices.begin(), indices.end());
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(Vertex), sizeof(UINT),
 		D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
 		vertices.data(), (UINT)vertices.size(), indices.data(), (UINT)indices.size());
 }
 
-void Mesh::LoadMaterialFromMtl(std::vector<Material>& mats, const std::wstring& filename)
+MaterialConstants Mesh::GetMaterialConstant() const
 {
-	std::ifstream mtl_file{ filename };
-
-	std::string info;
-	while (std::getline(mtl_file, info))
-	{
-		info += '\n';
-		OutputDebugStringA(info.c_str());
-	}
+	MaterialConstants matCnst{};
+	matCnst.Mat = mMaterial.Mat;
+	matCnst.TexTransform = mMaterial.TexTransform;
+	return matCnst;
 }
 
 
