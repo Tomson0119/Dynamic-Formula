@@ -25,12 +25,11 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     d3d11DeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-    ID3D11Device* pd3d11Device = NULL;
     ID3D12CommandQueue* ppd3dCommandQueues[] = { pd3dCommandQueue };
     ::D3D11On12CreateDevice(pd3dDevice, d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown**>(ppd3dCommandQueues), 
-        _countof(ppd3dCommandQueues), 0, (ID3D11Device**)&pd3d11Device, (ID3D11DeviceContext**)&m_pd3d11DeviceContext, nullptr);
-
-    pd3d11Device->QueryInterface(__uuidof(ID3D11On12Device), (void**)&m_pd3d11On12Device);
+        _countof(ppd3dCommandQueues), 0, &pd3d11Device, &m_pd3d11DeviceContext, nullptr);
+    ThrowIfFailed(pd3d11Device.As(&m_pd3d11On12Device));
+    //pd3d11Device->QueryInterface(__uuidof(ID3D11On12Device), (void**)&m_pd3d11On12Device);
     pd3d11Device->Release();
 
 #if defined(_DEBUG) || defined(DBG)
@@ -57,18 +56,18 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     }
     pd3dInfoQueue->Release();
 #endif
-    IDXGIDevice* pdxgiDevice = NULL;
-    m_pd3d11On12Device->QueryInterface(__uuidof(IDXGIDevice), (void**)&pdxgiDevice);
+    //IDXGIDevice* pdxgiDevice = NULL;
+    ThrowIfFailed(m_pd3d11On12Device.As(&pdxgiDevice));
+    //m_pd3d11On12Device->QueryInterface(__uuidof(IDXGIDevice), (void**)&pdxgiDevice);
 
-    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory3), &d2dFactoryOptions, (void**)&m_pd2dFactory);
-    ThrowIfFailed(m_pd2dFactory->CreateDevice(pdxgiDevice, (ID2D1Device2**)m_pd2dDevice.GetAddressOf()));
-    ThrowIfFailed(m_pd2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, (ID2D1DeviceContext2**)&m_pd2dDeviceContext));
+    ThrowIfFailed(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory3), &d2dFactoryOptions, &m_pd2dFactory));
+    ThrowIfFailed(m_pd2dFactory->CreateDevice(pdxgiDevice.Get(), &m_pd2dDevice));
+    ThrowIfFailed(m_pd2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &m_pd2dDeviceContext));
 
     m_pd2dDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
     m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), (ID2D1SolidColorBrush**)&m_pd2dTextBrush);
 
-    DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&m_pd2dWriteFactory);
-    pdxgiDevice->Release();
+    ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&m_pd2dWriteFactory));
 }
 
 void UI::UpdateLabels(const std::wstring& strUIText)

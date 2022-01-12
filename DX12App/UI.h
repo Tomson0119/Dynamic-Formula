@@ -22,11 +22,13 @@ private:
     float m_fWidth;
     float m_fHeight;
 
-    ID3D11DeviceContext* m_pd3d11DeviceContext;
+    ComPtr<ID3D11DeviceContext> m_pd3d11DeviceContext;
     ComPtr<ID3D11On12Device> m_pd3d11On12Device;
     ComPtr<ID2D1Factory3> m_pd2dFactory;
     ComPtr<IDWriteFactory> m_pd2dWriteFactory;
     ComPtr<ID2D1Device2> m_pd2dDevice;
+    ComPtr<ID3D11Device> pd3d11Device;
+    ComPtr<IDXGIDevice> pdxgiDevice;
     //ID3D11On12Device*               m_pd3d11On12Device = NULL;
     //ID2D1Factory3*                  m_pd2dFactory = NULL;
     //IDWriteFactory*                 m_pd2dWriteFactory = NULL;
