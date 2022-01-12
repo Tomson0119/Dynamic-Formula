@@ -356,10 +356,11 @@ void GameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandL
 	mMissileMesh = std::make_shared<BoxMesh>(device, cmdList, 5, 5, 5);
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
 	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), dynamicsWorld);
+	missile->LoadTexture(device, cmdList, L"Resources\\brick.dds");
 
 	mMissileObjects.push_back(missile);
-	mPipelines[Layer::Color]->AppendObject(missile);
-	mPipelines[Layer::Color]->ResetPipeline(device);
+	mPipelines[Layer::Default]->AppendObject(missile);
+	mPipelines[Layer::Default]->ResetPipeline(device);
 }
 
 void GameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
@@ -371,12 +372,12 @@ void GameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDisc
 		{
 			flag = true;
 			dynamicsWorld->removeRigidBody(i->get()->GetRigidBody());
-			auto& defaultObjects = mPipelines[Layer::Color]->GetRenderObjects();
+			auto& defaultObjects = mPipelines[Layer::Default]->GetRenderObjects();
 			for (int j = 0; j < defaultObjects.size(); ++j)
 			{
 				if (*i == defaultObjects[j])
 				{
-					mPipelines[Layer::Color]->DeleteObject(j);
+					mPipelines[Layer::Default]->DeleteObject(j);
 				}
 			}
 
@@ -385,7 +386,7 @@ void GameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDisc
 		else
 			++i;
 	}
-	if (flag) mPipelines[Layer::Color]->ResetPipeline(device);
+	if (flag) mPipelines[Layer::Default]->ResetPipeline(device);
 }
 
 

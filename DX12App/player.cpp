@@ -279,7 +279,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	
 	if (mBoosterLeft > 0.0f)
 	{
-		mMaxSpeed = 1200.0f;
+		mMaxSpeed = 1500.0f;
 		mBoosterLeft -= Elapsed;
 	}
 	
