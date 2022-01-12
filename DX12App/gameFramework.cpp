@@ -158,10 +158,11 @@ void GameFramework::Draw()
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	
 
-	for(auto ui : mpUI)
-		ui.Draw(mSwapChainBufferCount);
+	
 	// 다음 후면버퍼 위치로 이동한 후 다시 기다린다.
 	mCurrBackBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
+	for (auto ui : mpUI)
+		ui.Draw(mCurrBackBufferIndex);
 	WaitUntilGPUComplete();
 }
 

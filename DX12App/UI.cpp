@@ -78,11 +78,11 @@ void UI::UpdateLabels(const std::wstring& strUIText)
 
 void UI::Draw(UINT nFrame)
 {
-    ID3D11Resource* ppResources[] = { m_vWrappedRenderTargets[nFrame-1] };
+    ID3D11Resource* ppResources[] = { m_vWrappedRenderTargets[nFrame] };
 
     m_pd2dDeviceContext->BeginDraw();
     m_pd3d11On12Device->AcquireWrappedResources(ppResources, _countof(ppResources));
-    m_pd2dDeviceContext->SetTarget(m_vd2dRenderTargets[nFrame-1]);
+    m_pd2dDeviceContext->SetTarget(m_vd2dRenderTargets[nFrame]);
 
     for (auto textBlock : m_vTextBlocks)
     {
@@ -90,7 +90,7 @@ void UI::Draw(UINT nFrame)
     }
     m_pd2dDeviceContext->EndDraw();
 
-//m_pd3d11On12Device->ReleaseWrappedResources(ppResources, _countof(ppResources));
+    m_pd3d11On12Device->ReleaseWrappedResources(ppResources, _countof(ppResources));
     m_pd3d11DeviceContext->Flush();
 }
 
