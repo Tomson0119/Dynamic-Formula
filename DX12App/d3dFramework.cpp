@@ -490,8 +490,7 @@ void D3DFramework::UpdateUI()
 	{
 		uiText += s;
 	}
-	for(auto ui : mpUI)
-		ui.UpdateLabels(uiText);
+	mpUI->UpdateLabels(uiText);
 }
 
 void D3DFramework::ChangeFullScreenState()

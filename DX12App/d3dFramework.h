@@ -98,8 +98,8 @@ protected:
 	DXGI_FORMAT mDepthStencilBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	//UI 
-	std:: vector<UI> mpUI;
-	//UI				*mpUI = NULL;
+	//std:: vector<UI> mpUI;
+	UI				*mpUI = NULL;
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
 

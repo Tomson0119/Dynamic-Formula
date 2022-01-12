@@ -91,7 +91,7 @@ void UI::Draw(UINT nFrame)
     m_pd2dDeviceContext->EndDraw();
 
     //m_pd3d11On12Device->ReleaseWrappedResources(ppResources, _countof(ppResources));
-    //m_pd3d11DeviceContext->Flush();
+    m_pd3d11DeviceContext->Flush();
 }
 
 void UI::ReleaseResources()
