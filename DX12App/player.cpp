@@ -482,20 +482,20 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 
 	if (mBoosterLeft > 0.0f)
 	{
-		if (mAspectCoefficient < 1.0005f)
-			mAspectCoefficient += elapsedTime * 5.0f;
+		if (mAspectCoefficient < 1.05f)
+			mAspectCoefficient += elapsedTime * 2.0f;
 		else
-			mAspectCoefficient = 1.0005f;
+			mAspectCoefficient = 1.05f;
 	}
 	else
 	{
 		if (mAspectCoefficient > 1.0f)
-			mAspectCoefficient -= elapsedTime * 5.0f;
+			mAspectCoefficient -= elapsedTime * 2.0f;
 		else
 			mAspectCoefficient = 1.0f;
 	}
 
-	mCamera->SetAspectCoefficient(mAspectCoefficient);
+	mCamera->SetFovCoefficient(mAspectCoefficient);
 	mCamera->SetLens(mCamera->GetAspect());
 
 	if (mChild) mChild->Update(elapsedTime, &mWorld);

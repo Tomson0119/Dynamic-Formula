@@ -110,13 +110,13 @@ private:
 	std::shared_ptr<btRaycastVehicle> mVehicle;
 
 	float mBoosterLeft = 0.0f;
-	float mBoosterTime = 2.0f;
+	float mBoosterTime = 5.0f;
 
 	float mEngineForce = 0.f;
 	float mBreakingForce = 0.f;
 
 	float mMaxEngineForce = 8000.f;
-	float mBoosterEngineForce = 30000.f;
+	float mBoosterEngineForce = 300000.f;
 
 	float mVehicleSteering = 0.f;
 	float mSteeringIncrement = 0.01f;
