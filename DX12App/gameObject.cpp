@@ -4,12 +4,221 @@
 
 
 GameObject::GameObject()
-	: mMaterial{XMFLOAT4(1.0f,1.0f,1.0f,1.0f), XMFLOAT3(0.01f,0.01f,0.01f), 0.25f}
 {
 }
 
 GameObject::~GameObject()
 {
+}
+
+void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle)
+{
+	for (const auto& tex : mTextures)
+	{
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = tex->ShaderResourceView();
+		device->CreateShaderResourceView(tex->GetResource(), &srvDesc, cpuHandle);
+		cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+	}
+}
+
+void GameObject::LoadModel(
+	ID3D12Device* device, 
+	ID3D12GraphicsCommandList* cmdList, 
+	const std::wstring& path)
+{
+	std::ifstream in_file{ path, std::ios::binary };
+	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+
+	std::vector<XMFLOAT3> positions;
+	std::vector<XMFLOAT3> normals;
+	std::vector<XMFLOAT2> texcoords;
+	std::unordered_map<std::string, MatInfo> mats;
+
+	std::string info;
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+		std::string type;
+
+		ss >> type;
+
+		if (type == "mtllib")
+		{
+			std::string mtlname;
+			ss >> mtlname;
+
+			std::wstring mtl_path = L"";
+			std::wstring::size_type n = path.find('\\');
+			if (n != std::wstring::npos)
+				mtl_path = path.substr(0, n + 1);
+
+			mtl_path += std::wstring(mtlname.begin(), mtlname.end());
+
+			LoadMaterial(device, cmdList, mats, mtl_path);
+		}
+		else if (type == "v")
+		{
+			XMFLOAT3 pos;
+			ss >> pos.x >> pos.y >> pos.z;
+			pos.z *= -1.0f;
+			positions.push_back(pos);
+		}
+		else if (type == "vt")
+		{
+			XMFLOAT2 tex;
+			ss >> tex.x >> tex.y;
+			//tex.y = 1.0f - tex.y;
+			texcoords.push_back(tex);
+		}
+		else if (type == "vn")
+		{
+			XMFLOAT3 norm;
+			ss >> norm.x >> norm.y >> norm.z;
+			norm.z *= -1.0f;
+			normals.push_back(norm);
+		}
+		else if (type == "usemtl")
+		{
+			std::string mtl_name;
+			ss >> mtl_name;
+
+			auto new_mesh = std::make_shared<Mesh>();
+			new_mesh->LoadMesh(
+				device, cmdList, in_file, 
+				positions, normals, texcoords, mats[mtl_name]);
+			mMeshes.push_back(new_mesh);
+		}
+	}
+
+	const auto& [min_x, max_x] = std::minmax_element(positions.begin(), positions.end(), 
+		[](const XMFLOAT3& a, const XMFLOAT3& b) { return (a.x < b.x); });
+	const auto& [min_y, max_y] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) {return (a.y < b.y); });
+	const auto& [min_z, max_z] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) {return (a.z < b.z); });
+
+	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
+	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
+}
+
+void GameObject::LoadMaterial(
+	ID3D12Device* device, 
+	ID3D12GraphicsCommandList* cmdList, 
+	std::unordered_map<std::string, MatInfo>& mats, 
+	const std::wstring& path)
+{
+	std::ifstream mtl_file{ path, std::ios::binary };
+
+	std::string info;
+	std::string mat_name;
+
+	std::unordered_map<std::string, int> tex_names;
+	XMFLOAT2 tex_offset = { 0.0f,0.0f };
+	XMFLOAT2 tex_scale = { 1.0f,1.0f };
+	int tex_index = 0;
+
+	while (std::getline(mtl_file, info))
+	{
+		std::stringstream ss(info);
+
+		std::string type;
+		ss >> type;
+		
+		if (type == "newmtl")
+		{
+			ss >> mat_name;
+			mats[mat_name].Mat = Material();
+		}
+		else if (type == "Ns")
+		{
+			ss >> mats[mat_name].Mat.Exponent;
+		}
+		else if (type == "Ka")
+		{
+			float ambient;
+			ss >> ambient;
+			mats[mat_name].Mat.Ambient = { ambient,ambient,ambient };
+		}
+		else if (type == "Kd")
+		{
+			XMFLOAT4& diffuse = mats[mat_name].Mat.Diffuse;
+			ss >> diffuse.x >> diffuse.y >> diffuse.z;
+		}
+		else if (type == "Ks")
+		{
+			XMFLOAT3& specular = mats[mat_name].Mat.Specular;
+			ss >> specular.x >> specular.y >> specular.z;
+
+		}
+		else if (type == "Ke")
+		{
+			XMFLOAT3& emission = mats[mat_name].Mat.Emission;
+			ss >> emission.x >> emission.y >> emission.z;
+		}
+		else if (type == "Ni")
+		{
+			ss >> mats[mat_name].Mat.IOR;
+		}
+		else if (type == "d")
+		{
+			ss >> mats[mat_name].Mat.Diffuse.w;
+		}
+		else if (type == "map_Kd")
+		{
+			std::string option;
+			float ignore0;
+			
+			while (ss.eof() == false)
+			{
+				ss >> option;
+				if (ss.fail()) {
+					ss >> ignore0;
+					continue;
+				}
+
+				if (option == "-s")
+				{
+					ss >> tex_scale.x >> tex_scale.y;
+				}
+				else if (option == "-o")
+				{
+					ss >> tex_offset.x >> tex_offset.y;
+				}
+			}
+
+			mats[mat_name].TexOffset = tex_offset;
+			mats[mat_name].TexScale = tex_scale;			
+			
+			std::string::size_type beg = option.rfind('\\');
+			std::string::size_type end = option.rfind('.');
+			option = option.substr(beg + 1, end - beg - 1);
+
+			auto p = tex_names.find(option);
+			if (p == tex_names.end())
+			{
+				tex_names[option] = tex_index;
+				mats[mat_name].SrvIndex = tex_index++;
+
+				std::wstring tex_path = L"Resources\\" + std::wstring(option.begin(), option.end()) + L".dds";
+				LoadTexture(device, cmdList, tex_path);
+			}
+			else
+			{
+				mats[mat_name].SrvIndex = p->second;
+			}
+		}
+	}
+}
+
+void GameObject::LoadTexture(
+	ID3D12Device* device, 
+	ID3D12GraphicsCommandList* cmdList, 
+	const std::wstring& path, D3D12_SRV_DIMENSION dimension)
+{
+	auto tex = std::make_unique<Texture>();
+	tex->LoadTextureFromDDS(device, cmdList, path);
+	tex->SetDimension(dimension);
+	mTextures.push_back(std::move(tex));
 }
 
 void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
@@ -27,19 +236,30 @@ void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 	if (mSibling) mSibling->Update(elapsedTime, parent);
 }
 
-void GameObject::ExecuteSO(ID3D12GraphicsCommandList* cmdList)
+void GameObject::Draw(
+	ID3D12GraphicsCommandList* cmdList, 
+	UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
+	UINT64 matGPUAddress, UINT64 byteOffset, bool isSO)
 {
-	for (const auto& mesh : mMeshes) {
-		mesh->PrepareBufferViews(cmdList, true);
-		mesh->Draw(cmdList, true);
-	}
-}
+	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
+	
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	for (int i = 0; i < mMeshes.size(); i++)
+	{
+		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
 
-void GameObject::Draw(ID3D12GraphicsCommandList* cmdList)
-{
-	for (const auto& mesh : mMeshes) {
-		mesh->PrepareBufferViews(cmdList, false);
-		mesh->Draw(cmdList);
+		int srvIndex = mMeshes[i]->GetSrvIndex();
+
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
+		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
+		mMeshes[i]->Draw(cmdList, isSO);
+
+		matGPUAddress += byteOffset;
 	}
 }
 
@@ -66,11 +286,11 @@ void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 
 void GameObject::UpdateBoudingBox()
 {
-	for(const auto& mesh :mMeshes)
+	/*for(const auto& mesh :mMeshes)
 	{
 		mesh->mOOBB.Transform(mOOBB, XMLoadFloat4x4(&mWorld));
 		XMStoreFloat4(&mOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&mOOBB.Orientation)));
-	}
+	}*/
 }
 
 void GameObject::Animate(float elapsedTime)
@@ -80,6 +300,12 @@ void GameObject::Animate(float elapsedTime)
 
 	if (!Vector3::Equal(mRotationAxis, Vector3::Zero()))
 		Rotate(mRotationAxis, mRotationSpeed * elapsedTime);
+}
+
+void GameObject::UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset)
+{
+	for (int i = 0; i < mMeshes.size(); i++)
+		matCnst->CopyData(offset + i, mMeshes[i]->GetMaterialConstant());
 }
 
 void GameObject::SetChild(GameObject* child)
@@ -103,13 +329,6 @@ void GameObject::SetPosition(float x, float y, float z)
 void GameObject::SetPosition(const XMFLOAT3& pos)
 {
 	SetPosition(pos.x, pos.y, pos.z);
-}
-
-void GameObject::SetMaterial(XMFLOAT4 color, XMFLOAT3 frenel, float roughness)
-{
-	mMaterial.Color = color;
-	mMaterial.Frenel = frenel;
-	mMaterial.Roughness = roughness;
 }
 
 void GameObject::SetLook(XMFLOAT3& look)
@@ -235,8 +454,6 @@ ObjectConstants GameObject::GetObjectConstants()
 		objCnst.World = Matrix4x4::Transpose(Matrix4x4::Multiply(mWorld, mReflectMatrix));
 	else
 		objCnst.World = Matrix4x4::Transpose(mWorld);
-
-	objCnst.Mat = mMaterial;
 	return objCnst;
 }
 
@@ -246,11 +463,11 @@ ObjectConstants GameObject::GetObjectConstants()
 TerrainObject::TerrainObject(int width, int depth, const XMFLOAT3& scale)
 	: GameObject(), mWidth(width), mDepth(depth), mTerrainScale(scale)
 {
-	mMaterial = { XMFLOAT4(0.7f,0.7f,0.7f,1.0f),XMFLOAT3(0.1f,0.1f,0.1f),0.25f };
 }
 
 TerrainObject::~TerrainObject()
 {
+	delete mHeightmapData;
 }
 
 void TerrainObject::BuildHeightMap(const std::wstring& path)
@@ -489,3 +706,56 @@ void DynamicCubeMapObject::PreDraw(ID3D12GraphicsCommandList* cmdList, ID3D12Res
 		rtvResource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
+MissileObject::MissileObject()
+{
+}
+
+MissileObject::~MissileObject()
+{
+}
+
+void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+{
+	GameObject::SetMesh(mesh);
+	auto missileExtents = btVector3(mMeshes[0]->mOOBB.Extents.x, mMeshes[0]->mOOBB.Extents.y, mMeshes[0]->mOOBB.Extents.z);
+	btCollisionShape* missileShape = new btBoxShape(missileExtents);
+
+	btVector3 bulletPosition = 10 * forward;
+
+	btTransform btMissileTransform;
+	btMissileTransform.setIdentity();
+	btMissileTransform.setOrigin(btVector3(position.x + bulletPosition.x(), position.y + bulletPosition.y(), position.z + bulletPosition.z()));
+
+	mBtRigidBody = BulletHelper::CreateRigidBody(1.0f, btMissileTransform, missileShape, dynamicsWorld);
+
+	mBtRigidBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
+	mBtRigidBody->setLinearVelocity(forward * 1000.0f);
+}
+
+void MissileObject::Update(float elapsedTime, XMFLOAT4X4* parent)
+{
+	btScalar m[16];
+	btTransform btMat;
+	mBtRigidBody->getMotionState()->getWorldTransform(btMat);
+	btMat.getOpenGLMatrix(m);
+
+	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+
+	mPosition.x = mWorld(3, 0);
+	mPosition.y = mWorld(3, 1);
+	mPosition.z = mWorld(3, 2);
+
+	mLook.x = mWorld(2, 0);
+	mLook.y = mWorld(2, 1);
+	mLook.z = mWorld(2, 2);
+
+	mUp.x = mWorld(1, 0);
+	mUp.y = mWorld(1, 1);
+	mUp.z = mWorld(1, 2);
+
+	mRight.x = mWorld(0, 0);
+	mRight.y = mWorld(0, 1);
+	mRight.z = mWorld(0, 2);
+
+	mDuration -= elapsedTime;
+}

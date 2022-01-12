@@ -107,7 +107,7 @@ void GameFramework::Update()
 	UpdateUI();
 
 	//mCamera->Update(mTimer.ElapsedTime());
-	mScenes.top()->Update(mD3dDevice.Get(), mTimer);
+	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mBtDynamicsWorld, mTimer);
 }
 
 void GameFramework::Draw()
@@ -119,6 +119,8 @@ void GameFramework::Draw()
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
 	mCommandList->SetGraphicsRootSignature(mScenes.top()->GetRootSignature());
+
+	Update();
 
 	mScenes.top()->PreRender(mCommandList.Get());
 

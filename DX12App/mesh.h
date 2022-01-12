@@ -3,15 +3,32 @@
 #include "heightMapImage.h"
 #include "vertex.h"
 
+class Texture;
+
+struct MatInfo
+{
+	Material Mat;
+	XMFLOAT4X4 TexTransform;
+	XMFLOAT2 TexOffset;
+	XMFLOAT2 TexScale;
+	int SrvIndex;
+
+	MatInfo()
+		: Mat{},
+		  SrvIndex(-1)
+	{
+		TexTransform = Matrix4x4::Identity4x4();
+		TexScale = { 1.0f, 1.0f };
+		TexOffset = { 0.0f,0.0f };
+	}
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 class Mesh 
 {
 public:
 	Mesh();
-	Mesh(ID3D12Device* device,
-		 ID3D12GraphicsCommandList* cmdList,
-		 const std::wstring& path);
 	virtual ~Mesh() { }
 
 	void CreateResourceInfo(
@@ -25,11 +42,22 @@ public:
 	virtual void PrepareBufferViews(ID3D12GraphicsCommandList* cmdList, bool isSO) { }
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO=false);
 
-	void LoadFromObj(
-		ID3D12Device* device,
-		ID3D12GraphicsCommandList* cmdList,
-		const std::wstring& path);
-	
+	void LoadMesh(
+		ID3D12Device* device, 
+		ID3D12GraphicsCommandList* cmdList, 
+		std::ifstream& file,
+		const std::vector<XMFLOAT3>& positions,
+		const std::vector<XMFLOAT3>& normals,
+		const std::vector<XMFLOAT2>& texcoords,
+		const MatInfo& mat);
+
+	void SetMaterial(Material mat) { mMaterial.Mat = mat; }
+	void SetSrvIndex(UINT idx) { mMaterial.SrvIndex = idx; }
+
+public:
+	MaterialConstants GetMaterialConstant() const;
+	UINT GetSrvIndex() const { return mMaterial.SrvIndex; }
+
 protected:
 	ComPtr<ID3D12Resource> mVertexBufferGPU;
 	ComPtr<ID3D12Resource> mIndexBufferGPU;
@@ -46,11 +74,13 @@ protected:
 	UINT mStartIndex = 0;
 	UINT mBaseVertex = 0;
 
+	MatInfo mMaterial = {};
+
 public:
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView = {};
 	D3D12_INDEX_BUFFER_VIEW mIndexBufferView = {};
-
-	BoundingOrientedBox mOOBB;
+	
+	BoundingOrientedBox mOOBB = {};
 };
 
 

@@ -40,7 +40,7 @@ public:
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
 	virtual void OnPlayerUpdate(float elapsedTime) { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
-
+	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
 protected:
 	XMFLOAT3 mVelocity = {};
 	XMFLOAT3 mGravity = {};
@@ -80,6 +80,8 @@ class WheelObject : public GameObject
 {
 public:
 	WheelObject();
+	virtual ~WheelObject();
+
 	void UpdateRigidBody(float Elapsed, btTransform wheelTransform);
 };
 
@@ -87,30 +89,34 @@ class PhysicsPlayer : public Player
 {
 public:
 	PhysicsPlayer();
+	virtual ~PhysicsPlayer();
+
 	virtual void OnCameraUpdate(float elapsedTime);
 	virtual void OnPlayerUpdate(float elapsedTime);
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
 	virtual void OnPreciseKeyInput(float Elapsed);
 	virtual void UpdateTransform(XMFLOAT4X4* parent) { }
 	virtual Camera* ChangeCameraMode(int cameraMode);
+	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
 
-	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld);
-	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
+	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
+	void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 
 private:
-	std::shared_ptr<WheelObject> mWheel[4];
+	WheelObject* mWheel[4];
 	btRaycastVehicle::btVehicleTuning mTuning;
-	btVehicleRaycaster* mVehicleRayCaster;
-	btRaycastVehicle* mVehicle;
+	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
+	std::shared_ptr<btRaycastVehicle> mVehicle;
 
 	float mBoosterLeft = 0.0f;
-	float mBoosterTime = 2.0f;
+	float mBoosterTime = 5.0f;
 
 	float mEngineForce = 0.f;
 	float mBreakingForce = 0.f;
 
 	float mMaxEngineForce = 8000.f;
-	float mBoosterEngineForce = 30000.f;
+	float mBoosterEngineForce = 300000.f;
 
 	float mVehicleSteering = 0.f;
 	float mSteeringIncrement = 0.01f;
@@ -118,4 +124,6 @@ private:
 
 	float mCurrentSpeed = 0.0f;
 	float mMaxSpeed = 1000.0f;
+
+	float mFovCoefficient = 1.0f;
 };

@@ -99,6 +99,7 @@ extern ComPtr<ID3D12Resource> CreateTexture2DResource(
 	DXGI_FORMAT format, D3D12_RESOURCE_FLAGS resourceFlags,
 	D3D12_RESOURCE_STATES resourceStates, D3D12_CLEAR_VALUE* clearValue);
 
+
 inline UINT GetConstantBufferSize(UINT bytes)
 {
 	return ((bytes + 255) & ~255);
@@ -172,14 +173,33 @@ struct CameraConstants
 
 struct Material
 {
-	XMFLOAT4 Color;
-	XMFLOAT3 Frenel;
-	float Roughness;
+	XMFLOAT3 Ambient;
+	float	 padding0;
+	XMFLOAT4 Diffuse;
+	XMFLOAT3 Specular;
+	float	 Exponent;
+	XMFLOAT3 Emission;
+	float	 IOR;
+
+	Material()
+		: Ambient(1.0f,1.0f,1.0f),
+		  Diffuse(1.0f, 1.0f, 1.0f, 1.0f),
+		  Specular(1.0f,1.0f,1.0f),
+		  Emission(0.0f,0.0f,0.0f),
+		  Exponent(300.0f), IOR(1.45f), padding0(0)
+	{
+	}
 };
 
 struct ObjectConstants
 {
 	XMFLOAT4X4 World;
+	//Material Mat;
+};
+
+struct MaterialConstants
+{
+	XMFLOAT4X4 TexTransform;
 	Material Mat;
 };
 

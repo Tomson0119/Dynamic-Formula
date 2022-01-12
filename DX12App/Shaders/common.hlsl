@@ -14,29 +14,34 @@ cbuffer CameraCB : register(b0)
     matrix gProj            : packoffset(c4);
     matrix gViewProj        : packoffset(c8);
     float3 gCameraPos       : packoffset(c12);
-    float gAspect           : packoffset(c12.w);
+    float  gAspect          : packoffset(c12.w);
 }
 
 cbuffer LightCB : register(b1)
 {
-    matrix gShadowTransform   : packoffset(c0); // need as much as shadow map
-    float4 gAmbient           : packoffset(c4);
-    Light gLights[NUM_LIGHTS] : packoffset(c5);
+    matrix gShadowTransform    : packoffset(c0); // need as much as shadow map
+    float4 gAmbient            : packoffset(c4);
+    Light  gLights[NUM_LIGHTS] : packoffset(c5);
 }
 
 cbuffer GameInfoCB : register(b2)
 {
-    float4 gRandFloat4 : packoffset(c0);
-    float3 gPlayerPos  : packoffset(c1);
-    uint gKeyInput     : packoffset(c1.w);
-    float gCurrentTime : packoffset(c2.x);
-    float gElapsedTime : packoffset(c2.y);
+    float4 gRandFloat4  : packoffset(c0);
+    float3 gPlayerPos   : packoffset(c1);
+    uint   gKeyInput    : packoffset(c1.w);
+    float  gCurrentTime : packoffset(c2.x);
+    float  gElapsedTime : packoffset(c2.y);
 }
 
-cbuffer ObjectCB : register(b3)
+cbuffer MaterialCB : register(b3)
+{
+    matrix gTexTransform : packoffset(c0);
+    Material gMat        : packoffset(c4);    
+}
+
+cbuffer ObjectCB : register(b4)
 {
     matrix gWorld : packoffset(c0);
-    Material gMat : packoffset(c4);
 }
 
 float CalcShadowFactor(float4 shadowPos)

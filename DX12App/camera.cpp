@@ -42,6 +42,7 @@ void Camera::SetLens(float aspect)
 
 void Camera::SetLens(float fovY, float aspect, float zn, float zf)
 {
+
 	mNearWindow.y = 2.0f * tanf(fovY * 0.5f) * zn;
 	mNearWindow.x = aspect * mNearWindow.y;
 
@@ -55,7 +56,7 @@ void Camera::SetLens(float fovY, float aspect, float zn, float zf)
 	mNearZ = zn;
 	mFarZ = zf;
 
-	XMMATRIX P = XMMatrixPerspectiveFovLH(mFov.y, mAspect, mNearZ, mFarZ);
+	XMMATRIX P = XMMatrixPerspectiveFovLH(mFov.y * mFovCoefficient, mAspect * mFovCoefficient, mNearZ * mFovCoefficient, mFarZ * mFovCoefficient);
 	XMStoreFloat4x4(&mProj, P);
 	BoundingFrustum::CreateFromMatrix(mFrustumView, P);
 }
@@ -71,6 +72,11 @@ void Camera::SetOrthographicLens(XMFLOAT3& center, float range)
 		C.z - range, C.z + range);
 	XMStoreFloat4x4(&mProj, P);
 	BoundingFrustum::CreateFromMatrix(mFrustumView, P);
+}
+
+void Camera::SetFovCoefficient(float FovCoefficient)
+{
+	mFovCoefficient = FovCoefficient;
 }
 
 void Camera::LookAt(XMFLOAT3& pos, XMFLOAT3& target, XMFLOAT3& up)

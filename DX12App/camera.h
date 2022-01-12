@@ -32,6 +32,8 @@ public:
 	void SetLens(float fovY, float aspect, float zn, float zf);
 	void SetOrthographicLens(XMFLOAT3& center, float range);
 	
+	void SetFovCoefficient(float AspectCoefficient);
+
 	void LookAt(XMFLOAT3& pos, XMFLOAT3& target, XMFLOAT3& up);
 	void LookAt(XMFLOAT3& target);
 	void LookAt(float x, float y, float z);
@@ -101,6 +103,16 @@ protected:
 	BoundingFrustum mFrustumWorld;
 
 	class Player* mPlayer = nullptr;
+
+	float mFovYNeutral = 0.0f;
+	float mFarZNeutral = 0.0f;
+	float mNearZNeutral = 0.0f;
+	float mAspectNeutral = 0.0f;
+
+
+	float mFovCoefficient = 1.0f;
+
+
 
 	CameraMode mMode = CameraMode::THIRD_PERSON_CAMERA;
 };
