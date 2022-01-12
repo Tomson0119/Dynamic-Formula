@@ -9,7 +9,7 @@ class UI
 {
 public:
     UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
-    //~UI();
+    ~UI();
     void UpdateLabels(const std::wstring& strUIText);
     void Draw(UINT nFrame);
     void ReleaseResources();
@@ -34,11 +34,11 @@ private:
     //IDWriteFactory*                 m_pd2dWriteFactory = NULL;
     //ID2D1Device2*                   m_pd2dDevice = NULL;
     ComPtr<ID2D1DeviceContext2> m_pd2dDeviceContext;
-    ID2D1SolidColorBrush* m_pd2dTextBrush;
-    IDWriteTextFormat* m_pdwTextFormat;
+    ComPtr<ID2D1SolidColorBrush> m_pd2dTextBrush;
+    ComPtr<IDWriteTextFormat> m_pdwTextFormat;
 
-    std::vector<ID3D11Resource*>    m_vWrappedRenderTargets;
-    std::vector<ID2D1Bitmap1*>      m_vd2dRenderTargets;
+    std::vector<ComPtr<ID3D11Resource>>    m_vWrappedRenderTargets;
+    std::vector<ComPtr<ID2D1Bitmap1>>      m_vd2dRenderTargets;
     std::vector<TextBlock>          m_vTextBlocks;
 };
 

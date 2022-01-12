@@ -11,10 +11,10 @@ UI::UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     m_vTextBlocks.resize(1);
     Initialize(pd3dDevice, pd3dCommandQueue);
 }
-//UI::~UI()
-//{
-//    ReleaseResources();
-//}
+UI::~UI()
+{
+
+}
 void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
 {
     UINT d3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
@@ -72,43 +72,31 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
 
 void UI::UpdateLabels(const std::wstring& strUIText)
 {
-    m_vTextBlocks[0] = { strUIText, D2D1::RectF(0.0f, 0.0f, m_fWidth, m_fHeight), m_pdwTextFormat };
+    m_vTextBlocks[0] = { strUIText, D2D1::RectF(0.0f, 0.0f, m_fWidth, m_fHeight), m_pdwTextFormat.Get() };
 }
 
 void UI::Draw(UINT nFrame)
 {
-    ID3D11Resource* ppResources[] = { m_vWrappedRenderTargets[nFrame] };
+    ID3D11Resource* ppResources[] = { m_vWrappedRenderTargets[nFrame].Get() };
 
     m_pd2dDeviceContext->BeginDraw();
     m_pd3d11On12Device->AcquireWrappedResources(ppResources, _countof(ppResources));
-    m_pd2dDeviceContext->SetTarget(m_vd2dRenderTargets[nFrame]);
+    m_pd2dDeviceContext->SetTarget(m_vd2dRenderTargets[nFrame].Get());
 
     for (auto textBlock : m_vTextBlocks)
     {
-        m_pd2dDeviceContext->DrawText(textBlock.strText.c_str(), static_cast<UINT>(textBlock.strText.length()), textBlock.pdwFormat, textBlock.d2dLayoutRect, m_pd2dTextBrush);
+        m_pd2dDeviceContext->DrawTextW(textBlock.strText.c_str(), static_cast<UINT>(textBlock.strText.length()), 
+            textBlock.pdwFormat, textBlock.d2dLayoutRect, m_pd2dTextBrush.Get());
     }
     m_pd2dDeviceContext->EndDraw();
 
-    m_pd3d11On12Device->ReleaseWrappedResources(ppResources, _countof(ppResources));
-    m_pd3d11DeviceContext->Flush();
+    //m_pd3d11On12Device->ReleaseWrappedResources(ppResources, _countof(ppResources));
+    //m_pd3d11DeviceContext->Flush();
 }
 
 void UI::ReleaseResources()
 {
-    for (UINT i = 0; i < GetRenderTargetsCount(); i++)
-    {
-        ID3D11Resource* ppResources[] = { m_vWrappedRenderTargets[i] };
-        m_pd3d11On12Device->ReleaseWrappedResources(ppResources, _countof(ppResources));
-    }
-    /*m_pd2dDeviceContext.Get()->SetTarget();
-    m_pd3d11DeviceContext->Flush();*/
-    for (UINT i = 0; i < GetRenderTargetsCount(); ++i)
-    {
-        m_vd2dRenderTargets[i]->Release();
-        m_vWrappedRenderTargets[i]->Release();
-    }
-    m_pd2dTextBrush->Release();
-    m_pdwTextFormat->Release();
+    
 }
 
 void UI::Resize(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
