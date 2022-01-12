@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "d3dFramework.h"
+#include "UI.h"
 
 D3DFramework::D3DFramework()
 	: mViewPort{ }, mScissorRect{ }, mFenceValues{ }
@@ -476,6 +477,21 @@ void D3DFramework::UpdateFrameStates()
 		frameCount = 0;
 		elapsed += 1.0f;
 	}
+}
+
+void D3DFramework::UpdateUI()
+{
+	std::vector<std::wstring> labels;
+
+	labels.push_back(L"한글 테스트 궁서체\n");
+
+	std::wstring uiText = L"";
+	for (auto s : labels)
+	{
+		uiText += s;
+	}
+	for(auto ui : mpUI)
+		ui.UpdateLabels(uiText);
 }
 
 void D3DFramework::ChangeFullScreenState()

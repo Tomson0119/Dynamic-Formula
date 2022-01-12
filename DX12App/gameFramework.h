@@ -2,6 +2,7 @@
 
 #include "d3dFramework.h"
 #include "gameScene.h"
+class UI;
 
 class Camera;
 
