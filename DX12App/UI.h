@@ -33,7 +33,7 @@ private:
     //ID2D1Factory3*                  m_pd2dFactory = NULL;
     //IDWriteFactory*                 m_pd2dWriteFactory = NULL;
     //ID2D1Device2*                   m_pd2dDevice = NULL;
-    ID2D1DeviceContext2* m_pd2dDeviceContext;
+    ComPtr<ID2D1DeviceContext2> m_pd2dDeviceContext;
     ID2D1SolidColorBrush* m_pd2dTextBrush;
     IDWriteTextFormat* m_pdwTextFormat;
 
