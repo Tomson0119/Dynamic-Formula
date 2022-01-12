@@ -29,7 +29,6 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     ::D3D11On12CreateDevice(pd3dDevice, d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown**>(ppd3dCommandQueues), 
         _countof(ppd3dCommandQueues), 0, &pd3d11Device, &m_pd3d11DeviceContext, nullptr);
     ThrowIfFailed(pd3d11Device.As(&m_pd3d11On12Device));
-    //pd3d11Device->QueryInterface(__uuidof(ID3D11On12Device), (void**)&m_pd3d11On12Device);
     pd3d11Device->Release();
 
 #if defined(_DEBUG) || defined(DBG)
@@ -56,10 +55,8 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     }
     pd3dInfoQueue->Release();
 #endif
-    //IDXGIDevice* pdxgiDevice = NULL;
     ThrowIfFailed(m_pd3d11On12Device.As(&pdxgiDevice));
-    //m_pd3d11On12Device->QueryInterface(__uuidof(IDXGIDevice), (void**)&pdxgiDevice);
-
+   
     ThrowIfFailed(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory3), &d2dFactoryOptions, &m_pd2dFactory));
     ThrowIfFailed(m_pd2dFactory->CreateDevice(pdxgiDevice.Get(), &m_pd2dDevice));
     ThrowIfFailed(m_pd2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &m_pd2dDeviceContext));
@@ -89,8 +86,6 @@ void UI::Draw(UINT nFrame)
             textBlock.pdwFormat, textBlock.d2dLayoutRect, m_pd2dTextBrush.Get());
     }
     m_pd2dDeviceContext->EndDraw();
-
-    //m_pd3d11On12Device->ReleaseWrappedResources(ppResources, _countof(ppResources));
     m_pd3d11DeviceContext->Flush();
 }
 
@@ -117,12 +112,6 @@ void UI::Resize(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
         m_pd2dDeviceContext->CreateBitmapFromDxgiSurface(pdxgiSurface.Get(), &d2dBitmapProperties, &m_vd2dRenderTargets[i]);
     }
 
-   
-    //m_pd2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &m_pd2dDeviceContext);
-    //m_pd2dDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
-    //if (m_pd2dTextBrush) m_pd2dTextBrush->Release();
-    //m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_pd2dTextBrush);
-
     const float fFontSize = m_fHeight / 25.0f;
     const float fSmallFontSize = m_fHeight / 40.0f;
 
@@ -130,5 +119,4 @@ void UI::Resize(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 
     ThrowIfFailed(m_pdwTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
     ThrowIfFailed(m_pdwTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
-    // m_pd2dWriteFactory->CreateTextFormat(L"Arial", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fSmallFontSize, L"en-us", &m_pdwTextFormat);
 }

@@ -29,10 +29,6 @@ private:
     ComPtr<ID2D1Device2> m_pd2dDevice;
     ComPtr<ID3D11Device> pd3d11Device;
     ComPtr<IDXGIDevice> pdxgiDevice;
-    //ID3D11On12Device*               m_pd3d11On12Device = NULL;
-    //ID2D1Factory3*                  m_pd2dFactory = NULL;
-    //IDWriteFactory*                 m_pd2dWriteFactory = NULL;
-    //ID2D1Device2*                   m_pd2dDevice = NULL;
     ComPtr<ID2D1DeviceContext2> m_pd2dDeviceContext;
     ComPtr<ID2D1SolidColorBrush> m_pd2dTextBrush;
     ComPtr<IDWriteTextFormat> m_pdwTextFormat;
