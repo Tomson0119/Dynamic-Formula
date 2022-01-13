@@ -9,6 +9,8 @@ D3DFramework::D3DFramework()
 
 D3DFramework::~D3DFramework()
 {
+	if (mpUI) delete mpUI;
+
 	if (mBtDynamicsWorld)
 	{
 		int i;

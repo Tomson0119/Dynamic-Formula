@@ -23,7 +23,7 @@ private:
     float m_fHeight;
 
     ComPtr<ID3D11DeviceContext> m_pd3d11DeviceContext;
-    ComPtr<ID3D11On12Device> m_pd3d11On12Device;
+    ID3D11On12Device* m_pd3d11On12Device;
     ComPtr<ID2D1Factory3> m_pd2dFactory;
     ComPtr<IDWriteFactory> m_pd2dWriteFactory;
     ComPtr<ID2D1Device2> m_pd2dDevice;
