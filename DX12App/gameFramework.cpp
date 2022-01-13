@@ -151,7 +151,7 @@ void GameFramework::Draw()
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	//for (auto ui : mpUI)
-	mpUI->Draw(mCurrBackBufferIndex);
+	//mpUI->Draw(mCurrBackBufferIndex);
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 

@@ -145,7 +145,6 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 4096, 4096, 1);
 	mShadowMapRenderer->SetSunRange(80.0f);
-	mShadowMapRenderer->SetCenter(mRoomCenter);
 	mShadowMapRenderer->AppendTargetPipeline(mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(mPipelines[Layer::Color].get());
 	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
@@ -220,6 +219,8 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	mPlayer = carObj.get();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
+
+	mShadowMapRenderer->SetCenter(mPlayer->GetPosition());
 }
 
 void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
@@ -290,6 +291,7 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	UpdateLight(elapsed);
 	mMainCamera->Update(elapsed);
 
+	mShadowMapRenderer->SetCenter(mPlayer->GetPosition());
 	mShadowMapRenderer->UpdateDepthCamera(mMainLight);
 
 	for (const auto& [_, pso] : mPipelines)
