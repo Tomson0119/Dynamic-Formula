@@ -213,6 +213,7 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 
 void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
 {
+	
 }
 
 void GameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)

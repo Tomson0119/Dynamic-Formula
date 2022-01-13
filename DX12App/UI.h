@@ -10,7 +10,7 @@ class UI
 public:
     UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
     ~UI();
-    void UpdateLabels(const std::wstring& strUIText);
+    void UpdateLabels(const std::vector<std::wstring>& strUIText);
     void Draw(UINT nFrame);
     void ReleaseResources();
     void Resize(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);

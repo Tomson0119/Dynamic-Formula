@@ -97,16 +97,64 @@ void GameFramework::OnPreciseKeyInput()
 void GameFramework::TextUIUpdate()
 {
 	//TextUI Set
+	TextUI.clear();
 	TextUI.resize(4);
-	TextUI.push_back(to_wstring(mTimer.TotalTime()));
-
+	//Time Set
+	UINT Min = 0;
+	float Sec = 0.0;
+	Min = mTimer.TotalTime() / 60.0f;
+	Sec = mTimer.TotalTime() - (Min * 60.0f);
+	if (Min < 10)
+		TextUI[0].push_back('0');
+	for (auto wc : to_wstring(Min))
+		TextUI[0].push_back(wc);
+	
+	TextUI[0].push_back(':');
+	if (Sec < 10)
+		TextUI[0].push_back('0');
+	for (int i = 0; i < 3+!(Sec<10); ++i)
+		TextUI[0].push_back(to_wstring(Sec)[i]);
+	/*for (auto wc : to_wstring(Sec))
+		TextUI[0].push_back(wc);*/
+	
+	//Lap Count Set
+	if(static_cast<int>(mTimer.TotalTime()/60)>0)
+	{
+		for (auto wc : to_wstring(static_cast<int>(mTimer.TotalTime() / 60)))
+			TextUI[1].push_back(wc);
+		for (auto wc : std::wstring{ L"Lap" })
+			TextUI[1].push_back(wc);
+	}
+	//My Rank
+	UINT MyRank = 1;
+	TextUI[2].push_back(('0' + MyRank));
+	switch (MyRank%10)
+	{
+	case 1:
+		TextUI[2].push_back('s');
+		TextUI[2].push_back('t');
+		break;
+	case 2:
+		TextUI[2].push_back('n');
+		TextUI[2].push_back('d');
+		break;
+	case 3:
+		TextUI[2].push_back('r');
+		TextUI[2].push_back('d');
+		break;
+	default:
+		TextUI[2].push_back('t');
+		TextUI[2].push_back('h');
+		break;
+	}
+	//Speed
+	std::wstring kmh{ L"km/h" };
+	for(auto wc : kmh)
+		TextUI[3].push_back(wc);
 }
 
 void GameFramework::Update()
 {
-	
-	
-
 	mBtDynamicsWorld->stepSimulation(mTimer.ElapsedTime());
 
 	D3DFramework::UpdateFrameStates();
@@ -115,7 +163,8 @@ void GameFramework::Update()
 
 	//UI Update
 	TextUIUpdate();
-	UpdateUI(TextUI, TextUI.size());
+	mpUI->UpdateLabels(TextUI);
+	//UpdateUI(TextUI, TextUI.size());
 
 	//mCamera->Update(mTimer.ElapsedTime());
 	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mBtDynamicsWorld, mTimer);

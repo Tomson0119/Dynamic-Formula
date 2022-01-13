@@ -505,14 +505,19 @@ void D3DFramework::UpdateUI(std::vector<std::wstring>& TextList, UINT uTextListS
 {
 	std::vector<std::wstring> labels = TextList;
 
-	labels.push_back(L"한글 테스트\n");
+	//labels.push_back(L"한글 테스트\n");
 	
+
 	std::wstring uiText = L"";
-	for (auto s : labels)
+	for (int i = 0; i < uTextListSize; ++i)
 	{
-		uiText += s;
+		for (auto s : labels)
+		{
+			uiText += s;
+		}
+		//mpUI->UpdateLabels(uiText);
 	}
-	mpUI->UpdateLabels(uiText);
+	
 }
 
 void D3DFramework::ChangeFullScreenState()

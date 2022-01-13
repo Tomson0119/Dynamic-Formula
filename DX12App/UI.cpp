@@ -8,7 +8,7 @@ UI::UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
 
     m_vWrappedRenderTargets.resize(nFrame);
     m_vd2dRenderTargets.resize(nFrame);
-    m_vTextBlocks.resize(1);
+    m_vTextBlocks.resize(4);
     Initialize(pd3dDevice, pd3dCommandQueue);
 }
 UI::~UI()
@@ -69,9 +69,13 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&m_pd2dWriteFactory));
 }
 
-void UI::UpdateLabels(const std::wstring& strUIText)
+void UI::UpdateLabels(const std::vector<std::wstring>& strUIText)
 {
-    m_vTextBlocks[0] = { strUIText, D2D1::RectF(0.0f, 0.0f, m_fWidth, m_fHeight), m_pdwTextFormat.Get() };
+    //m_vTextBlocks[0] = { strUIText, D2D1::RectF(0.0f, 0.0f, m_fWidth, m_fHeight), m_pdwTextFormat.Get() };
+    m_vTextBlocks[0] = { strUIText[1], D2D1::RectF(0.0f,  23.0f + m_fHeight / 6, m_fWidth / 6, 23.0f + (m_fHeight / 6)), m_pdwTextFormat.Get() };
+    m_vTextBlocks[1] = { strUIText[0], D2D1::RectF(0.0f, 23.0f, m_fWidth/6, m_fHeight/6), m_pdwTextFormat.Get() };
+    m_vTextBlocks[2] = { strUIText[2], D2D1::RectF(5*(m_fWidth/6), 0.0f, m_fWidth, m_fHeight / 6), m_pdwTextFormat.Get() };
+    m_vTextBlocks[3] = { strUIText[3], D2D1::RectF(5 * (m_fWidth / 6), 5*(m_fHeight/6), m_fWidth, m_fHeight), m_pdwTextFormat.Get() };
 }
 
 void UI::Draw(UINT nFrame)
