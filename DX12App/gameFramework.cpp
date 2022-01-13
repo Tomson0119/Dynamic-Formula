@@ -20,8 +20,8 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
+
 	//UI Build
-	
 	mpUI=std::make_unique<UI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
 	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 	
@@ -94,8 +94,19 @@ void GameFramework::OnPreciseKeyInput()
 {
 }
 
+void GameFramework::TextUIUpdate()
+{
+	//TextUI Set
+	TextUI.resize(4);
+	TextUI.push_back(to_wstring(mTimer.TotalTime()));
+
+}
+
 void GameFramework::Update()
 {
+	
+	
+
 	mBtDynamicsWorld->stepSimulation(mTimer.ElapsedTime());
 
 	D3DFramework::UpdateFrameStates();
@@ -103,7 +114,8 @@ void GameFramework::Update()
 	OnPreciseKeyInput();
 
 	//UI Update
-	UpdateUI();
+	TextUIUpdate();
+	UpdateUI(TextUI, TextUI.size());
 
 	//mCamera->Update(mTimer.ElapsedTime());
 	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mBtDynamicsWorld, mTimer);

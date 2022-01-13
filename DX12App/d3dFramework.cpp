@@ -9,8 +9,6 @@ D3DFramework::D3DFramework()
 
 D3DFramework::~D3DFramework()
 {
-	//if (mpUI) delete mpUI;
-
 	if (mBtDynamicsWorld)
 	{
 		int i;
@@ -501,12 +499,14 @@ void D3DFramework::UpdateFrameStates()
 	}
 }
 
-void D3DFramework::UpdateUI()
+
+
+void D3DFramework::UpdateUI(std::vector<std::wstring>& TextList, UINT uTextListSize)
 {
-	std::vector<std::wstring> labels;
+	std::vector<std::wstring> labels = TextList;
 
-	labels.push_back(L"한글 테스트 궁서체\n");
-
+	labels.push_back(L"한글 테스트\n");
+	
 	std::wstring uiText = L"";
 	for (auto s : labels)
 	{

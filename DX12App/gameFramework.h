@@ -24,6 +24,8 @@ private:
 	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	virtual void Update() override;
+	void TextUIUpdate();
+
 	virtual void Draw() override;
 
 private:
@@ -31,4 +33,5 @@ private:
 
 private:
 	std::stack<std::unique_ptr<GameScene>> mScenes;
+	std::vector<std::wstring> TextUI;
 };

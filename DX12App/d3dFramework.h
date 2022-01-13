@@ -36,7 +36,9 @@ private:
 	
 public:
 	void UpdateFrameStates();
-	void UpdateUI();
+	//UI Set
+	void UpdateUI(std::vector<std::wstring>&, UINT uTextListSize);
+
 	void ChangeFullScreenState();
 
 protected:
@@ -98,9 +100,7 @@ protected:
 	DXGI_FORMAT mDepthStencilBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	//UI 
-	//std:: vector<UI> mpUI;
 	std::unique_ptr<UI> mpUI;
-	//UI*				mpUI = NULL;
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
 
