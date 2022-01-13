@@ -108,6 +108,8 @@ void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbv
 
 void Pipeline::BuildCBV(ID3D12Device* device)
 {
+	if (mObjectCB == nullptr) return;
+
 	UINT stride = mObjectCB->GetByteSize();
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
@@ -130,6 +132,7 @@ void Pipeline::BuildCBV(ID3D12Device* device)
 
 void Pipeline::BuildSRV(ID3D12Device* device)
 {
+
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 

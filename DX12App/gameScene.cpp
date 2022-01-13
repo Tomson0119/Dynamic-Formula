@@ -142,6 +142,13 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
+
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 4096, 4096, 1);
+	mShadowMapRenderer->SetSunRange(80.0f);
+	mShadowMapRenderer->SetCenter(mRoomCenter);
+	mShadowMapRenderer->AppendTargetPipeline(mPipelines[Layer::Default].get());
+	mShadowMapRenderer->AppendTargetPipeline(mPipelines[Layer::Color].get());
+	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
 }
 
 void GameScene::BuildConstantBuffers(ID3D12Device* device)
@@ -151,11 +158,15 @@ void GameScene::BuildConstantBuffers(ID3D12Device* device)
 	mGameInfoCB = std::make_unique<ConstantBuffer<GameInfoConstants>>(device, 1);
 
 	for (const auto& [_, pso] : mPipelines)
-		pso->BuildConstantBuffer(device);
+	{
+		if(pso)
+			pso->BuildConstantBuffer(device);
+	}
 }
 
 void GameScene::BuildDescriptorHeap(ID3D12Device* device)
 {
+	mShadowMapRenderer->BuildDescriptorHeap(device, 3, 4, 5);
 	for (const auto& [_, pso] : mPipelines)
 		pso->BuildDescriptorHeap(device, 3, 4, 5);
 }
@@ -213,6 +224,8 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 
 void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
 {
+	if (mShadowMapRenderer)
+		mShadowMapRenderer->PreRender(cmdList, this);
 }
 
 void GameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
@@ -277,6 +290,8 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	UpdateLight(elapsed);
 	mMainCamera->Update(elapsed);
 
+	mShadowMapRenderer->UpdateDepthCamera(mMainLight);
+
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mMainCamera.get());
 
@@ -298,6 +313,8 @@ void GameScene::UpdateLight(float elapsed)
 
 void GameScene::UpdateLightConstants()
 {
+	mMainLight.ShadowTransform = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(0));
+
 	mLightCB->CopyData(0, mMainLight);
 }
 
@@ -345,6 +362,7 @@ void GameScene::Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuf
 void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 {	
 	SetCBV(cmdList, cameraCBIndex);
+	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
 
 	for (const auto& [layer, pso] : mPipelines) {
 		pso->SetAndDraw(cmdList, (bool)mLODSet);
