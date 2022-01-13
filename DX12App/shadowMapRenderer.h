@@ -26,7 +26,6 @@ public:
 	XMFLOAT4X4 GetShadowTransform(int idx) const;
 
 private:
-	void CreateTexture(ID3D12Device* device);
 	void BuildDescriptorViews(ID3D12Device* device);
 
 private:
@@ -42,16 +41,12 @@ private:
 	D3D12_RECT mScissorRect;
 
 	ComPtr<ID3D12DescriptorHeap> mDsvDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mRtvDescriptorHeap;
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> mDsvCPUDescriptorHandles;
 
-	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> mRtvCPUDescriptorHandles;
-	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle;
-
-	ComPtr<ID3D12Resource> mDepthBuffer;
+	std::vector<ComPtr<ID3D12Resource>> mShadowMaps;
 
 	std::vector<std::unique_ptr<Camera>> mDepthCamera;
 	std::vector<Pipeline*> mShadowTargetPSOs;
-	std::vector<std::unique_ptr<Texture>> mShadowMaps;
 
 	const XMFLOAT4X4 mToTexture =
 	{

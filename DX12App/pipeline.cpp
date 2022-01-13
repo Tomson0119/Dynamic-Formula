@@ -132,7 +132,6 @@ void Pipeline::BuildCBV(ID3D12Device* device)
 
 void Pipeline::BuildSRV(ID3D12Device* device)
 {
-
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
