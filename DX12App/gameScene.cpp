@@ -31,7 +31,7 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	mMainLight.Lights[0].SetInfo(
 		XMFLOAT3(0.6f, 0.6f, 0.6f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(1.0f, 0.75f, -1.0f),
+		XMFLOAT3(0.0f, 1.0f, 0.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
 	mMainLight.Lights[1].SetInfo(
 		XMFLOAT3(0.3f, 0.3f, 0.3f),
@@ -145,7 +145,6 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 4096, 4096, 1);
 	mShadowMapRenderer->SetSunRange(80.0f);
-	mShadowMapRenderer->AppendTargetPipeline(mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(mPipelines[Layer::Color].get());
 	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
 }
@@ -304,13 +303,13 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 
 void GameScene::UpdateLight(float elapsed)
 {
-	XMMATRIX R = XMMatrixRotationY(0.1f * elapsed);
-	for (int i = 0; i < NUM_LIGHTS; i++)
-	{
-		// rotate each direction..
-		mMainLight.Lights[i].Direction = Vector3::TransformNormal(mMainLight.Lights[i].Direction,R);
-		mMainLight.Lights[i].Position = Vector3::Multiply(2.0f, mMainLight.Lights[i].Direction);
-	}
+	//XMMATRIX R = XMMatrixRotationY(0.1f * elapsed);
+	//for (int i = 0; i < NUM_LIGHTS; i++)
+	//{
+	//	// rotate each direction..
+	//	mMainLight.Lights[i].Direction = Vector3::TransformNormal(mMainLight.Lights[i].Direction,R);
+	//	mMainLight.Lights[i].Position = Vector3::Multiply(2.0f, mMainLight.Lights[i].Direction);
+	//}
 }
 
 void GameScene::UpdateLightConstants()

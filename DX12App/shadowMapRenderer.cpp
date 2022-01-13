@@ -27,8 +27,64 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 	mRasterizerDesc.SlopeScaledDepthBias = 1.0f;
 	mBackBufferFormat = DXGI_FORMAT_R32_FLOAT;
 	mDepthStencilFormat = DXGI_FORMAT_D32_FLOAT;
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
-	Pipeline::BuildPipeline(device, rootSig, shadowMapShader.get());
+	auto layout = shadowMapShader->GetInputLayout();
+
+	psoDesc.pRootSignature = rootSig;
+	psoDesc.InputLayout = {
+		layout.data(),
+		(UINT)layout.size()
+	};
+	psoDesc.VS = {
+		reinterpret_cast<BYTE*>(shadowMapShader->GetVS()->GetBufferPointer()),
+		shadowMapShader->GetVS()->GetBufferSize()
+	};
+	if (shadowMapShader->GetGS() != nullptr)
+	{
+		psoDesc.GS = {
+			reinterpret_cast<BYTE*>(shadowMapShader->GetGS()->GetBufferPointer()),
+			shadowMapShader->GetGS()->GetBufferSize()
+		};
+	}
+	if (shadowMapShader->GetDS() != nullptr)
+	{
+		psoDesc.DS = {
+			reinterpret_cast<BYTE*>(shadowMapShader->GetDS()->GetBufferPointer()),
+			shadowMapShader->GetDS()->GetBufferSize()
+		};
+	}
+	if (shadowMapShader->GetHS() != nullptr)
+	{
+		psoDesc.HS = {
+			reinterpret_cast<BYTE*>(shadowMapShader->GetHS()->GetBufferPointer()),
+			shadowMapShader->GetHS()->GetBufferSize()
+		};
+	}
+	if (shadowMapShader->GetPS() != nullptr)
+	{
+		psoDesc.PS = {
+			reinterpret_cast<BYTE*>(shadowMapShader->GetPS()->GetBufferPointer()),
+			shadowMapShader->GetPS()->GetBufferSize()
+		};
+	}
+	psoDesc.RasterizerState = mRasterizerDesc;
+	psoDesc.BlendState = mBlendDesc;
+	psoDesc.DepthStencilState = mDepthStencilDesc;
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.PrimitiveTopologyType = mPrimitive;
+	psoDesc.NumRenderTargets = 0;
+	psoDesc.DSVFormat = mDepthStencilFormat;
+	psoDesc.SampleDesc.Count = 1;
+
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mPSO[0])));
+
+	if (mIsWiredFrame) {
+		psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+		ThrowIfFailed(device->CreateGraphicsPipelineState(
+			&psoDesc, IID_PPV_ARGS(&mPSO[1])));
+	}
 }
 
 XMFLOAT4X4 ShadowMapRenderer::GetShadowTransform(int idx) const
