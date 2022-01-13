@@ -99,7 +99,8 @@ protected:
 
 	//UI 
 	//std:: vector<UI> mpUI;
-	UI*				mpUI = NULL;
+	std::unique_ptr<UI> mpUI;
+	//UI*				mpUI = NULL;
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
 
