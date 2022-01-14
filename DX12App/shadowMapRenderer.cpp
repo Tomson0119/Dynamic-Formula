@@ -20,8 +20,9 @@ ShadowMapRenderer::~ShadowMapRenderer()
 
 void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader)
 {
-	auto shadowMapShader = std::make_unique<DefaultShader>(L"Shaders\\shadow.hlsl");
-		
+	auto shadowMapShader = std::make_unique<ShadowShader>(L"Shaders\\shadow.hlsl");
+	auto shadowMapTerrainShader = std::make_unique<ShadowTerrainShader>(L"Shaders\\shadowTerrain.hlsl");
+
 	mRasterizerDesc.DepthBias = 100000;
 	mRasterizerDesc.DepthBiasClamp = 0.0f;
 	mRasterizerDesc.SlopeScaledDepthBias = 1.0f;
@@ -85,6 +86,44 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 		ThrowIfFailed(device->CreateGraphicsPipelineState(
 			&psoDesc, IID_PPV_ARGS(&mPSO[1])));
 	}
+	
+	psoDesc.VS = {
+		reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetVS()->GetBufferPointer()),
+		shadowMapTerrainShader->GetVS()->GetBufferSize()
+	};
+	if (shadowMapTerrainShader->GetGS() != nullptr)
+	{
+		psoDesc.GS = {
+			reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetGS()->GetBufferPointer()),
+			shadowMapTerrainShader->GetGS()->GetBufferSize()
+		};
+	}
+	if (shadowMapTerrainShader->GetDS() != nullptr)
+	{
+		psoDesc.DS = {
+			reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetDS()->GetBufferPointer()),
+			shadowMapTerrainShader->GetDS()->GetBufferSize()
+		};
+	}
+	if (shadowMapTerrainShader->GetHS() != nullptr)
+	{
+		psoDesc.HS = {
+			reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetHS()->GetBufferPointer()),
+			shadowMapTerrainShader->GetHS()->GetBufferSize()
+		};
+	}
+	if (shadowMapTerrainShader->GetPS() != nullptr)
+	{
+		psoDesc.PS = {
+			reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetPS()->GetBufferPointer()),
+			shadowMapTerrainShader->GetPS()->GetBufferSize()
+		};
+	}
+
+	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mTerrainPSO)));
 }
 
 XMFLOAT4X4 ShadowMapRenderer::GetShadowTransform(int idx) const
@@ -216,8 +255,26 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, GameScene*
 
 void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList)
 {
-	for (const auto& pso : mShadowTargetPSOs)
+	for (const auto& [layer, pso] : mShadowTargetPSOs)
+	{
+		if (layer == Layer::Terrain)
+		{
+			cmdList->SetPipelineState(mTerrainPSO.Get());
+		}
+
 		pso->SetAndDraw(cmdList, false, false);
+
+		if (layer == Layer::Terrain)
+		{
+			cmdList->SetPipelineState(mPSO[0].Get());
+		}
+
+	}
+}
+
+void ShadowMapRenderer::AppendTargetPipeline(Layer layer, Pipeline* pso)
+{
+	mShadowTargetPSOs.insert(std::make_pair(layer, pso));
 }
 
 void ShadowMapRenderer::SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)

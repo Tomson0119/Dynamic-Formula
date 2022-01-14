@@ -17,7 +17,7 @@ public:
 	void PreRender(ID3D12GraphicsCommandList* cmdList, GameScene* scene);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList);
 
-	void AppendTargetPipeline(Pipeline* pso) { mShadowTargetPSOs.push_back(pso); }
+	void AppendTargetPipeline(Layer layer, Pipeline* pso);
 	void SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 
 	void SetSunRange(float range) { mSunRange = range; }
@@ -46,7 +46,7 @@ private:
 	std::vector<ComPtr<ID3D12Resource>> mShadowMaps;
 
 	std::vector<std::unique_ptr<Camera>> mDepthCamera;
-	std::vector<Pipeline*> mShadowTargetPSOs;
+	std::map<Layer, Pipeline*> mShadowTargetPSOs;
 
 	const XMFLOAT4X4 mToTexture =
 	{
@@ -58,4 +58,6 @@ private:
 
 	const int OrthographicPlaneWidth = 1024;
 	const int OrthographicPlaneHeight = 1024;
+
+	ComPtr<ID3D12PipelineState> mTerrainPSO;
 };
