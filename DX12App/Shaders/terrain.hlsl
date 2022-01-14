@@ -151,6 +151,7 @@ DsOut DS(HsConstant hconst, float2 uv : SV_DomainLocation, OutputPatch<HsOut, 25
     float4 posW = mul(float4(pos, 1.0f), gWorld);
     
     dout.PosH = mul(mul(float4(pos, 1.0f), gWorld), gViewProj);
+    dout.PosS = mul(posW, gShadowTransform);
     float3 normalL = CubicBezierSum5x5(patch, uB, vB, true);
     float4x4 tWorld = transpose(gWorld);
     dout.NormalW = mul((float3x3) tWorld, normalize(normalL));
@@ -208,8 +209,15 @@ float4 PS(DsOut din) : SV_Target
         for (int i = 0; i < 3; i++)
             shadowFactor[i] = CalcShadowFactor(din.PosS);
         
-        float4 directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactor);
-    
+        float4 directLight;
+        float shadowFactorOut[3] = { 1.0f, 1.0f, 1.0f };
+        if (din.PosS.x < 0.0f || din.PosS.x > 1.0f || din.PosS.z < 0.0f || din.PosS.z > 1.0f || din.PosS.y < 0.0f || din.PosS.y > 1.0f)
+            directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactorOut);
+        else
+        {
+            directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactor);
+        }
+
         result = ambient + directLight;
         result.a = gMat.Diffuse.a;
     }
