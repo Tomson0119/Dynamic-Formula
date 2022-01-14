@@ -499,19 +499,19 @@ void D3DFramework::UpdateFrameStates()
 	}
 }
 
-void D3DFramework::UpdateUI()
-{
-	std::vector<std::wstring> labels;
-
-	labels.push_back(L"한글 테스트 궁서체\n");
-
-	std::wstring uiText = L"";
-	for (auto s : labels)
-	{
-		uiText += s;
-	}
-	mpUI->UpdateLabels(uiText);
-}
+//void D3DFramework::UpdateUI()
+//{
+//	std::vector<std::wstring> labels;
+//
+//	labels.push_back(L"한글 테스트 궁서체\n");
+//
+//	std::wstring uiText = L"";
+//	for (auto s : labels)
+//	{
+//		uiText += s;
+//	}
+//	mpUI->UpdateLabels(uiText);
+//}
 
 void D3DFramework::ChangeFullScreenState()
 {

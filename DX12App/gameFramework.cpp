@@ -20,12 +20,12 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-	//UI Build
-	if (!mpUI)
-	{
-		mpUI = new UI(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-		mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
-	}
+	////UI Build
+	//if (!mpUI)
+	//{
+	//	mpUI = new UI(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
+	//	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+	//}
 	
 	// 초기화하는 명령어를 넣기 위해 커맨드 리스트를 개방한다.
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
@@ -104,7 +104,7 @@ void GameFramework::Update()
 	OnPreciseKeyInput();
 
 	//UI Update
-	UpdateUI();
+	//UpdateUI();
 
 	//mCamera->Update(mTimer.ElapsedTime());
 	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mBtDynamicsWorld, mTimer);

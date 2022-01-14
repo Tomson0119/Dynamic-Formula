@@ -75,7 +75,7 @@ float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat,
     for (i = 0; i < NUM_LIGHTS; ++i)
     {        
         if (lights[i].Type == DIRECTIONAL_LIGHT)
-            result += ComputeDirectLight(lights[i], mat, normal, view);
+            result += shadowFactor[i] * ComputeDirectLight(lights[i], mat, normal, view);
         else if(lights[i].Type == SPOT_LIGHT)
             ;
         else

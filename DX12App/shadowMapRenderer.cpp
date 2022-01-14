@@ -149,7 +149,7 @@ void ShadowMapRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex,
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(mMapCount,
 			D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
+			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
 		IID_PPV_ARGS(&mDsvDescriptorHeap)));
 
 	BuildDescriptorViews(device);
@@ -272,8 +272,8 @@ void ShadowMapRenderer::AppendTargetPipeline(Layer layer, Pipeline* pso)
 
 void ShadowMapRenderer::SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
 {
-	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* descHeaps[] = { mDsvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-	auto gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	auto gpuHandle = mDsvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuHandle);
 }

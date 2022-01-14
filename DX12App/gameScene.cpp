@@ -31,15 +31,15 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	mMainLight.Lights[0].SetInfo(
 		XMFLOAT3(0.6f, 0.6f, 0.6f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(0.0f, 1.0f, 0.0f),
+		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
 	mMainLight.Lights[1].SetInfo(
-		XMFLOAT3(0.3f, 0.3f, 0.3f),
+		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
 	mMainLight.Lights[2].SetInfo(
-		XMFLOAT3(0.15f, 0.15f, 0.15f),
+		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, 1.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
@@ -144,7 +144,7 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 4096, 4096, 1);
-	mShadowMapRenderer->SetSunRange(20.0f);
+	mShadowMapRenderer->SetSunRange(100.0f);
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
