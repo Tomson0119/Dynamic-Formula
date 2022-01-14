@@ -12,6 +12,8 @@ public:
 		mPool = new T[count];
 		InitBlockList();
 	}
+	MemoryPool(const MemoryPool&) = delete;
+	MemoryPool& operator=(const MemoryPool&) = delete;
 
 	~MemoryPool()
 	{
