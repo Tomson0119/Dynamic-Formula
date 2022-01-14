@@ -43,6 +43,8 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mDsvDescriptorHeap;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> mDsvCPUDescriptorHandles;
 
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> mCbvSrvCPUDescriptorHandles;
+
 	std::vector<ComPtr<ID3D12Resource>> mShadowMaps;
 
 	std::vector<std::unique_ptr<Camera>> mDepthCamera;

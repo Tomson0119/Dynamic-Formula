@@ -12,6 +12,7 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 		mDepthCamera.push_back(std::make_unique<Camera>());
 
 	mDsvCPUDescriptorHandles.resize(mMapCount, {});
+	mCbvSrvCPUDescriptorHandles.resize(mMapCount, {});
 }
 
 ShadowMapRenderer::~ShadowMapRenderer()
@@ -27,7 +28,7 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 	mRasterizerDesc.DepthBiasClamp = 0.0f;
 	mRasterizerDesc.SlopeScaledDepthBias = 1.0f;
 	mBackBufferFormat = DXGI_FORMAT_R32_FLOAT;
-	mDepthStencilFormat = DXGI_FORMAT_D32_FLOAT;
+	mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
 	auto layout = shadowMapShader->GetInputLayout();
@@ -149,7 +150,7 @@ void ShadowMapRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex,
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(mMapCount,
 			D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
+			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
 		IID_PPV_ARGS(&mDsvDescriptorHeap)));
 
 	BuildDescriptorViews(device);
@@ -158,26 +159,41 @@ void ShadowMapRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex,
 void ShadowMapRenderer::BuildDescriptorViews(ID3D12Device* device)
 {
 	D3D12_CLEAR_VALUE clearValue{};
-	clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	clearValue.DepthStencil.Depth = 1.0f;
 	clearValue.DepthStencil.Stencil = 0;
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
-	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	srvDesc.Texture2D.PlaneSlice = 0;
+
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvCPUHandle = mDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE cbvSrvCPUHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 	for (int i = 0; i < mMapCount; ++i)
 	{
 		ComPtr<ID3D12Resource> shadowMap;
 		shadowMap = CreateTexture2DResource(
 			device, mMapWidth, mMapHeight, 1, 1,
-			DXGI_FORMAT_D32_FLOAT,
+			DXGI_FORMAT_D24_UNORM_S8_UINT,
 			D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			&clearValue);
+
+		mCbvSrvCPUDescriptorHandles[i] = cbvSrvCPUHandle;
+		cbvSrvCPUHandle.ptr += gCbvSrvUavDescriptorSize;
+
+		device->CreateShaderResourceView(shadowMap.Get(), &srvDesc, mCbvSrvCPUDescriptorHandles[i]);
 
 		mDsvCPUDescriptorHandles[i] = dsvCPUHandle;
 		dsvCPUHandle.ptr += gDsvDescriptorSize;
@@ -272,8 +288,8 @@ void ShadowMapRenderer::AppendTargetPipeline(Layer layer, Pipeline* pso)
 
 void ShadowMapRenderer::SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
 {
-	ID3D12DescriptorHeap* descHeaps[] = { mDsvDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-	auto gpuHandle = mDsvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	auto gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuHandle);
 }
