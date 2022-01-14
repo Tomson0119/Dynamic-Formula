@@ -7,4 +7,5 @@
 #include <RingBuffer.h>
 #include <Protocol.h>
 #include <IOCP.h>
+#include <MemoryPool.h>
 #include <Timer.h>

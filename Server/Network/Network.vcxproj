@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="EndPoint.h" />
     <ClInclude Include="IOCP.h" />
+    <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="RingBuffer.h" />
     <ClInclude Include="NetException.h" />
     <ClInclude Include="Protocol.h" />
