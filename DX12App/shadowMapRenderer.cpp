@@ -62,13 +62,7 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 			shadowMapShader->GetHS()->GetBufferSize()
 		};
 	}
-	if (shadowMapShader->GetPS() != nullptr)
-	{
-		psoDesc.PS = {
-			reinterpret_cast<BYTE*>(shadowMapShader->GetPS()->GetBufferPointer()),
-			shadowMapShader->GetPS()->GetBufferSize()
-		};
-	}
+
 	psoDesc.RasterizerState = mRasterizerDesc;
 	psoDesc.BlendState = mBlendDesc;
 	psoDesc.DepthStencilState = mDepthStencilDesc;
@@ -87,6 +81,12 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 			&psoDesc, IID_PPV_ARGS(&mPSO[1])));
 	}
 	
+	auto TerrainLayout = shadowMapTerrainShader->GetInputLayout();
+
+	psoDesc.InputLayout = {
+	TerrainLayout.data(),
+	(UINT)TerrainLayout.size()
+	};
 	psoDesc.VS = {
 		reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetVS()->GetBufferPointer()),
 		shadowMapTerrainShader->GetVS()->GetBufferSize()
@@ -110,13 +110,6 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 		psoDesc.HS = {
 			reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetHS()->GetBufferPointer()),
 			shadowMapTerrainShader->GetHS()->GetBufferSize()
-		};
-	}
-	if (shadowMapTerrainShader->GetPS() != nullptr)
-	{
-		psoDesc.PS = {
-			reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetPS()->GetBufferPointer()),
-			shadowMapTerrainShader->GetPS()->GetBufferSize()
 		};
 	}
 

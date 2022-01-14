@@ -144,7 +144,7 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 4096, 4096, 1);
-	mShadowMapRenderer->SetSunRange(80.0f);
+	mShadowMapRenderer->SetSunRange(20.0f);
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
