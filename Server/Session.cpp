@@ -26,7 +26,7 @@ void Session::AssignAcceptedID(int id, SOCKET sck)
 	mSocket.SetSocket(sck);
 }
 
-void Session::SendMsg(uchar* msg, int bytes)
+void Session::SendMsg(std::byte* msg, int bytes)
 {
 	WSAOVERLAPPEDEX* send_over = new WSAOVERLAPPEDEX(OP::SEND, msg, bytes);
 	mSocket.Send(*send_over);

@@ -33,6 +33,3 @@ extern "C" {
 #define ABS(x) ((x < 0) ? -(x) : (x))
 
 using namespace std::chrono_literals;
-
-typedef unsigned char uchar;
-

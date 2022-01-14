@@ -15,7 +15,7 @@ public:
 	void Disconnect();
 
 	void AssignAcceptedID(int id, SOCKET sck);
-	void SendMsg(uchar* msg, int bytes);
+	void SendMsg(std::byte* msg, int bytes);
 	void RecvMsg();
 
 	bool ChangeState(State expected, const State& desired);

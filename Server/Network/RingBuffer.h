@@ -10,20 +10,22 @@ public:
 
 	void Clear();
 
-	void Push(uchar* msg, int size);
-	void Pop(uchar* msg, int size);
+	void Push(std::byte* msg, size_t size);
+	void Pop(std::byte* msg, size_t size);
 
 	bool IsEmpty();
 	bool IsFull();
 
 	char GetMsgType();
-	uchar GetTotalMsgSize();
-	uchar PeekNextPacketSize();
+	size_t GetTotalMsgSize();
+	size_t PeekNextPacketSize();
 
-	uchar m_buffer[MaxBufferSize];
+	std::byte* GetBuffer() { return m_buffer; }
 
 private:
 	int m_readIndex;
 	int m_writeIndex;
-	int m_remainSize;
+	size_t m_remainSize;
+
+	std::byte m_buffer[MaxBufferSize];
 };

@@ -3,8 +3,8 @@
 
 RingBuffer::RingBuffer()
 	: m_writeIndex(0),
-	m_readIndex(0),
-	m_remainSize(MaxBufferSize)
+	  m_readIndex(0),
+	  m_remainSize(MaxBufferSize)
 {
 	std::memset(m_buffer, 0, MaxBufferSize);
 }
@@ -21,7 +21,7 @@ void RingBuffer::Clear()
 	m_remainSize = MaxBufferSize;
 }
 
-void RingBuffer::Push(uchar* msg, int size)
+void RingBuffer::Push(std::byte* msg, size_t size)
 {
 	if (size <= 0)
 		return;
@@ -31,7 +31,7 @@ void RingBuffer::Push(uchar* msg, int size)
 		return;
 	}
 
-	int push_amount = 0;
+	size_t push_amount = 0;
 	if (m_remainSize >= size)
 	{
 		bool out_of_index = (m_writeIndex + size) > MaxBufferSize;
@@ -50,13 +50,13 @@ void RingBuffer::Push(uchar* msg, int size)
 	Push(msg + push_amount, size - push_amount);
 }
 
-void RingBuffer::Pop(uchar* msg, int size)
+void RingBuffer::Pop(std::byte* msg, size_t size)
 {
 	if (IsEmpty() || size <= 0)
 		return;
 
-	int pop_amount = 0;
-	int remain_data_size = MaxBufferSize - m_remainSize;
+	size_t pop_amount = 0;
+	size_t remain_data_size = MaxBufferSize - m_remainSize;
 	if (remain_data_size >= size)
 	{
 		bool out_of_index = (m_readIndex + size) > MaxBufferSize;
@@ -95,14 +95,14 @@ char RingBuffer::GetMsgType()
 	return type;
 }
 
-uchar RingBuffer::GetTotalMsgSize()
+size_t RingBuffer::GetTotalMsgSize()
 {
-	return (uchar)(MaxBufferSize - m_remainSize);
+	return (MaxBufferSize - m_remainSize);
 }
 
-uchar RingBuffer::PeekNextPacketSize()
+size_t RingBuffer::PeekNextPacketSize()
 {
-	uchar size = 0;
+	char size = 0;
 	std::memcpy(reinterpret_cast<void*>(&size), m_buffer + m_readIndex, sizeof(size));
-	return size;
+	return (size_t)size;
 }
