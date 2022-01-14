@@ -77,7 +77,7 @@ void IOCPServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 			break;
 		}
 		Session* client = gClients[id].get();
-		over->MsgQueue.Push(over->NetBuffer, bytes);
+		//over->MsgQueue.Push(over->NetBuffer, bytes);
 		ProcessPackets(id, over->MsgQueue);
 		client->RecvMsg();
 		break;
@@ -91,7 +91,7 @@ void IOCPServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	}
 	case OP::ACCEPT:
 	{
-		SOCKET clientSck = *reinterpret_cast<SOCKET*>(over->NetBuffer);
+		SOCKET clientSck = *reinterpret_cast<SOCKET*>(over->MsgQueue.GetBuffer());
 		
 		int i = GetAvailableID();
 		if (i == -1) 
@@ -121,7 +121,21 @@ void IOCPServer::AcceptNewClient(int id, SOCKET sck)
 
 void IOCPServer::ProcessPackets(int id, RingBuffer& msgQueue)
 {
-	
+	std::byte* buffer_start = msgQueue.GetBuffer();
+	char type = static_cast<char>(buffer_start[1]);
+	switch (type)
+	{
+	case CS::CHAT:
+	{
+		CS::chat_packet* chat_packet = reinterpret_cast<CS::chat_packet*>(buffer_start);
+		std::cout << "[" << id << "]: " << chat_packet->message << "\n";
+		break;
+	}
+
+	default:
+		std::cout << "[" << id << "] Invalid packet\n";
+		break;
+	}
 }
 
 int IOCPServer::GetAvailableID()
