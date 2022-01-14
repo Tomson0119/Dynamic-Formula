@@ -9,9 +9,11 @@ public:
 	~Client();
 
 	bool Connect(const std::string& addr, short port);
+	void Disconnect();
 
-public:
-	bool Loop = true;
+	void Send(std::byte* msg, int bytes);
+
+	SOCKET GetSocket() const { return m_socket.GetSocket(); }
 
 private:
 	Socket m_socket;
