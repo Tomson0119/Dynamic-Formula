@@ -13,7 +13,7 @@ public:
     void UpdateLabels(const std::vector<std::wstring>& strUIText);
     void Draw(UINT nFrame);
     void ReleaseResources();
-    void Resize(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
+    void Resize(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height, ID3D12Device* pd3dDevice, ID3D12CommandAllocator* pd3dCommandAllocator);
 
 private:
     UINT GetRenderTargetsCount() { return static_cast<UINT>(m_vWrappedRenderTargets.size()); }

@@ -45,6 +45,7 @@ public:
 
 	void OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed);
 
+	Player* GetPlayer() { return mPlayer; }
 	XMFLOAT4 GetFrameColor() const { return mFrameColor; }
 	ID3D12RootSignature* GetRootSignature() const { return mRootSignature.Get(); }
 

@@ -36,7 +36,7 @@ public:
 
 public:
 	virtual Camera* ChangeCameraMode(int cameraMode);
-
+	virtual float GetCurrentVelocity() { return 0.0f; }
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
 	virtual void OnPlayerUpdate(float elapsedTime) { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
@@ -102,6 +102,8 @@ public:
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
 	void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	
+	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 
 private:
 	WheelObject* mWheel[4];

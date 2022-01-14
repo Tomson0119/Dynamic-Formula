@@ -22,8 +22,7 @@ bool GameFramework::InitFramework()
 		return false;
 
 	//UI Build
-	mpUI=std::make_unique<UI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+	
 	
 	
 	// 초기화하는 명령어를 넣기 위해 커맨드 리스트를 개방한다.
@@ -31,6 +30,9 @@ bool GameFramework::InitFramework()
 
 	mScenes.push(make_unique<GameScene>());
 	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
+	
+	mpUI = std::make_unique<UI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
+	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight, mD3dDevice.Get(), mCommandAllocator.Get());
 
 	// Command List를 닫고 Queue에 명령어를 싣는다.
 	ThrowIfFailed(mCommandList->Close());
@@ -96,10 +98,18 @@ void GameFramework::OnPreciseKeyInput()
 
 void GameFramework::TextUIUpdate()
 {
-	//TextUI Set
+	//const float fFontSize = m_fHeight / 25.0f;
+	//const float fSmallFontSize = m_fHeight / 40.0f;
+
+	//mpUI.get(). m_pd2dWriteFactory->CreateTextFormat(L"휴먼둥근헤드라인", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", &m_pdwTextFormat);
+
+	//ThrowIfFailed(m_pdwTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
+	//ThrowIfFailed(m_pdwTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
+	////TextUI Set
 	TextUI.clear();
 	TextUI.resize(4);
 	//Time Set
+
 	UINT Min = 0;
 	float Sec = 0.0;
 	Min = mTimer.TotalTime() / 60.0f;
@@ -114,8 +124,6 @@ void GameFramework::TextUIUpdate()
 		TextUI[0].push_back('0');
 	for (int i = 0; i < 3+!(Sec<10); ++i)
 		TextUI[0].push_back(to_wstring(Sec)[i]);
-	/*for (auto wc : to_wstring(Sec))
-		TextUI[0].push_back(wc);*/
 	
 	//Lap Count Set
 	if(static_cast<int>(mTimer.TotalTime()/60)>0)
@@ -148,8 +156,28 @@ void GameFramework::TextUIUpdate()
 		break;
 	}
 	//Speed
-	std::wstring kmh{ L"km/h" };
-	for(auto wc : kmh)
+	//float CurrentSpeed = mScenes.top().get()->GetPlayer()->GetCurrentVelocity();
+	if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 1000.0f)
+	{
+		for (int i = 0; i < 6; ++i)
+			TextUI[3].push_back(to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+	}
+	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 100.0f)
+	{
+		for (int i = 0; i < 5; ++i)
+			TextUI[3].push_back(to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+	}
+	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 10.0f)
+	{
+		for (int i = 0; i < 4; ++i)
+			TextUI[3].push_back(to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+	}
+	else
+	{
+		for (int i = 0; i < 3; ++i)
+			TextUI[3].push_back(to_wstring(0.0f)[i]);
+	}
+	for(auto wc : std::wstring(L"km/h"))
 		TextUI[3].push_back(wc);
 }
 
@@ -210,8 +238,10 @@ void GameFramework::Draw()
 
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
-	//for (auto ui : mpUI)
+	//mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+	
 	mpUI->Draw(mCurrBackBufferIndex);
+
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 
