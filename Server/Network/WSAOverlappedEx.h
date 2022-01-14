@@ -18,19 +18,16 @@ struct WSAOVERLAPPEDEX
 	WSABUF WSABuffer;
 	OP Operation;
 
-	uchar NetBuffer[MaxBufferSize];
 	RingBuffer MsgQueue;
 
 	WSAOVERLAPPEDEX(OP op = OP::RECV)
-		: Operation(op), WSABuffer{}, NetBuffer{}
+		: Operation(op), WSABuffer{}, MsgQueue{}
 	{
-		ZeroMemory(&Overlapped, sizeof(Overlapped));
-		WSABuffer.buf = reinterpret_cast<char*>(NetBuffer);
-		WSABuffer.len = sizeof(NetBuffer);
+		Reset(op);
 	}
 
-	WSAOVERLAPPEDEX(OP op, uchar* data, int bytes)
-		: Operation(op), WSABuffer{}, NetBuffer{}
+	WSAOVERLAPPEDEX(OP op, std::byte* data, int bytes)
+		: Operation(op), WSABuffer{}, MsgQueue{}
 	{
 		Reset(op, data, bytes);
 	}
@@ -39,16 +36,16 @@ struct WSAOVERLAPPEDEX
 	{
 		Operation = op;
 		ZeroMemory(&Overlapped, sizeof(Overlapped));
-		WSABuffer.buf = reinterpret_cast<char*>(NetBuffer);
+		WSABuffer.buf = reinterpret_cast<char*>(MsgQueue.GetBuffer());
 		WSABuffer.len = MaxBufferSize;
 	}
 
-	void Reset(OP op, uchar* data, int bytes)
+	void Reset(OP op, std::byte* data, int bytes)
 	{
 		Operation = op;
 		ZeroMemory(&Overlapped, sizeof(Overlapped));
-		std::memcpy(NetBuffer, data, bytes);
-		WSABuffer.buf = reinterpret_cast<char*>(NetBuffer);
+		std::memcpy(MsgQueue.GetBuffer(), data, bytes);
+		WSABuffer.buf = reinterpret_cast<char*>(MsgQueue.GetBuffer());
 		WSABuffer.len = (ULONG)bytes;
 	}
 };
