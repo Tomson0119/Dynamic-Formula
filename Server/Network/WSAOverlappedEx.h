@@ -21,13 +21,13 @@ struct WSAOVERLAPPEDEX
 	RingBuffer MsgQueue;
 
 	WSAOVERLAPPEDEX(OP op = OP::RECV)
-		: Operation(op), WSABuffer{}, MsgQueue{}
+		: Operation(op), WSABuffer{}
 	{
 		Reset(op);
 	}
 
 	WSAOVERLAPPEDEX(OP op, std::byte* data, int bytes)
-		: Operation(op), WSABuffer{}, MsgQueue{}
+		: Operation(op), WSABuffer{}
 	{
 		Reset(op, data, bytes);
 	}
@@ -36,6 +36,7 @@ struct WSAOVERLAPPEDEX
 	{
 		Operation = op;
 		ZeroMemory(&Overlapped, sizeof(Overlapped));
+		MsgQueue.Clear();
 		WSABuffer.buf = reinterpret_cast<char*>(MsgQueue.GetBuffer());
 		WSABuffer.len = MaxBufferSize;
 	}
@@ -44,8 +45,18 @@ struct WSAOVERLAPPEDEX
 	{
 		Operation = op;
 		ZeroMemory(&Overlapped, sizeof(Overlapped));
-		std::memcpy(MsgQueue.GetBuffer(), data, bytes);
+		MsgQueue.Clear();
+		MsgQueue.Push(data, bytes);
 		WSABuffer.buf = reinterpret_cast<char*>(MsgQueue.GetBuffer());
 		WSABuffer.len = (ULONG)bytes;
+	}
+
+	void PushMsg(std::byte* data, int bytes)
+	{
+		if (Operation == OP::SEND)
+		{
+			MsgQueue.Push(data, bytes);
+			WSABuffer.len = (ULONG)MsgQueue.GetTotalMsgSize();
+		}
 	}
 };
