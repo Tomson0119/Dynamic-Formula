@@ -15,8 +15,10 @@ public:
 	void Disconnect(int id);
 	void AcceptNewClient(int id, SOCKET sck);
 
-	void ProcessPackets(int id, RingBuffer& msgQueue);
+	void ProcessPackets(int id, std::byte* packet);
 	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes);
+
+	void AssemblePacket(int client_id, WSAOVERLAPPEDEX* over, int bytes);
 
 	static void NetworkThreadFunc(IOCPServer& server);
 	static const int MaxThreads = 1;

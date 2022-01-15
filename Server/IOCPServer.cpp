@@ -1,6 +1,8 @@
 #include "common.h"
 #include "IOCPServer.h"
 
+//#define USE_RINGBUFFER
+
 std::array<std::unique_ptr<Session>, MAX_PLAYER> IOCPServer::gClients;
 
 IOCPServer::IOCPServer(const EndPoint& ep)
@@ -77,8 +79,10 @@ void IOCPServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 			break;
 		}
 		Session* client = gClients[id].get();
-		//over->MsgQueue.Push(over->NetBuffer, bytes);
-		ProcessPackets(id, over->MsgQueue);
+		
+#ifndef USE_RINGBUFFER
+		AssemblePacket(id, over, bytes);
+#endif
 		client->RecvMsg();
 		break;
 	}
@@ -105,6 +109,28 @@ void IOCPServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	}
 }
 
+void IOCPServer::AssemblePacket(int client_id, WSAOVERLAPPEDEX* over, int bytes)
+{
+	std::byte* packet_start = over->MsgQueue.GetBuffer();
+	int remain_len = bytes + gClients[client_id]->PrevSize;
+	int packet_size = static_cast<int>(packet_start[0]);
+
+	while (packet_size <= remain_len)
+	{
+		ProcessPackets(client_id, packet_start);
+		remain_len -= packet_size;
+		packet_start += packet_size;
+		if (remain_len > 0) packet_size = static_cast<int>(packet_start[0]);
+		else break;
+	}
+
+	if (remain_len > 0)
+	{
+		gClients[client_id]->PrevSize = remain_len;
+		std::memcpy(over->MsgQueue.GetBuffer(), packet_start, remain_len);
+	}
+}
+
 void IOCPServer::Disconnect(int id)
 {
 	std::cout << "Disconnect [" << id << "]\n";
@@ -119,21 +145,32 @@ void IOCPServer::AcceptNewClient(int id, SOCKET sck)
 	gClients[id]->RecvMsg();
 }
 
-void IOCPServer::ProcessPackets(int id, RingBuffer& msgQueue)
+void IOCPServer::ProcessPackets(int id, std::byte* packet)
 {
-	std::byte* buffer_start = msgQueue.GetBuffer();
-	char type = static_cast<char>(buffer_start[1]);
+	char type = static_cast<char>(packet[1]);
+	std::cout << "[" << id << "] ";
 	switch (type)
 	{
-	case CS::CHAT:
+	case CS::LOGIN:
 	{
-		CS::chat_packet* chat_packet = reinterpret_cast<CS::chat_packet*>(buffer_start);
-		std::cout << "[" << id << "]: " << chat_packet->message << "\n";
+		CS::login_packet* pck = reinterpret_cast<CS::login_packet*>(packet);
+		std::cout << "Login packet: " << pck->name << std::endl;
 		break;
 	}
-
+	case CS::CHAT:
+	{
+		CS::chat_packet* pck = reinterpret_cast<CS::chat_packet*>(packet);
+		std::cout << "Chat packet: " << pck->message << std::endl;
+		break;
+	}
+	case CS::MOVE:
+	{
+		CS::move_packet* pck = reinterpret_cast<CS::move_packet*>(packet);
+		std::cout << "Move packet: " << (int)pck->direction << " " << pck->move_time << std::endl;
+		break;
+	}
 	default:
-		std::cout << "[" << id << "] Invalid packet\n";
+		std::cout << "Invalid packet\n";
 		break;
 	}
 }
