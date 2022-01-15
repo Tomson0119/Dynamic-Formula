@@ -15,7 +15,7 @@ RingBuffer::~RingBuffer()
 
 void RingBuffer::Clear()
 {
-	std::memset(m_buffer, 0, MaxBufferSize);
+	//std::memset(m_buffer, 0, MaxBufferSize);
 	m_writeIndex = 0;
 	m_readIndex = 0;
 	m_remainSize = MaxBufferSize;
