@@ -366,8 +366,12 @@ void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCB
 	SetCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
 
-	for (const auto& [layer, pso] : mPipelines) {
-		pso->SetAndDraw(cmdList, (bool)mLODSet);
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if (layer != Layer::Terrain)
+			pso->SetAndDraw(cmdList, (bool)mLODSet);
+		else
+			pso->SetAndDraw(cmdList, mMainCamera.get()->GetWorldFrustum(), (bool)mLODSet);
 	}
 }
 
