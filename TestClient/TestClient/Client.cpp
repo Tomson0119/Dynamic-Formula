@@ -1,6 +1,7 @@
 #include "Client.h"
 
-Client::Client()
+Client::Client(int id)
+	: m_sendOverlapped{ nullptr }, ID(id)
 {
 	m_socket.Init();
 }
@@ -19,8 +20,26 @@ void Client::Disconnect()
 	m_socket.Close();
 }
 
+void Client::PushPacket(std::byte* pck, int bytes)
+{
+	if (m_sendOverlapped == nullptr)
+		m_sendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
+	else
+	{
+		m_sendOverlapped->PushMsg(pck, bytes);
+	}
+}
+
+void Client::Send()
+{
+	if (m_sendOverlapped != nullptr) {
+		m_socket.Send(*m_sendOverlapped);
+		m_sendOverlapped = nullptr;
+	}
+}
+
 void Client::Send(std::byte* msg, int bytes)
 {
-	WSAOVERLAPPEDEX* send_over = new WSAOVERLAPPEDEX(OP::SEND, msg, bytes);
-	m_socket.Send(*send_over);
+	PushPacket(msg, bytes);
+	Send();	
 }
