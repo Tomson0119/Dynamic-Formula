@@ -6,7 +6,8 @@
 Session::Session(int id)
 	: ID(id),
 	  mRecvOverlapped{},
-	  mState{ State::EMPTY }
+	  mState{ State::EMPTY },
+	  PrevSize(0)
 {
 	mSocket.Init();
 }
@@ -17,6 +18,7 @@ Session::~Session()
 
 void Session::Disconnect()
 {
+	mState = State::EMPTY;
 	mSocket.Close();
 }
 

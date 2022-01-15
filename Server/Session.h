@@ -22,6 +22,7 @@ public:
 
 public:
 	int ID;
+	int PrevSize;
 
 private:
 	WSAOVERLAPPEDEX mRecvOverlapped;
