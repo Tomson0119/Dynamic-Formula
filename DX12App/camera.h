@@ -75,6 +75,8 @@ public:
 	CameraConstants GetConstants() const;
 
 	CameraMode GetMode() const { return mMode; }
+	BoundingFrustum GetWorldFrustum() const { return mFrustumWorld; }
+	BoundingFrustum GetViewFrustum() const { return mFrustumView; }
 
 protected:
 	bool mViewDirty = false;

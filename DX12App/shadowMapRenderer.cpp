@@ -269,15 +269,13 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList)
 		if (layer == Layer::Terrain)
 		{
 			cmdList->SetPipelineState(mTerrainPSO.Get());
-		}
 
-		pso->SetAndDraw(cmdList, false, false);
+			pso->SetAndDraw(cmdList, mDepthCamera[0]->GetWorldFrustum(), false, false);
 
-		if (layer == Layer::Terrain)
-		{
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
-
+		else
+			pso->SetAndDraw(cmdList, false, false);
 	}
 }
 

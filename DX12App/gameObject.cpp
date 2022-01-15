@@ -237,9 +237,36 @@ void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 }
 
 void GameObject::Draw(
-	ID3D12GraphicsCommandList* cmdList, 
+	ID3D12GraphicsCommandList* cmdList,
 	UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
 	UINT64 matGPUAddress, UINT64 byteOffset, bool isSO)
+{
+	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
+
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	for (int i = 0; i < mMeshes.size(); i++)
+	{
+		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
+
+		int srvIndex = mMeshes[i]->GetSrvIndex();
+
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
+		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
+		mMeshes[i]->Draw(cmdList, isSO);
+
+		matGPUAddress += byteOffset;
+	}
+}
+
+void GameObject::Draw(
+	ID3D12GraphicsCommandList* cmdList, 
+	UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
+	UINT64 matGPUAddress, UINT64 byteOffset, const BoundingFrustum& viewFrustum, bool isSO)
 {
 	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
 	
@@ -257,7 +284,7 @@ void GameObject::Draw(
 			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
 		}
 		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
-		mMeshes[i]->Draw(cmdList, isSO);
+		mMeshes[i]->Draw(cmdList, viewFrustum, isSO);
 
 		matGPUAddress += byteOffset;
 	}
@@ -286,8 +313,9 @@ void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 
 void GameObject::UpdateBoudingBox()
 {
-	/*for(const auto& mesh :mMeshes)
+	/*for (const auto& mesh : mMeshes)
 	{
+		mesh->mOOBB.Center = { 0.0f, 0.0f, 0.0f };
 		mesh->mOOBB.Transform(mOOBB, XMLoadFloat4x4(&mWorld));
 		XMStoreFloat4(&mOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&mOOBB.Orientation)));
 	}*/
