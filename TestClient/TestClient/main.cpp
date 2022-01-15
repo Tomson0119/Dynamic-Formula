@@ -1,4 +1,5 @@
 #include "Client.h"
+#include <random>
 
 const std::string SERVER_IP = "127.0.0.1";
 
@@ -6,8 +7,13 @@ const int MAX_TRIAL = 10;
 const int MAX_THREADS = 1;
 
 std::array<std::unique_ptr<Client>, MAX_TRIAL> gClients;
-std::atomic_bool gLoop = true;
+bool gLoop = true;
 IOCP gIOCP;
+
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_int_distribution id_gen{ 0, MAX_TRIAL - 1 };
+std::uniform_int_distribution type_gen{ 1, 3 };
 
 void ThreadFunc(int id)
 {
@@ -46,11 +52,46 @@ void ThreadFunc(int id)
 	}
 }
 
+void GenLoginPacket(int id)
+{
+	std::cout << "[" << id << "] Generating login packet ";
+	CS::login_packet pck{};
+	pck.size = sizeof(CS::login_packet);
+	pck.type = CS::LOGIN;
+	std::string client_name = "Host" + std::to_string(id);
+	strncpy_s(pck.name, client_name.c_str(), client_name.size());
+	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void GenChatPacket(int id)
+{
+	std::cout << "[" << id << "] Generating chat packet ";
+	CS::chat_packet pck{};
+	pck.size = sizeof(CS::chat_packet);
+	pck.type = CS::CHAT;
+	std::string chat = "Hello from Host" + std::to_string(id);
+	strncpy_s(pck.message, chat.c_str(), chat.size());
+	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void GenMovePacket(int id)
+{
+	std::cout << "[" << id << "] Generating move packet ";
+	CS::move_packet pck{};
+	pck.size = sizeof(CS::move_packet);
+	pck.type = CS::MOVE;
+	pck.direction = id;
+	auto now = std::chrono::steady_clock::now();
+	auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+	pck.move_time = now_ms.time_since_epoch().count();
+	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
 int main()
 {
 	for (int i = 0; i < MAX_TRIAL; i++)
 	{
-		gClients[i] = std::make_unique<Client>();
+		gClients[i] = std::make_unique<Client>(i);
 		if (gClients[i]->Connect(SERVER_IP, SERVER_PORT) == false)
 		{
 			std::cout << "Connection failed [" << i << "]\n";
@@ -69,15 +110,32 @@ int main()
 
 	while (true)
 	{
-		std::string input;
-		std::getline(std::cin, input);
+		int id = 1;
+		int type = type_gen(gen);
 
-		CS::chat_packet chat_packet{};
-		chat_packet.size = sizeof(CS::chat_packet);
-		chat_packet.type = CS::CHAT;
-		strncpy_s(chat_packet.message, input.c_str(), input.size());
-		gClients[0]->Send(reinterpret_cast<std::byte*>(&chat_packet), sizeof(CS::chat_packet));
-
-		//std::this_thread::sleep_for(10ms);
+		switch (type)
+		{
+		case CS::LOGIN:
+		{
+			GenLoginPacket(id);
+			if (id % 2 == 0) break;
+		}
+		case CS::CHAT:
+		{
+			GenChatPacket(id);
+			if (id % 2 == 0) break;
+		}
+		case CS::MOVE:
+		{
+			GenMovePacket(id);
+			break;
+		}
+		default:
+			std::cout << "Wrong type genned\n";
+			break;
+		}
+		std::cout << "\n";
+		gClients[id]->Send();
+		std::this_thread::sleep_for(2.3s);
 	}
 }
