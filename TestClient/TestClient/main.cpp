@@ -110,8 +110,8 @@ int main()
 
 	while (true)
 	{
-		int id = 1;
-		int type = type_gen(gen);
+		int id = id_gen(gen);
+		char type = type_gen(gen);
 
 		switch (type)
 		{
@@ -136,6 +136,6 @@ int main()
 		}
 		std::cout << "\n";
 		gClients[id]->Send();
-		std::this_thread::sleep_for(2.3s);
+		std::this_thread::sleep_for(1s);
 	}
 }
