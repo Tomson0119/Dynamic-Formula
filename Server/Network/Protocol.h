@@ -6,7 +6,7 @@ const int  MAX_NAME_SIZE = 20;
 const int  MAX_CHAT_SIZE = 100;
 const int  MAX_PLAYER = 10000;
 
-const int MaxBufferSize = 1024;
+const int MaxBufferSize = 300;
 
 #pragma pack (push, 1)
 namespace CS
