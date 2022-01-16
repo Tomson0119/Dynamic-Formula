@@ -3,7 +3,7 @@
 #include "stdafx.h"
 #include "Socket.h"
 #include "Protocol.h"
-#include "RingBuffer.h"
+#include "BufferQueue.h"
 
 enum class OP : char
 {
@@ -17,8 +17,7 @@ struct WSAOVERLAPPEDEX
 	WSAOVERLAPPED Overlapped;
 	WSABUF WSABuffer;
 	OP Operation;
-
-	RingBuffer MsgQueue;
+	BufferQueue NetBuffer;
 
 	WSAOVERLAPPEDEX(OP op = OP::RECV)
 		: Operation(op), WSABuffer{}
@@ -32,31 +31,29 @@ struct WSAOVERLAPPEDEX
 		Reset(op, data, bytes);
 	}
 
-	void Reset(OP op)
+	void Reset(OP op, std::byte* data=nullptr, int bytes=0)
 	{
 		Operation = op;
 		ZeroMemory(&Overlapped, sizeof(Overlapped));
-		MsgQueue.Clear();
-		WSABuffer.buf = reinterpret_cast<char*>(MsgQueue.GetBuffer());
-		WSABuffer.len = MaxBufferSize;
-	}
 
-	void Reset(OP op, std::byte* data, int bytes)
-	{
-		Operation = op;
-		ZeroMemory(&Overlapped, sizeof(Overlapped));
-		MsgQueue.Clear();
-		MsgQueue.Push(data, bytes);
-		WSABuffer.buf = reinterpret_cast<char*>(MsgQueue.GetBuffer());
-		WSABuffer.len = (ULONG)bytes;
+		if (op == OP::RECV)	{
+			WSABuffer.buf = reinterpret_cast<char*>(NetBuffer.BufWritePtr());
+			WSABuffer.len = (ULONG)NetBuffer.GetLeftBufLen();
+		}
+		else {
+			NetBuffer.Clear();
+			if(data) NetBuffer.Push(data, bytes);
+			WSABuffer.buf = reinterpret_cast<char*>(NetBuffer.BufStartPtr());
+			WSABuffer.len = (ULONG)bytes;
+		}
 	}
 
 	void PushMsg(std::byte* data, int bytes)
 	{
 		if (Operation == OP::SEND)
 		{
-			MsgQueue.Push(data, bytes);
-			WSABuffer.len = (ULONG)MsgQueue.GetTotalMsgSize();
+			NetBuffer.Push(data, bytes);
+			WSABuffer.len = (ULONG)NetBuffer.GetFilledBufLen();
 		}
 	}
 };
