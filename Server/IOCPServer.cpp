@@ -1,8 +1,6 @@
 #include "common.h"
 #include "IOCPServer.h"
 
-//#define USE_RINGBUFFER
-
 std::array<std::unique_ptr<Session>, MAX_PLAYER> IOCPServer::gClients;
 
 IOCPServer::IOCPServer(const EndPoint& ep)
@@ -51,10 +49,10 @@ void IOCPServer::NetworkThreadFunc(IOCPServer& server)
 			int client_id = static_cast<int>(info.key);
 			WSAOVERLAPPEDEX* over_ex = reinterpret_cast<WSAOVERLAPPEDEX*>(info.overEx);
 			
-			if (info.success == FALSE)
+			if (over_ex == nullptr || info.success == FALSE)
 			{
 				server.Disconnect(client_id);
-				if (over_ex->Operation == OP::SEND)
+				if (over_ex && over_ex->Operation == OP::SEND)
 					delete over_ex;
 				continue;
 			}
@@ -79,10 +77,8 @@ void IOCPServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 			break;
 		}
 		Session* client = gClients[id].get();
-		
-#ifndef USE_RINGBUFFER
-		AssemblePacket(id, over, bytes);
-#endif
+		over->NetBuffer.ShiftWritePtr(bytes);
+		ReadRecvBuffer(over, id, bytes);
 		client->RecvMsg();
 		break;
 	}
@@ -95,7 +91,7 @@ void IOCPServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	}
 	case OP::ACCEPT:
 	{
-		SOCKET clientSck = *reinterpret_cast<SOCKET*>(over->MsgQueue.GetBuffer());
+		SOCKET clientSck = *reinterpret_cast<SOCKET*>(over->NetBuffer.BufStartPtr());
 		
 		int i = GetAvailableID();
 		if (i == -1) 
@@ -106,28 +102,6 @@ void IOCPServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 		mListenSck.AsyncAccept(*over);
 		break;
 	}
-	}
-}
-
-void IOCPServer::AssemblePacket(int client_id, WSAOVERLAPPEDEX* over, int bytes)
-{
-	std::byte* packet_start = over->MsgQueue.GetBuffer();
-	int remain_len = bytes + gClients[client_id]->PrevSize;
-	int packet_size = static_cast<int>(packet_start[0]);
-
-	while (packet_size <= remain_len)
-	{
-		ProcessPackets(client_id, packet_start);
-		remain_len -= packet_size;
-		packet_start += packet_size;
-		if (remain_len > 0) packet_size = static_cast<int>(packet_start[0]);
-		else break;
-	}
-
-	if (remain_len > 0)
-	{
-		gClients[client_id]->PrevSize = remain_len;
-		std::memcpy(over->MsgQueue.GetBuffer(), packet_start, remain_len);
 	}
 }
 
@@ -145,10 +119,28 @@ void IOCPServer::AcceptNewClient(int id, SOCKET sck)
 	gClients[id]->RecvMsg();
 }
 
-void IOCPServer::ProcessPackets(int id, std::byte* packet)
+void IOCPServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
 {
+	while (over->NetBuffer.Readable())
+	{
+		std::byte* packet = over->NetBuffer.BufReadPtr();
+		
+		if (packet == nullptr) {
+			over->NetBuffer.Clear();
+			break;
+		}
+		if (ProcessPacket(packet, id, bytes) == false) {
+			over->NetBuffer.Clear();
+			break;
+		}
+	}
+	std::cout << "\n";
+}
+
+bool IOCPServer::ProcessPacket(std::byte* packet, int id, int bytes)
+{
+	std::cout << "[" << id << "] " <<static_cast<int>(packet[0])<<" ";
 	char type = static_cast<char>(packet[1]);
-	std::cout << "[" << id << "] ";
 	switch (type)
 	{
 	case CS::LOGIN:
@@ -170,9 +162,10 @@ void IOCPServer::ProcessPackets(int id, std::byte* packet)
 		break;
 	}
 	default:
-		std::cout << "Invalid packet\n";
-		break;
+		std::cout << "Invalid packet...clearing buffer\n";
+		return false;
 	}
+	return true;
 }
 
 int IOCPServer::GetAvailableID()
