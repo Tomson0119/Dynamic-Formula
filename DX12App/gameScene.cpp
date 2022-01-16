@@ -143,8 +143,7 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 4096, 4096, 1);
-	mShadowMapRenderer->SetSunRange(100.0f);
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 1024, 1024, 4);
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
@@ -220,8 +219,9 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
 
-	mShadowMapRenderer->SetCenter(mPlayer->GetPosition());
+	mShadowMapRenderer->BuildSpilitFrustum(mMainCamera.get());
 }
+
 
 void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
 {

@@ -20,8 +20,10 @@ public:
 	void AppendTargetPipeline(Layer layer, Pipeline* pso);
 	void SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 
-	void SetSunRange(float range) { mSunRange = range; }
-	void SetCenter(const XMFLOAT3& center) { mCenter = center; }
+	void SetSunRange(float range) { mSunRange.push_back(range); }
+	void SetCenter(const XMFLOAT3& center) { mCenter.push_back(center); }
+
+	void BuildSpilitFrustum(const Camera* mainCamera);
 
 	XMFLOAT4X4 GetShadowTransform(int idx) const;
 
@@ -32,8 +34,9 @@ private:
 	UINT mMapWidth;
 	UINT mMapHeight;
 
-	XMFLOAT3 mCenter;
-	float mSunRange;
+	std::vector<XMFLOAT3> mCenter;
+	std::vector<float> mZSplits;
+	std::vector<float> mSunRange;
 
 	UINT mMapCount;
 

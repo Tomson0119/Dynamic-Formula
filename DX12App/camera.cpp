@@ -104,6 +104,11 @@ XMFLOAT4X4 Camera::GetView() const
 	return mView;
 }
 
+XMFLOAT4X4 Camera::GetInverseView() const
+{
+	return mInvView;
+}
+
 CameraConstants Camera::GetConstants() const
 {
 	CameraConstants cameraCnst;

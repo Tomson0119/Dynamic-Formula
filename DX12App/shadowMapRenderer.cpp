@@ -120,6 +120,67 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 		&psoDesc, IID_PPV_ARGS(&mTerrainPSO)));
 }
 
+void ShadowMapRenderer::BuildSpilitFrustum(const Camera* mainCamera)
+{
+	auto invView = mainCamera->GetInverseView();
+	float vFov = mainCamera->GetFov().y;
+	float hFov = mainCamera->GetFov().x;
+
+	mZSplits.resize(mMapCount + 1);
+	mZSplits[0] = mainCamera->GetNearZ();
+	mZSplits[mMapCount - 1] = mainCamera->GetFarZ();
+	for (int i = 1; i < mMapCount - 1; ++i)
+	{
+		float index = (i / (float)mMapCount);
+		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount - 1] - mZSplits[0]) * index;
+		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount - 1] / mZSplits[0]), index);
+		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.5f);
+	}
+
+	for (int i = 0; i < mMapCount; ++i)
+	{
+		float xn = mZSplits[i] + hFov;
+		float xf = mZSplits[i + 1] * hFov;
+		float yn = mZSplits[i] * vFov;
+		float yf = mZSplits[i + 1] * vFov;
+
+		XMFLOAT3 frustumCorners[8] =
+		{
+			//near Face
+			{xn, yn, mZSplits[i]},
+			{-xn, yn, mZSplits[i]},
+			{xn, -yn ,mZSplits[i]},
+			{-xn, -yn, mZSplits[i]},
+			//far Face
+			{xf, yf, mZSplits[i + 1]},
+			{-xf, yf, mZSplits[i + 1]},
+			{xf, -yf, mZSplits[i + 1]},
+			{-xf, -yf, mZSplits[i + 1]}
+		};
+
+		XMFLOAT3 centerPos = { 0.0f, 0.0f, 0.0f };
+
+		for (int j = 0; j < 8; ++j)
+		{
+			frustumCorners[j] = Vector3::Transform(frustumCorners[j], XMLoadFloat4x4(&invView));
+			centerPos = Vector3::Add(centerPos, frustumCorners[j]);
+		}
+		centerPos = Vector3::Multiply(1 / 8, centerPos);
+		mCenter[i] = centerPos;
+
+		float sunRange = 0.0f;
+		for (int j = 0; j < 8; ++j)
+		{
+			float distance = Vector3::Length(Vector3::Subtract(frustumCorners[j], centerPos));
+			sunRange = std::max(sunRange, distance);
+		}
+
+		sunRange = std::ceil(sunRange * 16.0f) / 16.0f;
+
+		mSunRange[i] = sunRange;
+	}
+}
+
 XMFLOAT4X4 ShadowMapRenderer::GetShadowTransform(int idx) const
 {
 	XMMATRIX view = XMLoadFloat4x4(&mDepthCamera[idx]->GetView());
@@ -209,14 +270,14 @@ void ShadowMapRenderer::UpdateDepthCamera(LightConstants& lightCnst)
 	for (int i = 0; i < (int)mMapCount; i++)
 	{
 		XMFLOAT3 look = lightCnst.Lights[i].Direction;
-		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange, look, mCenter);
+		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange[i], look, mCenter[i]);
 
-		mDepthCamera[i]->LookAt(position, mCenter, XMFLOAT3(0.0f, 1.0f, 0.0f));
+		mDepthCamera[i]->LookAt(position, mCenter[i], XMFLOAT3(0.0f, 1.0f, 0.0f));
 
 		switch (lightCnst.Lights[i].Type)
 		{
 		case DIRECTIONAL_LIGHT:
-			mDepthCamera[i]->SetOrthographicLens(mCenter, mSunRange);
+			mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
 			break;
 
 		case SPOT_LIGHT:
