@@ -15,7 +15,7 @@ public:
 	
 	void UpdateDepthCamera(LightConstants& lightCnst);
 	void PreRender(ID3D12GraphicsCommandList* cmdList, GameScene* scene);
-	void RenderPipelines(ID3D12GraphicsCommandList* cmdList);
+	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int idx);
 
 	void AppendTargetPipeline(Layer layer, Pipeline* pso);
 	void SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
@@ -23,7 +23,7 @@ public:
 	void SetSunRange(float range) { mSunRange.push_back(range); }
 	void SetCenter(const XMFLOAT3& center) { mCenter.push_back(center); }
 
-	void BuildSpilitFrustum(const Camera* mainCamera);
+	void UpdateSplitFrustum(const Camera* mainCamera);
 
 	XMFLOAT4X4 GetShadowTransform(int idx) const;
 

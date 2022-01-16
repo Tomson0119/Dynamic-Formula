@@ -13,6 +13,9 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 
 	mDsvCPUDescriptorHandles.resize(mMapCount, {});
 	mCbvSrvCPUDescriptorHandles.resize(mMapCount, {});
+	mCenter.resize(mMapCount, {});
+	mSunRange.resize(mMapCount, {});
+	mZSplits.resize(mMapCount + 1);
 }
 
 ShadowMapRenderer::~ShadowMapRenderer()
@@ -120,20 +123,19 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 		&psoDesc, IID_PPV_ARGS(&mTerrainPSO)));
 }
 
-void ShadowMapRenderer::BuildSpilitFrustum(const Camera* mainCamera)
+void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
 {
 	auto invView = mainCamera->GetInverseView();
 	float vFov = mainCamera->GetFov().y;
 	float hFov = mainCamera->GetFov().x;
 
-	mZSplits.resize(mMapCount + 1);
 	mZSplits[0] = mainCamera->GetNearZ();
-	mZSplits[mMapCount - 1] = mainCamera->GetFarZ();
-	for (int i = 1; i < mMapCount - 1; ++i)
+	mZSplits[mMapCount] = mainCamera->GetFarZ();
+	for (int i = 1; i < mMapCount; ++i)
 	{
 		float index = (i / (float)mMapCount);
-		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount - 1] - mZSplits[0]) * index;
-		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount - 1] / mZSplits[0]), index);
+		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
+		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
 		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.5f);
 	}
 
@@ -165,7 +167,7 @@ void ShadowMapRenderer::BuildSpilitFrustum(const Camera* mainCamera)
 			frustumCorners[j] = Vector3::Transform(frustumCorners[j], XMLoadFloat4x4(&invView));
 			centerPos = Vector3::Add(centerPos, frustumCorners[j]);
 		}
-		centerPos = Vector3::Multiply(1 / 8, centerPos);
+ 		centerPos = Vector3::Divide(8, centerPos);
 		mCenter[i] = centerPos;
 
 		float sunRange = 0.0f;
@@ -175,7 +177,7 @@ void ShadowMapRenderer::BuildSpilitFrustum(const Camera* mainCamera)
 			sunRange = std::max(sunRange, distance);
 		}
 
-		sunRange = std::ceil(sunRange * 16.0f) / 16.0f;
+		sunRange = 400.0f * (i + 1);
 
 		mSunRange[i] = sunRange;
 	}
@@ -269,28 +271,29 @@ void ShadowMapRenderer::UpdateDepthCamera(LightConstants& lightCnst)
 {
 	for (int i = 0; i < (int)mMapCount; i++)
 	{
-		XMFLOAT3 look = lightCnst.Lights[i].Direction;
+		XMFLOAT3 look = lightCnst.Lights[0].Direction;
 		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange[i], look, mCenter[i]);
 
 		mDepthCamera[i]->LookAt(position, mCenter[i], XMFLOAT3(0.0f, 1.0f, 0.0f));
 
-		switch (lightCnst.Lights[i].Type)
-		{
-		case DIRECTIONAL_LIGHT:
-			mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
-			break;
+		//switch (lightCnst.Lights[0].Type)
+		//{
+		//case DIRECTIONAL_LIGHT:
+		//	mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
+		//	break;
 
-		case SPOT_LIGHT:
-			mDepthCamera[i]->SetLens(Math::PI * 0.333f,
-				(float)mMapWidth / (float)mMapHeight,
-				1.0f, lightCnst.Lights[i].Range);
-			break;
+		//case SPOT_LIGHT:
+		//	mDepthCamera[i]->SetLens(Math::PI * 0.333f,
+		//		(float)mMapWidth / (float)mMapHeight,
+		//		1.0f, lightCnst.Lights[i].Range);
+		//	break;
 
-		case POINT_LIGHT:
-			// need 6 shadow maps
-			break;
-		}
+		//case POINT_LIGHT:
+		//	// need 6 shadow maps
+		//	break;
+		//}
 
+		mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
 		mDepthCamera[i]->UpdateViewMatrix();
 	}
 }
@@ -314,7 +317,7 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, GameScene*
 
 		scene->UpdateCameraConstant(i + 1, mDepthCamera[i].get());
 		scene->SetCBV(cmdList, i + 1);
-		RenderPipelines(cmdList);
+		RenderPipelines(cmdList, i);
 
 		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 			mShadowMaps[i].Get(),
@@ -323,7 +326,7 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, GameScene*
 	}
 }
 
-void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList)
+void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int idx)
 {
 	for (const auto& [layer, pso] : mShadowTargetPSOs)
 	{
@@ -331,7 +334,7 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList)
 		{
 			cmdList->SetPipelineState(mTerrainPSO.Get());
 
-			pso->SetAndDraw(cmdList, mDepthCamera[0]->GetWorldFrustum(), false, false);
+			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false);
 
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}

@@ -143,7 +143,7 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 1024, 1024, 4);
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 2048, 2048, 4);
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
@@ -152,7 +152,7 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 void GameScene::BuildConstantBuffers(ID3D12Device* device)
 {
 	mLightCB = std::make_unique<ConstantBuffer<LightConstants>>(device, 2);
-	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(device, 1 + 2);
+	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(device, 6); // 메인 카메라, 그림자 매핑 카메라, 다이나믹 큐브매핑 카메라
 	mGameInfoCB = std::make_unique<ConstantBuffer<GameInfoConstants>>(device, 1);
 
 	for (const auto& [_, pso] : mPipelines)
@@ -218,8 +218,6 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	mPlayer = carObj.get();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
-
-	mShadowMapRenderer->BuildSpilitFrustum(mMainCamera.get());
 }
 
 
@@ -291,7 +289,7 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	UpdateLight(elapsed);
 	mMainCamera->Update(elapsed);
 
-	mShadowMapRenderer->SetCenter(mPlayer->GetPosition());
+	mShadowMapRenderer->UpdateSplitFrustum(mMainCamera.get());
 	mShadowMapRenderer->UpdateDepthCamera(mMainLight);
 
 	for (const auto& [_, pso] : mPipelines)

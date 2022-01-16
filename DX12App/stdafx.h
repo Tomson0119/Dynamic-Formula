@@ -262,6 +262,14 @@ namespace Vector3
 		return ret;
 	}
 
+	inline XMFLOAT3 Divide(float scalar, XMFLOAT3& v)
+	{
+		XMFLOAT3 ret;
+		XMStoreFloat3(&ret, XMLoadFloat3(&v) / scalar);
+		return ret;
+	}
+
+
 	inline XMFLOAT3 MultiplyAdd(float delta, XMFLOAT3& src, XMFLOAT3& dst)
 	{		
 		XMVECTOR v1 = XMLoadFloat3(&Replicate(delta));
