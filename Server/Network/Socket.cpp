@@ -57,7 +57,7 @@ void Socket::AsyncAccept(WSAOVERLAPPEDEX& accept_ex)
 
 	accept_ex.Reset(OP::ACCEPT, reinterpret_cast<std::byte*>(&sck), sizeof(sck));
 	
-	if (AcceptEx(mSckHandle, sck, accept_ex.MsgQueue.GetBuffer() + sizeof(SOCKET), 0, sizeof(sockaddr_in) + 16,
+	if (AcceptEx(mSckHandle, sck, accept_ex.NetBuffer.BufStartPtr() + sizeof(SOCKET), 0, sizeof(sockaddr_in) + 16,
 		sizeof(sockaddr_in) + 16, NULL, &accept_ex.Overlapped) == FALSE)
 	{
 		if(WSAGetLastError() != WSA_IO_PENDING)
