@@ -1,35 +1,39 @@
 #include "common.h"
 #include "IOCPServer.h"
+#include "Session.h"
+#include "InGameRoom.h"
 
-std::array<std::unique_ptr<Session>, MAX_PLAYER> IOCPServer::gClients;
+std::array<std::unique_ptr<Session>, MAX_PLAYER_SIZE> LobbyServer::gClients;
+std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE> LobbyServer::gRooms;
 
-IOCPServer::IOCPServer(const EndPoint& ep)
-	: mLoop(true)
+LobbyServer::LobbyServer(const EndPoint& ep)
+	: mLoop(true), mRoomCount(-1)
 {
 	if (mDBHandler.ConnectToDB(L"sql_server") == false)
 		std::cout << "failed to connect to DB\n";
 
 	for (int i = 0; i < gClients.size(); i++)
-	{
 		gClients[i] = std::make_unique<Session>(i);
-	}
+
+	for (int i = 0; i < gRooms.size(); i++)
+		gRooms[i] = std::make_unique<InGameRoom>(i, this);
 
 	mListenSck.Init();
 	mListenSck.Bind(ep);
 }
 
-IOCPServer::~IOCPServer()
+LobbyServer::~LobbyServer()
 {
 }
 
-void IOCPServer::Run()
+void LobbyServer::Run()
 {
 	mListenSck.Listen();
 	mIOCP.RegisterDevice(mListenSck.GetSocket(), 0);
 	std::cout << "Listening to clients...\n";
 
 	WSAOVERLAPPEDEX acceptEx;
-	mListenSck.AsyncAccept(acceptEx);
+	mListenSck.AsyncAccept(&acceptEx);
 
 	for (int i = 0; i < MaxThreads; i++)
 		mThreads.emplace_back(NetworkThreadFunc, std::ref(*this));
@@ -38,7 +42,7 @@ void IOCPServer::Run()
 		thrd.join();
 }
 
-void IOCPServer::NetworkThreadFunc(IOCPServer& server)
+void LobbyServer::NetworkThreadFunc(LobbyServer& server)
 {
 	CompletionInfo info{};
 	while (server.mLoop)
@@ -65,7 +69,7 @@ void IOCPServer::NetworkThreadFunc(IOCPServer& server)
 	}
 }
 
-void IOCPServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
+void LobbyServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 {
 	switch (over->Operation)
 	{
@@ -99,27 +103,27 @@ void IOCPServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 		else {
 			AcceptNewClient(i, clientSck);
 		}
-		mListenSck.AsyncAccept(*over);
+		mListenSck.AsyncAccept(over);
 		break;
 	}
 	}
 }
 
-void IOCPServer::Disconnect(int id)
+void LobbyServer::Disconnect(int id)
 {
 	std::cout << "Disconnect [" << id << "]\n";
 	gClients[id]->Disconnect();
 }
 
-void IOCPServer::AcceptNewClient(int id, SOCKET sck)
+void LobbyServer::AcceptNewClient(int id, SOCKET sck)
 {
-	std::cout << "Accepted client [" << id << "]\n";
+	//std::cout << "Accepted client [" << id << "]\n";
 	gClients[id]->AssignAcceptedID(id, sck);
 	mIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
 }
 
-void IOCPServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
+void LobbyServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
 {
 	while (over->NetBuffer.Readable())
 	{
@@ -134,31 +138,52 @@ void IOCPServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
 			break;
 		}
 	}
-	std::cout << "\n";
 }
 
-bool IOCPServer::ProcessPacket(std::byte* packet, int id, int bytes)
+bool LobbyServer::ProcessPacket(std::byte* packet, int id, int bytes)
 {
-	std::cout << "[" << id << "] " <<static_cast<int>(packet[0])<<" ";
 	char type = static_cast<char>(packet[1]);
 	switch (type)
 	{
 	case CS::LOGIN:
 	{
-		CS::login_packet* pck = reinterpret_cast<CS::login_packet*>(packet);
-		std::cout << "Login packet: " << pck->name << std::endl;
+		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
+		//std::cout << "[" << id << "] Login packet : " << pck->name << std::endl;
+		
+		// TODO: Search for valid id in database.
+		// if(succeeded)
+		{
+			gClients[id]->Name = pck->name; // name found in database
+			gClients[id]->SendLoginResultPacket(LOGIN_STAT::ACCEPTED);
+		}
+		// else
+		{
+			//gClients[id]->SendLoginResultPacket(LOGIN_STAT::INVALID_ID);
+		}		
 		break;
 	}
-	case CS::CHAT:
+	case CS::ENTER_ROOM:
 	{
-		CS::chat_packet* pck = reinterpret_cast<CS::chat_packet*>(packet);
-		std::cout << "Chat packet: " << pck->message << std::endl;
-		break;
-	}
-	case CS::MOVE:
-	{
-		CS::move_packet* pck = reinterpret_cast<CS::move_packet*>(packet);
-		std::cout << "Move packet: " << (int)pck->direction << " " << pck->move_time << std::endl;
+		CS::packet_enter_room* pck = reinterpret_cast<CS::packet_enter_room*>(packet);
+		//std::cout << "[" << id << "] Enter room packet\n";
+
+		if (pck->new_room)	
+		{
+			if (mRoomCount >= MAX_ROOM_SIZE - 1)
+				gClients[id]->SendEnterRoomDenyPacket(ROOM_STAT::MAX_ROOM_REACHED, -1);
+			else {
+				mRoomCount.fetch_add(1);
+				gRooms[mRoomCount]->OpenRoom(id);
+			}
+		}
+		else 
+		{
+			if (gRooms[pck->room_id]->Full())
+				gClients[id]->SendEnterRoomDenyPacket(ROOM_STAT::ROOM_IS_FULL, -1);
+			else {
+				gRooms[pck->room_id]->AddPlayer(id);
+			}
+		}
 		break;
 	}
 	default:
@@ -168,7 +193,7 @@ bool IOCPServer::ProcessPacket(std::byte* packet, int id, int bytes)
 	return true;
 }
 
-int IOCPServer::GetAvailableID()
+int LobbyServer::GetAvailableID()
 {
 	for (int i = 0; i < gClients.size(); i++)
 	{

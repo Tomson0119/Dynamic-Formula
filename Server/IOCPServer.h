@@ -1,13 +1,15 @@
 #pragma once
 
-#include "Session.h"
 #include "DBHandler.h"
 
-class IOCPServer
+class Session;
+class InGameRoom;
+
+class LobbyServer
 {
 public:
-	IOCPServer(const EndPoint& ep);
-	virtual ~IOCPServer();
+	LobbyServer(const EndPoint& ep);
+	virtual ~LobbyServer();
 
 public:
 	void Run();
@@ -19,7 +21,7 @@ public:
 	void ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes);
 	bool ProcessPacket(std::byte* packet, int id, int bytes);
 
-	static void NetworkThreadFunc(IOCPServer& server);
+	static void NetworkThreadFunc(LobbyServer& server);
 	static const int MaxThreads = 1;
 
 private:
@@ -31,8 +33,10 @@ private:
 
 	std::vector<std::thread> mThreads;
 	std::atomic_bool mLoop;
+	std::atomic_int mRoomCount;
 
 	DBHandler mDBHandler;
 
-	static std::array<std::unique_ptr<Session>, MAX_PLAYER> gClients;
+	static std::array<std::unique_ptr<Session>, MAX_PLAYER_SIZE> gClients;
+	static std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE> gRooms;
 };
