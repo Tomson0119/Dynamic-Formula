@@ -150,6 +150,7 @@ DsOut DS(HsConstant hconst, float2 uv : SV_DomainLocation, OutputPatch<HsOut, 25
     float3 pos = CubicBezierSum5x5(patch, uB, vB, false);
     float4 posW = mul(float4(pos, 1.0f), gWorld);
     
+    dout.PosW = posW;
     dout.PosH = mul(mul(float4(pos, 1.0f), gWorld), gViewProj);
     dout.PosS = mul(posW, gShadowTransform);
     float3 normalL = CubicBezierSum5x5(patch, uB, vB, true);
@@ -220,6 +221,29 @@ float4 PS(DsOut din) : SV_Target
 
         result = ambient + directLight;
         result.a = gMat.Diffuse.a;
+
+        float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+        for (int j = 2; j >= 0; --j)
+        {
+            float4 pos = mul(float4(din.PosW, 1.0f), gShadowViewProj[j]);
+            if (pos.x > 0.0f && pos.x < 1.0f && pos.z > 0.0f && pos.z < 1.0f && pos.y > 0.0f && pos.y < 1.0f)
+            {
+                if (j == 2)
+                {
+                    debugColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
+                }
+                if (j == 1)
+                {
+                    debugColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
+                }
+                if (j == 0)
+                {
+                    debugColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
+                }
+            }
+        }
+        result *= debugColor;
     }
+
     return result;
 }

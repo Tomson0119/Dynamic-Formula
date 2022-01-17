@@ -13,7 +13,7 @@ public:
 	virtual void BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader=nullptr) override;
 	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex) override;
 	
-	void UpdateDepthCamera(LightConstants& lightCnst);
+	void UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, LightConstants& lightCnst);
 	void PreRender(ID3D12GraphicsCommandList* cmdList, GameScene* scene);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int idx);
 

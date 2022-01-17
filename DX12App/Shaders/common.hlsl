@@ -44,6 +44,11 @@ cbuffer ObjectCB : register(b4)
     matrix gWorld : packoffset(c0);
 }
 
+cbuffer ShadowCB : register(b5)
+{
+    matrix gShadowViewProj[3] : packoffset(c0);
+}
+
 float CalcShadowFactor(float4 shadowPos)
 {
     shadowPos.xyz /= shadowPos.w;

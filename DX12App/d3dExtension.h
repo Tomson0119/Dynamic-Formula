@@ -93,6 +93,21 @@ namespace Extension
 		return rootParam;
 	}
 
+	inline D3D12_ROOT_PARAMETER Constants(
+		UINT num32BitValues,
+		UINT shaderRegister,
+		D3D12_SHADER_VISIBILITY visibility,
+		UINT registerSpace = 0)
+	{
+		D3D12_ROOT_PARAMETER rootParam{};
+		rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootParam.Constants.Num32BitValues = num32BitValues;
+		rootParam.Constants.ShaderRegister = shaderRegister;
+		rootParam.Constants.RegisterSpace = registerSpace;
+		rootParam.ShaderVisibility = visibility;
+		return rootParam;
+	}
+
 	inline D3D12_STATIC_SAMPLER_DESC SamplerDesc(
 		UINT shaderRegister,
 		D3D12_FILTER filter,
