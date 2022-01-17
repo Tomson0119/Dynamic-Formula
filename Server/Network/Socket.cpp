@@ -49,16 +49,18 @@ void Socket::Listen()
 		throw NetException("Listen failed");
 }
 
-void Socket::AsyncAccept(WSAOVERLAPPEDEX& accept_ex)
+void Socket::AsyncAccept(WSAOVERLAPPEDEX* accept_ex)
 {
+	if (accept_ex == nullptr) return;
+
 	SOCKET sck = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
 	if (sck == INVALID_SOCKET)
 		throw NetException("Socket is invalid");
 
-	accept_ex.Reset(OP::ACCEPT, reinterpret_cast<std::byte*>(&sck), sizeof(sck));
+	accept_ex->Reset(OP::ACCEPT, reinterpret_cast<std::byte*>(&sck), sizeof(sck));
 	
-	if (AcceptEx(mSckHandle, sck, accept_ex.NetBuffer.BufStartPtr() + sizeof(SOCKET), 0, sizeof(sockaddr_in) + 16,
-		sizeof(sockaddr_in) + 16, NULL, &accept_ex.Overlapped) == FALSE)
+	if (AcceptEx(mSckHandle, sck, accept_ex->NetBuffer.BufStartPtr() + sizeof(SOCKET), 0, sizeof(sockaddr_in) + 16,
+		sizeof(sockaddr_in) + 16, NULL, &accept_ex->Overlapped) == FALSE)
 	{
 		if(WSAGetLastError() != WSA_IO_PENDING)
 			throw NetException("AcceptEx failed");
@@ -76,13 +78,13 @@ bool Socket::Connect(const EndPoint& ep)
 	return true;
 }
 
-int Socket::Send(WSAOVERLAPPEDEX& overlapped)
+int Socket::Send(WSAOVERLAPPEDEX* overlapped)
 {
 	DWORD bytes = 0;
 
 	if (WSASend(mSckHandle,
-		&overlapped.WSABuffer, 1, &bytes, 0,
-		&overlapped.Overlapped, NULL) != 0)
+		&overlapped->WSABuffer, 1, &bytes, 0,
+		&overlapped->Overlapped, NULL) != 0)
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
 			return 0;
@@ -90,14 +92,14 @@ int Socket::Send(WSAOVERLAPPEDEX& overlapped)
 	return (int)bytes;
 }
 
-int Socket::Recv(WSAOVERLAPPEDEX& overlapped)
+int Socket::Recv(WSAOVERLAPPEDEX* overlapped)
 {
 	DWORD flag = 0;
 	DWORD bytes = 0;
 
 	if (WSARecv(mSckHandle,
-		&overlapped.WSABuffer, 1, &bytes, &flag,
-		&overlapped.Overlapped, NULL) != 0)
+		&overlapped->WSABuffer, 1, &bytes, &flag,
+		&overlapped->Overlapped, NULL) != 0)
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
 			return 0;

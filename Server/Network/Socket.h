@@ -20,11 +20,11 @@ public:
 	void Bind(const EndPoint& ep);
 	void Listen();
 	
-	void AsyncAccept(WSAOVERLAPPEDEX& accpet_ex);
+	void AsyncAccept(WSAOVERLAPPEDEX* accpet_ex);
 	bool Connect(const EndPoint& ep);
 
-	int Send(WSAOVERLAPPEDEX& overlapped);
-	int Recv(WSAOVERLAPPEDEX& overlapped);
+	int Send(WSAOVERLAPPEDEX* overlapped);
+	int Recv(WSAOVERLAPPEDEX* overlapped);
 
 	void SetSocket(SOCKET sck) { mSckHandle = sck; }
 	SOCKET GetSocket() const { return mSckHandle; }
