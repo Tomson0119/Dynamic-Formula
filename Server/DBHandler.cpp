@@ -1,3 +1,4 @@
+#include "common.h"
 #include "DBHandler.h"
 #include <iostream>
 
