@@ -14,7 +14,7 @@ public:
     void Draw(UINT nFrame);
     void ReleaseResources();
     void Resize(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
-    ID3D11DeviceContext* GetD3D11DeviceContext() { return m_pd3d11DeviceContext.Get(); }
+    //ID3D11DeviceContext* GetD3D11DeviceContext() { return m_pd3d11DeviceContext.Get(); }
 private:
     UINT GetRenderTargetsCount() { return static_cast<UINT>(m_vWrappedRenderTargets.size()); }
     void Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
