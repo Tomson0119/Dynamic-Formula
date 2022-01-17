@@ -16,22 +16,22 @@ public:
 	// For Recv buffer
 	void ShiftWritePtr(int offset);
 	
-	int GetLeftBufLen() const { return (MaxBufferSize - m_writeIndex); }
-	int GetFilledBufLen() const { return (MaxBufferSize - m_remainSize); }
+	int GetLeftBufLen() const { return (MaxBufferSize - mWriteIndex); }
+	int GetFilledBufLen() const { return (MaxBufferSize - mRemainSize); }
 	
 	bool Readable();
-	bool Empty() const { return (m_readIndex == m_writeIndex && m_remainSize > 0); }
+	bool Empty() const { return (mReadIndex == mWriteIndex && mRemainSize > 0); }
 	
 	char PeekNextPacketSize();
 
-	std::byte* BufStartPtr() { return m_buffer; }
-	std::byte* BufWritePtr() { return m_buffer + m_writeIndex; }
+	std::byte* BufStartPtr() { return mBuffer; }
+	std::byte* BufWritePtr() { return mBuffer + mWriteIndex; }
 	std::byte* BufReadPtr();
 
 private:
-	int m_readIndex;
-	int m_writeIndex;
-	int m_remainSize;
+	int mReadIndex;
+	int mWriteIndex;
+	int mRemainSize;
 	
-	std::byte m_buffer[MaxBufferSize];
+	std::byte mBuffer[MaxBufferSize];
 };

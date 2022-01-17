@@ -2,11 +2,11 @@
 #include "BufferQueue.h"
 
 BufferQueue::BufferQueue()
-	: m_writeIndex(0),
-	  m_readIndex(0),
-	  m_remainSize(MaxBufferSize)
+	: mWriteIndex(0),
+	  mReadIndex(0),
+	  mRemainSize(MaxBufferSize)
 {
-	std::memset(m_buffer, 0, MaxBufferSize);
+	std::memset(mBuffer, 0, MaxBufferSize);
 }
 
 BufferQueue::~BufferQueue()
@@ -15,22 +15,22 @@ BufferQueue::~BufferQueue()
 
 void BufferQueue::Clear()
 {
-	m_writeIndex = 0;
-	m_readIndex = 0;
-	m_remainSize = MaxBufferSize;
+	mWriteIndex = 0;
+	mReadIndex = 0;
+	mRemainSize = MaxBufferSize;
 }
 
 void BufferQueue::Push(std::byte* msg, int size)
 {
 	if (msg != nullptr && size > 0)
 	{
-		if (m_remainSize < size) {
+		if (mRemainSize < size) {
 			std::cout << "[Buffer Overflow] Unable to push data.\n";
 			return;
 		}
-		std::memcpy(m_buffer + m_writeIndex, msg, size);
-		m_writeIndex += size;
-		m_remainSize -= size;
+		std::memcpy(mBuffer + mWriteIndex, msg, size);
+		mWriteIndex += size;
+		mRemainSize -= size;
 	}
 }
 
@@ -42,12 +42,12 @@ void BufferQueue::ShiftWritePtr(int offset)
 	}
 
 	if (GetLeftBufLen() == offset) {
-		std::memcpy(m_buffer, m_buffer + m_readIndex, GetFilledBufLen() + offset);
-		m_readIndex = 0;
-		m_writeIndex = GetFilledBufLen();
+		std::memcpy(mBuffer, mBuffer + mReadIndex, GetFilledBufLen() + offset);
+		mReadIndex = 0;
+		mWriteIndex = GetFilledBufLen();
 	}
-	m_writeIndex += offset;
-	m_remainSize -= offset;
+	mWriteIndex += offset;
+	mRemainSize -= offset;
 }
 
 bool BufferQueue::Readable()
@@ -57,7 +57,7 @@ bool BufferQueue::Readable()
 
 char BufferQueue::PeekNextPacketSize()
 {
-	return *reinterpret_cast<char*>(m_buffer + m_readIndex);
+	return *reinterpret_cast<char*>(mBuffer + mReadIndex);
 }
 
 std::byte* BufferQueue::BufReadPtr()
@@ -70,9 +70,9 @@ std::byte* BufferQueue::BufReadPtr()
 	int size = (int)PeekNextPacketSize();
 	if (size <= GetFilledBufLen())
 	{
-		std::byte* ptr = reinterpret_cast<std::byte*>(m_buffer + m_readIndex);
-		m_readIndex += size;
-		m_remainSize += size;
+		std::byte* ptr = reinterpret_cast<std::byte*>(mBuffer + mReadIndex);
+		mReadIndex += size;
+		mRemainSize += size;
 
 		return ptr;
 	}
