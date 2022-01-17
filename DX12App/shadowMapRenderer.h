@@ -7,7 +7,7 @@ class GameScene;
 class ShadowMapRenderer : public Pipeline
 {
 public:
-	ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount);
+	ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount, const Camera* mainCamera);
 	virtual ~ShadowMapRenderer();
 
 	virtual void BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader=nullptr) override;

@@ -2,7 +2,7 @@
 #include "shadowMapRenderer.h"
 #include "gameScene.h"
 
-ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount)
+ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount, const Camera* mainCamera)
 	: mMapWidth(width), mMapHeight(height), mMapCount(lightCount)
 {
 	mViewPort = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
@@ -16,6 +16,16 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 	mCenter.resize(mMapCount, {});
 	mSunRange.resize(mMapCount, {});
 	mZSplits.resize(mMapCount + 1);
+
+	mZSplits[0] = mainCamera->GetNearZ();
+	mZSplits[mMapCount] = mainCamera->GetFarZ();
+	for (int i = 1; i < mMapCount; ++i)
+	{
+		float index = (i / (float)mMapCount);
+		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
+		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
+		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 1.0f);
+	}
 }
 
 ShadowMapRenderer::~ShadowMapRenderer()
@@ -129,16 +139,6 @@ void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
 	float vFov = tanf(mainCamera->GetFov().y / 2);
 	float hFov = vFov * mainCamera->GetAspect();
 
-	mZSplits[0] = mainCamera->GetNearZ();
-	mZSplits[mMapCount] = mainCamera->GetFarZ();
-	for (int i = 1; i < mMapCount; ++i)
-	{
-		float index = (i / (float)mMapCount);
-		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
-		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
-		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 1.0f);
-	}
-
 	for (int i = 0; i < mMapCount; ++i)
 	{
 		float xn = mZSplits[i] * hFov;
@@ -176,8 +176,6 @@ void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
 			float distance = Vector3::Length(Vector3::Subtract(frustumCorners[j], centerPos));
 			sunRange = std::max(sunRange, distance);
 		}
-
-		sunRange = std::ceil(sunRange * 16.0f) / 16.0f;
 
 		mSunRange[i] = sunRange;
 	}
@@ -271,10 +269,11 @@ void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, Li
 {
 	for (int i = 0; i < (int)mMapCount; i++)
 	{
-		XMFLOAT3 look = lightCnst.Lights[0].Direction;
+		XMFLOAT3 look = Vector3::Normalize(lightCnst.Lights[0].Direction);
 		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange[i], look, mCenter[i]);
 
 		mDepthCamera[i]->LookAt(position, mCenter[i], XMFLOAT3(0.0f, 1.0f, 0.0f));
+		
 
 		//switch (lightCnst.Lights[0].Type)
 		//{
@@ -294,7 +293,6 @@ void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, Li
 		//}
 
 		mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
-		mDepthCamera[i]->UpdateViewMatrix();
 
 		cmdList->SetGraphicsRoot32BitConstants(7, 16, &Matrix4x4::Transpose(Matrix4x4::Multiply(mDepthCamera[i]->GetView(), mDepthCamera[i]->GetProj())), i * 16);
 	}
@@ -336,7 +334,7 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int 
 		{
 			cmdList->SetPipelineState(mTerrainPSO.Get());
 
-			pso->SetAndDraw(cmdList,/* mDepthCamera[idx]->GetWorldFrustum(),*/ false, false);
+			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false);
 
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
