@@ -235,8 +235,8 @@ void GameFramework::Draw()
 	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBuffer());
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
-	mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));*/
 
 	ThrowIfFailed(mCommandList->Close());
 
