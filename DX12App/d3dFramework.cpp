@@ -282,6 +282,9 @@ void D3DFramework::OnResize()
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 
+	/*if(mpUI.get())
+		mpUI.get()->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);*/
+
 	WaitUntilGPUComplete();
 
 	mViewPort.Width = (float)gFrameWidth;

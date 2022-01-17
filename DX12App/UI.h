@@ -13,8 +13,8 @@ public:
     void UpdateLabels(const std::vector<std::wstring>& strUIText);
     void Draw(UINT nFrame);
     void ReleaseResources();
-    void Resize(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height, ID3D12Device* pd3dDevice, ID3D12CommandAllocator* pd3dCommandAllocator);
-
+    void Resize(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
+    ID3D11DeviceContext* GetD3D11DeviceContext() { return m_pd3d11DeviceContext.Get(); }
 private:
     UINT GetRenderTargetsCount() { return static_cast<UINT>(m_vWrappedRenderTargets.size()); }
     void Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
@@ -32,7 +32,7 @@ private:
     ComPtr<ID2D1DeviceContext2> m_pd2dDeviceContext;
     ComPtr<ID2D1SolidColorBrush> m_pd2dTextBrush;
     ComPtr<IDWriteTextFormat> m_pdwTextFormat;
-
+    
     std::vector<ComPtr<ID3D11Resource>>    m_vWrappedRenderTargets;
     std::vector<ComPtr<ID2D1Bitmap1>>      m_vd2dRenderTargets;
     std::vector<TextBlock>          m_vTextBlocks;

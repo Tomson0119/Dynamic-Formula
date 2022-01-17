@@ -63,7 +63,7 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     ThrowIfFailed(m_pd2dFactory->CreateDevice(pdxgiDevice.Get(), &m_pd2dDevice));
     ThrowIfFailed(m_pd2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &m_pd2dDeviceContext));
 
-    //m_pd2dDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+    m_pd2dDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
     ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), (ID2D1SolidColorBrush**)&m_pd2dTextBrush));
 
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&m_pd2dWriteFactory));
@@ -71,8 +71,8 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
 
 void UI::UpdateLabels(const std::vector<std::wstring>& strUIText)
 {
-    m_vTextBlocks[0] = { strUIText[1], D2D1::RectF(0.0f,  23.0f + m_fHeight / 6, m_fWidth / 6, 23.0f + (m_fHeight / 6)), m_pdwTextFormat.Get() };
-    m_vTextBlocks[1] = { strUIText[0], D2D1::RectF(0.0f, 23.0f, m_fWidth/6, m_fHeight/6), m_pdwTextFormat.Get() };
+    m_vTextBlocks[0] = { strUIText[0], D2D1::RectF(0.0f,  23.0f + m_fHeight / 6, m_fWidth / 6, 23.0f + (m_fHeight / 6)), m_pdwTextFormat.Get() };
+    m_vTextBlocks[1] = { strUIText[1], D2D1::RectF(0.0f, 23.0f, m_fWidth/6, m_fHeight/6), m_pdwTextFormat.Get() };
     m_vTextBlocks[2] = { strUIText[2], D2D1::RectF(5*(m_fWidth/6), 0.0f, m_fWidth, m_fHeight / 6), m_pdwTextFormat.Get() };
     m_vTextBlocks[3] = { strUIText[3], D2D1::RectF(5 * (m_fWidth / 6), 5*(m_fHeight/6), m_fWidth, m_fHeight), m_pdwTextFormat.Get() };
 }
@@ -81,31 +81,35 @@ void UI::Draw(UINT nFrame)
 {
     //ID3D11Resource* ppResources[] = { m_vWrappedRenderTargets[nFrame].Get() };
 
-    m_pd2dDeviceContext->BeginDraw();
-    m_pd3d11On12Device->AcquireWrappedResources(m_vWrappedRenderTargets[nFrame].GetAddressOf(), nFrame);
+    m_pd2dDeviceContext.Get()->BeginDraw();
+    //m_pd3d11On12Device->AcquireWrappedResources(m_vWrappedRenderTargets[nFrame].GetAddressOf(), nFrame);
     //m_pd3d11On12Device->AcquireWrappedResources(ppResources, _countof(ppResources));
-    m_pd2dDeviceContext->SetTarget(m_vd2dRenderTargets[nFrame].Get());
+    m_pd2dDeviceContext.Get()->SetTarget(m_vd2dRenderTargets[nFrame].Get());
      
     for (auto textBlock : m_vTextBlocks)
     {
         //function blabla(L"Font");
-        m_pd2dDeviceContext->DrawTextW(textBlock.strText.c_str(), static_cast<UINT>(textBlock.strText.length()), 
+        m_pd2dDeviceContext.Get()->DrawTextW(textBlock.strText.c_str(), static_cast<UINT>(textBlock.strText.length()), 
             textBlock.pdwFormat, textBlock.d2dLayoutRect, m_pd2dTextBrush.Get());
     }
-    m_pd2dDeviceContext->EndDraw();
+    m_pd2dDeviceContext.Get()->EndDraw();
+   
+    m_pd3d11On12Device->ReleaseWrappedResources(m_vWrappedRenderTargets[nFrame].GetAddressOf(), 0);
 
-    //m_pd3d11On12Device->ReleaseWrappedResources(m_vWrappedRenderTargets[nFrame].GetAddressOf(), 1);
+    m_pd3d11DeviceContext.Get()->Flush();
 
-    m_pd3d11DeviceContext->Flush();
 }
 
 void UI::ReleaseResources()
 {
     
+
 }
 
-void UI::Resize(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight, ID3D12Device* pd3dDevice, ID3D12CommandAllocator* pd3dCommandAllocator)
+void UI::Resize(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
+   
+
     m_fWidth = static_cast<float>(nWidth);
     m_fHeight = static_cast<float>(nHeight);
 
@@ -119,7 +123,7 @@ void UI::Resize(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight, 
             D3D12_RESOURCE_STATE_PRESENT, IID_PPV_ARGS(&m_vWrappedRenderTargets[i]));
         m_vWrappedRenderTargets[i]->QueryInterface(__uuidof(IDXGISurface), (void**)&pdxgiSurface);
         m_pd2dDeviceContext->CreateBitmapFromDxgiSurface(pdxgiSurface.Get(), &d2dBitmapProperties, &m_vd2dRenderTargets[i]);
-        ThrowIfFailed(pd3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&pd3dCommandAllocator)));
+        //ThrowIfFailed(pd3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&pd3dCommandAllocator)));
     }
     //const float fSmallFontSize = m_fHeight / 40.0f;
     const float fFontSize = m_fHeight / 25.0f;

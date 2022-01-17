@@ -32,7 +32,7 @@ bool GameFramework::InitFramework()
 	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
 	
 	mpUI = std::make_unique<UI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight, mD3dDevice.Get(), mCommandAllocator.Get());
+	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 
 	// Command List를 닫고 Queue에 명령어를 싣는다.
 	ThrowIfFailed(mCommandList->Close());
@@ -48,6 +48,9 @@ bool GameFramework::InitFramework()
 void GameFramework::OnResize()
 {
 	D3DFramework::OnResize();
+	//mpUI.get()->Initialize(mD3dDevice.Get(), mCommandQueue.Get());
+	if(mpUI.get())
+		mpUI.get()->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
 }
 
@@ -136,7 +139,8 @@ void GameFramework::TextUIUpdate()
 	//My Rank
 	UINT MyRank = 1;
 	TextUI[2].push_back(('0' + MyRank));
-	switch (MyRank%10)
+	
+	switch (MyRank % 10)
 	{
 	case 1:
 		TextUI[2].push_back('s');
@@ -244,7 +248,7 @@ void GameFramework::Draw()
 
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
-
+	//mpUI.get()->GetD3D11DeviceContext()->Flush();
 	
 
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
