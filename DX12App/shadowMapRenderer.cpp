@@ -18,13 +18,13 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 	mZSplits.resize(mMapCount + 1);
 
 	mZSplits[0] = mainCamera->GetNearZ();
-	mZSplits[mMapCount] = mainCamera->GetFarZ();
+	mZSplits[mMapCount] = 1000;
 	for (int i = 1; i < mMapCount; ++i)
 	{
 		float index = (i / (float)mMapCount);
 		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
 		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
-		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 1.0f);
+		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.2f);
 	}
 }
 
@@ -168,6 +168,7 @@ void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
 			centerPos = Vector3::Add(centerPos, frustumCorners[j]);
 		}
  		centerPos = Vector3::Divide(8, centerPos);
+
 		mCenter[i] = centerPos;
 
 		float sunRange = 0.0f;
@@ -274,24 +275,6 @@ void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, Li
 
 		mDepthCamera[i]->LookAt(position, mCenter[i], XMFLOAT3(0.0f, 1.0f, 0.0f));
 		
-
-		//switch (lightCnst.Lights[0].Type)
-		//{
-		//case DIRECTIONAL_LIGHT:
-		//	mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
-		//	break;
-
-		//case SPOT_LIGHT:
-		//	mDepthCamera[i]->SetLens(Math::PI * 0.333f,
-		//		(float)mMapWidth / (float)mMapHeight,
-		//		1.0f, lightCnst.Lights[i].Range);
-		//	break;
-
-		//case POINT_LIGHT:
-		//	// need 6 shadow maps
-		//	break;
-		//}
-
 		mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
 
 		cmdList->SetGraphicsRoot32BitConstants(7, 16, &Matrix4x4::Transpose(Matrix4x4::Multiply(mDepthCamera[i]->GetView(), mDepthCamera[i]->GetProj())), i * 16);
