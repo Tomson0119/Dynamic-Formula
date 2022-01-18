@@ -38,27 +38,19 @@ bool DBHandler::ConnectToDB(const std::wstring& sourcename)
 	return true;
 }
 
-bool DBHandler::ConnectWithID(const std::string& player_id)
+bool DBHandler::SearchIdAndPwd(const std::string& id, const std::string& pwd)
 {
-	std::wstring query = L"EXEC connect_with_id ";
-	query.insert(query.end(), player_id.begin(), player_id.end());
+	std::wstring query = L"EXEC search_id_pwd ";
+	query.insert(query.end(), id.begin(), id.end());
+	query += L", " + std::wstring(pwd.begin(), pwd.end());
 
 	RETCODE ret = SQLExecDirect(m_hStmt, (SQLWCHAR*)query.c_str() , SQL_NTS);
 	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) return false;
 
-	SQLSMALLINT retLevel = 0, retHP = 0, retMAXHP = 0;
-	SQLSMALLINT retX = 0, retY = 0;
-	SQLINTEGER retEXP = 0;
-	SQLCHAR retConnected = 0;
-	SQLLEN cb[7]{};
+	SQLINTEGER retCount{};
+	SQLLEN cb{};
 
-	SQLBindCol(m_hStmt, 1, SQL_C_SHORT, &retLevel, 2, &cb[0]);
-	SQLBindCol(m_hStmt, 2, SQL_C_SHORT, &retX, 2, &cb[1]);
-	SQLBindCol(m_hStmt, 3, SQL_C_SHORT, &retY, 2, &cb[2]);
-	SQLBindCol(m_hStmt, 4, SQL_C_SHORT, &retHP, 2, &cb[3]);
-	SQLBindCol(m_hStmt, 5, SQL_C_SHORT, &retMAXHP, 2, &cb[4]);
-	SQLBindCol(m_hStmt, 6, SQL_C_LONG, &retEXP, 4, &cb[5]);
-	SQLBindCol(m_hStmt, 7, SQL_C_BIT, &retConnected, 1, &cb[6]);
+	SQLBindCol(m_hStmt, 1, SQL_C_LONG, &retCount, 4, &cb);
 	
 	ret = SQLFetch(m_hStmt);
 	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) {
@@ -69,20 +61,7 @@ bool DBHandler::ConnectWithID(const std::string& player_id)
 	SQLCancel(m_hStmt);
 	SQLCloseCursor(m_hStmt);
 
-	if (retConnected == true) {
-		return false;
-	}
-
-	/*PlayerInfo info{};
-	strncpy_s(info.name, player_id.c_str(), player_id.size());
-	info.level = (short)retLevel;
-	info.x = (short)retX;
-	info.y = (short)retY;
-	info.hp = (short)retHP;
-	info.max_hp = (short)retMAXHP;
-	info.exp = (int)retEXP;
-	return { 1, info };*/
-	return true;
+	return (retCount == 1);
 }
 
 bool DBHandler::DisconnectAndUpdate()

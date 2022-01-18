@@ -13,7 +13,7 @@ public:
 	~DBHandler();
 
 	bool ConnectToDB(const std::wstring& sourcename);
-	bool ConnectWithID(const std::string& player_id);
+	bool SearchIdAndPwd(const std::string& id, const std::string& pwd);
 	bool DisconnectAndUpdate();
 
 private:
