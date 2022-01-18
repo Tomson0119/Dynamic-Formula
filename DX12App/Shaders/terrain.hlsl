@@ -206,9 +206,19 @@ float4 PS(DsOut din) : SV_Target
         float3 view = normalize(gCameraPos - din.PosW);
         float4 ambient = gAmbient * float4(gMat.Ambient, 1.0f) * diffuse;
         
+        int idx = -1;
+        float4 PosV = mul(float4(din.PosW, 1.0f), gView);
+        for (int j = 2; j >= 0; j--)
+        {
+            if (PosV.z < gZSplits[j])
+            {
+                idx = j;
+            }
+        }
+
         float shadowFactor[3] = { 1.0f, 1.0f, 1.0f };
         for (int i = 0; i < 3; i++)
-            shadowFactor[i] = CalcShadowFactor(din.PosS);
+            shadowFactor[i] = CalcShadowFactor(din.PosS, idx);
         
         float4 directLight;
         float shadowFactorOut[3] = { 1.0f, 1.0f, 1.0f };
@@ -222,27 +232,27 @@ float4 PS(DsOut din) : SV_Target
         result = ambient + directLight;
         result.a = gMat.Diffuse.a;
 
-        float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-        for (int j = 2; j >= 0; --j)
-        {
-            float4 pos = mul(float4(din.PosW, 1.0f), gShadowViewProj[j]);
-            if (pos.x > 0.0f && pos.x < 1.0f && pos.z > 0.0f && pos.z < 1.0f && pos.y > 0.0f && pos.y < 1.0f)
-            {
-                if (j == 2)
-                {
-                    debugColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
-                }
-                if (j == 1)
-                {
-                    debugColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
-                }
-                if (j == 0)
-                {
-                    debugColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
-                }
-            }
-        }
-        result *= debugColor;
+        //float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //for (int k = 2; k >= 0; --k)
+        //{
+        //    float4 pos = mul(float4(din.PosW, 1.0f), gShadowViewProj[k]);
+        //    if (pos.x > 0.0f && pos.x < 1.0f && pos.z > 0.0f && pos.z < 1.0f && pos.y > 0.0f && pos.y < 1.0f)
+        //    {
+        //        if (k == 2)
+        //        {
+        //            debugColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
+        //        }
+        //        if (k == 1)
+        //        {
+        //            debugColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
+        //        }
+        //        if (k == 0)
+        //        {
+        //            debugColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
+        //        }
+        //    }
+        //}
+        //result *= debugColor;
     }
 
     return result;

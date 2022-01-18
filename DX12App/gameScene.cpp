@@ -56,7 +56,7 @@ void GameScene::BuildRootSignature(ID3D12Device* device)
 	D3D12_DESCRIPTOR_RANGE descRanges[3];
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 4);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0);
-	descRanges[2] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 1);
+	descRanges[2] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 1);
 
 	D3D12_ROOT_PARAMETER parameters[8];
 	parameters[0] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 0, D3D12_SHADER_VISIBILITY_ALL);    // CameraCB
@@ -66,7 +66,7 @@ void GameScene::BuildRootSignature(ID3D12Device* device)
 	parameters[4] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);			     // Object,  CBV
 	parameters[5] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);				 // Texture, SRV
 	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap
-	parameters[7] = Extension::Constants(48, 5, D3D12_SHADER_VISIBILITY_ALL);                                // Shadow ViewProjection
+	parameters[7] = Extension::Constants(51, 5, D3D12_SHADER_VISIBILITY_ALL);                                // Shadow ViewProjection
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[5];
 	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_ANISOTROPIC, D3D12_TEXTURE_ADDRESS_MODE_WRAP);

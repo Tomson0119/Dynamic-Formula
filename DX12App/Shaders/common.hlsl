@@ -1,6 +1,6 @@
 #include "lighting.hlsl"
 
-Texture2D gShadowMap : register(t0, space1);
+Texture2D gShadowMap[3] : register(t0, space1);
 
 SamplerState gAnisotropicWrap  : register(s0);
 SamplerState gAnisotropicClamp : register(s1);
@@ -46,32 +46,37 @@ cbuffer ObjectCB : register(b4)
 
 cbuffer ShadowCB : register(b5)
 {
-    matrix gShadowViewProj[3] : packoffset(c0);
+    float gZSplits[3] : packoffset(c0);
+    matrix gShadowViewProj[3] : packoffset(c4);
 }
 
-float CalcShadowFactor(float4 shadowPos)
+float CalcShadowFactor(float4 shadowPos, int idx)
 {
-    shadowPos.xyz /= shadowPos.w;
-    float depth = shadowPos.z;
-    
-    uint width, height, mips;
-    gShadowMap.GetDimensions(0, width, height, mips);
-    
-    float dx = 1.0f / (float) width;
-    float dy = 1.0f / (float) height;
-    const float2 offsets[9] =
-    {
-        float2(-dx,  -dy), float2(0.0f,  -dy), float2(+dx,  -dy),
-        float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(+dx, 0.0f),
-        float2(-dx,  +dy), float2(0.0f,  +dy), float2(+dx,  +dy)
-    };
-
     float result = 0.0f;
-    [unroll]
-    for (int i = 0; i < 9;i++)
+    if (idx != -1)
     {
-        result += gShadowMap.SampleCmpLevelZero(
+        shadowPos.xyz /= shadowPos.w;
+        float depth = shadowPos.z;
+    
+        uint width, height, mips;
+        gShadowMap[idx].GetDimensions(0, width, height, mips);
+    
+        float dx = 1.0f / (float) width;
+        float dy = 1.0f / (float) height;
+        const float2 offsets[9] =
+        {
+            float2(-dx, -dy), float2(0.0f, -dy), float2(+dx, -dy),
+        float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(+dx, 0.0f),
+        float2(-dx, +dy), float2(0.0f, +dy), float2(+dx, +dy)
+        };
+
+        [unroll]
+        for (int i = 0; i < 9; i++)
+        {
+            result += gShadowMap[idx].SampleCmpLevelZero(
             gPCFShadow, shadowPos.xy + offsets[i], depth).r;
+        }
+        result = result / 9.0f;
     }
-    return result / 9.0f;
+    return result;
 }

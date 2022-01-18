@@ -277,7 +277,12 @@ void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, Li
 		
 		mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
 
-		cmdList->SetGraphicsRoot32BitConstants(7, 16, &Matrix4x4::Transpose(Matrix4x4::Multiply(mDepthCamera[i]->GetView(), mDepthCamera[i]->GetProj())), i * 16);
+		cmdList->SetGraphicsRoot32BitConstants(7, 16, &Matrix4x4::Transpose(Matrix4x4::Multiply(mDepthCamera[i]->GetView(), mDepthCamera[i]->GetProj())), 3 + i * 16);
+	}
+
+	for (int i = 1; i < mMapCount + 1; ++i)
+	{
+		cmdList->SetGraphicsRoot32BitConstants(7, 1, &mZSplits[i], i - 1);
 	}
 }
 

@@ -44,10 +44,21 @@ float4 PS(VertexOut pin) : SV_Target
     float3 view = normalize(gCameraPos - pin.PosW);
     float4 ambient = gAmbient * float4(gMat.Ambient, 1.0f) * gMat.Diffuse;
     
+    
+    int idx = -1;
+    float4 PosV = mul(float4(pin.PosW, 1.0f), gView);
+    for (int j = 2; j >= 0; j--)
+    {
+        if (PosV.z < gZSplits[j])
+        {
+            idx = j;
+        }
+    }
+
     float shadowFactor[3] = { 1.0f, 1.0f, 1.0f };
     for (int i = 0; i < 3; i++)
     {
-        shadowFactor[i] = CalcShadowFactor(pin.PosS);
+        shadowFactor[i] = CalcShadowFactor(pin.PosS, idx);
     }
     
     float4 directLight = ComputeLighting(gLights, gMat, pin.NormalW, view, shadowFactor);
