@@ -25,12 +25,11 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     d3d11DeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-    ID3D12CommandQueue* ppd3dCommandQueues[] = { pd3dCommandQueue };
+    ComPtr<ID3D12CommandQueue> ppd3dCommandQueues[] = { pd3dCommandQueue };
     ::D3D11On12CreateDevice(pd3dDevice, d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown**>(ppd3dCommandQueues), 
         _countof(ppd3dCommandQueues), 0, &pd3d11Device, &m_pd3d11DeviceContext, nullptr);
     ThrowIfFailed(pd3d11Device.As(&m_pd3d11On12Device));
-    pd3d11Device->Release();
-
+   
 #if defined(_DEBUG) || defined(DBG)
     ID3D12InfoQueue* pd3dInfoQueue;
     if (SUCCEEDED(pd3dDevice->QueryInterface(IID_PPV_ARGS(&pd3dInfoQueue))))
