@@ -24,7 +24,8 @@ public:
 
 public:
 	void SendLoginResultPacket(LOGIN_STAT result);
-	void SendEnterRoomDenyPacket(ROOM_STAT reason, int players);
+	void SendAccessRoomAcceptPacket();
+	void SendAccessRoomDenyPacket(ROOM_STAT reason, int players);
 
 public:
 	int ID;

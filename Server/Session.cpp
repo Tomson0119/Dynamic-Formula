@@ -58,21 +58,21 @@ bool Session::ChangeState(State expected, const State& desired)
 
 void Session::SendLoginResultPacket(LOGIN_STAT result)
 {
-	std::cout << "[" << ID << "] Send login ok packet\n";
+	std::cout << "[" << ID << "] Send login result packet\n";
 	SC::packet_login_result pck{};
 	pck.size = sizeof(SC::packet_login_result);
 	pck.type = SC::LOGIN_RESULT;
 	pck.result = (char)result;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	//Session::SendMsg();
+	Session::SendMsg();
 }
 
-void Session::SendEnterRoomDenyPacket(ROOM_STAT reason, int players)
+void Session::SendAccessRoomDenyPacket(ROOM_STAT reason, int players)
 {
-	SC::packet_enter_room_deny pck{};
-	pck.size = sizeof(SC::packet_enter_room_deny);
-	pck.type = SC::ENTER_ROOM_DENY;
+	SC::packet_access_room_deny pck{};
+	pck.size = sizeof(SC::packet_access_room_deny);
+	pck.type = SC::ACCESS_ROOM_DENY;
 	pck.reason = (char)reason;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	//Session::SendMsg();
+	Session::SendMsg();
 }
