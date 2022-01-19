@@ -21,13 +21,16 @@ public:
 	SOCKET GetSocket() const { return m_socket.GetSocket(); }
 
 public:
+
 	void RequestLogin();
 	void RequestNewRoom();
 	void RequestEnterRoom(int room_id);
 
 public:
 	int ID;
-
+	std::atomic_bool LoginSuccessFlag;
+	std::atomic_bool LoginResultFlag;
+;
 private:
 	Socket m_socket;
 

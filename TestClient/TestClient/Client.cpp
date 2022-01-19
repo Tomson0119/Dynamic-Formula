@@ -3,6 +3,8 @@
 Client::Client(int id)
 	: m_sendOverlapped{ nullptr }, ID(id)
 {
+	LoginSuccessFlag = false;
+	LoginResultFlag = false;
 	m_socket.Init();
 }
 
@@ -52,26 +54,30 @@ void Client::Recv()
 
 void Client::RequestLogin()
 {
+	std::string client_id, client_pwd;
+	std::cout << "Enter name: ";
+	std::cin >> client_id;
+	std::cout << "Enter pwd: ";
+	std::cin >> client_pwd;
+
 	std::cout << "[" << ID << "] Requesting login.\n";
 	CS::packet_login pck{};
 	pck.size = sizeof(CS::packet_login);
-	pck.type = CS::LOGIN;
-	std::string client_id = "Host" + std::to_string(ID);
-	std::string client_pwd = "Host" + std::to_string(ID);
-	strncpy_s(pck.name, client_id.c_str(), client_id.size());
-	strncpy_s(pck.pwd, client_pwd.c_str(), client_pwd.size());
+	pck.type = CS::LOGIN;	
+	strncpy_s(pck.name, client_id.c_str(), MAX_NAME_SIZE);
+	strncpy_s(pck.pwd, client_pwd.c_str(), MAX_PWD_SIZE);
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	Client::Send();
 }
 
 void Client::RequestNewRoom()
 {
 	std::cout << "[" << ID << "] Requesting new room.\n";
-	CS::packet_enter_room pck{};
+	CS::packet_open_room pck{};
 	pck.size = sizeof(CS::packet_enter_room);
-	pck.type = CS::ENTER_ROOM;
-	pck.new_room = true;
-	pck.room_id = -1;
+	pck.type = CS::OPEN_ROOM;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	Client::Send();
 }
 
 void Client::RequestEnterRoom(int room_id)
@@ -80,7 +86,7 @@ void Client::RequestEnterRoom(int room_id)
 	CS::packet_enter_room pck{};
 	pck.size = sizeof(CS::packet_enter_room);
 	pck.type = CS::ENTER_ROOM;
-	pck.new_room = false;
 	pck.room_id = room_id;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	Client::Send();
 }
