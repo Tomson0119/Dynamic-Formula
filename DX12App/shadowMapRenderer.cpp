@@ -24,7 +24,7 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 		float index = (i / (float)mMapCount);
 		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
 		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
-		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.2f);
+		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.3f);
 	}
 }
 
@@ -276,8 +276,6 @@ void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, Li
 		mDepthCamera[i]->LookAt(position, mCenter[i], XMFLOAT3(0.0f, 1.0f, 0.0f));
 		
 		mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
-
-		cmdList->SetGraphicsRoot32BitConstants(7, 16, &Matrix4x4::Transpose(Matrix4x4::Multiply(mDepthCamera[i]->GetView(), mDepthCamera[i]->GetProj())), 3 + i * 16);
 	}
 
 	for (int i = 1; i < mMapCount + 1; ++i)

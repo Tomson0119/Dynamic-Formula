@@ -157,7 +157,7 @@ struct LightInfo
 
 struct LightConstants
 {
-	XMFLOAT4X4 ShadowTransform;
+	XMFLOAT4X4 ShadowTransform[3];
 	XMFLOAT4 Ambient;
 	LightInfo Lights[NUM_LIGHTS];
 };

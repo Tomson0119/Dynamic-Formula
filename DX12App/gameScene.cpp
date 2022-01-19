@@ -66,7 +66,7 @@ void GameScene::BuildRootSignature(ID3D12Device* device)
 	parameters[4] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);			     // Object,  CBV
 	parameters[5] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);				 // Texture, SRV
 	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap
-	parameters[7] = Extension::Constants(51, 5, D3D12_SHADER_VISIBILITY_ALL);                                // Shadow ViewProjection
+	parameters[7] = Extension::Constants(3, 5, D3D12_SHADER_VISIBILITY_ALL);                                // Shadow ViewProjection
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[5];
 	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_ANISOTROPIC, D3D12_TEXTURE_ADDRESS_MODE_WRAP);
@@ -145,6 +145,7 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 1024, 1024, 3, mMainCamera.get());
+	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
@@ -314,7 +315,8 @@ void GameScene::UpdateLight(float elapsed)
 
 void GameScene::UpdateLightConstants()
 {
-	mMainLight.ShadowTransform = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(0));
+	for(int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
+		mMainLight.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(i));
 
 	mLightCB->CopyData(0, mMainLight);
 }

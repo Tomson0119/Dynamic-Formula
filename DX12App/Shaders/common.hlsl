@@ -19,9 +19,9 @@ cbuffer CameraCB : register(b0)
 
 cbuffer LightCB : register(b1)
 {
-    matrix gShadowTransform    : packoffset(c0); // need as much as shadow map
-    float4 gAmbient            : packoffset(c4);
-    Light  gLights[NUM_LIGHTS] : packoffset(c5);
+    matrix gShadowTransform[3] : packoffset(c0); // need as much as shadow map
+    float4 gAmbient            : packoffset(c12);
+    Light  gLights[NUM_LIGHTS] : packoffset(c13);
 }
 
 cbuffer GameInfoCB : register(b2)
@@ -46,8 +46,9 @@ cbuffer ObjectCB : register(b4)
 
 cbuffer ShadowCB : register(b5)
 {
-    float gZSplits[3] : packoffset(c0);
-    matrix gShadowViewProj[3] : packoffset(c4);
+    float gZSplit0 : packoffset(c0.x);
+    float gZSplit1 : packoffset(c0.y);
+    float gZSplit2 : packoffset(c0.z);
 }
 
 float CalcShadowFactor(float4 shadowPos, int idx)
@@ -73,8 +74,7 @@ float CalcShadowFactor(float4 shadowPos, int idx)
         [unroll]
         for (int i = 0; i < 9; i++)
         {
-            result += gShadowMap[idx].SampleCmpLevelZero(
-            gPCFShadow, shadowPos.xy + offsets[i], depth).r;
+            result += gShadowMap[idx].SampleCmpLevelZero(gPCFShadow, shadowPos.xy + offsets[i], depth).r;
         }
         result = result / 9.0f;
     }

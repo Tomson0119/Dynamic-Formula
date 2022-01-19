@@ -10,9 +10,9 @@ public:
 	ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount, const Camera* mainCamera);
 	virtual ~ShadowMapRenderer();
 
-	virtual void BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader=nullptr) override;
+	virtual void BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader = nullptr) override;
 	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex) override;
-	
+
 	void UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, LightConstants& lightCnst);
 	void PreRender(ID3D12GraphicsCommandList* cmdList, GameScene* scene);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int idx);
@@ -26,6 +26,7 @@ public:
 	void UpdateSplitFrustum(const Camera* mainCamera);
 
 	XMFLOAT4X4 GetShadowTransform(int idx) const;
+	int GetMapCount() const { return mMapCount; }
 
 private:
 	void BuildDescriptorViews(ID3D12Device* device);
