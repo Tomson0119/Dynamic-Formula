@@ -14,7 +14,7 @@ const int MaxBufferSize = 300;
 enum class LOGIN_STAT : char
 {
 	ACCEPTED = 0,
-	INVALID_ID,
+	INVALID_IDPWD,
 	ALREADY_IN,
 	BANNED
 };
@@ -30,7 +30,8 @@ enum class ROOM_STAT : char
 namespace CS
 {
 	const char LOGIN = 1;
-	const char ENTER_ROOM = 2;
+	const char OPEN_ROOM = 2;
+	const char ENTER_ROOM = 3;
 	const char MOVE = 3;
 	const char CHAT = 4;
 
@@ -41,10 +42,14 @@ namespace CS
 		char pwd[MAX_PWD_SIZE];
 	};
 
+	struct packet_open_room {
+		unsigned char size;
+		char type;
+	};
+
 	struct packet_enter_room {
 		unsigned char size;
 		char type;
-		bool new_room;
 		int room_id;
 	};
 }
@@ -60,8 +65,8 @@ namespace SC
 	};
 
 	const char LOGIN_RESULT = 1;
-	const char ENTER_ROOM_ACCEPT = 2;
-	const char ENTER_ROOM_DENY = 3;
+	const char ACCESS_ROOM_ACCEPT = 2;
+	const char ACCESS_ROOM_DENY = 3;
 	const char MOVE = 4;
 	const char CHAT = 5;
 
@@ -71,13 +76,13 @@ namespace SC
 		char result;
 	};
 
-	struct packet_enter_room_accept {
+	struct packet_access_room_accept {
 		unsigned char size;
 		char type;
 		PlayerState player_stats[MAX_ROOM_CAPACITY];
 	};
 
-	struct packet_enter_room_deny {
+	struct packet_access_room_deny {
 		unsigned char size;
 		char type;
 		char reason;
