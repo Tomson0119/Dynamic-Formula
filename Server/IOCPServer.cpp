@@ -7,7 +7,7 @@ std::array<std::unique_ptr<Session>, MAX_PLAYER_SIZE> LobbyServer::gClients;
 std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE> LobbyServer::gRooms;
 
 LobbyServer::LobbyServer(const EndPoint& ep)
-	: mLoop(true), mRoomCount(-1)
+	: mLoop(true), mRoomCount(0)
 {
 	if (mDBHandler.ConnectToDB(L"sql_server") == false)
 		std::cout << "failed to connect to DB\n";
@@ -117,7 +117,7 @@ void LobbyServer::Disconnect(int id)
 
 void LobbyServer::AcceptNewClient(int id, SOCKET sck)
 {
-	//std::cout << "Accepted client [" << id << "]\n";
+	std::cout << "Accepted client [" << id << "]\n";
 	gClients[id]->AssignAcceptedID(id, sck);
 	mIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
@@ -147,48 +147,53 @@ bool LobbyServer::ProcessPacket(std::byte* packet, int id, int bytes)
 	{
 	case CS::LOGIN:
 	{
+		std::cout << "[" << id << "] Login packet\n";
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
-		//std::cout << "[" << id << "] Login packet : " << pck->name << std::endl;
 		
-		// TODO: Search for valid id in database.
-		// if(succeeded)
-		{
+		std::string user_name = pck->name;
+		std::string user_pwd = pck->pwd;
+		bool succeeded = mDBHandler.SearchIdAndPwd(user_name, user_pwd);
+		if(succeeded) {
 			gClients[id]->Name = pck->name; // name found in database
 			gClients[id]->SendLoginResultPacket(LOGIN_STAT::ACCEPTED);
 		}
-		// else
-		{
-			//gClients[id]->SendLoginResultPacket(LOGIN_STAT::INVALID_ID);
-		}		
+		else {
+			gClients[id]->SendLoginResultPacket(LOGIN_STAT::INVALID_IDPWD);
+		}
+		break;
+	}
+	case CS::OPEN_ROOM:
+	{
+		CS::packet_open_room* pck = reinterpret_cast<CS::packet_open_room*>(packet);
+		std::cout << "[" << id << "] Open room packet\n";
+
+		if (mRoomCount.load() >= MAX_ROOM_SIZE)
+			gClients[id]->SendAccessRoomDenyPacket(ROOM_STAT::MAX_ROOM_REACHED, -1);
+		else {
+			mRoomCount.fetch_add(1);
+			gRooms[mRoomCount - 1]->OpenRoom(id);
+		}
+
 		break;
 	}
 	case CS::ENTER_ROOM:
 	{
 		CS::packet_enter_room* pck = reinterpret_cast<CS::packet_enter_room*>(packet);
-		//std::cout << "[" << id << "] Enter room packet\n";
+		std::cout << "[" << id << "] Enter room packet\n";
 
-		if (pck->new_room)	
-		{
-			if (mRoomCount >= MAX_ROOM_SIZE - 1)
-				gClients[id]->SendEnterRoomDenyPacket(ROOM_STAT::MAX_ROOM_REACHED, -1);
-			else {
-				mRoomCount.fetch_add(1);
-				gRooms[mRoomCount]->OpenRoom(id);
-			}
+		if (gRooms[pck->room_id]->Full())
+			gClients[id]->SendAccessRoomDenyPacket(ROOM_STAT::ROOM_IS_FULL, -1);
+		else {
+			gRooms[pck->room_id]->AddPlayer(id);
 		}
-		else 
-		{
-			if (gRooms[pck->room_id]->Full())
-				gClients[id]->SendEnterRoomDenyPacket(ROOM_STAT::ROOM_IS_FULL, -1);
-			else {
-				gRooms[pck->room_id]->AddPlayer(id);
-			}
-		}
+		
 		break;
 	}
 	default:
+	{
 		std::cout << "Invalid packet...clearing buffer\n";
 		return false;
+	}
 	}
 	return true;
 }

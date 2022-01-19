@@ -27,6 +27,9 @@ public:
 private:
 	int GetAvailableID();
 
+public:
+	static std::array<std::unique_ptr<Session>, MAX_PLAYER_SIZE> gClients;
+
 private:
 	Socket mListenSck;
 	IOCP mIOCP;
@@ -37,6 +40,5 @@ private:
 
 	DBHandler mDBHandler;
 
-	static std::array<std::unique_ptr<Session>, MAX_PLAYER_SIZE> gClients;
 	static std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE> gRooms;
 };
