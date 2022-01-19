@@ -3,7 +3,7 @@
 
 const std::string SERVER_IP = "127.0.0.1";
 
-const int MAX_TRIAL = 2;
+const int MAX_TRIAL = 1;
 const int MAX_NET_THREADS = 1;
 
 std::array<std::unique_ptr<Client>, MAX_TRIAL> gClients;
@@ -14,6 +14,13 @@ std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_int_distribution id_gen{ 0, MAX_TRIAL - 1 };
 std::uniform_int_distribution type_gen{ 1, 3 };
+
+struct Room
+{
+	int player_count;
+};
+
+std::atomic_int gRoom_count;
 
 void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 {
@@ -27,19 +34,39 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 		case SC::LOGIN_RESULT:
 		{
 			SC::packet_login_result* pck = reinterpret_cast<SC::packet_login_result*>(packet);
-			if (pck->result == (char)LOGIN_STAT::ACCEPTED)
-				std::cout << "[" << id << "] Login succeeded\n";
-			else
+
+			if (pck->result == (char)LOGIN_STAT::ACCEPTED) {
+				std::cout << "[" << id << "] Login succeeded.\n";
+				gClients[id]->LoginSuccessFlag.store(true, std::memory_order_release);
+			}
+			else {
 				std::cout << "[" << id << "] Login failed (reason: " << (int)pck->result << ")\n";
+				gClients[id]->LoginSuccessFlag.store(false, std::memory_order_release);
+			}
+			gClients[id]->LoginResultFlag.store(true, std::memory_order_release);
 			break;
 		}
-		case SC::ENTER_ROOM_RESULT:
+		case SC::ACCESS_ROOM_ACCEPT:
 		{
-			SC::packet_enter_room_result* pck = reinterpret_cast<SC::packet_enter_room_result*>(packet);
-			if (pck->result == (char)ROOM_STAT::ACCEPTED)
-				std::cout << "[" << id << "] Entered the room (count: " << pck->num_players << "\n";
-			else
-				std::cout << "[" << id << "] Room request failed (reason: " << (int)pck->result << ")\n";
+			SC::packet_access_room_accept* pck = reinterpret_cast<SC::packet_access_room_accept*>(packet);
+			gRoom_count.fetch_add(1);
+
+			std::cout << "[" << id << "] Room entered.\n\t";
+			for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
+			{
+				if (pck->player_stats->empty == false) {
+					std::cout << "player: " << pck->player_stats->name << "\n\t";
+					std::cout << "color: " << pck->player_stats->color << "\n\t";
+					std::cout << "ready: " << std::boolalpha<<pck->player_stats->ready << "\n\t";
+				}
+			}
+
+			break;
+		}
+		case SC::ACCESS_ROOM_DENY:
+		{
+			SC::packet_access_room_deny* pck = reinterpret_cast<SC::packet_access_room_deny*>(packet);
+			std::cout << "[" << id << "] Room access denied (reason: " << pck->reason << "\n";
 			break;
 		}
 		default:
@@ -86,6 +113,7 @@ void ThreadFunc()
 			Client* client = gClients[client_id].get();
 			over_ex->NetBuffer.ShiftWritePtr(info.bytes);
 			ProcessPacket(over_ex, client_id, info.bytes);
+			gClients[client_id]->Recv();
 			break;
 		}
 		default:
@@ -97,12 +125,19 @@ void ThreadFunc()
 
 void ClientFunc(int thread_id)
 {
+	while (gClients[thread_id]->LoginSuccessFlag.load(std::memory_order_acquire) == false)
+	{
+		gClients[thread_id]->RequestLogin();
+		while (gClients[thread_id]->LoginResultFlag.load(std::memory_order_acquire) == false);
+		
+		bool b = true;
+		gClients[thread_id]->LoginResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
+	}
+	std::cout << "[" << thread_id << "]" << "Login Success\n";
+
 	while (true)
 	{
 		
-		
-		std::string temp;
-		std::cin >> temp;
 		std::this_thread::sleep_for(1s);
 	}
 }
@@ -119,7 +154,6 @@ int main()
 		else
 		{
 			gIOCP.RegisterDevice(gClients[i]->GetSocket(), i);
-			gClients[i]->RequestLogin();
 			gClients[i]->Recv();
 		}
 	}
