@@ -1,34 +1,34 @@
 #include "common.h"
-#include "Session.h"
+#include "Client.h"
 #include "WSAOverlappedEx.h"
 
 
-Session::Session(int id)
+Client::Client(int id)
 	: ID(id),
 	  mRecvOverlapped{},
 	  mSendOverlapped{},
-	  mState{ State::EMPTY }
+	  mState{ CLIENT_STAT::EMPTY }
 {
 	mSocket.Init();
 }
 
-Session::~Session()
+Client::~Client()
 {
 }
 
-void Session::Disconnect()
-{
-	mState = State::EMPTY;
+void Client::Disconnect()
+{	
+	mState = CLIENT_STAT::EMPTY;
 	mSocket.Close();
 }
 
-void Session::AssignAcceptedID(int id, SOCKET sck)
+void Client::AssignAcceptedID(int id, SOCKET sck)
 {
 	ID = id;
 	mSocket.SetSocket(sck);
 }
 
-void Session::PushPacket(std::byte* pck, int bytes)
+void Client::PushPacket(std::byte* pck, int bytes)
 {
 	if (mSendOverlapped == nullptr)
 		mSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
@@ -36,7 +36,7 @@ void Session::PushPacket(std::byte* pck, int bytes)
 		mSendOverlapped->PushMsg(pck, bytes);
 }
 
-void Session::SendMsg()
+void Client::SendMsg()
 {
 	if (mSendOverlapped)
 	{
@@ -45,18 +45,18 @@ void Session::SendMsg()
 	}
 }
 
-void Session::RecvMsg()
+void Client::RecvMsg()
 {
 	mRecvOverlapped.Reset(OP::RECV);
 	mSocket.Recv(&mRecvOverlapped);
 }
 
-bool Session::ChangeState(State expected, const State& desired)
+bool Client::ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired)
 {
 	return mState.compare_exchange_strong(expected, desired);
 }
 
-void Session::SendLoginResultPacket(LOGIN_STAT result)
+void Client::SendLoginResultPacket(LOGIN_STAT result)
 {
 	std::cout << "[" << ID << "] Send login result packet\n";
 	SC::packet_login_result pck{};
@@ -64,15 +64,26 @@ void Session::SendLoginResultPacket(LOGIN_STAT result)
 	pck.type = SC::LOGIN_RESULT;
 	pck.result = (char)result;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	Session::SendMsg();
+	Client::SendMsg();
 }
 
-void Session::SendAccessRoomDenyPacket(ROOM_STAT reason, int players)
+void Client::SendRegisterResultPacket(REGI_STAT result)
+{
+	std::cout << "[" << ID << "] Send login result packet\n";
+	SC::packet_register_result pck{};
+	pck.size = sizeof(SC::packet_register_result);
+	pck.type = SC::REGISTER_RESULT;
+	pck.result = (char)result;
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	Client::SendMsg();
+}
+
+void Client::SendAccessRoomDenyPacket(ROOM_STAT reason, int players)
 {
 	SC::packet_access_room_deny pck{};
 	pck.size = sizeof(SC::packet_access_room_deny);
 	pck.type = SC::ACCESS_ROOM_DENY;
 	pck.reason = (char)reason;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	Session::SendMsg();
+	Client::SendMsg();
 }

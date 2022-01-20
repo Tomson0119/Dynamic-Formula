@@ -1,16 +1,19 @@
 #pragma once
 
-enum class State : char
+enum class CLIENT_STAT : char
 {
 	EMPTY,
+	CONNECTED,
 	LOGIN,
+	IN_ROOM,
+	IN_GAME
 };
 
-class Session
+class Client
 {
 public:
-	Session(int id);
-	virtual ~Session();
+	Client(int id);
+	virtual ~Client();
 
 	void Disconnect();
 	void AssignAcceptedID(int id, SOCKET sck);
@@ -20,11 +23,13 @@ public:
 	void SendMsg();
 	void RecvMsg();
 
-	bool ChangeState(State expected, const State& desired);
+	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
+
+	CLIENT_STAT GetCurrentState() const { return mState.load(); }
 
 public:
 	void SendLoginResultPacket(LOGIN_STAT result);
-	void SendAccessRoomAcceptPacket();
+	void SendRegisterResultPacket(REGI_STAT result);
 	void SendAccessRoomDenyPacket(ROOM_STAT reason, int players);
 
 public:
@@ -35,7 +40,7 @@ private:
 	WSAOVERLAPPEDEX mRecvOverlapped;
 	WSAOVERLAPPEDEX* mSendOverlapped;
 
-	std::atomic<State> mState;
+	std::atomic<CLIENT_STAT> mState;
 
 	Socket mSocket;
 };
