@@ -1,9 +1,9 @@
 #include "common.h"
-#include "IOCPServer.h"
-#include "Session.h"
+#include "LobbyServer.h"
+#include "Client.h"
 #include "InGameRoom.h"
 
-std::array<std::unique_ptr<Session>, MAX_PLAYER_SIZE> LobbyServer::gClients;
+std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> LobbyServer::gClients;
 std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE> LobbyServer::gRooms;
 
 LobbyServer::LobbyServer(const EndPoint& ep)
@@ -13,7 +13,7 @@ LobbyServer::LobbyServer(const EndPoint& ep)
 		std::cout << "failed to connect to DB\n";
 
 	for (int i = 0; i < gClients.size(); i++)
-		gClients[i] = std::make_unique<Session>(i);
+		gClients[i] = std::make_unique<Client>(i);
 
 	for (int i = 0; i < gRooms.size(); i++)
 		gRooms[i] = std::make_unique<InGameRoom>(i, this);
@@ -80,7 +80,7 @@ void LobbyServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 			Disconnect(id);
 			break;
 		}
-		Session* client = gClients[id].get();
+		Client* client = gClients[id].get();
 		over->NetBuffer.ShiftWritePtr(bytes);
 		ReadRecvBuffer(over, id, bytes);
 		client->RecvMsg();
@@ -112,6 +112,7 @@ void LobbyServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 void LobbyServer::Disconnect(int id)
 {
 	std::cout << "Disconnect [" << id << "]\n";
+	mDBHandler.SaveAndDisconnect(id);
 	gClients[id]->Disconnect();
 }
 
@@ -128,38 +129,59 @@ void LobbyServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
 	while (over->NetBuffer.Readable())
 	{
 		std::byte* packet = over->NetBuffer.BufReadPtr();
-		
+		char type = GetPacketType(packet);
+
 		if (packet == nullptr) {
 			over->NetBuffer.Clear();
 			break;
 		}
-		if (ProcessPacket(packet, id, bytes) == false) {
+		if (ProcessPacket(packet, type, id, bytes) == false) {
 			over->NetBuffer.Clear();
 			break;
 		}
 	}
 }
 
-bool LobbyServer::ProcessPacket(std::byte* packet, int id, int bytes)
+bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 {
-	char type = static_cast<char>(packet[1]);
 	switch (type)
 	{
 	case CS::LOGIN:
 	{
 		std::cout << "[" << id << "] Login packet\n";
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
-		
-		std::string user_name = pck->name;
-		std::string user_pwd = pck->pwd;
-		bool succeeded = mDBHandler.SearchIdAndPwd(user_name, user_pwd);
-		if(succeeded) {
-			gClients[id]->Name = pck->name; // name found in database
+		int conn_id = mDBHandler.SearchIdAndPwd(pck->name, pck->pwd, id);
+
+		if(conn_id >= (int)LOGIN_STAT::ACCEPTED) 
+		{
+			if (conn_id >= 0) Disconnect(conn_id);
+
+			gClients[id]->Name = pck->name + std::to_string(id);
 			gClients[id]->SendLoginResultPacket(LOGIN_STAT::ACCEPTED);
+			
+			if (gClients[id]->ChangeState(CLIENT_STAT::CONNECTED, CLIENT_STAT::LOGIN) == false)
+			{
+				std::cout << "Failed to change state\n";
+				Disconnect(id);
+			}
+		}
+		else if(conn_id == (int)LOGIN_STAT::INVALID_IDPWD)
+			gClients[id]->SendLoginResultPacket(LOGIN_STAT::INVALID_IDPWD);
+		break;
+	}
+	case CS::REGISTER:
+	{
+		CS::packet_register* pck = reinterpret_cast<CS::packet_register*>(packet);
+		std::cout << "[" << id << "] Register packet.\n";
+
+		bool succeeded = mDBHandler.RegisterIdAndPwd(pck->name, pck->pwd);
+		if (succeeded) {
+			gClients[id]->SendRegisterResultPacket(REGI_STAT::ACCEPTED);
 		}
 		else {
-			gClients[id]->SendLoginResultPacket(LOGIN_STAT::INVALID_IDPWD);
+			gClients[id]->SendRegisterResultPacket(REGI_STAT::INVALID_IDPWD);
 		}
+
 		break;
 	}
 	case CS::OPEN_ROOM:
@@ -170,7 +192,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, int id, int bytes)
 		if (mRoomCount.load() >= MAX_ROOM_SIZE)
 			gClients[id]->SendAccessRoomDenyPacket(ROOM_STAT::MAX_ROOM_REACHED, -1);
 		else {
-			mRoomCount.fetch_add(1);
+			mRoomCount.fetch_add(1);			
 			gRooms[mRoomCount - 1]->OpenRoom(id);
 		}
 
@@ -186,7 +208,6 @@ bool LobbyServer::ProcessPacket(std::byte* packet, int id, int bytes)
 		else {
 			gRooms[pck->room_id]->AddPlayer(id);
 		}
-		
 		break;
 	}
 	default:
@@ -202,7 +223,7 @@ int LobbyServer::GetAvailableID()
 {
 	for (int i = 0; i < gClients.size(); i++)
 	{
-		if (gClients[i]->ChangeState(State::EMPTY, State::LOGIN))
+		if (gClients[i]->ChangeState(CLIENT_STAT::EMPTY, CLIENT_STAT::CONNECTED))
 			return i;
 	}
 	return -1;

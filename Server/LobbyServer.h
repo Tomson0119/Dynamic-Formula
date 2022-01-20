@@ -2,7 +2,7 @@
 
 #include "DBHandler.h"
 
-class Session;
+class Client;
 class InGameRoom;
 
 class LobbyServer
@@ -19,7 +19,7 @@ public:
 
 	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes);
 	void ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes);
-	bool ProcessPacket(std::byte* packet, int id, int bytes);
+	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
 	static void NetworkThreadFunc(LobbyServer& server);
 	static const int MaxThreads = 1;
@@ -28,7 +28,7 @@ private:
 	int GetAvailableID();
 
 public:
-	static std::array<std::unique_ptr<Session>, MAX_PLAYER_SIZE> gClients;
+	static std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
 
 private:
 	Socket mListenSck;
