@@ -21,7 +21,6 @@ bool GameFramework::InitFramework()
 	if (!D3DFramework::InitFramework())
 		return false;
 
-	//UI Build
 	
 	
 	
@@ -31,6 +30,7 @@ bool GameFramework::InitFramework()
 	mScenes.push(make_unique<GameScene>());
 	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
 	
+	//UI Build
 	mpUI = std::make_unique<UI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
 	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 

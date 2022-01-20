@@ -31,9 +31,11 @@ private:
     ComPtr<ID3D11Device> pd3d11Device;
     ComPtr<IDXGIDevice> pdxgiDevice;
     ComPtr<ID2D1DeviceContext2> m_pd2dDeviceContext;
-    ComPtr<IDWriteTextFormat> m_pdwTextFormat;
-    
-    std::vector<ComPtr<ID2D1SolidColorBrush>> m_vpd2dTextBrush;
+    std::vector<ComPtr<IDWriteTextFormat>> m_vdwTextFormat;
+
+    std::vector<ComPtr<ID2D1LinearGradientBrush>> m_vd2dLinearGradientBrush;
+
+    std::vector<ComPtr<ID2D1SolidColorBrush>> m_vd2dTextBrush;
 
     std::vector<ComPtr<ID3D11Resource>>    m_vWrappedRenderTargets;
     std::vector<ComPtr<ID2D1Bitmap1>>      m_vd2dRenderTargets;
