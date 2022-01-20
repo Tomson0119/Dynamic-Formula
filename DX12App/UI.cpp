@@ -1,14 +1,15 @@
 #include "stdafx.h"
 #include "UI.h"
 
-UI::UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
+UI::UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue) : TextCnt(4)
 {
     m_fWidth = 0.0f;
     m_fHeight = 0.0f;
 
     m_vWrappedRenderTargets.resize(nFrame);
     m_vd2dRenderTargets.resize(nFrame);
-    m_vTextBlocks.resize(4);
+    m_vTextBlocks.resize(TextCnt);
+    m_vpd2dTextBrush.resize(TextCnt+3);
     Initialize(pd3dDevice, pd3dCommandQueue);
 }
 UI::~UI()
@@ -64,7 +65,12 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     ThrowIfFailed(m_pd2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &m_pd2dDeviceContext));
 
     m_pd2dDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
-    ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), (ID2D1SolidColorBrush**)&m_pd2dTextBrush));
+    for(int i=0;i<TextCnt;++i)
+        ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), (ID2D1SolidColorBrush**)&m_vpd2dTextBrush[i]));
+
+    ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&m_vpd2dTextBrush[TextCnt]));
+    ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red), (ID2D1SolidColorBrush**)&m_vpd2dTextBrush[TextCnt+1]));
+    ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Aqua), (ID2D1SolidColorBrush**)&m_vpd2dTextBrush[TextCnt+2]));
 
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&m_pd2dWriteFactory));
 }
@@ -86,18 +92,28 @@ void UI::Draw(UINT nFrame)
     //m_pd3d11On12Device->AcquireWrappedResources(ppResources, _countof(ppResources));
     m_pd2dDeviceContext.Get()->SetTarget(m_vd2dRenderTargets[nFrame].Get());
      
-    for (auto textBlock : m_vTextBlocks)
+    for (int i=0;i<TextCnt;++i/*auto textBlock : m_vTextBlocks*/)
     {
         //function blabla(L"Font");
-        m_pd2dDeviceContext.Get()->DrawTextW(textBlock.strText.c_str(), static_cast<UINT>(textBlock.strText.length()), 
-            textBlock.pdwFormat, textBlock.d2dLayoutRect, m_pd2dTextBrush.Get());
+        m_pd2dDeviceContext.Get()->DrawTextW(m_vTextBlocks[i].strText.c_str(), static_cast<UINT>(m_vTextBlocks[i].strText.length()),
+            m_vTextBlocks[i].pdwFormat, m_vTextBlocks[i].d2dLayoutRect, m_vpd2dTextBrush[i].Get());
     }
     //Draft gage
-    m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f/9.0f)), m_pd2dTextBrush.Get());
+    m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f/9.0f)), 
+        m_vpd2dTextBrush[TextCnt].Get());
+    //Fill Draft gage
+    m_pd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f / 9.0f)), 
+        m_vpd2dTextBrush[TextCnt].Get());
     // Item Slot1
-    m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (17.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (18.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), m_pd2dTextBrush.Get());
+    m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (17.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (18.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), 
+        m_vpd2dTextBrush[TextCnt].Get());
+    m_pd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (17.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (18.0f / 32.0f), m_fHeight * (8.0f / 9.0f)),
+        m_vpd2dTextBrush[TextCnt+1].Get());
     // Item Slot2
-    m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (19.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), m_pd2dTextBrush.Get());
+    m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (19.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), 
+        m_vpd2dTextBrush[TextCnt].Get());
+    m_pd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (19.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (8.0f / 9.0f)),
+        m_vpd2dTextBrush[TextCnt+2].Get());
 
     m_pd2dDeviceContext.Get()->EndDraw();
    

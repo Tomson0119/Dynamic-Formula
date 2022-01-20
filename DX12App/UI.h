@@ -21,6 +21,7 @@ private:
 
     float m_fWidth;
     float m_fHeight;
+    UINT TextCnt;
 
     ComPtr<ID3D11DeviceContext> m_pd3d11DeviceContext;
     ID3D11On12Device* m_pd3d11On12Device;
@@ -30,9 +31,10 @@ private:
     ComPtr<ID3D11Device> pd3d11Device;
     ComPtr<IDXGIDevice> pdxgiDevice;
     ComPtr<ID2D1DeviceContext2> m_pd2dDeviceContext;
-    ComPtr<ID2D1SolidColorBrush> m_pd2dTextBrush;
     ComPtr<IDWriteTextFormat> m_pdwTextFormat;
     
+    std::vector<ComPtr<ID2D1SolidColorBrush>> m_vpd2dTextBrush;
+
     std::vector<ComPtr<ID3D11Resource>>    m_vWrappedRenderTargets;
     std::vector<ComPtr<ID2D1Bitmap1>>      m_vd2dRenderTargets;
     std::vector<TextBlock>          m_vTextBlocks;
