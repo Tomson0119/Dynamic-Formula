@@ -92,6 +92,13 @@ void UI::Draw(UINT nFrame)
         m_pd2dDeviceContext.Get()->DrawTextW(textBlock.strText.c_str(), static_cast<UINT>(textBlock.strText.length()), 
             textBlock.pdwFormat, textBlock.d2dLayoutRect, m_pd2dTextBrush.Get());
     }
+    //Draft gage
+    m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f/9.0f)), m_pd2dTextBrush.Get());
+    // Item Slot1
+    m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (17.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (18.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), m_pd2dTextBrush.Get());
+    // Item Slot2
+    m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (19.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), m_pd2dTextBrush.Get());
+
     m_pd2dDeviceContext.Get()->EndDraw();
    
     m_pd3d11On12Device->ReleaseWrappedResources(m_vWrappedRenderTargets[nFrame].GetAddressOf(), 0);
