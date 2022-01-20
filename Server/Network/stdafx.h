@@ -26,6 +26,7 @@ extern "C" {
 #include <unordered_map>
 #include <unordered_set>
 #include <concurrent_priority_queue.h>
+#include <concurrent_unordered_set.h>
 
 #include "NetException.h"
 #include "Protocol.h"
@@ -33,3 +34,17 @@ extern "C" {
 #define ABS(x) ((x < 0) ? -(x) : (x))
 
 using namespace std::chrono_literals;
+
+inline char GetPacketType(std::byte* pck)
+{
+	return *reinterpret_cast<char*>(pck + sizeof(uint16_t));
+}
+
+inline std::wstring CharToWString(const char* str)
+{
+	std::string s_str(str);
+	int size = MultiByteToWideChar(CP_ACP, 0, &s_str[0], (int)s_str.size(), NULL, 0);
+	std::wstring wstr(size, 0);
+	MultiByteToWideChar(CP_ACP, 0, &s_str[0], (int)s_str.size(), &wstr[0], size);
+	return wstr;
+}
