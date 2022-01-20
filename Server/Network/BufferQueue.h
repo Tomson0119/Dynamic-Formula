@@ -22,7 +22,7 @@ public:
 	bool Readable();
 	bool Empty() const { return (mReadIndex == mWriteIndex && mRemainSize > 0); }
 	
-	char PeekNextPacketSize();
+	uint16_t PeekNextPacketSize();
 
 	std::byte* BufStartPtr() { return mBuffer; }
 	std::byte* BufWritePtr() { return mBuffer + mWriteIndex; }
