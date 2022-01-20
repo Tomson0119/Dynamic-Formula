@@ -3,7 +3,7 @@
 struct PlayerInfo
 {
 	bool Empty;
-	char CarModel;
+	char Color;
 	bool Ready;
 	int ID;
 	std::string Name;
@@ -21,12 +21,13 @@ public:
 	void AddPlayer(int player);
 
 public:
-	char GetPlayerCount() const { return mPlayerCount; }
-	bool Full() const { return (mPlayerCount == MAX_ROOM_CAPACITY); }
+	char GetPlayerCount() const { return mPlayerCount.load(); }
+	bool Full() const { return (mPlayerCount.load() == MAX_ROOM_CAPACITY); }
 	bool Empty() const { return mOpen.load(); }
 
 private:
 	void SendAccessRoomAcceptPacket(int id);
+	void SendRoomInfoToLobbyPlayers();
 
 private:
 	int mID;

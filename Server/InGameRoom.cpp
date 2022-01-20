@@ -1,7 +1,7 @@
 #include "common.h"
 #include "InGameRoom.h"
-#include "IOCPServer.h"
-#include "Session.h"
+#include "LobbyServer.h"
+#include "Client.h"
 
 InGameRoom::InGameRoom(int id, LobbyServer* server)
 	: mID(id), mOpen(false), mLobbyPtr(server), mPlayerCount(0)
@@ -22,23 +22,29 @@ void InGameRoom::OpenRoom(int player)
 	}
 	else {
 		AddPlayer(player);
-	}		
+	}
 }
 
 void InGameRoom::AddPlayer(int player)
 {
 	if (mOpen.load())
 	{
+		Client* client = mLobbyPtr->gClients[player].get();
+
 		mPlayerCount.fetch_add(1);
 		
 		PlayerInfo& info = mPlayers[mPlayerCount.load() - 1];
 		info.ID = player;
-		info.CarModel = 0;
+		info.Color = 0;
 		info.Empty = false;
-		info.Name = mLobbyPtr->gClients[player]->Name;
+		info.Name = client->Name;
 		info.Ready = false;
 
+		if (client->ChangeState(CLIENT_STAT::LOGIN, CLIENT_STAT::IN_ROOM) == false)
+			client->Disconnect();
+
 		SendAccessRoomAcceptPacket(player);
+		SendRoomInfoToLobbyPlayers();
 	}
 }
 
@@ -48,12 +54,25 @@ void InGameRoom::SendAccessRoomAcceptPacket(int id)
 	SC::packet_access_room_accept pck{};
 	pck.size = sizeof(SC::packet_access_room_accept);
 	pck.type = SC::ACCESS_ROOM_ACCEPT;
+	pck.room_id = mID;
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++) {
 		strncpy_s(pck.player_stats[i].name, mPlayers[i].Name.c_str(), mPlayers[i].Name.size());
-		pck.player_stats[i].color = mPlayers[i].CarModel;
+		pck.player_stats[i].color = mPlayers[i].Color;
 		pck.player_stats[i].empty = mPlayers[i].Empty;
 		pck.player_stats[i].ready = mPlayers[i].Ready;
 	}
 	mLobbyPtr->gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	mLobbyPtr->gClients[id]->SendMsg();
+}
+
+void InGameRoom::SendRoomInfoToLobbyPlayers()
+{
+	for (int i = 0; i < MAX_PLAYER_SIZE; i++)
+	{
+		Client* client = mLobbyPtr->gClients[i].get();
+		if (client->GetCurrentState() == CLIENT_STAT::LOGIN)
+		{
+			
+		}
+	}
 }
