@@ -27,39 +27,47 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 	while (over->NetBuffer.Readable())
 	{
 		std::byte* packet = over->NetBuffer.BufReadPtr();
-		char type = static_cast<char>(packet[1]);
+		char type = GetPacketType(packet);
 
 		switch (type)
 		{
 		case SC::LOGIN_RESULT:
 		{
 			SC::packet_login_result* pck = reinterpret_cast<SC::packet_login_result*>(packet);
-
 			if (pck->result == (char)LOGIN_STAT::ACCEPTED) {
 				std::cout << "[" << id << "] Login succeeded.\n";
 				gClients[id]->LoginSuccessFlag.store(true, std::memory_order_release);
 			}
 			else {
 				std::cout << "[" << id << "] Login failed (reason: " << (int)pck->result << ")\n";
-				gClients[id]->LoginSuccessFlag.store(false, std::memory_order_release);
-			}
-			gClients[id]->LoginResultFlag.store(true, std::memory_order_release);
+			}			
+			break;
+		}
+		case SC::REGISTER_RESULT:
+		{
+			SC::packet_register_result* pck = reinterpret_cast<SC::packet_register_result*>(packet);
+			if (pck->result == (char)REGI_STAT::ACCEPTED)
+				std::cout << "[" << id << "] Register succeeded.\n";
+			else
+				std::cout << "[" << id << "] Register failed (reason: " << (int)pck->result << ")\n";
 			break;
 		}
 		case SC::ACCESS_ROOM_ACCEPT:
 		{
 			SC::packet_access_room_accept* pck = reinterpret_cast<SC::packet_access_room_accept*>(packet);
 			gRoom_count.fetch_add(1);
-
-			std::cout << "[" << id << "] Room entered.\n\t";
+			gClients[id]->RoomID = pck->room_id;
+			
+			std::cout << "[" << id << "] Room entered.\n";
 			for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 			{
-				if (pck->player_stats->empty == false) {
-					std::cout << "player: " << pck->player_stats->name << "\n\t";
-					std::cout << "color: " << pck->player_stats->color << "\n\t";
-					std::cout << "ready: " << std::boolalpha<<pck->player_stats->ready << "\n\t";
+				if (pck->player_stats[i].empty == false) {
+					std::cout << "   1. player: " << pck->player_stats[i].name << "\n";
+					std::cout << "      color: " << (int)pck->player_stats[i].color << "\n";
+					std::cout << "      ready: " << std::boolalpha<<pck->player_stats[i].ready << "\n";
 				}
 			}
+			std::cout << "\n";
 
 			break;
 		}
@@ -113,6 +121,7 @@ void ThreadFunc()
 			Client* client = gClients[client_id].get();
 			over_ex->NetBuffer.ShiftWritePtr(info.bytes);
 			ProcessPacket(over_ex, client_id, info.bytes);
+			client->RecvResultFlag.store(true, std::memory_order_release);
 			gClients[client_id]->Recv();
 			break;
 		}
@@ -125,21 +134,10 @@ void ThreadFunc()
 
 void ClientFunc(int thread_id)
 {
-	while (gClients[thread_id]->LoginSuccessFlag.load(std::memory_order_acquire) == false)
-	{
-		gClients[thread_id]->RequestLogin();
-		while (gClients[thread_id]->LoginResultFlag.load(std::memory_order_acquire) == false);
-		
-		bool b = true;
-		gClients[thread_id]->LoginResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
-	}
-	std::cout << "[" << thread_id << "]" << "Login Success\n";
-
-	while (true)
-	{
-		
-		std::this_thread::sleep_for(1s);
-	}
+	gClients[thread_id]->EnterLoginScreen();
+	gClients[thread_id]->EnterLobbyScreen();
+	gClients[thread_id]->EnterWaitRoomScreen();
+	gClients[thread_id]->EnterInGameScreen();	
 }
 
 int main()
