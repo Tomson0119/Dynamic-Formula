@@ -38,22 +38,35 @@ bool DBHandler::ConnectToDB(const std::wstring& sourcename)
 	return true;
 }
 
-bool DBHandler::SearchIdAndPwd(const std::string& id, const std::string& pwd)
+bool DBHandler::SaveAndDisconnect(int host_id)
 {
-	std::wstring query = L"EXEC search_id_pwd ";
-	query.insert(query.end(), id.begin(), id.end());
-	query += L", " + std::wstring(pwd.begin(), pwd.end());
+	std::wstring query = L"EXEC save_user_info " + std::to_wstring(host_id);
 
-	RETCODE ret = SQLExecDirect(m_hStmt, (SQLWCHAR*)query.c_str() , SQL_NTS);
+	RETCODE ret = SQLExecDirect(m_hStmt, (SQLWCHAR*)query.c_str(), SQL_NTS);
 	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) return false;
 
-	SQLINTEGER retCount{};
+	SQLCancel(m_hStmt);
+	SQLCloseCursor(m_hStmt);
+
+	return true;
+}
+
+bool DBHandler::RegisterIdAndPwd(char* id, char* pwd)
+{
+	std::wstring query = L"EXEC register_new_user " + CharToWString(id) + L", " + CharToWString(pwd);
+
+	RETCODE ret = SQLExecDirect(m_hStmt, (SQLWCHAR*)query.c_str(), SQL_NTS);
+	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) return false;
+
+	SQLSMALLINT retValue{};
 	SQLLEN cb{};
 
-	SQLBindCol(m_hStmt, 1, SQL_C_LONG, &retCount, 4, &cb);
-	
+	ret = SQLBindCol(m_hStmt, 1, SQL_C_SHORT, &retValue, 2, &cb);
+	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) return false;
+
 	ret = SQLFetch(m_hStmt);
 	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) {
+		SQLCancel(m_hStmt);
 		SQLCloseCursor(m_hStmt);
 		return false;
 	}
@@ -61,29 +74,34 @@ bool DBHandler::SearchIdAndPwd(const std::string& id, const std::string& pwd)
 	SQLCancel(m_hStmt);
 	SQLCloseCursor(m_hStmt);
 
-	return (retCount == 1);
+	return (retValue == 1);
 }
 
-bool DBHandler::DisconnectAndUpdate()
+int DBHandler::SearchIdAndPwd(const char* id, const char* pwd, int host_id)
 {
-	/*std::wstring query = L"EXEC disconnect ";
-	query.insert(query.end(), std::begin(info.name), std::begin(info.name) + strlen(info.name));
-	query += L", " + std::to_wstring(info.level)
-		+ L", " + std::to_wstring(info.x)
-		+ L", " + std::to_wstring(info.y)
-		+ L", " + std::to_wstring(info.hp)
-		+ L", " + std::to_wstring(info.max_hp)
-		+ L", " + std::to_wstring(info.exp);
+	std::wstring query = L"EXEC search_id_pwd " + CharToWString(id) 
+		+ L", " + CharToWString(pwd) + L", " + std::to_wstring(host_id);
 
 	RETCODE ret = SQLExecDirect(m_hStmt, (SQLWCHAR*)query.c_str(), SQL_NTS);
 	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) return false;
 
-	if (ret == SQL_SUCCESS || ret == SQL_SUCCESS_WITH_INFO) {
+	SQLINTEGER retConnID{};
+	SQLLEN cb{};
+
+	ret = SQLBindCol(m_hStmt, 1, SQL_C_LONG, &retConnID, 4, &cb);
+	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) return false;
+
+	ret = SQLFetch(m_hStmt);
+	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) {
 		SQLCancel(m_hStmt);
+		SQLCloseCursor(m_hStmt);
+		return false;
 	}
 
-	SQLCloseCursor(m_hStmt);*/
-	return true;
+	SQLCancel(m_hStmt);
+	SQLCloseCursor(m_hStmt);
+	
+	return (int)(retConnID);
 }
 
 bool DBHandler::PrintIfError(SQLHANDLE handle, SQLSMALLINT type, RETCODE retCode)

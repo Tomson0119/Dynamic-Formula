@@ -13,8 +13,10 @@ public:
 	~DBHandler();
 
 	bool ConnectToDB(const std::wstring& sourcename);
-	bool SearchIdAndPwd(const std::string& id, const std::string& pwd);
-	bool DisconnectAndUpdate();
+	
+	bool SaveAndDisconnect(int host_id);
+	bool RegisterIdAndPwd(char* id, char* pwd);
+	int SearchIdAndPwd(const char* id, const char* pwd, int host_id);
 
 private:
 	bool PrintIfError(SQLHANDLE handle, SQLSMALLINT type, RETCODE retCode);
