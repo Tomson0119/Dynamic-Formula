@@ -21,15 +21,22 @@ public:
 	SOCKET GetSocket() const { return m_socket.GetSocket(); }
 
 public:
-
+	void EnterLoginScreen();
+	void EnterLobbyScreen();
+	void EnterWaitRoomScreen() { }
+	void EnterInGameScreen() { }
+	
 	void RequestLogin();
+	void RequestRegister();
+
 	void RequestNewRoom();
 	void RequestEnterRoom(int room_id);
 
 public:
 	int ID;
+	int RoomID;
 	std::atomic_bool LoginSuccessFlag;
-	std::atomic_bool LoginResultFlag;
+	std::atomic_bool RecvResultFlag;
 ;
 private:
 	Socket m_socket;

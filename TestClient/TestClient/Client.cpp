@@ -1,10 +1,10 @@
 #include "Client.h"
 
 Client::Client(int id)
-	: m_sendOverlapped{ nullptr }, ID(id)
+	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1)
 {
 	LoginSuccessFlag = false;
-	LoginResultFlag = false;
+	RecvResultFlag = false;
 	m_socket.Init();
 }
 
@@ -52,20 +52,108 @@ void Client::Recv()
 	m_socket.Recv(&m_recvOverlapped);
 }
 
+void Client::EnterLoginScreen()
+{
+	std::cout << "[Login Screen].\n";
+	while (LoginSuccessFlag.load(std::memory_order_acquire) == false)
+	{
+		int c;
+		std::cout << "1. Login.\n";
+		std::cout << "2. Register.\n";
+		std::cout << " : ";
+		std::cin >> c;
+		std::cin.clear();
+
+		switch (c)
+		{
+		case 1:
+			RequestLogin();
+			break;
+
+		case 2:
+			RequestRegister();
+			break;
+
+		default:
+			continue;
+		}
+
+		while (RecvResultFlag.load(std::memory_order_acquire) == false);
+		bool b = true;
+		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
+	}
+	std::cout << "\n";
+}
+
+void Client::EnterLobbyScreen()
+{
+	while (true)
+	{
+		int choice = 0;
+
+		std::cout << "1. Request New Room.\n";
+		std::cout << "2. Request Enter Room.\n";
+		std::cout << " : ";
+		std::cin >> choice;
+		std::cin.clear();
+
+		switch (choice)
+		{
+		case 1:
+			RequestNewRoom();
+			break;
+
+		case 2:
+		{
+			break;
+		}
+		case 3:
+			break;
+
+		default:
+			break;
+		}
+
+		while (RecvResultFlag.load(std::memory_order_acquire) == false);
+		bool b = true;
+		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
+	}
+}
+
 void Client::RequestLogin()
 {
 	std::string client_id, client_pwd;
-	std::cout << "Enter name: ";
+	std::cout << "ID: ";
 	std::cin >> client_id;
-	std::cout << "Enter pwd: ";
+	std::cout << "PWD: ";
 	std::cin >> client_pwd;
+	std::cin.clear();
 
 	std::cout << "[" << ID << "] Requesting login.\n";
 	CS::packet_login pck{};
 	pck.size = sizeof(CS::packet_login);
 	pck.type = CS::LOGIN;	
-	strncpy_s(pck.name, client_id.c_str(), MAX_NAME_SIZE);
-	strncpy_s(pck.pwd, client_pwd.c_str(), MAX_PWD_SIZE);
+	strncpy_s(pck.name, client_id.c_str(), MAX_NAME_SIZE-1);
+	strncpy_s(pck.pwd, client_pwd.c_str(), MAX_PWD_SIZE-1);
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	Client::Send();
+}
+
+void Client::RequestRegister()
+{
+	std::string client_id, client_pwd;
+	std::cout << "ID: ";
+	std::cin >> client_id;
+	std::cout << "PWD: ";
+	std::cin >> client_pwd;
+	std::cin.clear();
+
+	std::cout << "[" << ID << "] Requesting register.\n";
+	CS::packet_register pck{};
+	pck.size = sizeof(CS::packet_register);
+	pck.type = CS::REGISTER;
+	strncpy_s(pck.name, client_id.c_str(), MAX_NAME_SIZE - 1);
+	strncpy_s(pck.pwd, client_pwd.c_str(), MAX_PWD_SIZE - 1);
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	Client::Send();
 }
@@ -74,7 +162,7 @@ void Client::RequestNewRoom()
 {
 	std::cout << "[" << ID << "] Requesting new room.\n";
 	CS::packet_open_room pck{};
-	pck.size = sizeof(CS::packet_enter_room);
+	pck.size = sizeof(CS::packet_open_room);
 	pck.type = CS::OPEN_ROOM;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	Client::Send();
