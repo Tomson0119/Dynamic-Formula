@@ -70,11 +70,14 @@ public:
 	XMFLOAT2 GetFarWindow() const { return mFarWindow; }
 
 	XMFLOAT4X4 GetView() const;
+	XMFLOAT4X4 GetInverseView() const;
 	XMFLOAT4X4 GetProj() const { return mProj; }
 
 	CameraConstants GetConstants() const;
 
 	CameraMode GetMode() const { return mMode; }
+	BoundingFrustum GetWorldFrustum() const { return mFrustumWorld; }
+	BoundingFrustum GetViewFrustum() const { return mFrustumView; }
 
 protected:
 	bool mViewDirty = false;

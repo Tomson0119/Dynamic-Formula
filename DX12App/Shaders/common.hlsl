@@ -1,6 +1,6 @@
 #include "lighting.hlsl"
 
-Texture2D gShadowMap : register(t0, space1);
+Texture2D gShadowMap[3] : register(t0, space1);
 
 SamplerState gAnisotropicWrap  : register(s0);
 SamplerState gAnisotropicClamp : register(s1);
@@ -19,9 +19,9 @@ cbuffer CameraCB : register(b0)
 
 cbuffer LightCB : register(b1)
 {
-    matrix gShadowTransform    : packoffset(c0); // need as much as shadow map
-    float4 gAmbient            : packoffset(c4);
-    Light  gLights[NUM_LIGHTS] : packoffset(c5);
+    matrix gShadowTransform[3] : packoffset(c0); // need as much as shadow map
+    float4 gAmbient            : packoffset(c12);
+    Light  gLights[NUM_LIGHTS] : packoffset(c13);
 }
 
 cbuffer GameInfoCB : register(b2)
@@ -44,29 +44,39 @@ cbuffer ObjectCB : register(b4)
     matrix gWorld : packoffset(c0);
 }
 
-float CalcShadowFactor(float4 shadowPos)
+cbuffer ShadowCB : register(b5)
 {
-    shadowPos.xyz /= shadowPos.w;
-    float depth = shadowPos.z;
-    
-    uint width, height, mips;
-    gShadowMap.GetDimensions(0, width, height, mips);
-    
-    float dx = 1.0f / (float) width;
-    float dy = 1.0f / (float) height;
-    const float2 offsets[9] =
-    {
-        float2(-dx,  -dy), float2(0.0f,  -dy), float2(+dx,  -dy),
-        float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(+dx, 0.0f),
-        float2(-dx,  +dy), float2(0.0f,  +dy), float2(+dx,  +dy)
-    };
+    float gZSplit0 : packoffset(c0.x);
+    float gZSplit1 : packoffset(c0.y);
+    float gZSplit2 : packoffset(c0.z);
+}
 
+float CalcShadowFactor(float4 shadowPos, int idx)
+{
     float result = 0.0f;
-    [unroll]
-    for (int i = 0; i < 9;i++)
+    if (idx != -1)
     {
-        result += gShadowMap.SampleCmpLevelZero(
-            gPCFShadow, shadowPos.xy + offsets[i], depth).r;
+        shadowPos.xyz /= shadowPos.w;
+        float depth = shadowPos.z;
+    
+        uint width, height, mips;
+        gShadowMap[idx].GetDimensions(0, width, height, mips);
+    
+        float dx = 1.0f / (float) width;
+        float dy = 1.0f / (float) height;
+        const float2 offsets[9] =
+        {
+            float2(-dx, -dy), float2(0.0f, -dy), float2(+dx, -dy),
+        float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(+dx, 0.0f),
+        float2(-dx, +dy), float2(0.0f, +dy), float2(+dx, +dy)
+        };
+
+        [unroll]
+        for (int i = 0; i < 9; i++)
+        {
+            result += gShadowMap[idx].SampleCmpLevelZero(gPCFShadow, shadowPos.xy + offsets[i], depth).r;
+        }
+        result = result / 9.0f;
     }
-    return result / 9.0f;
+    return result;
 }

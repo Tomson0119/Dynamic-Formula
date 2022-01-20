@@ -17,10 +17,16 @@ public:
 
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
 	virtual void UpdateTransform(XMFLOAT4X4* parent);
+
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset,
+		const BoundingFrustum& viewFrustum, bool isSO=false);
+
 	virtual void Draw(
 		ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
-		UINT64 matGPUAddress, UINT64 byteOffset, bool isSO=false);
+		UINT64 matGPUAddress, UINT64 byteOffse, bool isSO=false);
 	
 	void UpdateBoudingBox();
 	void Animate(float elapsedTime);

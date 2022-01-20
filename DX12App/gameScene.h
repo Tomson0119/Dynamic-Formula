@@ -79,6 +79,8 @@ private:
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 	
+	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
+
 	Player* mPlayer = nullptr;
 	std::vector<std::shared_ptr<MissileObject>> mMissileObjects;
 

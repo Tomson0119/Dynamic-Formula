@@ -41,7 +41,6 @@ struct DsOut
 {
     float4 PosH         : SV_POSITION;
     float3 PosW         : POSITION0;
-    float4 PosS         : POSITION1;
     float3 NormalW      : NORMAL;
     float2 TexCoord0    : TEXCOORD0;
     float2 TexCoord1    : TEXCOORD1;
@@ -150,6 +149,7 @@ DsOut DS(HsConstant hconst, float2 uv : SV_DomainLocation, OutputPatch<HsOut, 25
     float3 pos = CubicBezierSum5x5(patch, uB, vB, false);
     float4 posW = mul(float4(pos, 1.0f), gWorld);
     
+    dout.PosW = posW;
     dout.PosH = mul(mul(float4(pos, 1.0f), gWorld), gViewProj);
     float3 normalL = CubicBezierSum5x5(patch, uB, vB, true);
     float4x4 tWorld = transpose(gWorld);
@@ -186,6 +186,19 @@ float4 PS(DsOut din) : SV_Target
     }
     else
     {
+        int idx = -1;
+        float4 PosV = mul(float4(din.PosW, 1.0f), gView);
+        
+        float zSplits[3] = { gZSplit0, gZSplit1, gZSplit2 };
+        for (int j = 2; j >= 0; j--)
+        {
+            if (PosV.z < zSplits[j])
+            {
+                idx = j;
+            }
+        }
+        float4 PosS = mul(float4(din.PosW, 1.0f), gShadowTransform[idx]);
+
         float4 diffuse = 0.0f;
         
         float4 baseTexDiffuse = gBaseTexture.Sample(gAnisotropicWrap, din.TexCoord0) * gMat.Diffuse;
@@ -203,15 +216,38 @@ float4 PS(DsOut din) : SV_Target
         
         float3 view = normalize(gCameraPos - din.PosW);
         float4 ambient = gAmbient * float4(gMat.Ambient, 1.0f) * diffuse;
-        
+
         float shadowFactor[3] = { 1.0f, 1.0f, 1.0f };
         for (int i = 0; i < 3; i++)
-            shadowFactor[i] = CalcShadowFactor(din.PosS);
+            shadowFactor[i] = CalcShadowFactor(PosS, idx);
         
-        float4 directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactor);
-    
+        float4 directLight;
+        float shadowFactorOut[3] = { 1.0f, 1.0f, 1.0f };
+        if (PosS.x < 0.0f || PosS.x > 1.0f || PosS.z < 0.0f || PosS.z > 1.0f || PosS.y < 0.0f || PosS.y > 1.0f || idx == -1)
+            directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactorOut);
+        else
+        {
+            directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactor);
+        }
+
         result = ambient + directLight;
         result.a = gMat.Diffuse.a;
+
+        float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //if (idx == 2)
+        //{
+        //    debugColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
+        //}
+        //else if (idx == 1)
+        //{
+        //    debugColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
+        //}
+        //else if (idx == 0)
+        //{
+        //    debugColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
+        //}
+        result *= debugColor;
     }
+
     return result;
 }

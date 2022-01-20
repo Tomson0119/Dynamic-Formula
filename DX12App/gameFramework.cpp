@@ -20,12 +20,12 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-	//UI Build
-	if (!mpUI)
-	{
-		mpUI = new UI(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-		mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
-	}
+	////UI Build
+	//if (!mpUI)
+	//{
+	//	mpUI = new UI(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
+	//	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+	//}
 	
 	// 초기화하는 명령어를 넣기 위해 커맨드 리스트를 개방한다.
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
@@ -104,7 +104,7 @@ void GameFramework::Update()
 	OnPreciseKeyInput();
 
 	//UI Update
-	UpdateUI();
+	//UpdateUI();
 
 	//mCamera->Update(mTimer.ElapsedTime());
 	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mBtDynamicsWorld, mTimer);
@@ -151,11 +151,9 @@ void GameFramework::Draw()
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	//for (auto ui : mpUI)
-	mpUI->Draw(mCurrBackBufferIndex);
+	//mpUI->Draw(mCurrBackBufferIndex);
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
-
-	
 
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	

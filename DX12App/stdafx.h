@@ -157,7 +157,7 @@ struct LightInfo
 
 struct LightConstants
 {
-	XMFLOAT4X4 ShadowTransform;
+	XMFLOAT4X4 ShadowTransform[3];
 	XMFLOAT4 Ambient;
 	LightInfo Lights[NUM_LIGHTS];
 };
@@ -261,6 +261,14 @@ namespace Vector3
 		XMStoreFloat3(&ret, scalar * XMLoadFloat3(&v));
 		return ret;
 	}
+
+	inline XMFLOAT3 Divide(float scalar, XMFLOAT3& v)
+	{
+		XMFLOAT3 ret;
+		XMStoreFloat3(&ret, XMLoadFloat3(&v) / scalar);
+		return ret;
+	}
+
 
 	inline XMFLOAT3 MultiplyAdd(float delta, XMFLOAT3& src, XMFLOAT3& dst)
 	{		

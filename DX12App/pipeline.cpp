@@ -108,6 +108,8 @@ void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbv
 
 void Pipeline::BuildCBV(ID3D12Device* device)
 {
+	if (mObjectCB == nullptr) return;
+
 	UINT stride = mObjectCB->GetByteSize();
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
@@ -178,6 +180,22 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 	Draw(cmdList);
 }
 
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool drawWiredFrame, bool setPipeline)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+	cmdList->OMSetStencilRef(mStencilRef);
+
+	if (setPipeline) {
+		if (mIsWiredFrame && drawWiredFrame)
+			cmdList->SetPipelineState(mPSO[1].Get());
+		else
+			cmdList->SetPipelineState(mPSO[0].Get());
+	}
+
+	Draw(cmdList, viewFrustum);
+}
+
 void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 {
 	UINT matOffset = 0;
@@ -190,6 +208,23 @@ void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 			mRootParamSRVIndex,
 			mMaterialCB->GetGPUVirtualAddress(matOffset), 
 			mMaterialCB->GetByteSize(), isSO);
+
+		matOffset += mRenderObjects[i]->GetMeshCount();
+	}
+}
+
+void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool isSO)
+{
+	UINT matOffset = 0;
+	for (int i = 0; i < mRenderObjects.size(); i++)
+	{
+		mRenderObjects[i]->Draw(
+			cmdList,
+			mRootParamMatIndex,
+			mRootParamCBVIndex,
+			mRootParamSRVIndex,
+			mMaterialCB->GetGPUVirtualAddress(matOffset),
+			mMaterialCB->GetByteSize(), viewFrustum, isSO);
 
 		matOffset += mRenderObjects[i]->GetMeshCount();
 	}

@@ -42,7 +42,6 @@ void Camera::SetLens(float aspect)
 
 void Camera::SetLens(float fovY, float aspect, float zn, float zf)
 {
-
 	mNearWindow.y = 2.0f * tanf(fovY * 0.5f) * zn;
 	mNearWindow.x = aspect * mNearWindow.y;
 
@@ -103,6 +102,11 @@ XMFLOAT4X4 Camera::GetView() const
 {
 	assert(!mViewDirty && "Camera -> mView is not updated!!");
 	return mView;
+}
+
+XMFLOAT4X4 Camera::GetInverseView() const
+{
+	return mInvView;
 }
 
 CameraConstants Camera::GetConstants() const

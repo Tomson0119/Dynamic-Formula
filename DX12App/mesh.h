@@ -41,6 +41,7 @@ public:
 
 	virtual void PrepareBufferViews(ID3D12GraphicsCommandList* cmdList, bool isSO) { }
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO=false);
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool isSO = false);
 
 	void LoadMesh(
 		ID3D12Device* device, 

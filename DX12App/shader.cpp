@@ -189,3 +189,67 @@ void ComputeShader::Compile(const std::wstring& path)
 {
 	CS = Shader::CompileShader(path, "CS", "cs_5_1");
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+ShadowShader::ShadowShader(const std::wstring& path) : Shader()
+{
+	Compile(path);
+	BuildInputLayout();
+}
+
+void ShadowShader::Compile(const std::wstring& path)
+{
+	VS = Shader::CompileShader(path, "VS", "vs_5_1");
+}
+
+void ShadowShader::BuildInputLayout()
+{
+	mInputLayout =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 36,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+ShadowTerrainShader::ShadowTerrainShader(const std::wstring& path)
+{
+	Compile(path);
+	BuildInputLayout();
+}
+
+void ShadowTerrainShader::Compile(const std::wstring& path)
+{
+	VS = Shader::CompileShader(path, "VS", "vs_5_1");
+	DS = Shader::CompileShader(path, "DS", "ds_5_1");
+	HS = Shader::CompileShader(path, "HS", "hs_5_1");
+}
+
+void ShadowTerrainShader::BuildInputLayout()
+{
+	mInputLayout =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 32,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+}
