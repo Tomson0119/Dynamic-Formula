@@ -17,16 +17,22 @@ public:
 	InGameRoom(int id, LobbyServer* server);
 	~InGameRoom();
 
-	void OpenRoom(int player);
-	void AddPlayer(int player);
+	void OpenRoom(int hostID);
+	void TryAddPlayer(int hostID);
+
+	void AddPlayer(int hostID);
+	void RemovePlayer(int hostID);
 
 public:
 	char GetPlayerCount() const { return mPlayerCount; }
-	bool Full() const { return (mPlayerCount == MAX_ROOM_CAPACITY); }
-	bool Empty() const { return !mOpen; }
+	bool Full() const { return (Empty() == false && mPlayerCount == MAX_ROOM_CAPACITY); }
+	bool Empty() const { return (mOpen == false); }
+	bool GameRunning() const { return mGameRunning; }
 
 public:
-	void SendAccessRoomAccept(int id, bool instSend=true);
+	void ProcessPacket(std::byte* packet, char type, int id, int bytes);
+
+	void SendPlayersInfo(int id, bool instSend=true);
 	void SendCurrentRoomInfo(int id, bool instSend=true);
 	void SendRoomInfoToLobbyPlayers(bool instSend=true);
 
