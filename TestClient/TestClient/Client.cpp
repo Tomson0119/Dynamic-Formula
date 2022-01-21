@@ -1,12 +1,10 @@
 #include "Client.h"
 
 Client::Client(int id)
-	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1)
+	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1),
+	  LoginSuccessFlag(false), RecvResultFlag(false),
+	  RoomEnteredFlag(false), GameStartFlag(false)
 {
-	LoginSuccessFlag = false;
-	RecvResultFlag = false;
-	RoomEnteredFlag = false;
-
 	m_socket.Init();
 }
 
@@ -56,6 +54,8 @@ void Client::Recv()
 
 void Client::EnterLoginScreen()
 {
+	LoginSuccessFlag = false;
+
 	std::cout << "[Login Screen].\n";
 	while (LoginSuccessFlag.load(std::memory_order_acquire) == false)
 	{
@@ -97,10 +97,13 @@ void Client::EnterLoginScreen()
 		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
 	}
 	std::cout << "\n";
+	PushScene(SCENE::LOBBY);
 }
 
 void Client::EnterLobbyScreen()
 {
+	RoomEnteredFlag = false;
+
 	std::cout << "[Lobby Screen]\n";
 	while (RoomEnteredFlag == false)
 	{
@@ -132,6 +135,48 @@ void Client::EnterLobbyScreen()
 			break;
 
 		default:
+			continue;
+		}
+
+		while (RecvResultFlag.load(std::memory_order_acquire) == false);
+		bool b = true;
+		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
+	}
+	PushScene(SCENE::ROOM);
+}
+
+void Client::EnterWaitRoomScreen()
+{
+	GameStartFlag = false;
+
+	bool b = true;
+	std::cout << "[Wait Room Screen]\n";
+	while (GameStartFlag == false)
+	{
+		int choice = -1;
+		std::cout << "0. Back to Lobby\n";
+		std::cout << "1. Switch to next map(Only Admin).\n";
+		std::cout << "2. Click Ready(Start) button.\n";
+		std::cout << " : ";
+		std::cin >> choice;
+		std::cin.clear();
+		
+		switch (choice)
+		{
+		case 0:
+			BackToLobby();
+			PopScene();
+			return;
+
+		case 1:
+			if (Admin()) SwitchMap();
+			break;
+
+		case 2:
+			SetOrUnsetReady();
+			break;
+
+		default:
 			break;
 		}
 
@@ -139,15 +184,7 @@ void Client::EnterLobbyScreen()
 		bool b = true;
 		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
 	}
-}
-
-void Client::EnterWaitRoomScreen()
-{
-	std::cout << "[Wait Room Screen]\n";
-	while (true)
-	{
-		std::this_thread::sleep_for(1s);
-	}
+	PushScene(SCENE::IN_GAME);
 }
 
 void Client::EnterInGameScreen()
@@ -155,7 +192,18 @@ void Client::EnterInGameScreen()
 	std::cout << "[In Game Screen]\n";
 	while (true)
 	{
-		std::this_thread::sleep_for(1s);
+		int choice = -1;
+		std::cout << "0. Back to Room.\n";
+		
+		switch (choice)
+		{
+		case 0:
+			PopScene();
+			break;
+		}
+		while (RecvResultFlag.load(std::memory_order_acquire) == false);
+		bool b = true;
+		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
 	}
 }
 
@@ -202,4 +250,21 @@ void Client::RequestEnterRoom(int room_id)
 	pck.room_id = room_id;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	Client::Send();
+}
+
+void Client::BackToLobby()
+{
+	CS::packet_revert_scene pck{};
+	pck.size = sizeof(CS::packet_revert_scene);
+	pck.type = CS::REVERT_SCENE;
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	Client::Send();
+}
+
+void Client::SwitchMap()
+{
+}
+
+void Client::SetOrUnsetReady()
+{
 }
