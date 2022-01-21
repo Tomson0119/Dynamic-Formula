@@ -28,10 +28,10 @@ public:
 	CLIENT_STAT GetCurrentState() const { return mState.load(); }
 
 public:
-	void SendLoginResultPacket(LOGIN_STAT result);
-	void SendRegisterResultPacket(REGI_STAT result);
-	void SendAccessRoomDenyPacket(ROOM_STAT reason, int players);
-
+	void SendLoginResult(LOGIN_STAT result, bool instSend=true);
+	void SendRegisterResult(REGI_STAT result, bool instSend=true);
+	void SendAccessRoomDeny(ROOM_STAT reason, int players, bool instSend=true);
+	
 public:
 	int ID;
 	std::string Name;

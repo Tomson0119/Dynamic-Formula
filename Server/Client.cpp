@@ -56,7 +56,7 @@ bool Client::ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired)
 	return mState.compare_exchange_strong(expected, desired);
 }
 
-void Client::SendLoginResultPacket(LOGIN_STAT result)
+void Client::SendLoginResult(LOGIN_STAT result, bool instSend)
 {
 	std::cout << "[" << ID << "] Send login result packet\n";
 	SC::packet_login_result pck{};
@@ -64,10 +64,10 @@ void Client::SendLoginResultPacket(LOGIN_STAT result)
 	pck.type = SC::LOGIN_RESULT;
 	pck.result = (char)result;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	Client::SendMsg();
+	if(instSend) Client::SendMsg();
 }
 
-void Client::SendRegisterResultPacket(REGI_STAT result)
+void Client::SendRegisterResult(REGI_STAT result, bool instSend)
 {
 	std::cout << "[" << ID << "] Send login result packet\n";
 	SC::packet_register_result pck{};
@@ -75,15 +75,15 @@ void Client::SendRegisterResultPacket(REGI_STAT result)
 	pck.type = SC::REGISTER_RESULT;
 	pck.result = (char)result;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	Client::SendMsg();
+	if(instSend) Client::SendMsg();
 }
 
-void Client::SendAccessRoomDenyPacket(ROOM_STAT reason, int players)
+void Client::SendAccessRoomDeny(ROOM_STAT reason, int players, bool instSend)
 {
 	SC::packet_access_room_deny pck{};
 	pck.size = sizeof(SC::packet_access_room_deny);
 	pck.type = SC::ACCESS_ROOM_DENY;
 	pck.reason = (char)reason;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	Client::SendMsg();
+	if(instSend) Client::SendMsg();
 }
