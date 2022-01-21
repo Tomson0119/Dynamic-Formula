@@ -21,18 +21,21 @@ public:
 	void AddPlayer(int player);
 
 public:
-	char GetPlayerCount() const { return mPlayerCount.load(); }
-	bool Full() const { return (mPlayerCount.load() == MAX_ROOM_CAPACITY); }
-	bool Empty() const { return mOpen.load(); }
+	char GetPlayerCount() const { return mPlayerCount; }
+	bool Full() const { return (mPlayerCount == MAX_ROOM_CAPACITY); }
+	bool Empty() const { return !mOpen; }
 
-private:
-	void SendAccessRoomAcceptPacket(int id);
-	void SendRoomInfoToLobbyPlayers();
+public:
+	void SendAccessRoomAccept(int id, bool instSend=true);
+	void SendCurrentRoomInfo(int id, bool instSend=true);
+	void SendRoomInfoToLobbyPlayers(bool instSend=true);
 
 private:
 	int mID;
 	std::atomic_int mPlayerCount;
 	std::atomic_bool mOpen;
+	std::atomic_bool mGameRunning;
+	std::atomic_char mMapIndex;
 
 	std::array<PlayerInfo, MAX_ROOM_CAPACITY> mPlayers;
 	
