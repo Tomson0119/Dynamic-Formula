@@ -76,9 +76,12 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     ThrowIfFailed(m_pd2dDeviceContext->CreateGradientStopCollection(gradientStops, 2, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &pGradientStops));
 
     ThrowIfFailed(m_pd2dDeviceContext->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2D1::Point2F(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f)), D2D1::Point2F(m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f / 9.0f))), pGradientStops, &m_vd2dLinearGradientBrush[0]));
+    D2D1::ColorF ColorList[8] = { D2D1::ColorF::Black, D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::Black, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
+
+    BuildBrush(TextCnt + 4, ColorList);
     /*for(int i=0;i<TextCnt;++i)
         ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(0xE12C38, 1.0f), (ID2D1SolidColorBrush**)&m_vpd2dTextBrush[i]));*/
-    ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt - 4]));
+    /*ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt - 4]));
     ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt - 3]));
     ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(0xE12C38, 1.0f), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt-2]));
     ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(0xE12C38, 1.0f), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt-1]));
@@ -86,7 +89,7 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt]));
     ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Yellow), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt+1]));
     ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt+2]));
-    ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Aqua), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt+3]));
+    ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Aqua), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[TextCnt+3]));*/
 
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&m_pd2dWriteFactory));
     pGradientStops->Release();
@@ -188,4 +191,11 @@ void UI::Resize(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
     ThrowIfFailed(m_vdwTextFormat[3]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
     ThrowIfFailed(m_vdwTextFormat[2]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
     ThrowIfFailed(m_vdwTextFormat[3]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
+}
+
+void UI::BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList)
+{
+    // 0: Lap, 1: Time, 2: Rank, 3: Speed, 4: Draft Gage, 5: Item Slot1, 6: Item Slot2
+    for (int i = 0; i < UI_Cnt; ++i)
+        ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(ColorList[i]), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[i]));
 }

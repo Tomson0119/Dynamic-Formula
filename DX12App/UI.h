@@ -14,6 +14,7 @@ public:
     void Draw(UINT nFrame);
     void ReleaseResources();
     void Resize(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
+    void BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList);
     //ID3D11DeviceContext* GetD3D11DeviceContext() { return m_pd3d11DeviceContext.Get(); }
 private:
     UINT GetRenderTargetsCount() { return static_cast<UINT>(m_vWrappedRenderTargets.size()); }
@@ -34,6 +35,7 @@ private:
     std::vector<ComPtr<IDWriteTextFormat>> m_vdwTextFormat;
 
     std::vector<ComPtr<ID2D1LinearGradientBrush>> m_vd2dLinearGradientBrush;
+    ID2D1GradientStopCollection* pGradientStops;
 
     std::vector<ComPtr<ID2D1SolidColorBrush>> m_vd2dTextBrush;
 
