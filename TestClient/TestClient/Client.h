@@ -23,11 +23,11 @@ public:
 public:
 	void EnterLoginScreen();
 	void EnterLobbyScreen();
-	void EnterWaitRoomScreen() { }
-	void EnterInGameScreen() { }
+	void EnterWaitRoomScreen();
+	void EnterInGameScreen();
 	
-	void RequestLogin();
-	void RequestRegister();
+	void RequestLogin(const std::string& name, const std::string& pwd);
+	void RequestRegister(const std::string& name, const std::string& pwd);
 
 	void RequestNewRoom();
 	void RequestEnterRoom(int room_id);
@@ -37,6 +37,7 @@ public:
 	int RoomID;
 	std::atomic_bool LoginSuccessFlag;
 	std::atomic_bool RecvResultFlag;
+	std::atomic_bool RoomEnteredFlag;
 ;
 private:
 	Socket m_socket;

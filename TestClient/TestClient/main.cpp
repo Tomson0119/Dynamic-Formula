@@ -68,7 +68,7 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 				}
 			}
 			std::cout << "\n";
-
+			gClients[id]->RoomEnteredFlag = true;
 			break;
 		}
 		case SC::ACCESS_ROOM_DENY:
@@ -77,6 +77,19 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 			std::cout << "[" << id << "] Room access denied (reason: " << pck->reason << "\n";
 			break;
 		}
+		case SC::ROOM_INFO:
+		{
+			SC::packet_room_info* pck = reinterpret_cast<SC::packet_room_info*>(packet);
+			
+			std::cout << "\n!Room updated!\n";
+			std::cout << "Room ID: " << pck->room_id << "\n";
+			std::cout << "Player Counts: " << (int)pck->player_count << "\n";
+			std::cout << "Map: " << (int)pck->map_id << "\n";
+			std::cout << "Game started: " << std::boolalpha << pck->game_started << "\n\n";
+
+			break;
+		}
+
 		default:
 			std::cout << "Invalid packet\n";
 			break;

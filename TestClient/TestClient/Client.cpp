@@ -5,6 +5,8 @@ Client::Client(int id)
 {
 	LoginSuccessFlag = false;
 	RecvResultFlag = false;
+	RoomEnteredFlag = false;
+
 	m_socket.Init();
 }
 
@@ -57,26 +59,38 @@ void Client::EnterLoginScreen()
 	std::cout << "[Login Screen].\n";
 	while (LoginSuccessFlag.load(std::memory_order_acquire) == false)
 	{
-		int c;
+		// TEST
+		std::string user_id = "GM";
+		std::string user_pwd = "GM";
+		RequestLogin(user_id, user_pwd);
+
+		/*int c;
 		std::cout << "1. Login.\n";
 		std::cout << "2. Register.\n";
 		std::cout << " : ";
 		std::cin >> c;
 		std::cin.clear();
 
+		std::string user_id, user_pwd;
+		std::cout << "ID: ";
+		std::cin >> user_id;
+		std::cout << "PWD: ";
+		std::cin >> user_pwd;
+		std::cin.clear();
+
 		switch (c)
 		{
 		case 1:
-			RequestLogin();
+			RequestLogin(user_id, user_pwd);
 			break;
 
 		case 2:
-			RequestRegister();
+			RequestRegister(user_id, user_pwd);
 			break;
 
 		default:
 			continue;
-		}
+		}*/
 
 		while (RecvResultFlag.load(std::memory_order_acquire) == false);
 		bool b = true;
@@ -87,7 +101,8 @@ void Client::EnterLoginScreen()
 
 void Client::EnterLobbyScreen()
 {
-	while (true)
+	std::cout << "[Lobby Screen]\n";
+	while (RoomEnteredFlag == false)
 	{
 		int choice = 0;
 
@@ -95,7 +110,7 @@ void Client::EnterLobbyScreen()
 		std::cout << "2. Request Enter Room.\n";
 		std::cout << " : ";
 		std::cin >> choice;
-		std::cin.clear();
+		std::cin.clear();		
 
 		switch (choice)
 		{
@@ -105,6 +120,12 @@ void Client::EnterLobbyScreen()
 
 		case 2:
 		{
+			int n;
+			std::cout << "Room number: ";
+			std::cin >> n;
+			std::cin.clear();
+
+			RequestEnterRoom(n);
 			break;
 		}
 		case 3:
@@ -120,40 +141,44 @@ void Client::EnterLobbyScreen()
 	}
 }
 
-void Client::RequestLogin()
+void Client::EnterWaitRoomScreen()
 {
-	std::string client_id, client_pwd;
-	std::cout << "ID: ";
-	std::cin >> client_id;
-	std::cout << "PWD: ";
-	std::cin >> client_pwd;
-	std::cin.clear();
+	std::cout << "[Wait Room Screen]\n";
+	while (true)
+	{
+		std::this_thread::sleep_for(1s);
+	}
+}
 
+void Client::EnterInGameScreen()
+{
+	std::cout << "[In Game Screen]\n";
+	while (true)
+	{
+		std::this_thread::sleep_for(1s);
+	}
+}
+
+void Client::RequestLogin(const std::string& name, const std::string& pwd)
+{
 	std::cout << "[" << ID << "] Requesting login.\n";
 	CS::packet_login pck{};
 	pck.size = sizeof(CS::packet_login);
 	pck.type = CS::LOGIN;	
-	strncpy_s(pck.name, client_id.c_str(), MAX_NAME_SIZE-1);
-	strncpy_s(pck.pwd, client_pwd.c_str(), MAX_PWD_SIZE-1);
+	strncpy_s(pck.name, name.c_str(), MAX_NAME_SIZE-1);
+	strncpy_s(pck.pwd, pwd.c_str(), MAX_PWD_SIZE-1);
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	Client::Send();
 }
 
-void Client::RequestRegister()
+void Client::RequestRegister(const std::string& name, const std::string& pwd)
 {
-	std::string client_id, client_pwd;
-	std::cout << "ID: ";
-	std::cin >> client_id;
-	std::cout << "PWD: ";
-	std::cin >> client_pwd;
-	std::cin.clear();
-
 	std::cout << "[" << ID << "] Requesting register.\n";
 	CS::packet_register pck{};
 	pck.size = sizeof(CS::packet_register);
 	pck.type = CS::REGISTER;
-	strncpy_s(pck.name, client_id.c_str(), MAX_NAME_SIZE - 1);
-	strncpy_s(pck.pwd, client_pwd.c_str(), MAX_PWD_SIZE - 1);
+	strncpy_s(pck.name, name.c_str(), MAX_NAME_SIZE - 1);
+	strncpy_s(pck.pwd, pwd.c_str(), MAX_PWD_SIZE - 1);
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	Client::Send();
 }
