@@ -7,7 +7,8 @@ Client::Client(int id)
 	: ID(id),
 	  mRecvOverlapped{},
 	  mSendOverlapped{},
-	  mState{ CLIENT_STAT::EMPTY }
+	  mState{ CLIENT_STAT::EMPTY },
+	  AssignedRoomID(-1)
 {
 	mSocket.Init();
 }
@@ -78,7 +79,7 @@ void Client::SendRegisterResult(REGI_STAT result, bool instSend)
 	if(instSend) Client::SendMsg();
 }
 
-void Client::SendAccessRoomDeny(ROOM_STAT reason, int players, bool instSend)
+void Client::SendAccessRoomDeny(ROOM_STAT reason, bool instSend)
 {
 	SC::packet_access_room_deny pck{};
 	pck.size = sizeof(SC::packet_access_room_deny);

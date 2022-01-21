@@ -2,7 +2,7 @@
 
 enum class CLIENT_STAT : char
 {
-	EMPTY,
+	EMPTY = 0,
 	CONNECTED,
 	LOGIN,
 	IN_ROOM,
@@ -25,22 +25,23 @@ public:
 
 	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
 
-	CLIENT_STAT GetCurrentState() const { return mState.load(); }
+	CLIENT_STAT GetCurrentState() const { return mState; }
 
 public:
 	void SendLoginResult(LOGIN_STAT result, bool instSend=true);
 	void SendRegisterResult(REGI_STAT result, bool instSend=true);
-	void SendAccessRoomDeny(ROOM_STAT reason, int players, bool instSend=true);
+	void SendAccessRoomDeny(ROOM_STAT reason, bool instSend=true);
 	
 public:
 	int ID;
-	std::string Name;
+	std::string Name;	
+	std::atomic_int AssignedRoomID;
 
 private:
 	WSAOVERLAPPEDEX mRecvOverlapped;
 	WSAOVERLAPPEDEX* mSendOverlapped;
 
-	std::atomic<CLIENT_STAT> mState;
+	std::atomic<CLIENT_STAT> mState;	
 
 	Socket mSocket;
 };
