@@ -38,7 +38,7 @@ bool DBHandler::ConnectToDB(const std::wstring& sourcename)
 	return true;
 }
 
-bool DBHandler::SaveAndDisconnect(int host_id)
+bool DBHandler::SaveUserInfo(int host_id)
 {
 	std::wstring query = L"EXEC save_user_info " + std::to_wstring(host_id);
 

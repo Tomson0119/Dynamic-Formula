@@ -14,7 +14,7 @@ public:
 
 	bool ConnectToDB(const std::wstring& sourcename);
 	
-	bool SaveAndDisconnect(int host_id);
+	bool SaveUserInfo(int host_id);
 	bool RegisterIdAndPwd(char* id, char* pwd);
 	int SearchIdAndPwd(const char* id, const char* pwd, int host_id);
 
