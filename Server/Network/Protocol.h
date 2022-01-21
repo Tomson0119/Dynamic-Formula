@@ -79,6 +79,7 @@ namespace SC
 	const char REGISTER_RESULT = 2;
 	const char ACCESS_ROOM_ACCEPT = 3;
 	const char ACCESS_ROOM_DENY = 4;
+	const char ROOM_INFO = 5;
 
 	struct packet_login_result {
 		uint16_t size;
@@ -104,6 +105,15 @@ namespace SC
 		uint16_t size;
 		char type;
 		char reason;
+	};
+
+	struct packet_room_info {
+		uint16_t size;
+		char type;
+		int room_id;
+		unsigned char player_count : 4;
+		unsigned char map_id : 1;
+		bool game_started : 1;
 	};
 }
 #pragma pack(pop)
