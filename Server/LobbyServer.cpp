@@ -150,23 +150,26 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	{
 		std::cout << "[" << id << "] Login packet\n";
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
-		int conn_id = mDBHandler.SearchIdAndPwd(pck->name, pck->pwd, id);
 
-		if(conn_id >= (int)LOGIN_STAT::ACCEPTED) 
+		int conn_id = (int)LOGIN_STAT::INVALID_IDPWD;
+		if (strcmp(pck->name, "GM") == 0) 
+		{
+			std::string number = std::to_string(id);
+			strncat_s(pck->name, number.c_str(), number.size());
+			conn_id = (int)LOGIN_STAT::ACCEPTED;
+		}
+		else
+			conn_id = mDBHandler.SearchIdAndPwd(pck->name, pck->pwd, id);
+
+		if(conn_id >= (int)LOGIN_STAT::ACCEPTED)
 		{
 			if (conn_id >= 0) Disconnect(conn_id);
-
-			gClients[id]->Name = pck->name + std::to_string(id);
-			gClients[id]->SendLoginResultPacket(LOGIN_STAT::ACCEPTED);
-			
-			if (gClients[id]->ChangeState(CLIENT_STAT::CONNECTED, CLIENT_STAT::LOGIN) == false)
-			{
-				std::cout << "Failed to change state\n";
-				Disconnect(id);
-			}
+			ProcessLoginStep(pck->name, id);
 		}
-		else if(conn_id == (int)LOGIN_STAT::INVALID_IDPWD)
-			gClients[id]->SendLoginResultPacket(LOGIN_STAT::INVALID_IDPWD);
+		else if (conn_id == (int)LOGIN_STAT::INVALID_IDPWD)
+		{
+			gClients[id]->SendLoginResult(LOGIN_STAT::INVALID_IDPWD);
+		}
 		break;
 	}
 	case CS::REGISTER:
@@ -174,14 +177,17 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		CS::packet_register* pck = reinterpret_cast<CS::packet_register*>(packet);
 		std::cout << "[" << id << "] Register packet.\n";
 
-		bool succeeded = mDBHandler.RegisterIdAndPwd(pck->name, pck->pwd);
-		if (succeeded) {
-			gClients[id]->SendRegisterResultPacket(REGI_STAT::ACCEPTED);
-		}
-		else {
-			gClients[id]->SendRegisterResultPacket(REGI_STAT::INVALID_IDPWD);
+		if (std::string(pck->name).find("GM") != std::string::npos)
+		{
+			gClients[id]->SendRegisterResult(REGI_STAT::INVALID_IDPWD);
+			break;
 		}
 
+		bool succeeded = mDBHandler.RegisterIdAndPwd(pck->name, pck->pwd);
+		if (succeeded)
+			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
+		else
+			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
 		break;
 	}
 	case CS::OPEN_ROOM:
@@ -189,9 +195,10 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		CS::packet_open_room* pck = reinterpret_cast<CS::packet_open_room*>(packet);
 		std::cout << "[" << id << "] Open room packet\n";
 
-		if (mRoomCount.load() >= MAX_ROOM_SIZE)
-			gClients[id]->SendAccessRoomDenyPacket(ROOM_STAT::MAX_ROOM_REACHED, -1);
-		else {
+		if (mRoomCount >= MAX_ROOM_SIZE)
+			gClients[id]->SendAccessRoomDeny(ROOM_STAT::MAX_ROOM_REACHED, -1);
+		else 
+		{
 			mRoomCount.fetch_add(1);			
 			gRooms[mRoomCount - 1]->OpenRoom(id);
 		}
@@ -204,10 +211,9 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		std::cout << "[" << id << "] Enter room packet\n";
 
 		if (gRooms[pck->room_id]->Full())
-			gClients[id]->SendAccessRoomDenyPacket(ROOM_STAT::ROOM_IS_FULL, -1);
-		else {
+			gClients[id]->SendAccessRoomDeny(ROOM_STAT::ROOM_IS_FULL, -1);
+		else
 			gRooms[pck->room_id]->AddPlayer(id);
-		}
 		break;
 	}
 	default:
@@ -227,4 +233,31 @@ int LobbyServer::GetAvailableID()
 			return i;
 	}
 	return -1;
+}
+
+void LobbyServer::ProcessLoginStep(const char* name, int id)
+{
+	if (gClients[id]->ChangeState(CLIENT_STAT::CONNECTED, CLIENT_STAT::LOGIN) == false)
+	{
+		std::cout << "Failed to change state\n";
+		Disconnect(id);
+		return;
+	}
+	gClients[id]->Name = name;
+	gClients[id]->SendLoginResult(LOGIN_STAT::ACCEPTED, false);
+	SendCurrentRoomList(id);
+}
+
+void LobbyServer::SendCurrentRoomList(int id)
+{
+	int k = mRoomCount;
+	for (int i = 0; i < MAX_ROOM_SIZE && k > 0; i++)
+	{
+		if (gRooms[i]->Empty() == false)
+		{
+			gRooms[i]->SendCurrentRoomInfo(id, false);
+			k -= 1;
+		}
+	}
+	gClients[id]->SendMsg();
 }

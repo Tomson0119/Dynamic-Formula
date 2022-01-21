@@ -26,6 +26,8 @@ public:
 
 private:
 	int GetAvailableID();
+	void ProcessLoginStep(const char* name, int id);
+	void SendCurrentRoomList(int id);
 
 public:
 	static std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
