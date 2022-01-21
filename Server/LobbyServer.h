@@ -7,6 +7,7 @@ class InGameRoom;
 
 class LobbyServer
 {
+	friend class InGameRoom;
 public:
 	LobbyServer(const EndPoint& ep);
 	virtual ~LobbyServer();
@@ -29,18 +30,17 @@ private:
 	void ProcessLoginStep(const char* name, int id);
 	void SendCurrentRoomList(int id);
 
-public:
-	static std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
-
 private:
 	Socket mListenSck;
 	IOCP mIOCP;
 
 	std::vector<std::thread> mThreads;
-	std::atomic_bool mLoop;
+	std::atomic_bool mLoop;	
 	std::atomic_int mRoomCount;
+	std::atomic_int mLobbyPlayerCount;
 
 	DBHandler mDBHandler;
 
+	static std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
 	static std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE> gRooms;
 };
