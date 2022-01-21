@@ -22,6 +22,84 @@ struct Room
 
 std::atomic_int gRoom_count;
 
+void HandleLoginResultPacket(SC::packet_login_result* pck, int id)
+{
+	if (pck->result == (char)LOGIN_STAT::ACCEPTED)
+	{
+		std::cout << "[" << id << "] Login succeeded.\n";
+		gClients[id]->LoginSuccessFlag.store(true, std::memory_order_release);
+	}
+	else 
+	{
+		std::cout << "[" << id << "] Login failed (reason: ";
+		switch (pck->result)
+		{
+		case (char)LOGIN_STAT::INVALID_IDPWD:
+			std::cout << "Invaild ID or Password.)\n";
+			break;
+		}
+	}
+}
+
+void HandleRegisterResultPacket(SC::packet_register_result* pck, int id)
+{
+	if (pck->result == (char)REGI_STAT::ACCEPTED)
+		std::cout << "[" << id << "] Register succeeded.\n";
+	else 
+	{
+		std::cout << "[" << id << "] Register failed (reason: ";
+		switch (pck->result)
+		{
+		case (char)REGI_STAT::INVALID_IDPWD:
+			std::cout << "Invalid ID or Password.)\n";
+			break;
+
+		case (char)REGI_STAT::ALREADY_EXIST:
+			std::cout << "ID is already exists.)\n";
+			break;
+		}
+	}
+}
+
+void HandleWaitPlayersInfo(SC::packet_wait_players_info* pck, int id)
+{
+	gRoom_count.fetch_add(1);
+	gClients[id]->RoomID = pck->room_id;
+
+	std::cout << "[" << id << "] Room entered.\n";
+	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
+	{
+		if (pck->player_stats[i].empty == false)
+		{
+			std::cout << "   " << i + 1
+				<< ".player: " << pck->player_stats[i].name << "\n";
+			std::cout << "      color: " << (int)pck->player_stats[i].color << "\n";
+			std::cout << "      ready: " << std::boolalpha << pck->player_stats[i].ready << "\n";
+		}
+	}
+	std::cout << "\n";
+	gClients[id]->RoomEnteredFlag = true;
+}
+
+void HandleAccessRoomDenyPacket(SC::packet_access_room_deny* pck, int id)
+{
+	std::cout << "[" << id << "] Room access denied (reason: ";
+	switch (pck->reason)
+	{
+	case (char)ROOM_STAT::ROOM_IS_FULL:
+		std::cout << "Room is full.)\n";
+		break;
+
+	case (char)ROOM_STAT::GAME_STARTED:
+		std::cout << "Game already started.)\n";
+		break;
+
+	case (char)ROOM_STAT::MAX_ROOM_REACHED:
+		std::cout << "Max room has reached.)\n";
+		break;
+	}
+}
+
 void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 {
 	while (over->NetBuffer.Readable())
@@ -34,54 +112,37 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 		case SC::LOGIN_RESULT:
 		{
 			SC::packet_login_result* pck = reinterpret_cast<SC::packet_login_result*>(packet);
-			if (pck->result == (char)LOGIN_STAT::ACCEPTED) {
-				std::cout << "[" << id << "] Login succeeded.\n";
-				gClients[id]->LoginSuccessFlag.store(true, std::memory_order_release);
-			}
-			else {
-				std::cout << "[" << id << "] Login failed (reason: " << (int)pck->result << ")\n";
-			}			
+			HandleLoginResultPacket(pck, id);
 			break;
 		}
 		case SC::REGISTER_RESULT:
 		{
 			SC::packet_register_result* pck = reinterpret_cast<SC::packet_register_result*>(packet);
-			if (pck->result == (char)REGI_STAT::ACCEPTED)
-				std::cout << "[" << id << "] Register succeeded.\n";
-			else
-				std::cout << "[" << id << "] Register failed (reason: " << (int)pck->result << ")\n";
+			HandleRegisterResultPacket(pck, id);
 			break;
 		}
-		case SC::ACCESS_ROOM_ACCEPT:
+		case SC::WAIT_PLAYERS_INFO:
 		{
-			SC::packet_access_room_accept* pck = reinterpret_cast<SC::packet_access_room_accept*>(packet);
-			gRoom_count.fetch_add(1);
-			gClients[id]->RoomID = pck->room_id;
-			
-			std::cout << "[" << id << "] Room entered.\n";
-			for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
-			{
-				if (pck->player_stats[i].empty == false) {
-					std::cout << "   1. player: " << pck->player_stats[i].name << "\n";
-					std::cout << "      color: " << (int)pck->player_stats[i].color << "\n";
-					std::cout << "      ready: " << std::boolalpha<<pck->player_stats[i].ready << "\n";
-				}
-			}
-			std::cout << "\n";
-			gClients[id]->RoomEnteredFlag = true;
+			SC::packet_wait_players_info* pck = reinterpret_cast<SC::packet_wait_players_info*>(packet);
+			HandleWaitPlayersInfo(pck, id);
 			break;
 		}
 		case SC::ACCESS_ROOM_DENY:
 		{
 			SC::packet_access_room_deny* pck = reinterpret_cast<SC::packet_access_room_deny*>(packet);
-			std::cout << "[" << id << "] Room access denied (reason: " << pck->reason << "\n";
+			HandleAccessRoomDenyPacket(pck, id);
 			break;
 		}
-		case SC::ROOM_INFO:
+		case SC::ROOM_UPDATE_INFO:
 		{
-			SC::packet_room_info* pck = reinterpret_cast<SC::packet_room_info*>(packet);
-			
+			SC::packet_room_update_info* pck = reinterpret_cast<SC::packet_room_update_info*>(packet);
+
 			std::cout << "\n!Room updated!\n";
+			if (pck->room_closed)
+			{
+				std::cout << "Room (ID: " << pck->room_id << ") has closed.\n";
+				break;
+			}
 			std::cout << "Room ID: " << pck->room_id << "\n";
 			std::cout << "Player Counts: " << (int)pck->player_count << "\n";
 			std::cout << "Map: " << (int)pck->map_id << "\n";
@@ -89,7 +150,6 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 
 			break;
 		}
-
 		default:
 			std::cout << "Invalid packet\n";
 			break;
@@ -147,10 +207,29 @@ void ThreadFunc()
 
 void ClientFunc(int thread_id)
 {
-	gClients[thread_id]->EnterLoginScreen();
-	gClients[thread_id]->EnterLobbyScreen();
-	gClients[thread_id]->EnterWaitRoomScreen();
-	gClients[thread_id]->EnterInGameScreen();	
+	gClients[thread_id]->PushScene(SCENE::LOGIN);
+
+	while (gClients[thread_id]->SceneEmpty() == false)
+	{
+		switch (gClients[thread_id]->GetCurrentScene())
+		{
+		case SCENE::LOGIN:
+			gClients[thread_id]->EnterLoginScreen();
+			break;
+
+		case SCENE::LOBBY:
+			gClients[thread_id]->EnterLobbyScreen();
+			break;
+
+		case SCENE::ROOM:
+			gClients[thread_id]->EnterWaitRoomScreen();
+			break;
+			
+		case SCENE::IN_GAME:
+			gClients[thread_id]->EnterInGameScreen();
+			break;
+		}
+	}
 }
 
 int main()
@@ -163,7 +242,7 @@ int main()
 			std::cout << "Connection failed [" << i << "]\n";
 		}
 		else
-		{
+		{			
 			gIOCP.RegisterDevice(gClients[i]->GetSocket(), i);
 			gClients[i]->Recv();
 		}
