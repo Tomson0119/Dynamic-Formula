@@ -2,7 +2,7 @@
 
 #include "gameObject.h"
 #include "camera.h"
-
+#include "gameScene.h"
 
 class Player : public GameObject
 {
@@ -126,4 +126,37 @@ private:
 	float mMaxSpeed = 1000.0f;
 
 	float mFovCoefficient = 1.0f;
+
+public:
+	virtual void BuildDsvRtvView(
+		ID3D12Device* device) override;
+
+	void BuildCameras();
+
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene) override;
+
+public:
+	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
+
+private:
+	static const int RtvCounts = 6;
+
+	ULONG mCubeMapSize = 500;
+
+	std::array<std::unique_ptr<Camera>, RtvCounts> mCameras;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE mRtvCPUDescriptorHandles[RtvCounts];
+	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mSrvCPUDescriptorHandle;
+
+	ComPtr<ID3D12Resource> mDepthStencilBuffer;
+	std::unique_ptr<Texture> mCubeMap;
+
+	D3D12_VIEWPORT mViewPort;
+	D3D12_RECT mScissorRect;
+
+	ComPtr<ID3D12DescriptorHeap> mRtvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mDsvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap;
+
 };

@@ -34,7 +34,9 @@ public:
 
 	void SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
 	void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer);
+
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0);
+	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0);
 
 	void PreRender(ID3D12GraphicsCommandList* cmdList);
 

@@ -70,7 +70,14 @@ float4 PS(VertexOut pin) : SV_Target
     }
     float4 result = ambient + directLight;
     result.a = gMat.Diffuse.a;
+    
+    float3 Normal = normalize(pin.NormalW);
+    float3 fromEye = normalize(pin.PosW - gCameraPos.xyz);
+    float3 reflected = normalize(reflect(fromEye, pin.NormalW));
+    
+    result = saturate((gCubeMap.Sample(gLinearWrap, reflected) * 0.1f) + (result * 0.9f));
 
+    result *= gCubeMap.Sample(gLinearWrap, reflected);
 
     float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
     //if (idx == 2)

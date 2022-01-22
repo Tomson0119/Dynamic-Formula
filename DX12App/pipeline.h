@@ -16,8 +16,7 @@ enum class Layer : int
 	Particle,
 	Transparent,
 	ShadowDebug,
-	//ShadowMap,
-	//DynamicCubeMap
+	DynamicCubeMap
 };
 
 class Pipeline

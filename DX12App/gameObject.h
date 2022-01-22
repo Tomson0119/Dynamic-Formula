@@ -67,13 +67,9 @@ public:
 	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
 
 public:
-	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtvResource, GameScene* scene) { }
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene) { }
 	
-	virtual void BuildDsvRtvView(
-		ID3D12Device* device,
-		ID3D12Resource* rtvResource,
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvCPUHandle,
-		D3D12_CPU_DESCRIPTOR_HANDLE dsvCPUHandle) { }
+	virtual void BuildDsvRtvView(ID3D12Device* device) { }
 
 public:
 	virtual void Strafe(float dist, bool local=true);
@@ -209,46 +205,6 @@ private:
 	std::chrono::steady_clock::time_point mCreationTime;
 	std::chrono::milliseconds mDurationTime;
 };
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-class DynamicCubeMapObject : public GameObject
-{
-public:
-	DynamicCubeMapObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, LONG cubeMapSize);
-	virtual ~DynamicCubeMapObject();
-
-	virtual void BuildDsvRtvView(
-		ID3D12Device* device,
-		ID3D12Resource* rtvResource,
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvCPUHandle,
-		D3D12_CPU_DESCRIPTOR_HANDLE dsvCPUHandle) override;
-
-	void BuildCameras();
-
-	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtvResource, GameScene* scene) override;
-
-
-public:
-	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
-
-private:
-	static const int RtvCounts = 6;
-
-	ULONG mCubeMapSize = 0;
-
-	std::array<std::unique_ptr<Camera>, RtvCounts> mCameras;
-
-	D3D12_CPU_DESCRIPTOR_HANDLE mRtvCPUDescriptorHandles[RtvCounts];
-	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle;
-
-	ComPtr<ID3D12Resource> mDepthStencilBuffer;
-
-	D3D12_VIEWPORT mViewPort;
-	D3D12_RECT mScissorRect;
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //

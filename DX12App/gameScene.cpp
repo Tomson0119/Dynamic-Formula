@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "gameScene.h"
-#include "dynamicCubeRenderer.h"
 #include "shadowMapRenderer.h"
 
 using namespace std;
@@ -53,12 +52,13 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 
 void GameScene::BuildRootSignature(ID3D12Device* device)
 {
-	D3D12_DESCRIPTOR_RANGE descRanges[3];
+	D3D12_DESCRIPTOR_RANGE descRanges[4];
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 4);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0);
 	descRanges[2] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 1);
+	descRanges[3] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 2);
 
-	D3D12_ROOT_PARAMETER parameters[8];
+	D3D12_ROOT_PARAMETER parameters[9];
 	parameters[0] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 0, D3D12_SHADER_VISIBILITY_ALL);    // CameraCB
 	parameters[1] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_ALL);    // LightCB
 	parameters[2] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 2, D3D12_SHADER_VISIBILITY_ALL);    // GameInfoCB
@@ -66,7 +66,8 @@ void GameScene::BuildRootSignature(ID3D12Device* device)
 	parameters[4] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);			     // Object,  CBV
 	parameters[5] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);				 // Texture, SRV
 	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap
-	parameters[7] = Extension::Constants(3, 5, D3D12_SHADER_VISIBILITY_ALL);                                // Shadow ViewProjection
+	parameters[7] = Extension::DescriptorTable(1, &descRanges[3], D3D12_SHADER_VISIBILITY_ALL);				 // CubeMap
+	parameters[8] = Extension::Constants(3, 5, D3D12_SHADER_VISIBILITY_ALL);                                 // Shadow ViewProjection
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[5];
 	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_ANISOTROPIC, D3D12_TEXTURE_ADDRESS_MODE_WRAP);
@@ -133,7 +134,6 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::SkyBox]->BuildPipeline(device, mRootSignature.Get());
 
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
-	//mPipelines[Layer::Default]->SetCullClockwise();
 	mPipelines[Layer::Default]->BuildPipeline(device, mRootSignature.Get(), defaultShader.get());
 
 	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
@@ -154,7 +154,7 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 void GameScene::BuildConstantBuffers(ID3D12Device* device)
 {
 	mLightCB = std::make_unique<ConstantBuffer<LightConstants>>(device, 2);
-	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(device, 6); // 메인 카메라, 그림자 매핑 카메라, 다이나믹 큐브매핑 카메라
+	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(device, 10); // 메인 카메라 1개, 그림자 매핑 카메라 3개, 다이나믹 큐브매핑 카메라 6개
 	mGameInfoCB = std::make_unique<ConstantBuffer<GameInfoConstants>>(device, 1);
 
 	for (const auto& [_, pso] : mPipelines)
@@ -214,6 +214,7 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
 	carObj->BuildRigidBody(dynamicsWorld);
+	carObj->BuildDsvRtvView(device);
 	mPipelines[Layer::Color]->AppendObject(carObj);
 
 	float aspect = mMainCamera->GetAspect();
@@ -227,6 +228,7 @@ void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
 {
 	if (mShadowMapRenderer)
 		mShadowMapRenderer->PreRender(cmdList, this);
+	mPlayer->PreDraw(cmdList, this);
 }
 
 void GameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
@@ -373,6 +375,23 @@ void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCB
 			pso->SetAndDraw(cmdList, (bool)mLODSet);
 		else
 			pso->SetAndDraw(cmdList, mMainCamera.get()->GetWorldFrustum(), (bool)mLODSet);
+	}
+}
+
+void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera ,int cameraCBIndex)
+{
+	SetCBV(cmdList, cameraCBIndex);
+	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
+
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if (layer == Layer::Color)
+			continue;
+
+		if (layer != Layer::Terrain)
+			pso->SetAndDraw(cmdList, (bool)mLODSet);
+		else
+			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), (bool)mLODSet);
 	}
 }
 
