@@ -12,6 +12,8 @@ LobbyServer::LobbyServer(const EndPoint& ep)
 	if (mDBHandler.ConnectToDB(L"sql_server") == false)
 		std::cout << "failed to connect to DB\n";
 
+	mDBHandler.ResetAllHost();
+
 	for (int i = 0; i < gClients.size(); i++)
 		gClients[i] = std::make_unique<Client>(i);
 

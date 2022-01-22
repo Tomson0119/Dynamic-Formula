@@ -12,8 +12,9 @@ public:
 	DBHandler();
 	~DBHandler();
 
-	bool ConnectToDB(const std::wstring& sourcename);
-	
+	bool ConnectToDB(const std::wstring& sourcename);	
+	void ResetAllHost();
+
 	bool SaveUserInfo(int host_id);
 	bool RegisterIdAndPwd(char* id, char* pwd);
 	int SearchIdAndPwd(const char* id, const char* pwd, int host_id);

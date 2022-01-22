@@ -38,6 +38,17 @@ bool DBHandler::ConnectToDB(const std::wstring& sourcename)
 	return true;
 }
 
+void DBHandler::ResetAllHost()
+{
+	std::wstring query = L"EXEC reset_all_user";
+
+	RETCODE ret = SQLExecDirect(m_hStmt, (SQLWCHAR*)query.c_str(), SQL_NTS);
+	if (PrintIfError(m_hStmt, SQL_HANDLE_STMT, ret)) return;
+
+	SQLCancel(m_hStmt);
+	SQLCloseCursor(m_hStmt);
+}
+
 bool DBHandler::SaveUserInfo(int host_id)
 {
 	std::wstring query = L"EXEC save_user_info " + std::to_wstring(host_id);
