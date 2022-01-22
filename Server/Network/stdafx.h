@@ -25,8 +25,6 @@ extern "C" {
 #include <atomic>
 #include <unordered_map>
 #include <unordered_set>
-#include <concurrent_priority_queue.h>
-#include <concurrent_unordered_set.h>
 
 #include "NetException.h"
 #include "Protocol.h"

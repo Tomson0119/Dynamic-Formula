@@ -55,7 +55,7 @@ void InGameRoom::AddPlayer(int hostID)
 		p->Name = client->Name;
 		p->Ready = false;
 
-		if (client->ChangeState(CLIENT_STAT::LOGIN, CLIENT_STAT::IN_ROOM) == false)
+		if (client->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
 			mLobbyPtr->Disconnect(hostID);
 		
 		mLobbyPtr->mLobbyPlayerCount.fetch_sub(1);
@@ -88,7 +88,7 @@ void InGameRoom::RemovePlayer(int hostID)
 		// SendRemovedPlayerID();
 		SendRoomInfoToLobbyPlayers(hostID);
 
-		if (client->ChangeState(CLIENT_STAT::IN_ROOM, CLIENT_STAT::LOGIN) == false)
+		if (client->ChangeState(CLIENT_STAT::IN_ROOM, CLIENT_STAT::LOBBY) == false)
 			mLobbyPtr->Disconnect(hostID);
 	}
 }
@@ -126,7 +126,7 @@ void InGameRoom::SendRoomInfoToLobbyPlayers(bool instSend)
 	for (int i = 0; i < MAX_PLAYER_SIZE && lobbyPlayers > 0; i++)
 	{
 		Client* client = mLobbyPtr->gClients[i].get();
-		if (client->GetCurrentState() == CLIENT_STAT::LOGIN)
+		if (client->GetCurrentState() == CLIENT_STAT::LOBBY)
 		{
 			SendCurrentRoomInfo(i);
 			lobbyPlayers -= 1;
