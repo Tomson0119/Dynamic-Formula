@@ -1,9 +1,7 @@
 #include "Client.h"
 
 Client::Client(int id)
-	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1),
-	  LoginSuccessFlag(false), RecvResultFlag(false),
-	  RoomEnteredFlag(false), GameStartFlag(false)
+	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1)
 {
 	m_socket.Init();
 }
@@ -52,158 +50,179 @@ void Client::Recv()
 	m_socket.Recv(&m_recvOverlapped);
 }
 
-void Client::EnterLoginScreen()
+void Client::PushScene(SCENE newScene)
 {
-	LoginSuccessFlag = false;
+	std::lock_guard<std::mutex> lck(mSceneStackLock);
+	mSceneStack.push(newScene);
+}
 
-	std::cout << "[Login Screen].\n";
-	while (LoginSuccessFlag.load(std::memory_order_acquire) == false)
+void Client::PopScene()
+{
+	std::lock_guard<std::mutex> lck(mSceneStackLock);
+	mSceneStack.pop();
+}
+
+SCENE Client::GetCurrentScene()
+{
+	std::lock_guard<std::mutex> lck(mSceneStackLock);
+	return mSceneStack.top();
+}
+
+void Client::PrintRoomList()
+{
+	std::lock_guard<std::mutex> lck(mRoomListLock);
+
+	int k = 0;
+	for (const auto& [_, room] : mRoomList)
 	{
-		// TEST
-		std::string user_id = "GM";
-		std::string user_pwd = "GM";
+		std::cout << "--------------- " << (k++) + 1 << " ---------------\n";
+		std::cout << "Room ID: " << room.ID << "\n";
+		std::cout << "Player Counts: " << (int)room.PlayerCount << "\n";
+		std::cout << "Map: " << (int)room.MapID << "\n";
+		std::cout << "Game started: " << std::boolalpha << room.GameStarted << "\n";
+	}
+	std::cout << "---------------------------------\n";
+}
+
+void Client::InsertRoom(SC::packet_room_update_info* packet)
+{
+	std::lock_guard<std::mutex> lck(mRoomListLock);
+	Room newRoom{};
+	newRoom.ID = packet->room_id;
+	newRoom.MapID = packet->map_id;
+	newRoom.PlayerCount = packet->player_count;
+	newRoom.GameStarted = packet->game_started;
+	newRoom.Closed = packet->room_closed;
+	mRoomList.insert({ newRoom.ID, newRoom });
+
+	system("cls");
+	PrintLobbyInterface();
+}
+
+void Client::EraseRoom(int room_id)
+{
+	std::lock_guard<std::mutex> lck(mRoomListLock);
+	mRoomList.erase(room_id);
+
+	system("cls");
+	PrintLobbyInterface();
+}
+
+void Client::ShowLoginScreen()
+{
+	std::cout << "[Login Screen]\n";
+	std::cout << "1. Login.\n";
+	std::cout << "2. Register.\n";
+	std::cout << " : ";
+
+	int choice = -1;
+	std::cin >> choice;
+
+	std::string user_id, user_pwd;
+	std::cout << "ID: ";
+	std::cin >> user_id;
+	std::cout << "PWD: ";
+	std::cin >> user_pwd;
+
+	switch (choice)
+	{
+	case 1:
 		RequestLogin(user_id, user_pwd);
+		break;
 
-		/*int c;
-		std::cout << "1. Login.\n";
-		std::cout << "2. Register.\n";
-		std::cout << " : ";
-		std::cin >> c;
-		std::cin.clear();
-
-		std::string user_id, user_pwd;
-		std::cout << "ID: ";
-		std::cin >> user_id;
-		std::cout << "PWD: ";
-		std::cin >> user_pwd;
-		std::cin.clear();
-
-		switch (c)
-		{
-		case 1:
-			RequestLogin(user_id, user_pwd);
-			break;
-
-		case 2:
-			RequestRegister(user_id, user_pwd);
-			break;
-
-		default:
-			continue;
-		}*/
-
-		while (RecvResultFlag.load(std::memory_order_acquire) == false);
-		bool b = true;
-		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
+	case 2:
+		RequestRegister(user_id, user_pwd);
+		break;
 	}
-	std::cout << "\n";
-	PushScene(SCENE::LOBBY);
 }
 
-void Client::EnterLobbyScreen()
+void Client::PrintLobbyInterface()
 {
-	RoomEnteredFlag = false;
-
 	std::cout << "[Lobby Screen]\n";
-	while (RoomEnteredFlag == false)
-	{
-		int choice = 0;
-
-		std::cout << "1. Request New Room.\n";
-		std::cout << "2. Request Enter Room.\n";
-		std::cout << " : ";
-		std::cin >> choice;
-		std::cin.clear();		
-
-		switch (choice)
-		{
-		case 1:
-			RequestNewRoom();
-			break;
-
-		case 2:
-		{
-			int n;
-			std::cout << "Room number: ";
-			std::cin >> n;
-			std::cin.clear();
-
-			RequestEnterRoom(n);
-			break;
-		}
-		case 3:
-			break;
-
-		default:
-			continue;
-		}
-
-		while (RecvResultFlag.load(std::memory_order_acquire) == false);
-		bool b = true;
-		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
-	}
-	PushScene(SCENE::ROOM);
+	PrintRoomList();
+	std::cout << "0. Back to Loggin scene.\n";
+	std::cout << "1. Request New Room.\n";
+	std::cout << "2. Request Enter Room.\n";
+	std::cout << " : ";
 }
 
-void Client::EnterWaitRoomScreen()
+void Client::ShowLobbyScreen()
 {
-	GameStartFlag = false;
+	PrintLobbyInterface();
 
-	bool b = true;
-	std::cout << "[Wait Room Screen]\n";
-	while (GameStartFlag == false)
+	int choice = -1;
+	std::cin >> choice;
+
+	switch (choice)
 	{
-		int choice = -1;
-		std::cout << "0. Back to Lobby\n";
-		std::cout << "1. Switch to next map(Only Admin).\n";
-		std::cout << "2. Click Ready(Start) button.\n";
-		std::cout << " : ";
-		std::cin >> choice;
+	case 0:
+		RevertScene();
+		PopScene();
+		return;
+			
+	case 1:
+		RequestNewRoom();
+		break;
+
+	case 2:
+	{
+		int n;
+		std::cout << "Room number: ";
+		std::cin >> n;
 		std::cin.clear();
-		
-		switch (choice)
-		{
-		case 0:
-			BackToLobby();
-			PopScene();
-			return;
 
-		case 1:
-			if (Admin()) SwitchMap();
-			break;
-
-		case 2:
-			SetOrUnsetReady();
-			break;
-
-		default:
-			break;
-		}
-
-		while (RecvResultFlag.load(std::memory_order_acquire) == false);
-		bool b = true;
-		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
+		RequestEnterRoom(n);
+		break;
 	}
-	PushScene(SCENE::IN_GAME);
+	}
 }
 
-void Client::EnterInGameScreen()
+void Client::ShowWaitRoomScreen()
+{
+	std::cout << "[Wait Room Screen]  (ID: " << RoomID << ")\n";
+	std::cout << "0. Back to Lobby\n";
+	std::cout << "1. Switch to next map(Only Admin).\n";
+	std::cout << "2. Click Ready(Start) button.\n";
+	std::cout << " : ";
+	
+	int choice = -1;
+	std::cin >> choice;
+
+	switch (choice)
+	{
+	case 0:
+		RevertScene();
+		PopScene();
+		return;
+
+	case 1:
+		if (Admin()) SwitchMap();
+		break;
+
+	case 2:
+		SetOrUnsetReady();
+		break;
+
+	default:
+		break;
+	}
+}
+
+void Client::ShowInGameScreen()
 {
 	std::cout << "[In Game Screen]\n";
-	while (true)
+	std::cout << "0. Back to Room.\n";
+	std::cout << " : ";
+	
+	int choice = -1;
+	std::cin >> choice;
+
+	switch (choice)
 	{
-		int choice = -1;
-		std::cout << "0. Back to Room.\n";
-		
-		switch (choice)
-		{
-		case 0:
-			PopScene();
-			break;
-		}
-		while (RecvResultFlag.load(std::memory_order_acquire) == false);
-		bool b = true;
-		RecvResultFlag.compare_exchange_strong(b, false, std::memory_order_release);
+	case 0:
+		RevertScene();
+		PopScene();
+		return;
 	}
 }
 
@@ -252,7 +271,7 @@ void Client::RequestEnterRoom(int room_id)
 	Client::Send();
 }
 
-void Client::BackToLobby()
+void Client::RevertScene()
 {
 	CS::packet_revert_scene pck{};
 	pck.size = sizeof(CS::packet_revert_scene);

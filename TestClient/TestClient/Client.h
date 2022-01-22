@@ -11,6 +11,15 @@ enum class SCENE : char
 	IN_GAME
 };
 
+struct Room
+{
+	int ID;
+	char PlayerCount;
+	char MapID;
+	bool GameStarted;
+	bool Closed;
+};
+
 class Client
 {
 public:
@@ -27,20 +36,27 @@ public:
 
 	void Recv();
 
-	void PushScene(SCENE newScene) { mSceneStack.push(newScene); }
-	void PopScene() { mSceneStack.pop(); }
+	void PushScene(SCENE newScene);
+	void PopScene();
 
-	SCENE GetCurrentScene() const { return mSceneStack.top(); }
+	SCENE GetCurrentScene();
 	SOCKET GetSocket() const { return m_socket.GetSocket(); }
 
 	bool SceneEmpty() const { return mSceneStack.empty(); }
 	bool Admin() const { return m_isAdmin; }
 
 public:
-	void EnterLoginScreen();
-	void EnterLobbyScreen();
-	void EnterWaitRoomScreen();
-	void EnterInGameScreen();
+	void InsertRoom(SC::packet_room_update_info* packet);
+	void EraseRoom(int room_id);
+	void PrintRoomList();
+
+public:
+	void ShowLoginScreen();
+
+	void PrintLobbyInterface();
+	void ShowLobbyScreen();
+	void ShowWaitRoomScreen();
+	void ShowInGameScreen();
 	
 	void RequestLogin(const std::string& name, const std::string& pwd);
 	void RequestRegister(const std::string& name, const std::string& pwd);
@@ -48,24 +64,23 @@ public:
 	void RequestNewRoom();
 	void RequestEnterRoom(int room_id);
 
-	void BackToLobby();
+	void RevertScene();
 	void SwitchMap();
 	void SetOrUnsetReady();
 
 public:
 	int ID;
-	int RoomID;
-	
-	std::atomic_bool LoginSuccessFlag;
-	std::atomic_bool RecvResultFlag;
-	std::atomic_bool RoomEnteredFlag;
-	std::atomic_bool GameStartFlag;
-;
+	std::atomic_int RoomID;
+
 private:
 	Socket m_socket;
 
+	std::mutex mSceneStackLock;
 	std::stack<SCENE> mSceneStack;
 	std::atomic_bool m_isAdmin;
+
+	std::mutex mRoomListLock;
+	std::unordered_map<int, Room> mRoomList;
 
 	WSAOVERLAPPEDEX* m_sendOverlapped;
 	WSAOVERLAPPEDEX m_recvOverlapped;
