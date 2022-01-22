@@ -27,6 +27,7 @@ enum class REGI_STAT : char
 enum class ROOM_STAT : char
 {
 	GAME_STARTED = 0,
+	INVALID_ROOM_ID,
 	ROOM_IS_FULL,
 	ROOM_IS_CLOSED,
 	MAX_ROOM_REACHED,
@@ -88,11 +89,18 @@ namespace SC
 		char color;
 	};
 
+	const char FORCE_LOGOUT = 0;
 	const char LOGIN_RESULT = 1;
 	const char REGISTER_RESULT = 2;
 	const char WAIT_PLAYERS_INFO = 3;
 	const char ACCESS_ROOM_DENY = 4;
 	const char ROOM_UPDATE_INFO = 5;
+
+	struct packet_force_logout
+	{
+		uint16_t size;
+		char type;
+	};
 
 	struct packet_login_result 
 	{

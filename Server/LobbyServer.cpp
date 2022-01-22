@@ -109,10 +109,20 @@ void LobbyServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	}
 }
 
+void LobbyServer::ForceLogout(int id)
+{
+	std::cout << "[" << id << "] Force logout.\n";
+	int roomID = gClients[id]->AssignedRoomID;
+	if (roomID >= 0) gRooms[roomID]->RemovePlayer(id);
+
+	mDBHandler.SaveUserInfo(id);
+	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
+	gClients[id]->SendForceLogout();
+}
+
 void LobbyServer::Disconnect(int id)
 {
-	std::cout << "Disconnect [" << id << "]\n";
-
+	std::cout << "[" << id << "] Disconnect.\n";
 	int roomID = gClients[id]->AssignedRoomID;
 	if (roomID >= 0) gRooms[roomID]->RemovePlayer(id);
 
@@ -122,7 +132,7 @@ void LobbyServer::Disconnect(int id)
 
 void LobbyServer::AcceptNewClient(int id, SOCKET sck)
 {
-	std::cout << "Accepted client [" << id << "]\n";
+	std::cout << "[" << id << "] Accepted client.\n";
 	gClients[id]->AssignAcceptedID(id, sck);
 	mIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
@@ -155,19 +165,18 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		std::cout << "[" << id << "] Login packet\n";
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
 
-		int conn_id = (int)LOGIN_STAT::INVALID_IDPWD;
 		if (strcmp(pck->name, "GM") == 0) 
 		{
 			std::string number = std::to_string(id);
 			strncat_s(pck->name, number.c_str(), number.size());
-			conn_id = (int)LOGIN_STAT::ACCEPTED;
+			ProcessLoginStep(pck->name, id);
+			break;
 		}
-		else
-			conn_id = mDBHandler.SearchIdAndPwd(pck->name, pck->pwd, id);
-
+		
+		int	conn_id = mDBHandler.SearchIdAndPwd(pck->name, pck->pwd, id);
 		if(conn_id >= (int)LOGIN_STAT::ACCEPTED)
 		{
-			if (conn_id >= 0) Disconnect(conn_id);
+			if (conn_id >= 0) ForceLogout(conn_id);
 			ProcessLoginStep(pck->name, id);
 		}
 		else if (conn_id == (int)LOGIN_STAT::INVALID_IDPWD)
@@ -188,9 +197,9 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		}
 
 		bool succeeded = mDBHandler.RegisterIdAndPwd(pck->name, pck->pwd);
-		if (succeeded)
+		if (succeeded) 
 			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
-		else
+		else		  
 			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
 		break;
 	}
@@ -206,22 +215,25 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 			mRoomCount.fetch_add(1);			
 			gRooms[mRoomCount - 1]->OpenRoom(id);
 		}
-
 		break;
 	}
 	case CS::ENTER_ROOM:
 	{
 		CS::packet_enter_room* pck = reinterpret_cast<CS::packet_enter_room*>(packet);
 		std::cout << "[" << id << "] Enter room packet\n";
-		gRooms[pck->room_id]->TryAddPlayer(id);	
+
+		if (pck->room_id >= 0)
+			gRooms[pck->room_id]->TryAddPlayer(id);
+		else
+			gClients[id]->SendAccessRoomDeny(ROOM_STAT::INVALID_ROOM_ID);
 		break;
 	}
 	case CS::REVERT_SCENE:
 	{
 		auto currentState = gClients[id]->GetCurrentState();		
-		if (currentState == CLIENT_STAT::LOGIN)
+		if (currentState == CLIENT_STAT::LOBBY)
 		{
-			if (gClients[id]->ChangeState(currentState, CLIENT_STAT::CONNECTED) == false)
+			if (gClients[id]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::CONNECTED) == false)
 			{
 				Disconnect(id);
 				break;
@@ -258,7 +270,7 @@ int LobbyServer::GetAvailableID()
 
 void LobbyServer::ProcessLoginStep(const char* name, int id)
 {
-	if (gClients[id]->ChangeState(CLIENT_STAT::CONNECTED, CLIENT_STAT::LOGIN) == false)
+	if (gClients[id]->ChangeState(CLIENT_STAT::CONNECTED, CLIENT_STAT::LOBBY) == false)
 	{
 		Disconnect(id);
 		return;

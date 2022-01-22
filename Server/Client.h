@@ -4,7 +4,7 @@ enum class CLIENT_STAT : char
 {
 	EMPTY = 0,
 	CONNECTED,
-	LOGIN,
+	LOBBY,
 	IN_ROOM,
 	IN_GAME
 };
@@ -25,12 +25,15 @@ public:
 
 	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
 
+	void SetState(const CLIENT_STAT& stat) { mState = stat; }
 	CLIENT_STAT GetCurrentState() const { return mState; }
 
 public:
 	void SendLoginResult(LOGIN_STAT result, bool instSend=true);
 	void SendRegisterResult(REGI_STAT result, bool instSend=true);
 	void SendAccessRoomDeny(ROOM_STAT reason, bool instSend=true);
+
+	void SendForceLogout();
 	
 public:
 	int ID;

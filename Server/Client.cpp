@@ -65,7 +65,7 @@ void Client::SendLoginResult(LOGIN_STAT result, bool instSend)
 	pck.type = SC::LOGIN_RESULT;
 	pck.result = (char)result;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	if(instSend) Client::SendMsg();
+	if(instSend) SendMsg();
 }
 
 void Client::SendRegisterResult(REGI_STAT result, bool instSend)
@@ -76,7 +76,7 @@ void Client::SendRegisterResult(REGI_STAT result, bool instSend)
 	pck.type = SC::REGISTER_RESULT;
 	pck.result = (char)result;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	if(instSend) Client::SendMsg();
+	if(instSend) SendMsg();
 }
 
 void Client::SendAccessRoomDeny(ROOM_STAT reason, bool instSend)
@@ -86,5 +86,14 @@ void Client::SendAccessRoomDeny(ROOM_STAT reason, bool instSend)
 	pck.type = SC::ACCESS_ROOM_DENY;
 	pck.reason = (char)reason;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	if(instSend) Client::SendMsg();
+	if(instSend) SendMsg();
+}
+
+void Client::SendForceLogout()
+{
+	SC::packet_force_logout pck{};
+	pck.size = sizeof(SC::packet_force_logout);
+	pck.type = SC::FORCE_LOGOUT;
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	SendMsg();
 }

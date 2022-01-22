@@ -15,6 +15,7 @@ public:
 public:
 	void Run();
 	
+	void ForceLogout(int id);
 	void Disconnect(int id);
 	void AcceptNewClient(int id, SOCKET sck);
 
@@ -27,6 +28,7 @@ public:
 
 private:
 	int GetAvailableID();
+
 	void ProcessLoginStep(const char* name, int id);
 	void SendCurrentRoomList(int id);
 
