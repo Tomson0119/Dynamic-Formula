@@ -27,7 +27,9 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffse, bool isSO=false);
-	
+
+	virtual void ChangeCurrentRenderTarget() {}
+
 	void UpdateBoundingBox();
 	void Animate(float elapsedTime);
 
@@ -67,7 +69,7 @@ public:
 	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
 
 public:
-	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene) { }
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene, const UINT& cubemapIndex) { }
 	
 	virtual void BuildDsvRtvView(ID3D12Device* device) { }
 

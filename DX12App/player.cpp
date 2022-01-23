@@ -582,7 +582,6 @@ void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIn
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
 
 	auto gpuStart = mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	gpuStart.ptr += gCbvSrvUavDescriptorSize * 6 * mCurrentRenderTarget;
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuStart);
 }
 
@@ -757,7 +756,7 @@ void PhysicsPlayer::BuildCameras()
 	}
 }
 
-void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene)
+void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene, const UINT& cubemapIndex)
 {
 	BuildCameras();
 
@@ -769,15 +768,13 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene
 		mCubeMap->GetResource(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	FLOAT clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	for (int i = 0; i < RtvCounts / 2; i++)
-	{
-		cmdList->ClearRenderTargetView(mRtvCPUDescriptorHandles[i + (mCurrentRenderTarget * 6)], clearValue, 0, NULL);
-		cmdList->ClearDepthStencilView(mDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
-		cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[i + (mCurrentRenderTarget * 6)], TRUE, &mDsvCPUDescriptorHandle);
 
-		scene->UpdateCameraConstant(i + 4, mCameras[i].get());
-		scene->RenderPipelines(cmdList, mCameras[i].get(), i + 4);
-	}
+	cmdList->ClearRenderTargetView(mRtvCPUDescriptorHandles[cubemapIndex + (mCurrentRenderTarget * 6)], clearValue, 0, NULL);
+	cmdList->ClearDepthStencilView(mDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
+	cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[cubemapIndex + (mCurrentRenderTarget * 6)], TRUE, &mDsvCPUDescriptorHandle);
+
+	scene->UpdateCameraConstant(cubemapIndex + 4, mCameras[cubemapIndex].get());
+	scene->RenderPipelines(cmdList, mCameras[cubemapIndex].get(), cubemapIndex + 4);
 
 	// resource barrier
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(

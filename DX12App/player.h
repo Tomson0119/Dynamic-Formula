@@ -135,7 +135,8 @@ public:
 
 	void BuildCameras();
 
-	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene) override;
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene, const UINT& cubemapIndex) override;
+	virtual void ChangeCurrentRenderTarget() { mCurrentRenderTarget = 1 - mCurrentRenderTarget; }
 
 public:
 	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }

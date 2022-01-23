@@ -98,4 +98,6 @@ private:
 
 	float mMissileInterval = 0.0f;
 	float mCubemapInterval = 0.0f;
+
+	UINT mCubemapDrawIndex = 0;
 };
