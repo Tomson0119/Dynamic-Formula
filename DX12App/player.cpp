@@ -576,6 +576,14 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 	}
 }
 
+void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+	auto gpuStart = mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuStart);
+}
+
 void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
@@ -773,12 +781,6 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene
 	// resource barrier
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		mCubeMap->GetResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
-
-	ID3D12DescriptorHeap* descHeaps[] = { mSrvDescriptorHeap.Get() };
-	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-
-	auto gpuStart = mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	cmdList->SetGraphicsRootDescriptorTable(7, gpuStart);
 }
 
 WheelObject::WheelObject() : GameObject()

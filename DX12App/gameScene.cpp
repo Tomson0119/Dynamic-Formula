@@ -21,7 +21,7 @@ void GameScene::OnResize(float aspect)
 void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -220,15 +220,25 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	float aspect = mMainCamera->GetAspect();
 	mPlayer = carObj.get();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
 }
 
 
-void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
+void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList, const float& elapsed)
 {
 	if (mShadowMapRenderer)
 		mShadowMapRenderer->PreRender(cmdList, this);
-	mPlayer->PreDraw(cmdList, this);
+
+	if (mCubemapInterval < 0.0f)
+	{
+		mCubemapInterval = 0.3f;
+		mPlayer->PreDraw(cmdList, this);
+	}
+	else
+	{
+		mCubemapInterval -= elapsed;
+	}
+	mPlayer->SetCubemapSrv(cmdList, 7);
 }
 
 void GameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)

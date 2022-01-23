@@ -234,18 +234,7 @@ float4 PS(DsOut din) : SV_Target
         result.a = gMat.Diffuse.a;
 
         float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-        //if (idx == 2)
-        //{
-        //    debugColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
-        //}
-        //else if (idx == 1)
-        //{
-        //    debugColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
-        //}
-        //else if (idx == 0)
-        //{
-        //    debugColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
-        //}
+
         result *= debugColor;
     }
 
