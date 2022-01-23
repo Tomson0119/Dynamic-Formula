@@ -153,7 +153,7 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE mSrvCPUDescriptorHandle;
 
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
-	std::unique_ptr<Texture> mCubeMap;
+	std::unique_ptr<Texture> mCubeMap[2];
 
 	D3D12_VIEWPORT mViewPort;
 	D3D12_RECT mScissorRect;

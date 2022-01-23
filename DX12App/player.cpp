@@ -582,6 +582,7 @@ void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIn
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
 
 	auto gpuStart = mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	gpuStart.ptr += gCbvSrvUavDescriptorSize * (1 - mCurrentRenderTarget);
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuStart);
 }
 
@@ -669,7 +670,7 @@ void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)
 
 	device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
-			1,
+			2,
 			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
 		IID_PPV_ARGS(&mSrvDescriptorHeap));
@@ -678,35 +679,36 @@ void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)
 	auto dsvHandle = mDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	auto srvHandle = mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	std::unique_ptr<Texture> textureCube = std::make_unique<Texture>();
-	textureCube->SetDimension(D3D12_SRV_DIMENSION_TEXTURECUBE);
-
 	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,1.0f} };
 
-	textureCube->CreateTexture(
-		device, mCubeMapSize, mCubeMapSize, RtvCounts, 1,
-		DXGI_FORMAT_R8G8B8A8_UNORM,
-		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_GENERIC_READ, &clearValue);
-
-	mCubeMap = std::move(textureCube);
-
-
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-	rtvDesc.Texture2DArray.MipSlice = 0;
-	rtvDesc.Texture2DArray.PlaneSlice = 0;
-	rtvDesc.Texture2DArray.ArraySize = 1;
-
-	for (int i = 0; i < RtvCounts; i++)
+	for (int i = 0; i < 2; ++i)
 	{
-		mRtvCPUDescriptorHandles[i] = rtvHandle;
-		rtvDesc.Texture2DArray.FirstArraySlice = i % 6;
-		device->CreateRenderTargetView(mCubeMap->GetResource(), &rtvDesc, mRtvCPUDescriptorHandles[i]);
-		rtvHandle.ptr += gRtvDescriptorSize;
-	}
+		std::unique_ptr<Texture> textureCube = std::make_unique<Texture>();
+		textureCube->SetDimension(D3D12_SRV_DIMENSION_TEXTURECUBE);
+		textureCube->CreateTexture(
+			device, mCubeMapSize, mCubeMapSize, RtvCounts / 2, 1,
+			DXGI_FORMAT_R8G8B8A8_UNORM,
+			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_GENERIC_READ, &clearValue);
 
+		mCubeMap[i] = std::move(textureCube);
+
+
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+		rtvDesc.Texture2DArray.MipSlice = 0;
+		rtvDesc.Texture2DArray.PlaneSlice = 0;
+		rtvDesc.Texture2DArray.ArraySize = 1;
+
+		for (int j = i * 6; j < (i + 1) * 6; j++)
+		{
+			mRtvCPUDescriptorHandles[j] = rtvHandle;
+			rtvDesc.Texture2DArray.FirstArraySlice = j % 6;
+			device->CreateRenderTargetView(mCubeMap[i]->GetResource(), &rtvDesc, mRtvCPUDescriptorHandles[j]);
+			rtvHandle.ptr += gRtvDescriptorSize;
+		}
+	}
 	clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	clearValue.DepthStencil.Depth = 1.0f;
 	clearValue.DepthStencil.Stencil = 0;
@@ -721,8 +723,12 @@ void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)
 	mDsvCPUDescriptorHandle = dsvHandle;
 	device->CreateDepthStencilView(mDepthStencilBuffer.Get(), NULL, mDsvCPUDescriptorHandle);
 	
-	mSrvCPUDescriptorHandle = srvHandle;
-	device->CreateShaderResourceView(mCubeMap->GetResource(), &mCubeMap->ShaderResourceView(), mSrvCPUDescriptorHandle);
+	for (int i = 0; i < 2; ++i)
+	{
+		mSrvCPUDescriptorHandle = srvHandle;
+		device->CreateShaderResourceView(mCubeMap[i]->GetResource(), &mCubeMap[i]->ShaderResourceView(), mSrvCPUDescriptorHandle);
+		srvHandle.ptr += gCbvSrvUavDescriptorSize;
+	}
 }
 
 void PhysicsPlayer::BuildCameras()
@@ -765,7 +771,7 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene
 
 	// resource barrier
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		mCubeMap->GetResource(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		mCubeMap[mCurrentRenderTarget]->GetResource(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	FLOAT clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -778,7 +784,7 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene
 
 	// resource barrier
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		mCubeMap->GetResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+		mCubeMap[mCurrentRenderTarget]->GetResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 WheelObject::WheelObject() : GameObject()
