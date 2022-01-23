@@ -20,16 +20,16 @@ void HandleLoginResultPacket(SC::packet_login_result* pck, int id)
 {
 	if (pck->result == (char)LOGIN_STAT::ACCEPTED)
 	{
-		std::cout << "[" << id << "] Login succeeded.\n";
+		gClients[id]->LoginResult = "Login succeeded.\n\n";
 		gClients[id]->PushScene(SCENE::LOBBY);
 	}
 	else 
 	{
-		std::cout << "[" << id << "] Login failed (reason: ";
+		gClients[id]->LoginResult = "Login failed (reason: ";
 		switch (pck->result)
 		{
 		case (char)LOGIN_STAT::INVALID_IDPWD:
-			std::cout << "Invaild ID or Password.)\n";
+			gClients[id]->LoginResult += "Invaild ID or Password.)\n\n";
 			break;
 		}
 	}
@@ -38,18 +38,18 @@ void HandleLoginResultPacket(SC::packet_login_result* pck, int id)
 void HandleRegisterResultPacket(SC::packet_register_result* pck, int id)
 {
 	if (pck->result == (char)REGI_STAT::ACCEPTED)
-		std::cout << "[" << id << "] Register succeeded.\n";
+		gClients[id]->LoginResult = "Register succeeded.\n\n";
 	else 
 	{
-		std::cout << "[" << id << "] Register failed (reason: ";
+		gClients[id]->LoginResult = "Register failed(reason: ";
 		switch (pck->result)
 		{
 		case (char)REGI_STAT::INVALID_IDPWD:
-			std::cout << "Invalid ID or Password.)\n";
+			gClients[id]->LoginResult += "Invalid ID or Password.)\n\n";
 			break;
 
 		case (char)REGI_STAT::ALREADY_EXIST:
-			std::cout << "ID is already exists.)\n";
+			gClients[id]->LoginResult += "ID is already exists.)\n\n";
 			break;
 		}
 	}
@@ -57,45 +57,33 @@ void HandleRegisterResultPacket(SC::packet_register_result* pck, int id)
 
 void HandleWaitPlayersInfo(SC::packet_wait_players_info* pck, int id)
 {
-	if (gClients[id]->RoomID < 0) 
+	if (gClients[id]->RoomID != pck->room_id)
 	{
-		gClients[id]->RoomID = pck->room_id;
-		gClients[id]->PushScene(SCENE::ROOM);
+		std::cout << "Invalid room id\n";
+		return;
 	}
-
-	std::cout << "[" << id << "] Room entered (ID: " << pck->room_id << ").\n";
-	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
-	{
-		if (pck->player_stats[i].empty == false)
-		{
-			std::cout << "   " << i + 1
-				<< ".player: " << pck->player_stats[i].name << "\n";
-			std::cout << "      color: " << (int)pck->player_stats[i].color << "\n";
-			std::cout << "      ready: " << std::boolalpha << pck->player_stats[i].ready << "\n";
-		}
-	}
-	std::cout << "\n";
+	gClients[id]->UpdateWaitPlayersInfo(pck);
 }
 
 void HandleAccessRoomDenyPacket(SC::packet_access_room_deny* pck, int id)
 {
-	std::cout << "[" << id << "] Room access denied (reason: ";
+	gClients[id]->EnterRoomResult = "Room access denied(reason: ";
 	switch (pck->reason)
 	{
 	case (char)ROOM_STAT::ROOM_IS_FULL:
-		std::cout << "Room is full.)\n";
+		gClients[id]->EnterRoomResult += "Room is full.)\n\n";
 		break;
 
 	case (char)ROOM_STAT::GAME_STARTED:
-		std::cout << "Game already started.)\n";
+		gClients[id]->EnterRoomResult += "Game already started.)\n\n";
 		break;
 
 	case (char)ROOM_STAT::MAX_ROOM_REACHED:
-		std::cout << "Max room has reached.)\n";
+		gClients[id]->EnterRoomResult += "Max room has reached.)\n\n";
 		break;
 
 	case (char)ROOM_STAT::INVALID_ROOM_ID:
-		std::cout << "Invalid room id.)\n";
+		gClients[id]->EnterRoomResult += "Invalid room id.)\n";
 		break;
 	}
 }
@@ -127,6 +115,14 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 			HandleWaitPlayersInfo(pck, id);
 			break;
 		}
+		case SC::ACCESS_ROOM_ACCEPT:
+		{
+			SC::packet_access_room_accept* pck = reinterpret_cast<SC::packet_access_room_accept*>(packet);
+			gClients[id]->EnterRoomResult = "Room entered(ID: " + std::to_string(pck->room_id) + ").\n";
+			gClients[id]->RoomID = pck->room_id;
+			gClients[id]->PushScene(SCENE::ROOM);			
+			break;
+		}
 		case SC::ACCESS_ROOM_DENY:
 		{
 			SC::packet_access_room_deny* pck = reinterpret_cast<SC::packet_access_room_deny*>(packet);
@@ -145,8 +141,9 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 		}
 		case SC::FORCE_LOGOUT:
 		{
-			while (gClients[id]->GetCurrentScene() == SCENE::LOGIN)
+			while (gClients[id]->GetCurrentScene() != SCENE::LOGIN)
 				gClients[id]->PopScene();
+			std::cout << "Force Logout!! Returning to login screen..(Input any value)\n";
 			break;
 		}
 		default:
@@ -228,13 +225,14 @@ void ClientFunc(int thread_id)
 			gClients[thread_id]->ShowInGameScreen();
 			break;
 		}
+		gClients[thread_id]->LoginResult = "";
+		gClients[thread_id]->EnterRoomResult = "";
 	}
 	gLoop.store(false, std::memory_order_relaxed);
 }
 
 int main()
 {
-
 	for (int i = 0; i < MAX_TRIAL; i++)
 	{
 		gClients[i] = std::make_unique<Client>(i);

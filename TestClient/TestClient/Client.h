@@ -20,6 +20,14 @@ struct Room
 	bool Closed;
 };
 
+struct PlayerInfo
+{
+	bool Empty;
+	char Color;
+	bool Ready;
+	std::string Name;
+};
+
 class Client
 {
 public:
@@ -49,12 +57,18 @@ public:
 	void InsertRoom(SC::packet_room_update_info* packet);
 	void EraseRoom(int room_id);
 	void PrintRoomList();
+	void ClearRoomList();
+
+	void UpdateWaitPlayersInfo(SC::packet_wait_players_info* info);
+	void PrintWaitPlayers();
+	void ClearPlayerList();
 
 public:
 	void ShowLoginScreen();
 
 	void PrintLobbyInterface();
 	void ShowLobbyScreen();
+	void PrintWaitRoomInterface();
 	void ShowWaitRoomScreen();
 	void ShowInGameScreen();
 	
@@ -72,15 +86,21 @@ public:
 	int ID;
 	std::atomic_int RoomID;
 
+	std::string LoginResult;
+	std::string EnterRoomResult;
+
 private:
 	Socket m_socket;
 
 	std::mutex mSceneStackLock;
 	std::stack<SCENE> mSceneStack;
+	std::atomic_char mMapIdx;
 	std::atomic_bool m_isAdmin;
 
 	std::mutex mRoomListLock;
 	std::unordered_map<int, Room> mRoomList;
+
+	std::array<PlayerInfo, MAX_ROOM_CAPACITY> mPlayerList;
 
 	WSAOVERLAPPEDEX* m_sendOverlapped;
 	WSAOVERLAPPEDEX m_recvOverlapped;

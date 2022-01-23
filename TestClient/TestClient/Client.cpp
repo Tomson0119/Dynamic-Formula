@@ -3,6 +3,11 @@
 Client::Client(int id)
 	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1)
 {
+	LoginResult = "";
+	EnterRoomResult = "";
+	
+	ClearPlayerList();
+
 	m_socket.Init();
 }
 
@@ -70,8 +75,6 @@ SCENE Client::GetCurrentScene()
 
 void Client::PrintRoomList()
 {
-	std::lock_guard<std::mutex> lck(mRoomListLock);
-
 	int k = 0;
 	for (const auto& [_, room] : mRoomList)
 	{
@@ -82,6 +85,11 @@ void Client::PrintRoomList()
 		std::cout << "Game started: " << std::boolalpha << room.GameStarted << "\n";
 	}
 	std::cout << "---------------------------------\n";
+}
+
+void Client::ClearRoomList()
+{
+	mRoomList.clear();
 }
 
 void Client::InsertRoom(SC::packet_room_update_info* packet)
@@ -99,6 +107,24 @@ void Client::InsertRoom(SC::packet_room_update_info* packet)
 	PrintLobbyInterface();
 }
 
+void Client::UpdateWaitPlayersInfo(SC::packet_wait_players_info* info)
+{
+	if (RoomID == info->room_id)
+	{
+		mMapIdx = info->map_id;
+		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
+		{
+			mPlayerList[i].Name = info->player_stats[i].name;
+			mPlayerList[i].Color = info->player_stats[i].color;
+			mPlayerList[i].Empty = info->player_stats[i].empty;
+			mPlayerList[i].Ready = info->player_stats[i].ready;
+		}
+	}
+
+	system("cls");
+	PrintWaitRoomInterface();
+}
+
 void Client::EraseRoom(int room_id)
 {
 	std::lock_guard<std::mutex> lck(mRoomListLock);
@@ -108,8 +134,30 @@ void Client::EraseRoom(int room_id)
 	PrintLobbyInterface();
 }
 
+void Client::PrintWaitPlayers()
+{
+	int i = 1;
+	for (const PlayerInfo& info : mPlayerList)
+	{
+		if (info.Empty == false) {
+			std::cout << "---------- " << i << " ----------\n";
+			std::cout << "Name: " << info.Name << "\n";
+			std::cout << "Color: " << (int)info.Color << "\n";
+			std::cout << "Ready: " << std::boolalpha << info.Ready << "\n";
+		}
+	}
+	std::cout << "-----------------------\n";
+}
+
+void Client::ClearPlayerList()
+{
+	for (PlayerInfo& info : mPlayerList)
+		info.Empty = true;
+}
+
 void Client::ShowLoginScreen()
 {
+	std::cout << LoginResult;
 	std::cout << "[Login Screen]\n";
 	std::cout << "1. Login.\n";
 	std::cout << "2. Register.\n";
@@ -117,12 +165,16 @@ void Client::ShowLoginScreen()
 
 	int choice = -1;
 	std::cin >> choice;
+	std::cin.clear();
 
 	std::string user_id, user_pwd;
 	std::cout << "ID: ";
 	std::cin >> user_id;
 	std::cout << "PWD: ";
 	std::cin >> user_pwd;
+
+	if (GetCurrentScene() != SCENE::LOGIN)
+		return;
 
 	switch (choice)
 	{
@@ -148,14 +200,20 @@ void Client::PrintLobbyInterface()
 
 void Client::ShowLobbyScreen()
 {
+	std::cout << LoginResult << EnterRoomResult;
 	PrintLobbyInterface();
 
 	int choice = -1;
 	std::cin >> choice;
+	std::cin.clear();
+
+	if (GetCurrentScene() != SCENE::LOBBY)
+		return;
 
 	switch (choice)
 	{
 	case 0:
+		ClearRoomList();
 		RevertScene();
 		PopScene();
 		return;
@@ -177,20 +235,33 @@ void Client::ShowLobbyScreen()
 	}
 }
 
-void Client::ShowWaitRoomScreen()
+void Client::PrintWaitRoomInterface()
 {
 	std::cout << "[Wait Room Screen]  (ID: " << RoomID << ")\n";
+	PrintWaitPlayers();
 	std::cout << "0. Back to Lobby\n";
 	std::cout << "1. Switch to next map(Only Admin).\n";
 	std::cout << "2. Click Ready(Start) button.\n";
 	std::cout << " : ";
+}
+
+void Client::ShowWaitRoomScreen()
+{
+	std::cout << EnterRoomResult;
+	//PrintWaitRoomInterface();
 	
 	int choice = -1;
 	std::cin >> choice;
+	std::cin.clear();
+
+	if (GetCurrentScene() != SCENE::ROOM)
+		return;
 
 	switch (choice)
 	{
 	case 0:
+		ClearRoomList();
+		ClearPlayerList();
 		RevertScene();
 		PopScene();
 		return;
@@ -216,6 +287,10 @@ void Client::ShowInGameScreen()
 	
 	int choice = -1;
 	std::cin >> choice;
+	std::cin.clear();
+
+	if (GetCurrentScene() != SCENE::IN_GAME)
+		return;
 
 	switch (choice)
 	{
