@@ -2,8 +2,8 @@
 
 const short SERVER_PORT = 4000;
 
-const int MAX_NAME_SIZE  = 20;
-const int MAX_PWD_SIZE = 20;
+const int MAX_NAME_SIZE = 20;
+const int MAX_PWD_SIZE  = 20;
 
 const int MAX_PLAYER_SIZE = 10000;
 const int MAX_ROOM_CAPACITY = 8;
@@ -37,10 +37,10 @@ enum class ROOM_STAT : char
 #pragma pack (push, 1)
 namespace CS
 {
-	const char LOGIN = 1;
-	const char REGISTER = 2;
-	const char OPEN_ROOM = 3;
-	const char ENTER_ROOM = 4;
+	const char LOGIN		= 1;
+	const char REGISTER		= 2;
+	const char OPEN_ROOM	= 3;
+	const char ENTER_ROOM	= 4;
 	const char REVERT_SCENE = 5;
 
 	struct packet_login 
@@ -89,12 +89,13 @@ namespace SC
 		char color;
 	};
 
-	const char FORCE_LOGOUT = 0;
-	const char LOGIN_RESULT = 1;
-	const char REGISTER_RESULT = 2;
-	const char WAIT_PLAYERS_INFO = 3;
-	const char ACCESS_ROOM_DENY = 4;
-	const char ROOM_UPDATE_INFO = 5;
+	const char FORCE_LOGOUT		  = 0;
+	const char LOGIN_RESULT		  = 1;
+	const char REGISTER_RESULT	  = 2;
+	const char ACCESS_ROOM_ACCEPT = 3;
+	const char ACCESS_ROOM_DENY   = 4;
+	const char WAIT_PLAYERS_INFO  = 5;
+	const char ROOM_UPDATE_INFO   = 6;
 
 	struct packet_force_logout
 	{
@@ -116,6 +117,20 @@ namespace SC
 		char result;
 	};
 
+	struct packet_access_room_accept
+	{
+		uint16_t size;
+		char type;
+		int room_id;
+	};
+
+	struct packet_access_room_deny
+	{
+		uint16_t size;
+		char type;
+		char reason;
+	};
+
 	struct packet_wait_players_info 
 	{
 		uint16_t size;
@@ -123,13 +138,6 @@ namespace SC
 		char map_id;
 		int room_id;
 		PlayerState player_stats[MAX_ROOM_CAPACITY];
-	};
-
-	struct packet_access_room_deny 
-	{
-		uint16_t size;
-		char type;
-		char reason;
 	};
 
 	struct packet_room_update_info 

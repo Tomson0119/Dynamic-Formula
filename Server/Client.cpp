@@ -8,7 +8,7 @@ Client::Client(int id)
 	  mRecvOverlapped{},
 	  mSendOverlapped{},
 	  mState{ CLIENT_STAT::EMPTY },
-	  AssignedRoomID(-1)
+	  RoomID(-1)
 {
 	mSocket.Init();
 }
@@ -77,6 +77,16 @@ void Client::SendRegisterResult(REGI_STAT result, bool instSend)
 	pck.result = (char)result;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if(instSend) SendMsg();
+}
+
+void Client::SendAccessRoomAccept(int roomID, bool instSend)
+{
+	SC::packet_access_room_accept pck{};
+	pck.size = sizeof(SC::packet_access_room_accept);
+	pck.type = SC::ACCESS_ROOM_ACCEPT;
+	pck.room_id = roomID;
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if (instSend) SendMsg();
 }
 
 void Client::SendAccessRoomDeny(ROOM_STAT reason, bool instSend)

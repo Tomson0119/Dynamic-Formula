@@ -31,6 +31,7 @@ public:
 public:
 	void SendLoginResult(LOGIN_STAT result, bool instSend=true);
 	void SendRegisterResult(REGI_STAT result, bool instSend=true);
+	void SendAccessRoomAccept(int roomID, bool instSend=true);
 	void SendAccessRoomDeny(ROOM_STAT reason, bool instSend=true);
 
 	void SendForceLogout();
@@ -38,7 +39,7 @@ public:
 public:
 	int ID;
 	std::string Name;	
-	std::atomic_int AssignedRoomID;
+	std::atomic_int RoomID;
 
 private:
 	WSAOVERLAPPEDEX mRecvOverlapped;
