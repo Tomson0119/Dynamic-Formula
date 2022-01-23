@@ -1,222 +1,78 @@
 #include "common.h"
-#include "LobbyServer.h"
-#include "Client.h"
+#include "LoginServer.h"
 #include "InGameRoom.h"
+#include "Client.h"
+#include "LobbyServer.h"
 
-std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> LobbyServer::gClients;
-std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE> LobbyServer::gRooms;
+LobbyServer::RoomList LobbyServer::gRooms;
 
-LobbyServer::LobbyServer(const EndPoint& ep)
-	: mLoop(true), mRoomCount(0), mLobbyPlayerCount(0)
+LobbyServer::LobbyServer()
+	: mLoginPtr{}
 {
-	if (mDBHandler.ConnectToDB(L"sql_server") == false)
-		std::cout << "failed to connect to DB\n";
-
-	mDBHandler.ResetAllHost();
-
-	for (int i = 0; i < gClients.size(); i++)
-		gClients[i] = std::make_unique<Client>(i);
-
-	for (int i = 0; i < gRooms.size(); i++)
-		gRooms[i] = std::make_unique<InGameRoom>(i, this);
-
-	mListenSck.Init();
-	mListenSck.Bind(ep);
+	
 }
 
 LobbyServer::~LobbyServer()
 {
 }
 
-void LobbyServer::Run()
+void LobbyServer::Init(LoginServer* ptr)
 {
-	mListenSck.Listen();
-	mIOCP.RegisterDevice(mListenSck.GetSocket(), 0);
-	std::cout << "Listening to clients...\n";
-
-	WSAOVERLAPPEDEX acceptEx;
-	mListenSck.AsyncAccept(&acceptEx);
-
-	for (int i = 0; i < MaxThreads; i++)
-		mThreads.emplace_back(NetworkThreadFunc, std::ref(*this));
-
-	for (std::thread& thrd : mThreads)
-		thrd.join();
+	mLoginPtr = ptr;
+	for (int i = 0; i < MAX_ROOM_SIZE; i++)
+		gRooms[i] = std::make_unique<InGameRoom>(i, ptr);
 }
 
-void LobbyServer::NetworkThreadFunc(LobbyServer& server)
+void LobbyServer::AcceptLogin(const char* name, int id)
 {
-	CompletionInfo info{};
-	while (server.mLoop)
+	Client* client = gClients[id].get();
+	if (client->ChangeState(CLIENT_STAT::CONNECTED, CLIENT_STAT::LOBBY) == false)
 	{
-		try {
-			server.mIOCP.GetCompletionInfo(info);
-
-			int client_id = static_cast<int>(info.key);
-			WSAOVERLAPPEDEX* over_ex = reinterpret_cast<WSAOVERLAPPEDEX*>(info.overEx);
-			
-			if (over_ex == nullptr || info.success == FALSE)
-			{
-				server.Disconnect(client_id);
-				if (over_ex && over_ex->Operation == OP::SEND)
-					delete over_ex;
-				continue;
-			}
-			server.HandleCompletionInfo(over_ex, client_id, info.bytes);
-		}
-		catch (std::exception& ex)
-		{
-			std::cout << ex.what() << std::endl;
-		}
+		mLoginPtr->Disconnect(id);
+		return;
 	}
+	mLobbyPlayerCount.fetch_add(1);
+	client->Name = name;
+	client->SendLoginResult(LOGIN_STAT::ACCEPTED, false);
+	SendExistingRoomList(id);
 }
 
-void LobbyServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
-{
-	switch (over->Operation)
-	{
-	case OP::RECV:
-	{
-		if (bytes == 0)
-		{
-			Disconnect(id);
-			break;
-		}
-		Client* client = gClients[id].get();
-		over->NetBuffer.ShiftWritePtr(bytes);
-		ReadRecvBuffer(over, id, bytes);
-		client->RecvMsg();
-		break;
-	}
-	case OP::SEND:
-	{
-		if (bytes != over->WSABuffer.len)
-			Disconnect(id);
-		delete over;
-		break;
-	}
-	case OP::ACCEPT:
-	{
-		SOCKET clientSck = *reinterpret_cast<SOCKET*>(over->NetBuffer.BufStartPtr());
-		
-		int i = GetAvailableID();
-		if (i == -1) 
-			std::cout << "Session's full\n";
-		else {
-			AcceptNewClient(i, clientSck);
-		}
-		mListenSck.AsyncAccept(over);
-		break;
-	}
-	}
-}
+void LobbyServer::Logout(int id)
+{	
+	TryRemovePlayer(gClients[id]->RoomID, id);
 
-void LobbyServer::ForceLogout(int id)
-{
-	std::cout << "[" << id << "] Force logout.\n";
-	int roomID = gClients[id]->AssignedRoomID;
-	if (roomID >= 0) gRooms[roomID]->RemovePlayer(id);
-
-	mDBHandler.SaveUserInfo(id);
 	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
-	gClients[id]->SendForceLogout();
-}
-
-void LobbyServer::Disconnect(int id)
-{
-	std::cout << "[" << id << "] Disconnect.\n";
-	int roomID = gClients[id]->AssignedRoomID;
-	if (roomID >= 0) gRooms[roomID]->RemovePlayer(id);
-
-	mDBHandler.SaveUserInfo(id);
-	gClients[id]->Disconnect();
-}
-
-void LobbyServer::AcceptNewClient(int id, SOCKET sck)
-{
-	std::cout << "[" << id << "] Accepted client.\n";
-	gClients[id]->AssignAcceptedID(id, sck);
-	mIOCP.RegisterDevice(sck, id);
-	gClients[id]->RecvMsg();
-}
-
-void LobbyServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
-{
-	while (over->NetBuffer.Readable())
-	{
-		std::byte* packet = over->NetBuffer.BufReadPtr();
-		char type = GetPacketType(packet);
-
-		if (packet == nullptr) {
-			over->NetBuffer.Clear();
-			break;
-		}
-		if (ProcessPacket(packet, type, id, bytes) == false) {
-			over->NetBuffer.Clear();
-			break;
-		}
-	}
+	mLobbyPlayerCount.fetch_sub(1);
+	//TEST
+	//PrintRoomList();
 }
 
 bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 {
+	Client* client = gClients[id].get();
 	switch (type)
 	{
-	case CS::LOGIN:
-	{
-		std::cout << "[" << id << "] Login packet\n";
-		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
-
-		if (strcmp(pck->name, "GM") == 0) 
-		{
-			std::string number = std::to_string(id);
-			strncat_s(pck->name, number.c_str(), number.size());
-			ProcessLoginStep(pck->name, id);
-			break;
-		}
-		
-		int	conn_id = mDBHandler.SearchIdAndPwd(pck->name, pck->pwd, id);
-		if(conn_id >= (int)LOGIN_STAT::ACCEPTED)
-		{
-			if (conn_id >= 0) ForceLogout(conn_id);
-			ProcessLoginStep(pck->name, id);
-		}
-		else if (conn_id == (int)LOGIN_STAT::INVALID_IDPWD)
-		{
-			gClients[id]->SendLoginResult(LOGIN_STAT::INVALID_IDPWD);
-		}
-		break;
-	}
-	case CS::REGISTER:
-	{
-		CS::packet_register* pck = reinterpret_cast<CS::packet_register*>(packet);
-		std::cout << "[" << id << "] Register packet.\n";
-
-		if (std::string(pck->name).find("GM") != std::string::npos)
-		{
-			gClients[id]->SendRegisterResult(REGI_STAT::INVALID_IDPWD);
-			break;
-		}
-
-		bool succeeded = mDBHandler.RegisterIdAndPwd(pck->name, pck->pwd);
-		if (succeeded) 
-			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
-		else		  
-			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
-		break;
-	}
 	case CS::OPEN_ROOM:
 	{
 		CS::packet_open_room* pck = reinterpret_cast<CS::packet_open_room*>(packet);
 		std::cout << "[" << id << "] Open room packet\n";
 
-		if (mRoomCount >= MAX_ROOM_SIZE)
-			gClients[id]->SendAccessRoomDeny(ROOM_STAT::MAX_ROOM_REACHED);
-		else 
+		if (mRoomCount < MAX_ROOM_SIZE)
 		{
-			mRoomCount.fetch_add(1);			
-			gRooms[mRoomCount - 1]->OpenRoom(id);
+			if (gRooms[mRoomCount]->OpenRoom(id) == false)
+			{
+				std::cout << "[" << id << " Failed to open room.\n";
+				break;
+			}
+			mLobbyPlayerCount.fetch_sub(1);
+
+			client->SendAccessRoomAccept(mRoomCount, false);
+			gRooms[mRoomCount]->SendPlayersInfo(id);
+			SendRoomInfoToLobbyPlayers(mRoomCount);
+
+			mRoomCount.fetch_add(1);
 		}
+		else client->SendAccessRoomDeny(ROOM_STAT::MAX_ROOM_REACHED);
 		break;
 	}
 	case CS::ENTER_ROOM:
@@ -227,63 +83,62 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		if (pck->room_id >= 0)
 			gRooms[pck->room_id]->TryAddPlayer(id);
 		else
-			gClients[id]->SendAccessRoomDeny(ROOM_STAT::INVALID_ROOM_ID);
+			client->SendAccessRoomDeny(ROOM_STAT::INVALID_ROOM_ID);
 		break;
 	}
 	case CS::REVERT_SCENE:
 	{
-		auto currentState = gClients[id]->GetCurrentState();		
+		auto currentState = client->GetCurrentState();
 		if (currentState == CLIENT_STAT::LOBBY)
-		{
-			if (gClients[id]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::CONNECTED) == false)
-			{
-				Disconnect(id);
-				break;
-			}
-			mDBHandler.SaveUserInfo(id);
-		}
+			Logout(id);
 		else if (currentState == CLIENT_STAT::IN_ROOM)
 		{
-			int roomID = gClients[id]->AssignedRoomID;
-			if (roomID >= 0) gRooms[roomID]->RemovePlayer(id);
-			SendCurrentRoomList(id);
+			TryRemovePlayer(client->RoomID, id);
+			SendExistingRoomList(id);
 		}
 		break;
-	}	
+	}
 	default:
 	{
-		int roomID = gClients[id]->AssignedRoomID;
-		if (roomID >= 0) gRooms[roomID]->ProcessPacket(packet, type, id, bytes);
-		break;
+		int roomID = client->RoomID;
+		if (roomID >= 0) 
+			return gRooms[roomID]->ProcessPacket(packet, type, id, bytes);
+		return false;
 	}
 	}
+	//TEST
+	//PrintRoomList();
 	return true;
 }
 
-int LobbyServer::GetAvailableID()
+void LobbyServer::TryRemovePlayer(int roomID, int hostID)
 {
-	for (int i = 0; i < gClients.size(); i++)
+	if (roomID >= 0 && gRooms[roomID]->RemovePlayer(hostID))
 	{
-		if (gClients[i]->ChangeState(CLIENT_STAT::EMPTY, CLIENT_STAT::CONNECTED))
-			return i;
+		if (gRooms[roomID]->Empty()) mRoomCount.fetch_sub(1);
+
+		gClients[hostID]->RoomID = -1;
+		SendRoomInfoToLobbyPlayers(roomID);
+		mLobbyPlayerCount.fetch_add(1);
+		gClients[hostID]->ChangeState(CLIENT_STAT::IN_ROOM, CLIENT_STAT::LOBBY);
 	}
-	return -1;
 }
 
-void LobbyServer::ProcessLoginStep(const char* name, int id)
+void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, bool instSend)
 {
-	if (gClients[id]->ChangeState(CLIENT_STAT::CONNECTED, CLIENT_STAT::LOBBY) == false)
+	int lobbyPlayers = mLobbyPlayerCount;
+	for (int i = 0; i < MAX_PLAYER_SIZE && lobbyPlayers > 0; i++)
 	{
-		Disconnect(id);
-		return;
+		Client* client = gClients[i].get();
+		if (client->GetCurrentState() == CLIENT_STAT::LOBBY)
+		{
+			gRooms[roomID]->SendCurrentRoomInfo(i);
+			lobbyPlayers -= 1;
+		}
 	}
-	mLobbyPlayerCount.fetch_add(1);
-	gClients[id]->Name = name;
-	gClients[id]->SendLoginResult(LOGIN_STAT::ACCEPTED, false);
-	SendCurrentRoomList(id);
 }
 
-void LobbyServer::SendCurrentRoomList(int id)
+void LobbyServer::SendExistingRoomList(int id)
 {
 	int rooms = mRoomCount;
 	for (int i = 0; i < MAX_ROOM_SIZE && rooms > 0; i++)
@@ -295,4 +150,27 @@ void LobbyServer::SendCurrentRoomList(int id)
 		}
 	}
 	gClients[id]->SendMsg();
+}
+
+void LobbyServer::PrintRoomList()
+{
+	system("cls");
+	std::cout << "Room count: " << mRoomCount << "\n";
+	std::cout << "Lobby player count: " << mLobbyPlayerCount << "\n";
+
+	int roomCount = mRoomCount;
+	for (int i = 0; i < roomCount;)
+	{
+		if (gRooms.empty() == false)
+		{
+			std::cout << "---------- " << i + 1 << " ----------\n";
+			std::cout << "Room id: " << i << "\n";
+			std::cout << "Map index: " << (int)gRooms[i]->GetMapIndex() << "\n";
+			std::cout << "Game running: " << std::boolalpha << gRooms[i]->GameRunning() << "\n";
+			std::cout << "Player count: " << (int)gRooms[i]->GetPlayerCount() << "\n";
+			gRooms[i]->PrintWaitPlayers();
+			i += 1;
+		}		
+	}
+	std::cout << "-----------------------\n";
 }

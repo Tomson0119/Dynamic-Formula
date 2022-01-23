@@ -1,48 +1,35 @@
 #pragma once
 
-#include "DBHandler.h"
-
-class Client;
+class LoginServer;
 class InGameRoom;
+class Client;
 
 class LobbyServer
 {
-	friend class InGameRoom;
+	using RoomList = std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE>;
 public:
-	LobbyServer(const EndPoint& ep);
-	virtual ~LobbyServer();
+	LobbyServer();
+	~LobbyServer();
 
-public:
-	void Run();
-	
-	void ForceLogout(int id);
-	void Disconnect(int id);
-	void AcceptNewClient(int id, SOCKET sck);
+	void Init(LoginServer* ptr);
 
-	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes);
-	void ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes);
+	void AcceptLogin(const char* name, int id);
+	void Logout(int id);
+
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
+	void TryRemovePlayer(int roomID, int hostID);
 
-	static void NetworkThreadFunc(LobbyServer& server);
-	static const int MaxThreads = 1;
+	void SendRoomInfoToLobbyPlayers(int roomID, bool instSend = true);
+	void SendExistingRoomList(int id);
 
-private:
-	int GetAvailableID();
-
-	void ProcessLoginStep(const char* name, int id);
-	void SendCurrentRoomList(int id);
+	// TEST
+	void PrintRoomList();
 
 private:
-	Socket mListenSck;
-	IOCP mIOCP;
-
-	std::vector<std::thread> mThreads;
-	std::atomic_bool mLoop;	
 	std::atomic_int mRoomCount;
 	std::atomic_int mLobbyPlayerCount;
 
-	DBHandler mDBHandler;
+	static RoomList gRooms;
 
-	static std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
-	static std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE> gRooms;
+	LoginServer* mLoginPtr;
 };

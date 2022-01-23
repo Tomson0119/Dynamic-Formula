@@ -1,11 +1,11 @@
 #include "common.h"
+#include "LoginServer.h"
 #include "InGameRoom.h"
-#include "LobbyServer.h"
 #include "Client.h"
 
-InGameRoom::InGameRoom(int id, LobbyServer* server)
+InGameRoom::InGameRoom(int id, LoginServer* ptr)
 	: mID(id), mGameRunning(false), mOpen(false),
-	  mMapIndex(0), mLobbyPtr(server), mPlayerCount(0)
+	  mMapIndex(0), mPlayerCount(0), mLoginPtr(ptr)
 {
 	for (int i = 0; i < mPlayers.size(); i++)
 		mPlayers[i] = PlayerInfo{ true, -1, false, -1, "" };
@@ -15,92 +15,116 @@ InGameRoom::~InGameRoom()
 {
 }
 
-void InGameRoom::OpenRoom(int hostID)
+bool InGameRoom::OpenRoom(int hostID)
 {
-	bool b = false;
-	if (mOpen.compare_exchange_strong(b, true) == false)
-		std::cout << "Room has already created.\n";
-	else 
-		AddPlayer(hostID);
-}
-
-void InGameRoom::TryAddPlayer(int hostID)
-{
-	Client* client = mLobbyPtr->gClients[hostID].get();
-	if (Full())
-		client->SendAccessRoomDeny(ROOM_STAT::ROOM_IS_FULL);
-	else if (Empty())
-		client->SendAccessRoomDeny(ROOM_STAT::ROOM_IS_CLOSED);
-	else if (GameRunning())
-		client->SendAccessRoomDeny(ROOM_STAT::GAME_STARTED);
-	else
-		AddPlayer(hostID);
-}
-
-void InGameRoom::AddPlayer(int hostID)
-{
-	if (mOpen && Full() == false)
+	if (Empty() && AddPlayer(hostID))
 	{
-		mPlayerCount.fetch_add(1);
-
-		auto p = std::find_if(mPlayers.begin(), mPlayers.end(),
-			[](const PlayerInfo& info) { return (info.Empty); });
-		
-		Client* client = mLobbyPtr->gClients[hostID].get();
-		client->AssignedRoomID = mID;
-
-		p->ID = hostID;
-		p->Color = 0;
-		p->Empty = false;
-		p->Name = client->Name;
-		p->Ready = false;
-
-		if (client->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
-			mLobbyPtr->Disconnect(hostID);
-		
-		mLobbyPtr->mLobbyPlayerCount.fetch_sub(1);
-		SendPlayersInfo(hostID);
-		// SendNewPlayerInfo();
-		SendRoomInfoToLobbyPlayers();
+		bool b = false;
+		mOpen.compare_exchange_strong(b, true);
+		return true;
 	}
+	return false;
 }
 
-void InGameRoom::RemovePlayer(int hostID)
+bool InGameRoom::TryAddPlayer(int hostID)
+{
+	Client* client = gClients[hostID].get();
+	if (Full())
+	{
+		client->SendAccessRoomDeny(ROOM_STAT::ROOM_IS_FULL);
+		return false;
+	}
+	else if (Empty())
+	{
+		client->SendAccessRoomDeny(ROOM_STAT::ROOM_IS_CLOSED);
+		return false;
+	}
+	else if (GameRunning())
+	{
+		client->SendAccessRoomDeny(ROOM_STAT::GAME_STARTED);
+		return false;
+	}
+	else return AddPlayer(hostID);
+}
+
+bool InGameRoom::AddPlayer(int hostID)
+{
+	auto p = std::find_if(mPlayers.begin(), mPlayers.end(),
+		[](const PlayerInfo& info) { return (info.Empty); });		
+
+	if (p == mPlayers.end()) return false;
+
+	Client* client = gClients[hostID].get();
+	if (client->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
+	{
+		mLoginPtr->Disconnect(hostID);
+		return false;
+	}
+	
+	client->RoomID = mID;
+
+	p->ID = hostID;
+	p->Color = 0;
+	p->Empty = false;
+	p->Name = client->Name;
+	p->Ready = false;
+
+	mPlayerCount.fetch_add(1);
+
+	return true;
+}
+
+bool InGameRoom::RemovePlayer(int hostID)
 {
 	if (mOpen)
 	{
-		mPlayerCount.fetch_sub(1);
+		auto p = std::find_if(mPlayers.begin(), mPlayers.end(),
+			[&hostID](const PlayerInfo& info) { return (info.ID == hostID); });
+
+		if (p == mPlayers.end()) return false;
+
+		p->Empty = true;
+
+		if (mPlayerCount > 0) mPlayerCount.fetch_sub(1);
 		if (mPlayerCount == 0)
 		{
 			mOpen = false;
-			mLobbyPtr->mRoomCount.fetch_sub(1);
+		}
+		else
+		{
+			// Send player update packet to clients in this room..
 		}
 
-		Client* client = mLobbyPtr->gClients[hostID].get();
-		client->AssignedRoomID = -1;
-		
-		auto p = std::find_if(mPlayers.begin(), mPlayers.end(),
-			[&client](const PlayerInfo& info) { return (info.ID == client->ID); });
-		
-		p->Empty = true;
-		
-		mLobbyPtr->mLobbyPlayerCount.fetch_add(1);
-		// SendRemovedPlayerID();
-		SendRoomInfoToLobbyPlayers(hostID);
+		return true;
+	}
+	return false;
+}
 
-		if (client->ChangeState(CLIENT_STAT::IN_ROOM, CLIENT_STAT::LOBBY) == false)
-			mLobbyPtr->Disconnect(hostID);
+void InGameRoom::PrintWaitPlayers()
+{
+	int playerCount = mPlayerCount;
+	for (int j = 0; j < playerCount;)
+	{
+		if (mPlayers[j].Empty == false)
+		{
+			std::cout << "\t" << j+1 << " .Name: " << mPlayers[j].Name << "\n";
+			std::cout << "\t   Color: " << (int)mPlayers[j].Color << "\n";
+			std::cout << "\t   Ready: " << std::boolalpha << mPlayers[j].Empty << "\n";
+			std::cout << "\t   Host ID: " << mPlayers[j].ID << "\n\n";
+			j += 1;
+		}
 	}
 }
 
-void InGameRoom::ProcessPacket(std::byte* packet, char type, int id, int bytes)
+bool InGameRoom::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 {
 	switch (type)
 	{
 	default:
 		std::cout << "Invalid packet.\n";
-		break;
+		return false;
 	}
+	return true;
 }
 
 void InGameRoom::SendPlayersInfo(int id, bool instSend)
@@ -116,22 +140,8 @@ void InGameRoom::SendPlayersInfo(int id, bool instSend)
 		pck.player_stats[i].empty = mPlayers[i].Empty;
 		pck.player_stats[i].ready = mPlayers[i].Ready;
 	}
-	mLobbyPtr->gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	if(instSend) mLobbyPtr->gClients[id]->SendMsg();
-}
-
-void InGameRoom::SendRoomInfoToLobbyPlayers(bool instSend)
-{
-	int lobbyPlayers = mLobbyPtr->mLobbyPlayerCount;
-	for (int i = 0; i < MAX_PLAYER_SIZE && lobbyPlayers > 0; i++)
-	{
-		Client* client = mLobbyPtr->gClients[i].get();
-		if (client->GetCurrentState() == CLIENT_STAT::LOBBY)
-		{
-			SendCurrentRoomInfo(i);
-			lobbyPlayers -= 1;
-		}
-	}
+	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if(instSend) gClients[id]->SendMsg();
 }
 
 void InGameRoom::SendCurrentRoomInfo(int id, bool instSend)
@@ -145,6 +155,6 @@ void InGameRoom::SendCurrentRoomInfo(int id, bool instSend)
 	pck.game_started = mGameRunning;
 	pck.map_id = mMapIndex;
 	pck.room_closed = !mOpen;
-	mLobbyPtr->gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	if (instSend) mLobbyPtr->gClients[id]->SendMsg();
+	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if (instSend) gClients[id]->SendMsg();
 }

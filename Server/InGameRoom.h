@@ -9,32 +9,36 @@ struct PlayerInfo
 	std::string Name;
 };
 
-class LobbyServer;
+class LoginServer;
 
 class InGameRoom
 {
 public:
-	InGameRoom(int id, LobbyServer* server);
+	InGameRoom(int id, LoginServer* ptr);
 	~InGameRoom();
 
-	void OpenRoom(int hostID);
-	void TryAddPlayer(int hostID);
+	bool OpenRoom(int hostID);
+	bool TryAddPlayer(int hostID);
+	
+	bool AddPlayer(int hostID);
+	bool RemovePlayer(int hostID);
 
-	void AddPlayer(int hostID);
-	void RemovePlayer(int hostID);
+	// TEST
+	void PrintWaitPlayers();
 
 public:
 	char GetPlayerCount() const { return mPlayerCount; }
+	char GetMapIndex() const { return mMapIndex; }
+
 	bool Full() const { return (Empty() == false && mPlayerCount == MAX_ROOM_CAPACITY); }
 	bool Empty() const { return (mOpen == false); }
 	bool GameRunning() const { return mGameRunning; }
 
 public:
-	void ProcessPacket(std::byte* packet, char type, int id, int bytes);
+	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
 	void SendPlayersInfo(int id, bool instSend=true);
-	void SendCurrentRoomInfo(int id, bool instSend=true);
-	void SendRoomInfoToLobbyPlayers(bool instSend=true);
+	void SendCurrentRoomInfo(int id, bool instSend=true);	
 
 private:
 	int mID;
@@ -44,6 +48,6 @@ private:
 	std::atomic_char mMapIndex;
 
 	std::array<PlayerInfo, MAX_ROOM_CAPACITY> mPlayers;
-	
-	LobbyServer* mLobbyPtr;
+
+	LoginServer* mLoginPtr;
 };
