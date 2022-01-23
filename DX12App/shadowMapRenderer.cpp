@@ -24,7 +24,7 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 		float index = (i / (float)mMapCount);
 		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
 		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
-		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.25f);
+		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.5f);
 	}
 }
 

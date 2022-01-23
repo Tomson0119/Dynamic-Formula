@@ -580,7 +580,9 @@ void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIn
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+
 	auto gpuStart = mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	gpuStart.ptr += gCbvSrvUavDescriptorSize * 6 * mCurrentRenderTarget;
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuStart);
 }
 
@@ -604,7 +606,6 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dyna
 
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
 	dynamicsWorld->addVehicle(mVehicle.get());
-
 
 	mVehicle->setCoordinateSystem(0, 1, 2);
 
@@ -702,7 +703,7 @@ void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)
 	for (int i = 0; i < RtvCounts; i++)
 	{
 		mRtvCPUDescriptorHandles[i] = rtvHandle;
-		rtvDesc.Texture2DArray.FirstArraySlice = i;
+		rtvDesc.Texture2DArray.FirstArraySlice = i % 6;
 		device->CreateRenderTargetView(mCubeMap->GetResource(), &rtvDesc, mRtvCPUDescriptorHandles[i]);
 		rtvHandle.ptr += gRtvDescriptorSize;
 	}
@@ -727,7 +728,7 @@ void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)
 
 void PhysicsPlayer::BuildCameras()
 {
-	static XMFLOAT3 lookAts[RtvCounts] =
+	static XMFLOAT3 lookAts[RtvCounts / 2] =
 	{
 		XMFLOAT3(+1.0f, 0.0f,  0.0f),
 		XMFLOAT3(-1.0f, 0.0f,  0.0f),
@@ -737,7 +738,7 @@ void PhysicsPlayer::BuildCameras()
 		XMFLOAT3(0.0f,  0.0f, -1.0f)
 	};
 
-	static XMFLOAT3 ups[RtvCounts] =
+	static XMFLOAT3 ups[RtvCounts / 2] =
 	{
 		XMFLOAT3(0.0f, +1.0f,  0.0f),
 		XMFLOAT3(0.0f, +1.0f,  0.0f),
@@ -748,10 +749,10 @@ void PhysicsPlayer::BuildCameras()
 	};
 
 	XMFLOAT3 pos = GetPosition();
-	for (int i = 0; i < RtvCounts; i++)
+	for (int i = 0; i < RtvCounts / 2; i++)
 	{
 		mCameras[i]->SetPosition(pos);
-		mCameras[i]->LookAt(pos, Vector3::Add(lookAts[i], pos), ups[i]);
+		mCameras[i]->LookAt(pos, Vector3::Add(lookAts[i % 6], pos), ups[i % 6]);
 		mCameras[i]->UpdateViewMatrix();
 	}
 }
@@ -768,11 +769,11 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene
 		mCubeMap->GetResource(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	FLOAT clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	for (int i = 0; i < RtvCounts; i++)
+	for (int i = 0; i < RtvCounts / 2; i++)
 	{
-		cmdList->ClearRenderTargetView(mRtvCPUDescriptorHandles[i], clearValue, 0, NULL);
+		cmdList->ClearRenderTargetView(mRtvCPUDescriptorHandles[i + (mCurrentRenderTarget * 6)], clearValue, 0, NULL);
 		cmdList->ClearDepthStencilView(mDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
-		cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[i], TRUE, &mDsvCPUDescriptorHandle);
+		cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[i + (mCurrentRenderTarget * 6)], TRUE, &mDsvCPUDescriptorHandle);
 
 		scene->UpdateCameraConstant(i + 4, mCameras[i].get());
 		scene->RenderPipelines(cmdList, mCameras[i].get(), i + 4);

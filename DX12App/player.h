@@ -141,11 +141,11 @@ public:
 	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
 
 private:
-	static const int RtvCounts = 6;
+	static const int RtvCounts = 12;
 
 	ULONG mCubeMapSize = 500;
 
-	std::array<std::unique_ptr<Camera>, RtvCounts> mCameras;
+	std::array<std::unique_ptr<Camera>, RtvCounts / 2> mCameras;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE mRtvCPUDescriptorHandles[RtvCounts];
 	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle;
@@ -161,4 +161,5 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mDsvDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap;
 
+	UINT mCurrentRenderTarget = 0;
 };
