@@ -320,12 +320,12 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int 
 		{
 			cmdList->SetPipelineState(mTerrainPSO.Get());
 
-			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false);
+			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false, false);
 
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
 		else
-			pso->SetAndDraw(cmdList, false, false);
+			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), true, false, false);
 	}
 }
 

@@ -56,9 +56,9 @@ public:
 
 	virtual void Update(const float elapsed, Camera* camera=nullptr);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true);
-	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool drawWiredFrame=false, bool setPipeline=true);
+	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool isSO = false);
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
 
 	void UpdateConstants();
 

@@ -371,10 +371,12 @@ void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCB
 
 	for (const auto& [layer, pso] : mPipelines)
 	{
-		if (layer != Layer::Terrain)
-			pso->SetAndDraw(cmdList, (bool)mLODSet);
+		if (layer != Layer::Terrain && layer != Layer::SkyBox)
+			pso->SetAndDraw(cmdList, mMainCamera->GetWorldFrustum(), true, (bool)mLODSet);
+		else if (layer != Layer::SkyBox)
+			pso->SetAndDraw(cmdList, mMainCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else
-			pso->SetAndDraw(cmdList, mMainCamera.get()->GetWorldFrustum(), (bool)mLODSet);
+			pso->SetAndDraw(cmdList, (bool)mLODSet);
 	}
 }
 
@@ -388,10 +390,12 @@ void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* came
 		if (layer == Layer::Color)
 			continue;
 
-		if (layer != Layer::Terrain)
-			pso->SetAndDraw(cmdList, (bool)mLODSet);
+		if (layer != Layer::Terrain && layer != Layer::SkyBox)
+			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), true, (bool)mLODSet);
+		else if(layer != Layer::SkyBox)
+			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), false, (bool)mLODSet);
 		else
-			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), (bool)mLODSet);
+			pso->SetAndDraw(cmdList, (bool)mLODSet);
 	}
 }
 

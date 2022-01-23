@@ -230,7 +230,7 @@ void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 	Animate(elapsedTime);
 
 	UpdateTransform(parent);
-	UpdateBoudingBox();
+	UpdateBoundingBox();
 
 	if (mChild) mChild->Update(elapsedTime, &mWorld);
 	if (mSibling) mSibling->Update(elapsedTime, parent);
@@ -266,7 +266,7 @@ void GameObject::Draw(
 void GameObject::Draw(
 	ID3D12GraphicsCommandList* cmdList, 
 	UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
-	UINT64 matGPUAddress, UINT64 byteOffset, const BoundingFrustum& viewFrustum, bool isSO)
+	UINT64 matGPUAddress, UINT64 byteOffset, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
 {
 	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
 	
@@ -284,7 +284,11 @@ void GameObject::Draw(
 			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
 		}
 		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
-		mMeshes[i]->Draw(cmdList, viewFrustum, isSO);
+
+		if (objectOOBB && viewFrustum.Intersects(mOOBB))
+			mMeshes[i]->Draw(cmdList, isSO);
+		else if(!objectOOBB)
+			mMeshes[i]->Draw(cmdList, viewFrustum, isSO);
 
 		matGPUAddress += byteOffset;
 	}
@@ -311,14 +315,14 @@ void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 	mWorld = (parent) ? Matrix4x4::Multiply(mWorld, *parent) : mWorld;
 }
 
-void GameObject::UpdateBoudingBox()
+void GameObject::UpdateBoundingBox()
 {
-	/*for (const auto& mesh : mMeshes)
+	for (const auto& mesh : mMeshes)
 	{
-		mesh->mOOBB.Center = { 0.0f, 0.0f, 0.0f };
-		mesh->mOOBB.Transform(mOOBB, XMLoadFloat4x4(&mWorld));
+		mOOBB.Center = { 0.0f, 0.0f, 0.0f };
+		mOOBB.Transform(mOOBB, XMLoadFloat4x4(&mWorld));
 		XMStoreFloat4(&mOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&mOOBB.Orientation)));
-	}*/
+	}
 }
 
 void GameObject::Animate(float elapsedTime)

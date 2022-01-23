@@ -468,6 +468,7 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 	btMat.getOpenGLMatrix(m);
 
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+	UpdateBoundingBox();
 
 	OnPlayerUpdate(elapsedTime);
 

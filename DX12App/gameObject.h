@@ -21,14 +21,14 @@ public:
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffset,
-		const BoundingFrustum& viewFrustum, bool isSO=false);
+		const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO=false);
 
 	virtual void Draw(
 		ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffse, bool isSO=false);
 	
-	void UpdateBoudingBox();
+	void UpdateBoundingBox();
 	void Animate(float elapsedTime);
 
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
