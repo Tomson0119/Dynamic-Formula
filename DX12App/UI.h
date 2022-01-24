@@ -22,6 +22,12 @@ private:
 
     float m_fWidth;
     float m_fHeight;
+
+    float GradientPoint = 0.0f;
+
+    //POINT DraftUIStart{ m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f) };
+    //POINT DraftUIEnd{ m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f / 9.0f) };
+
     UINT TextCnt;
 
     ComPtr<ID3D11DeviceContext> m_pd3d11DeviceContext;
@@ -34,7 +40,7 @@ private:
     ComPtr<ID2D1DeviceContext2> m_pd2dDeviceContext;
     std::vector<ComPtr<IDWriteTextFormat>> m_vdwTextFormat;
 
-    std::vector<ComPtr<ID2D1LinearGradientBrush>> m_vd2dLinearGradientBrush;
+    ComPtr<ID2D1LinearGradientBrush> m_d2dLinearGradientBrush;
     ID2D1GradientStopCollection* pGradientStops;
 
     std::vector<ComPtr<ID2D1SolidColorBrush>> m_vd2dTextBrush;
