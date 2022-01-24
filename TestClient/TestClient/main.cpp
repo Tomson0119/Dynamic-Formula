@@ -55,14 +55,14 @@ void HandleRegisterResultPacket(SC::packet_register_result* pck, int id)
 	}
 }
 
-void HandleWaitPlayersInfo(SC::packet_wait_players_info* pck, int id)
+void HandleWaitPlayersInfo(SC::packet_room_inside_info* pck, int id)
 {
 	if (gClients[id]->RoomID != pck->room_id)
 	{
 		std::cout << "Invalid room id\n";
 		return;
 	}
-	gClients[id]->UpdateWaitPlayersInfo(pck);
+	gClients[id]->UpdateWaitRoomInfo(pck);
 }
 
 void HandleAccessRoomDenyPacket(SC::packet_access_room_deny* pck, int id)
@@ -109,9 +109,9 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 			HandleRegisterResultPacket(pck, id);
 			break;
 		}
-		case SC::WAIT_PLAYERS_INFO:
+		case SC::ROOM_INSIDE_INFO:
 		{
-			SC::packet_wait_players_info* pck = reinterpret_cast<SC::packet_wait_players_info*>(packet);
+			SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 			HandleWaitPlayersInfo(pck, id);
 			break;
 		}
@@ -129,9 +129,9 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 			HandleAccessRoomDenyPacket(pck, id);
 			break;
 		}
-		case SC::ROOM_UPDATE_INFO:
+		case SC::ROOM_OUTSIDE_INFO:
 		{
-			SC::packet_room_update_info* pck = reinterpret_cast<SC::packet_room_update_info*>(packet);
+			SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
 
 			if (pck->room_closed)
 				gClients[id]->EraseRoom(pck->room_id);

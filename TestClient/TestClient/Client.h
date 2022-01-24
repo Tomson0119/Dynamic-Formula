@@ -51,16 +51,16 @@ public:
 	SOCKET GetSocket() const { return m_socket.GetSocket(); }
 
 	bool SceneEmpty() const { return mSceneStack.empty(); }
-	bool Admin() const { return m_isAdmin; }
+	bool Admin() const { return mIsAdmin; }
 
 public:
-	void InsertRoom(SC::packet_room_update_info* packet);
+	void InsertRoom(SC::packet_room_outside_info* packet);
 	void EraseRoom(int room_id);
 	void PrintRoomList();
 	void ClearRoomList();
 
-	void UpdateWaitPlayersInfo(SC::packet_wait_players_info* info);
-	void PrintWaitPlayers();
+	void UpdateWaitRoomInfo(SC::packet_room_inside_info* info);
+	void PrintWaitRoomInfo();
 	void ClearPlayerList();
 
 public:
@@ -95,7 +95,10 @@ private:
 	std::mutex mSceneStackLock;
 	std::stack<SCENE> mSceneStack;
 	std::atomic_char mMapIdx;
-	std::atomic_bool m_isAdmin;
+	std::atomic_bool mIsAdmin;
+
+	std::atomic_bool mEnteredRoomFlag;
+	std::atomic_bool mEnteredLobbyFlag;
 
 	std::mutex mRoomListLock;
 	std::unordered_map<int, Room> mRoomList;
