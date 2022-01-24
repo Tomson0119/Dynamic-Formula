@@ -81,6 +81,7 @@ void Client::SendRegisterResult(REGI_STAT result, bool instSend)
 
 void Client::SendAccessRoomAccept(int roomID, bool instSend)
 {
+	std::cout << "[" << ID << "] Send access room accept packet\n";
 	SC::packet_access_room_accept pck{};
 	pck.size = sizeof(SC::packet_access_room_accept);
 	pck.type = SC::ACCESS_ROOM_ACCEPT;
@@ -91,6 +92,7 @@ void Client::SendAccessRoomAccept(int roomID, bool instSend)
 
 void Client::SendAccessRoomDeny(ROOM_STAT reason, bool instSend)
 {
+	std::cout << "[" << ID << "] Send access room deny packet\n";
 	SC::packet_access_room_deny pck{};
 	pck.size = sizeof(SC::packet_access_room_deny);
 	pck.type = SC::ACCESS_ROOM_DENY;
@@ -101,6 +103,7 @@ void Client::SendAccessRoomDeny(ROOM_STAT reason, bool instSend)
 
 void Client::SendForceLogout()
 {
+	std::cout << "[" << ID << "] Send force logout packet\n";
 	SC::packet_force_logout pck{};
 	pck.size = sizeof(SC::packet_force_logout);
 	pck.type = SC::FORCE_LOGOUT;
