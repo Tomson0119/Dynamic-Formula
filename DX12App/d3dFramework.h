@@ -3,7 +3,8 @@
 #include "gameTimer.h"
 #include "dxException.h"
 #include "stdafx.h"
-class UI;
+//class UI;
+class InGameUI;
 
 class D3DFramework : public BaseWin<D3DFramework>
 {
@@ -36,9 +37,6 @@ private:
 	
 public:
 	void UpdateFrameStates();
-	//UI Set
-	void UpdateUI(std::vector<std::wstring>&, UINT uTextListSize);
-
 	void ChangeFullScreenState();
 
 protected:
@@ -100,7 +98,7 @@ protected:
 	DXGI_FORMAT mDepthStencilBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	//UI 
-	std::unique_ptr<UI> mpUI;
+	std::unique_ptr<InGameUI> mpInGameUI;
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
 

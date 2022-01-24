@@ -27,9 +27,9 @@ bool GameFramework::InitFramework()
 	mScenes.push(make_unique<GameScene>());
 	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
 	
-	//UI Build
-	mpUI = std::make_unique<UI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-	mpUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+	//InGameUI Build
+	mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
+	mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 
 	// Command List를 닫고 Queue에 명령어를 싣는다.
 	ThrowIfFailed(mCommandList->Close());
@@ -44,12 +44,12 @@ bool GameFramework::InitFramework()
 
 void GameFramework::OnResize()
 {
-	/*if (mpUI.get())
-		mpUI.get()->Reset();*/
+	//if (mpInGameUI.get())
+		//mpInGameUI.get()->Reset();
 	D3DFramework::OnResize();
 	//mpUI.get()->Initialize(mD3dDevice.Get(), mCommandQueue.Get());
-	if(mpUI.get())
-		mpUI.get()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+	//if(mpInGameUI.get())
+		//mpInGameUI.get()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
 }
 
@@ -194,7 +194,7 @@ void GameFramework::Update()
 
 	//UI Update
 	TextUIUpdate();
-	mpUI->Update(TextUI);
+	mpInGameUI->Update(TextUI);
 	//UpdateUI(TextUI, TextUI.size());
 
 	//mCamera->Update(mTimer.ElapsedTime());
@@ -243,7 +243,7 @@ void GameFramework::Draw()
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	//mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 	
-	mpUI->Draw(mCurrBackBufferIndex);
+	mpInGameUI->Draw(mCurrBackBufferIndex);
 
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();

@@ -266,8 +266,8 @@ void D3DFramework::OnResize()
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 	for (int i = 0; i < mSwapChainBufferCount; ++i)
 		mSwapChainBuffers[i].Reset();
-	if(mpUI)
-		mpUI.get()->Reset();
+	/*if(mpInGameUI)
+		mpInGameUI.get()->Reset();*/
 
 	ThrowIfFailed(mSwapChain->ResizeBuffers(
 		mSwapChainBufferCount,
@@ -499,27 +499,6 @@ void D3DFramework::UpdateFrameStates()
 		frameCount = 0;
 		elapsed += 1.0f;
 	}
-}
-
-
-
-void D3DFramework::UpdateUI(std::vector<std::wstring>& TextList, UINT uTextListSize)
-{
-	std::vector<std::wstring> labels = TextList;
-
-	//labels.push_back(L"한글 테스트\n");
-	
-
-	std::wstring uiText = L"";
-	for (int i = 0; i < uTextListSize; ++i)
-	{
-		for (auto s : labels)
-		{
-			uiText += s;
-		}
-		//mpUI->UpdateLabels(uiText);
-	}
-	
 }
 
 void D3DFramework::ChangeFullScreenState()
