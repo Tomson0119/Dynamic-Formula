@@ -266,7 +266,9 @@ void D3DFramework::OnResize()
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 	for (int i = 0; i < mSwapChainBufferCount; ++i)
 		mSwapChainBuffers[i].Reset();
-	
+	if(mpUI)
+		mpUI.get()->Reset();
+
 	ThrowIfFailed(mSwapChain->ResizeBuffers(
 		mSwapChainBufferCount,
 		gFrameWidth, gFrameHeight,
@@ -281,9 +283,6 @@ void D3DFramework::OnResize()
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
-
-	/*if(mpUI.get())
-		mpUI.get()->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);*/
 
 	WaitUntilGPUComplete();
 

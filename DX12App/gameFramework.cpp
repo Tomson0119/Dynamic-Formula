@@ -44,10 +44,12 @@ bool GameFramework::InitFramework()
 
 void GameFramework::OnResize()
 {
+	/*if (mpUI.get())
+		mpUI.get()->Reset();*/
 	D3DFramework::OnResize();
 	//mpUI.get()->Initialize(mD3dDevice.Get(), mCommandQueue.Get());
 	if(mpUI.get())
-		mpUI.get()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		mpUI.get()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
 }
 

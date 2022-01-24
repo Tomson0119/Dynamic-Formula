@@ -188,7 +188,37 @@ void UI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
     BuildBrush(TextCnt + 4, ColorList); //SolidBrush and LinearBrush(Gradient)
 
     SetTextRect();
+}
 
+void UI::Reset()
+{
+    /*m_d2dLinearGradientBrush.Reset();
+    m_pd3d11DeviceContext.Reset();
+    m_pd3d11On12Device.Reset();
+    m_pd2dFactory.Reset();
+    m_pd2dWriteFactory.Reset();
+    m_pd2dDevice.Reset();
+    pd3d11Device.Reset();
+    pdxgiDevice.Reset();
+    m_pd2dDeviceContext.Reset();
+    
+    m_vTextBlocks.clear();
+    m_vd2dTextBrush.clear();*/
+    for (auto RenderTarget : m_vWrappedRenderTargets)
+        RenderTarget.Reset();
+    for (auto Bitmap : m_vd2dRenderTargets)
+        Bitmap.Reset();
+
+    //m_vWrappedRenderTargets.clear();
+    //m_vd2dRenderTargets.clear();
+}
+
+void UI::OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice, 
+    ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
+{
+    /*SetVectorSize(nFrame, TextCnt);
+    Initialize(pd3dDevice, pd3dCommandQueue);*/
+    PreDraw(ppd3dRenderTargets, width, height);
 }
 
 void UI::BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList)
