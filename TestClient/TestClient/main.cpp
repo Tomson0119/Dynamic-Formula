@@ -139,6 +139,33 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 				gClients[id]->InsertRoom(pck);
 			break;
 		}
+		case SC::UPDATE_PLAYER_INFO:
+		{
+			SC::packet_update_player_info* pck = reinterpret_cast<SC::packet_update_player_info*>(packet);
+			if (pck->room_id == gClients[id]->RoomID)
+			{
+				gClients[id]->UpdatePlayer(pck->index, pck->player_info);
+			}
+			break;
+		}
+		case SC::UPDATE_MAP_INFO:
+		{
+			SC::packet_update_map_info* pck = reinterpret_cast<SC::packet_update_map_info*>(packet);
+			if (gClients[id]->RoomID == pck->room_id)
+			{
+				gClients[id]->UpdateMap(pck->map_id);
+			}
+			break;
+		}
+		case SC::REMOVE_PLAYER:
+		{
+			SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
+			if (gClients[id]->RoomID == pck->room_id)
+			{
+				gClients[id]->RemovePlayer(pck->index);
+			}
+			break;
+		}
 		case SC::FORCE_LOGOUT:
 		{
 			while (gClients[id]->GetCurrentScene() != SCENE::LOGIN)

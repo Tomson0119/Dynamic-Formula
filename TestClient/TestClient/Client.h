@@ -60,6 +60,10 @@ public:
 	void ClearRoomList();
 
 	void UpdateWaitRoomInfo(SC::packet_room_inside_info* info);
+	void UpdatePlayer(int idx, SC::PlayerState& state);
+	void RemovePlayer(int idx);
+	void UpdateMap(int map_id);
+
 	void PrintWaitRoomInfo();
 	void ClearPlayerList();
 

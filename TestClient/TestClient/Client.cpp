@@ -109,7 +109,6 @@ void Client::InsertRoom(SC::packet_room_outside_info* packet)
 		system("cls");
 		PrintLobbyInterface();
 	}
-	else mEnteredLobbyFlag = true;
 }
 
 void Client::UpdateWaitRoomInfo(SC::packet_room_inside_info* info)
@@ -130,7 +129,33 @@ void Client::UpdateWaitRoomInfo(SC::packet_room_inside_info* info)
 		system("cls");
 		PrintWaitRoomInterface();
 	}
-	else mEnteredRoomFlag = true;
+}
+
+void Client::UpdatePlayer(int idx, SC::PlayerState& state)
+{
+	mPlayerList[idx].Name = state.name;
+	mPlayerList[idx].Color = state.color;
+	mPlayerList[idx].Empty = state.empty;
+	mPlayerList[idx].Ready = state.ready;
+
+	system("cls");
+	PrintWaitRoomInterface();
+}
+
+void Client::RemovePlayer(int idx)
+{
+	mPlayerList[idx].Empty = true;
+
+	system("cls");
+	PrintWaitRoomInterface();
+}
+
+void Client::UpdateMap(int map_id)
+{
+	mMapIdx = map_id;
+
+	system("cls");
+	PrintWaitRoomInterface();
 }
 
 void Client::EraseRoom(int room_id)
@@ -215,6 +240,7 @@ void Client::ShowLobbyScreen()
 {
 	std::cout << LoginResult << EnterRoomResult;
 	PrintLobbyInterface();
+	mEnteredLobbyFlag = true;
 
 	int choice = -1;
 	std::cin >> choice;
@@ -262,7 +288,8 @@ void Client::ShowWaitRoomScreen()
 {
 	std::cout << EnterRoomResult;
 	PrintWaitRoomInterface();
-	
+	mEnteredRoomFlag = true;
+
 	int choice = -1;
 	std::cin >> choice;
 	std::cin.clear();
@@ -370,8 +397,22 @@ void Client::RevertScene()
 
 void Client::SwitchMap()
 {
+	char new_map_id = (mMapIdx == 0) ? 1 : 0;
+	CS::packet_switch_map pck{};
+	pck.size = sizeof(CS::packet_switch_map);
+	pck.type = CS::SWITCH_MAP;
+	pck.room_id = RoomID;
+	pck.map_id = new_map_id;
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	Client::Send();
 }
 
 void Client::SetOrUnsetReady()
 {
+	CS::packet_press_ready pck{};
+	pck.size = sizeof(CS::packet_press_ready);
+	pck.type = CS::PRESS_READY;
+	pck.room_id = RoomID;
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	Client::Send();
 }
