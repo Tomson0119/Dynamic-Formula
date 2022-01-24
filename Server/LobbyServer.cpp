@@ -40,6 +40,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 				AcceptEnterRoom(mRoomCount, id);
 				mRoomCount.fetch_add(1);
 			}
+			else std::cout << "Failed to open room\n";
 		}
 		else client->SendAccessRoomDeny(ROOM_STAT::MAX_ROOM_REACHED);
 		break;
@@ -70,7 +71,8 @@ void LobbyServer::AcceptEnterRoom(int roomID, int hostID)
 {
 	mLobbyPlayerCount.fetch_sub(1);
 	gClients[hostID]->SendAccessRoomAccept(roomID, false);
-	gRooms[roomID]->SendRoomUpdateToAll();
+	gRooms[roomID]->SendRoomInsideInfo(hostID);
+	gRooms[roomID]->SendUpdatePlayerInfoToAll(hostID, hostID);
 	SendRoomInfoToLobbyPlayers(roomID);
 }
 
@@ -106,10 +108,12 @@ void LobbyServer::TryRemovePlayer(int roomID, int hostID)
 		if (gRooms[roomID]->Empty()) mRoomCount.fetch_sub(1);
 
 		SendRoomInfoToLobbyPlayers(roomID);
-		gClients[hostID]->RoomID = -1;
 		gClients[hostID]->ChangeState(CLIENT_STAT::IN_ROOM, CLIENT_STAT::LOBBY);
 		
-		gRooms[roomID]->SendRoomUpdateToAll();
+		gRooms[roomID]->SendRemovePlayerInfoToAll(hostID);
+		
+		gClients[hostID]->RoomID = -1;
+		gClients[hostID]->PlayerIndex = -1;
 		mLobbyPlayerCount.fetch_add(1);
 	}
 }
@@ -117,7 +121,6 @@ void LobbyServer::TryRemovePlayer(int roomID, int hostID)
 void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, bool instSend)
 {
 	int lobbyPlayers = mLobbyPlayerCount;
-	std::cout << lobbyPlayers << std::endl;
 	for (int i = 0; i < MAX_PLAYER_SIZE && lobbyPlayers > 0; i++)
 	{
 		Client* client = gClients[i].get();
