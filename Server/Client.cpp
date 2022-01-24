@@ -8,7 +8,7 @@ Client::Client(int id)
 	  mRecvOverlapped{},
 	  mSendOverlapped{},
 	  mState{ CLIENT_STAT::EMPTY },
-	  RoomID(-1)
+	  RoomID(-1), PlayerIndex(-1)
 {
 	mSocket.Init();
 }
