@@ -17,6 +17,9 @@ public:
 public:
 	void Run();
 	
+	void AcceptLogin(const char* name, int id);
+	void Logout(int id);
+
 	void Disconnect(int id);
 	void AcceptNewClient(int id, SOCKET sck);
 	int GetAvailableID();

@@ -108,11 +108,33 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	}
 }
 
+void LoginServer::AcceptLogin(const char* name, int id)
+{
+	if (gClients[id]->ChangeState(CLIENT_STAT::CONNECTED, CLIENT_STAT::LOBBY) == false)
+	{
+		Disconnect(id);
+		return;
+	}
+	gClients[id]->Name = name;
+	gClients[id]->SendLoginResult(LOGIN_STAT::ACCEPTED, false);
+	
+	mLobby.IncreasePlayerCount();
+	mLobby.SendExistingRoomList(id);
+}
+
+void LoginServer::Logout(int id)
+{
+	mLobby.TryRemovePlayer(gClients[id]->RoomID, id);
+	mLobby.DecreasePlayerCount();
+
+	mDBHandler.SaveUserInfo(id);
+	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
+}
+
 void LoginServer::Disconnect(int id)
 {
 	std::cout << "[" << id << "] Disconnect.\n";
-	mLobby.Logout(id);
-	mDBHandler.SaveUserInfo(id);
+	Logout(id);
 	gClients[id]->Disconnect();
 }
 
@@ -158,14 +180,14 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	{
 	case CS::LOGIN:
 	{
-		std::cout << "[" << id << "] Login packet\n";
+		std::cout << "[" << id << "] Received login packet\n";
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
 
 		if (strcmp(pck->name, "GM") == 0) 
 		{
 			std::string number = std::to_string(id);
 			strncat_s(pck->name, number.c_str(), number.size());
-			mLobby.AcceptLogin(pck->name, id);
+			AcceptLogin(pck->name, id);
 			break;
 		}
 		
@@ -174,11 +196,10 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		{
 			if (conn_id >= 0)
 			{
-				mLobby.Logout(conn_id);
-				mDBHandler.SaveUserInfo(id);
+				Logout(conn_id);
 				gClients[conn_id]->SendForceLogout();
 			}
-			mLobby.AcceptLogin(pck->name, id);
+			AcceptLogin(pck->name, id);
 		}
 		else if (conn_id == (int)LOGIN_STAT::INVALID_IDPWD)
 		{
@@ -189,7 +210,7 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	case CS::REGISTER:
 	{
 		CS::packet_register* pck = reinterpret_cast<CS::packet_register*>(packet);
-		std::cout << "[" << id << "] Register packet.\n";
+		std::cout << "[" << id << "] Received register packet.\n";
 
 		if (std::string(pck->name).find("GM") != std::string::npos)
 		{
@@ -203,7 +224,19 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
 		break;
 	}
-		
+	case CS::REVERT_SCENE:
+	{
+		std::cout << "[" << id << "] Received revert scene.\n";
+		auto currentState = gClients[id]->GetCurrentState();
+		if (currentState == CLIENT_STAT::LOBBY)
+			Logout(id);
+		else if (currentState == CLIENT_STAT::IN_ROOM)
+		{
+			mLobby.TryRemovePlayer(gClients[id]->RoomID, id);
+			mLobby.SendExistingRoomList(id);
+		}
+		break;
+	}
 	default:
 		return mLobby.ProcessPacket(packet, type, id, bytes);
 	}

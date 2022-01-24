@@ -13,10 +13,10 @@ public:
 
 	void Init(LoginServer* ptr);
 
-	void AcceptLogin(const char* name, int id);
-	void Logout(int id);
-
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
+
+	void AcceptEnterRoom(int roomID, int hostID);
+	bool TryAddPlayer(int roomID, int hostID);
 	void TryRemovePlayer(int roomID, int hostID);
 
 	void SendRoomInfoToLobbyPlayers(int roomID, bool instSend = true);
@@ -24,6 +24,10 @@ public:
 
 	// TEST
 	void PrintRoomList();
+
+public:
+	void IncreasePlayerCount() { mLobbyPlayerCount.fetch_add(1); }
+	void DecreasePlayerCount() { mLobbyPlayerCount.fetch_sub(1); }
 
 private:
 	std::atomic_int mRoomCount;

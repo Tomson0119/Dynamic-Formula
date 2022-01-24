@@ -17,8 +17,7 @@ public:
 	InGameRoom(int id, LoginServer* ptr);
 	~InGameRoom();
 
-	bool OpenRoom(int hostID);
-	bool TryAddPlayer(int hostID);
+	bool OpenRoom(int hostID);	
 	
 	bool AddPlayer(int hostID);
 	bool RemovePlayer(int hostID);
@@ -37,8 +36,9 @@ public:
 public:
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
-	void SendPlayersInfo(int id, bool instSend=true);
-	void SendCurrentRoomInfo(int id, bool instSend=true);	
+	void SendRoomUpdateToAll(bool instSend=true);
+	void SendRoomInsideInfo(int id, bool instSend=true);
+	void SendRoomOutsideInfo(int id, bool instSend=true);	
 
 private:
 	int mID;

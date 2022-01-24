@@ -94,8 +94,8 @@ namespace SC
 	const char REGISTER_RESULT	  = 2;
 	const char ACCESS_ROOM_ACCEPT = 3;
 	const char ACCESS_ROOM_DENY   = 4;
-	const char WAIT_PLAYERS_INFO  = 5;
-	const char ROOM_UPDATE_INFO   = 6;
+	const char ROOM_INSIDE_INFO   = 5;
+	const char ROOM_OUTSIDE_INFO  = 6;
 
 	struct packet_force_logout
 	{
@@ -131,16 +131,16 @@ namespace SC
 		char reason;
 	};
 
-	struct packet_wait_players_info 
+	struct packet_room_inside_info 
 	{
 		uint16_t size;
 		char type;
 		char map_id;
-		int room_id;
+		int room_id;		
 		PlayerState player_stats[MAX_ROOM_CAPACITY];
 	};
 
-	struct packet_room_update_info 
+	struct packet_room_outside_info 
 	{
 		uint16_t size;
 		char type;

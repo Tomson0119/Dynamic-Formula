@@ -26,27 +26,6 @@ bool InGameRoom::OpenRoom(int hostID)
 	return false;
 }
 
-bool InGameRoom::TryAddPlayer(int hostID)
-{
-	Client* client = gClients[hostID].get();
-	if (Full())
-	{
-		client->SendAccessRoomDeny(ROOM_STAT::ROOM_IS_FULL);
-		return false;
-	}
-	else if (Empty())
-	{
-		client->SendAccessRoomDeny(ROOM_STAT::ROOM_IS_CLOSED);
-		return false;
-	}
-	else if (GameRunning())
-	{
-		client->SendAccessRoomDeny(ROOM_STAT::GAME_STARTED);
-		return false;
-	}
-	else return AddPlayer(hostID);
-}
-
 bool InGameRoom::AddPlayer(int hostID)
 {
 	auto p = std::find_if(mPlayers.begin(), mPlayers.end(),
@@ -90,11 +69,6 @@ bool InGameRoom::RemovePlayer(int hostID)
 		{
 			mOpen = false;
 		}
-		else
-		{
-			// Send player update packet to clients in this room..
-		}
-
 		return true;
 	}
 	return false;
@@ -127,13 +101,27 @@ bool InGameRoom::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	return true;
 }
 
-void InGameRoom::SendPlayersInfo(int id, bool instSend)
+void InGameRoom::SendRoomUpdateToAll(bool instSend)
 {
-	std::cout << "[" << id << "] Sending wait players info packet.\n";
-	SC::packet_wait_players_info pck{};
-	pck.size = sizeof(SC::packet_wait_players_info);
-	pck.type = SC::WAIT_PLAYERS_INFO;
+	int playerCount = mPlayerCount;
+	for (int i = 0; i < MAX_PLAYER_SIZE && playerCount > 0; i++)
+	{
+		if (gClients[i]->GetCurrentState() == CLIENT_STAT::IN_ROOM)
+		{
+			SendRoomInsideInfo(i);
+			playerCount -= 1;
+		}
+	}
+}
+
+void InGameRoom::SendRoomInsideInfo(int id, bool instSend)
+{
+	std::cout << "[" << id << "] Sending room inside info packet.\n";
+	SC::packet_room_inside_info pck{};
+	pck.size = sizeof(SC::packet_room_inside_info);
+	pck.type = SC::ROOM_INSIDE_INFO;
 	pck.room_id = mID;
+	pck.map_id = mMapIndex;
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++) {
 		strncpy_s(pck.player_stats[i].name, mPlayers[i].Name.c_str(), mPlayers[i].Name.size());
 		pck.player_stats[i].color = mPlayers[i].Color;
@@ -144,12 +132,12 @@ void InGameRoom::SendPlayersInfo(int id, bool instSend)
 	if(instSend) gClients[id]->SendMsg();
 }
 
-void InGameRoom::SendCurrentRoomInfo(int id, bool instSend)
+void InGameRoom::SendRoomOutsideInfo(int id, bool instSend)
 {
-	std::cout << "[" << id << "] Sending current room info packet.\n";
-	SC::packet_room_update_info pck{};
-	pck.size = sizeof(SC::packet_room_update_info);
-	pck.type = SC::ROOM_UPDATE_INFO;
+	std::cout << "[" << id << "] Sending room outside info packet.\n";
+	SC::packet_room_outside_info pck{};
+	pck.size = sizeof(SC::packet_room_outside_info);
+	pck.type = SC::ROOM_OUTSIDE_INFO;
 	pck.room_id = mID;
 	pck.player_count = mPlayerCount;
 	pck.game_started = mGameRunning;
