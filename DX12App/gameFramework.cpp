@@ -21,9 +21,6 @@ bool GameFramework::InitFramework()
 	if (!D3DFramework::InitFramework())
 		return false;
 
-	
-	
-	
 	// 초기화하는 명령어를 넣기 위해 커맨드 리스트를 개방한다.
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
@@ -32,7 +29,7 @@ bool GameFramework::InitFramework()
 	
 	//UI Build
 	mpUI = std::make_unique<UI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+	mpUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 
 	// Command List를 닫고 Queue에 명령어를 싣는다.
 	ThrowIfFailed(mCommandList->Close());
@@ -50,7 +47,7 @@ void GameFramework::OnResize()
 	D3DFramework::OnResize();
 	//mpUI.get()->Initialize(mD3dDevice.Get(), mCommandQueue.Get());
 	if(mpUI.get())
-		mpUI.get()->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		mpUI.get()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
 }
 
@@ -195,7 +192,7 @@ void GameFramework::Update()
 
 	//UI Update
 	TextUIUpdate();
-	mpUI->UpdateLabels(TextUI);
+	mpUI->Update(TextUI);
 	//UpdateUI(TextUI, TextUI.size());
 
 	//mCamera->Update(mTimer.ElapsedTime());

@@ -3,21 +3,25 @@
 
 UI::UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue) : TextCnt(4)
 {
-    m_fWidth = 0.0f;
-    m_fHeight = 0.0f;
+    SetVectorSize(nFrame, TextCnt);
+    Initialize(pd3dDevice, pd3dCommandQueue);
+}
 
+UI::~UI()
+{
+
+}
+
+void UI::SetVectorSize(UINT nFrame, UINT TextCnt)
+{
     m_vWrappedRenderTargets.resize(nFrame);
     m_vdwTextFormat.resize(TextCnt);
     m_vd2dRenderTargets.resize(nFrame);
     m_vTextBlocks.resize(TextCnt);
     //m_vd2dLinearGradientBrush.resize(TextCnt);
-    m_vd2dTextBrush.resize(TextCnt+4);
-    Initialize(pd3dDevice, pd3dCommandQueue);
+    m_vd2dTextBrush.resize(TextCnt + 4);
 }
-UI::~UI()
-{
 
-}
 void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
 {
     UINT d3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
@@ -68,56 +72,65 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
 
     m_pd2dDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 
-    D2D1::ColorF ColorList[8] = { D2D1::ColorF::Black, D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::Black, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
-    BuildBrush(TextCnt + 4, ColorList);
 
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&m_pd2dWriteFactory));
 }
 
-void UI::UpdateLabels(const std::vector<std::wstring>& strUIText)
+void UI::Update(const std::vector<std::wstring>& strUIText)
 {
-    m_vTextBlocks[0] = { strUIText[0], D2D1::RectF(0.0f,  23.0f + m_fHeight / 6, m_fWidth / 6, 23.0f + (m_fHeight / 6)), m_vdwTextFormat[0].Get() };
-    m_vTextBlocks[1] = { strUIText[1], D2D1::RectF(0.0f, 23.0f, m_fWidth/6, m_fHeight/6), m_vdwTextFormat[0].Get() };
-    m_vTextBlocks[2] = { strUIText[2], D2D1::RectF(5*(m_fWidth/6), 0.0f, m_fWidth, m_fHeight / 6), m_vdwTextFormat[0].Get() };
-    m_vTextBlocks[3] = { strUIText[3], D2D1::RectF(5 * (m_fWidth / 6), 5*(m_fHeight/6), m_fWidth, m_fHeight), m_vdwTextFormat[0].Get() };
+    for (int i = 0; i < TextCnt; ++i)
+        m_vTextBlocks[i].strText = strUIText[i];
+    if (fDraftGage >= 1.0f) 
+    { 
+        fDraftGage = 0.0f; 
+        if (uItemCnt < 2)
+            uItemCnt += 1;
+    }
+    //DraftGage Set
+    SetDraftGage();
+}
+
+void UI::SetDraftGage()
+{
+    fDraftGage += 0.001f;
 }
 
 void UI::Draw(UINT nFrame)
 {
-    //ID3D11Resource* ppResources[] = { m_vWrappedRenderTargets[nFrame].Get() };
-
     m_pd2dDeviceContext.Get()->BeginDraw();
     m_pd3d11On12Device->AcquireWrappedResources(m_vWrappedRenderTargets[nFrame].GetAddressOf(), nFrame);
-    //m_pd3d11On12Device->AcquireWrappedResources(ppResources, _countof(ppResources));
     m_pd2dDeviceContext.Get()->SetTarget(m_vd2dRenderTargets[nFrame].Get());
      
-    for (int i=0;i<TextCnt;++i/*auto textBlock : m_vTextBlocks*/)
+    for (int i=0;i<TextCnt;++i)
     {
-        //function blabla(L"Font");
         m_pd2dDeviceContext.Get()->DrawTextW(m_vTextBlocks[i].strText.c_str(), static_cast<UINT>(m_vTextBlocks[i].strText.length()),
             m_vdwTextFormat[i].Get(), m_vTextBlocks[i].d2dLayoutRect, m_vd2dTextBrush[i].Get());
     }
+    
     //Fill Draft gage
-    m_pd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f / 9.0f)),
-        m_d2dLinearGradientBrush.Get());
+    m_pd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (3.0f / 16.0f) + (m_fWidth * (1.0f / 2.0f) - m_fWidth * (3.0f / 16.0f)) * fDraftGage, m_fHeight * (8.0f / 9.0f)),
+        m_d2dLinearGradientBrush.Get());//LinearBrush - Color[4] : ForestGreen, Yellow, Orange, Red 
     //Draft gage
     m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f/9.0f)), 
-        m_vd2dTextBrush[TextCnt].Get());
+        m_vd2dTextBrush[TextCnt].Get()); //BrushColor : Black
     
     // Item Slot1
     m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (17.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (18.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), 
-        m_vd2dTextBrush[TextCnt].Get());
+        m_vd2dTextBrush[TextCnt].Get());//BrushColor : Black
+    if (uItemCnt > 0)
     m_pd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (17.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (18.0f / 32.0f), m_fHeight * (8.0f / 9.0f)),
-        m_vd2dTextBrush[TextCnt+2].Get());
+        m_vd2dTextBrush[TextCnt+2].Get()); //BrusuhColor : Red
+
     // Item Slot2
     m_pd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (19.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), 
-        m_vd2dTextBrush[TextCnt].Get());
+        m_vd2dTextBrush[TextCnt].Get());//BrushColor : Black
+    if(uItemCnt>1)
     m_pd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (19.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (8.0f / 9.0f)),
-        m_vd2dTextBrush[TextCnt+3].Get());
+        m_vd2dTextBrush[TextCnt+3].Get());//BrushColor : Aqua
 
     m_pd2dDeviceContext.Get()->EndDraw();
    
-    m_pd3d11On12Device->ReleaseWrappedResources(m_vWrappedRenderTargets[nFrame].GetAddressOf(), 0);
+    //m_pd3d11On12Device->ReleaseWrappedResources(m_vWrappedRenderTargets[nFrame].GetAddressOf(), 0);
 
     m_pd3d11DeviceContext.Get()->Flush();
 }
@@ -128,10 +141,20 @@ void UI::ReleaseResources()
 
 }
 
-void UI::Resize(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
+void UI::SetTextRect()
 {
-   
+    for (auto Text : m_vTextBlocks)
+        Text.pdwFormat = m_vdwTextFormat[0].Get();
 
+    m_vTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f + m_fHeight / 6, m_fWidth / 6, 23.0f + (m_fHeight / 6));
+    m_vTextBlocks[1].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f, m_fWidth / 6, m_fHeight / 6);
+    m_vTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (m_fWidth / 6), 0.0f, m_fWidth, m_fHeight / 6);
+    m_vTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (m_fWidth / 6), 5 * (m_fHeight / 6), m_fWidth, m_fHeight);
+
+ }
+
+void UI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
+{
     m_fWidth = static_cast<float>(nWidth);
     m_fHeight = static_cast<float>(nHeight);
 
@@ -145,58 +168,61 @@ void UI::Resize(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
             D3D12_RESOURCE_STATE_RENDER_TARGET, IID_PPV_ARGS(&m_vWrappedRenderTargets[i]));
         m_vWrappedRenderTargets[i]->QueryInterface(__uuidof(IDXGISurface), (void**)&pdxgiSurface);
         m_pd2dDeviceContext->CreateBitmapFromDxgiSurface(pdxgiSurface.Get(), &d2dBitmapProperties, &m_vd2dRenderTargets[i]);
-        //ThrowIfFailed(pd3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&pd3dCommandAllocator)));
     }
 
-    ID2D1GradientStopCollection* pGradientStops = NULL;
-    D2D1_GRADIENT_STOP gradientStops[4];
-    gradientStops[0].color = D2D1::ColorF(D2D1::ColorF::ForestGreen, 1.0f);
-    gradientStops[0].position = 0.0f;
-    gradientStops[1].color = D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f);
-    gradientStops[1].position = 0.33f;
-    gradientStops[2].color = D2D1::ColorF(D2D1::ColorF::Orange, 1.0f);
-    gradientStops[2].position = 0.66f;
-    gradientStops[3].color = D2D1::ColorF(D2D1::ColorF::Red, 1.0f);
-    gradientStops[3].position = 1.0f;
+    float fFontSize = m_fHeight / 15.0f;
 
-    ThrowIfFailed(m_pd2dDeviceContext->CreateGradientStopCollection(gradientStops, 4, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &pGradientStops));
-
-    ThrowIfFailed(m_pd2dDeviceContext->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2D1::Point2F(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f)), D2D1::Point2F(m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f / 9.0f))), pGradientStops, &m_d2dLinearGradientBrush));
-
-    m_d2dLinearGradientBrush.Get()->SetStartPoint(D2D1::Point2F(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f)));
-    m_d2dLinearGradientBrush.Get()->SetEndPoint(D2D1::Point2F(m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f / 9.0f)));
-
-
-
-    //const float fSmallFontSize = m_fHeight / 40.0f;
-    const float fFontSize = m_fHeight / 15.0f;
-
-    //Num Font
+    //All System Font
     m_pd2dWriteFactory->CreateTextFormat(L"Tahoma", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", m_vdwTextFormat[0].GetAddressOf());
-    //Eng Font
     m_pd2dWriteFactory->CreateTextFormat(L"Vladimir Script ∫∏≈Î", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", m_vdwTextFormat[1].GetAddressOf());
     m_pd2dWriteFactory->CreateTextFormat(L"πŸ≈¡√º", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", m_vdwTextFormat[2].GetAddressOf());
     m_pd2dWriteFactory->CreateTextFormat(L"±º∏≤√º", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", m_vdwTextFormat[3].GetAddressOf());
 
-   /* m_pd2dWriteFactory->CreateTextFormat(L"πŸ≈¡√º", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", &m_vTextBlocks[2].pdwFormat);
-    m_pd2dWriteFactory->CreateTextFormat(L"πŸ≈¡√º", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", &m_vTextBlocks[3].pdwFormat);
-    m_pd2dWriteFactory->CreateTextFormat(L"πŸ≈¡√º", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", &m_vTextBlocks[4].pdwFormat);*/
+    for (int i = 0; i < TextCnt; ++i)
+    {
+        ThrowIfFailed(m_vdwTextFormat[i]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
+        ThrowIfFailed(m_vdwTextFormat[i]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
+    }
+    
+    D2D1::ColorF ColorList[8] = { D2D1::ColorF::Black, D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::Black, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
+    BuildBrush(TextCnt + 4, ColorList); //SolidBrush and LinearBrush(Gradient)
 
-    ThrowIfFailed(m_vdwTextFormat[0]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
-    ThrowIfFailed(m_vdwTextFormat[1]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
-    ThrowIfFailed(m_vdwTextFormat[0]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
-    ThrowIfFailed(m_vdwTextFormat[1]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
-    ThrowIfFailed(m_vdwTextFormat[2]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
-    ThrowIfFailed(m_vdwTextFormat[3]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
-    ThrowIfFailed(m_vdwTextFormat[2]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
-    ThrowIfFailed(m_vdwTextFormat[3]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
-    pGradientStops->Release();
+    SetTextRect();
 
 }
 
 void UI::BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList)
 {
+    BuildSolidBrush(UI_Cnt, ColorList);
+    BuildLinearBrush();
+}
+
+void UI::BuildSolidBrush(UINT UI_Cnt, D2D1::ColorF* ColorList)
+{
     // 0: Lap, 1: Time, 2: Rank, 3: Speed, 4: Draft Gage, 5: Item Slot1, 6: Item Slot2
+    //Black, Black, DarkRed, DarkRed, Black, Yellow, Red, Aqua
     for (int i = 0; i < UI_Cnt; ++i)
         ThrowIfFailed(m_pd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(ColorList[i]), (ID2D1SolidColorBrush**)&m_vd2dTextBrush[i]));
+}
+
+void UI::BuildLinearBrush()
+{
+    ID2D1GradientStopCollection* pGradientStops = NULL;
+
+    D2D1_GRADIENT_STOP gradientStops[4];
+    D2D1::ColorF GradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
+
+    for (int i = 0; i < 4; ++i)
+    {
+        gradientStops[i].color = GradientColors[i];
+        gradientStops[i].position = static_cast<float>(i) * 1.0f / 3.0f;
+    }
+
+    ThrowIfFailed(m_pd2dDeviceContext->CreateGradientStopCollection(gradientStops, 4, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &pGradientStops));
+    ThrowIfFailed(m_pd2dDeviceContext->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2D1::Point2F(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f)), D2D1::Point2F(m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f / 9.0f))), pGradientStops, &m_d2dLinearGradientBrush));
+
+    //m_d2dLinearGradientBrush.Get()->SetStartPoint(D2D1::Point2F(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f)));
+    //m_d2dLinearGradientBrush.Get()->SetEndPoint(D2D1::Point2F(m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f / 9.0f)));
+
+    pGradientStops->Release();
 }
