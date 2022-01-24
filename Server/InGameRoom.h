@@ -36,9 +36,16 @@ public:
 public:
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
-	void SendRoomUpdateToAll(bool instSend=true);
+	void SendUpdatePlayerInfoToAll(int target, int ignore=-1, bool instSend=true);
+	void SendRemovePlayerInfoToAll(int target, bool instSend=true);
+	void SendUpdateMapInfoToAll(bool instSend=true);
+
 	void SendRoomInsideInfo(int id, bool instSend=true);
-	void SendRoomOutsideInfo(int id, bool instSend=true);	
+	void SendRoomOutsideInfo(int id, bool instSend=true);
+
+private:
+	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
+
 
 private:
 	int mID;
