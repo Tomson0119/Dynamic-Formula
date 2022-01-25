@@ -7,9 +7,34 @@ struct TextBlock
 
 class UI
 {
-    UI() {};
-    ~UI() {};
+public:
+    UI() {}
+    ~UI() {}
+    virtual void Update() {}
+    virtual void Draw() {}
+    virtual void PreDraw() {}
+    virtual void BuildBrush() {}
+    virtual void Reset() {}
+    virtual void OnResize() {}
+    
+private:
+    virtual void Initialize() {}
+    float mfHeight = 0.0f;
+    float mfWidth = 0.0f;
 
+    ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
+    ComPtr<ID3D11On12Device> mpd3d11On12Device;
+    ComPtr<ID2D1Factory3> mpd2dFactory;
+    ComPtr<IDWriteFactory> mpd2dWriteFactory;
+    ComPtr<ID2D1Device2> mpd2dDevice;
+    ComPtr<ID3D11Device> pd3d11Device;
+    ComPtr<IDXGIDevice> pdxgiDevice;
+    ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
+
+    std::vector<ComPtr<ID2D1SolidColorBrush>> mvd2dTextBrush;
+
+    std::vector<ComPtr<ID3D11Resource>>    mvWrappedRenderTargets;
+    std::vector<ComPtr<ID2D1Bitmap1>>      mvd2dRenderTargets;
 };
 
 class InGameUI
