@@ -54,9 +54,6 @@
     <ClCompile Include="texture.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="dynamicCubeRenderer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="d3dFramework.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -111,9 +108,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="vertex.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="dynamicCubeRenderer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="d3dFramework.h">

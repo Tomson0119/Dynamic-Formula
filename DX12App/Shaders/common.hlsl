@@ -1,6 +1,7 @@
 #include "lighting.hlsl"
 
 Texture2D gShadowMap[3] : register(t0, space1);
+TextureCube gCubeMap : register(t0, space2);
 
 SamplerState gAnisotropicWrap  : register(s0);
 SamplerState gAnisotropicClamp : register(s1);
@@ -67,8 +68,8 @@ float CalcShadowFactor(float4 shadowPos, int idx)
         const float2 offsets[9] =
         {
             float2(-dx, -dy), float2(0.0f, -dy), float2(+dx, -dy),
-        float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(+dx, 0.0f),
-        float2(-dx, +dy), float2(0.0f, +dy), float2(+dx, +dy)
+            float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(+dx, 0.0f),
+            float2(-dx, +dy), float2(0.0f, +dy), float2(+dx, +dy)
         };
 
         [unroll]

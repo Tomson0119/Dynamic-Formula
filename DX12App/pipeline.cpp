@@ -180,7 +180,7 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 	Draw(cmdList);
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool drawWiredFrame, bool setPipeline)
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
@@ -193,7 +193,7 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrus
 			cmdList->SetPipelineState(mPSO[0].Get());
 	}
 
-	Draw(cmdList, viewFrustum);
+	Draw(cmdList, viewFrustum, objectOOBB);
 }
 
 void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
@@ -213,7 +213,7 @@ void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 	}
 }
 
-void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool isSO)
+void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
 {
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++)
@@ -224,7 +224,7 @@ void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& v
 			mRootParamCBVIndex,
 			mRootParamSRVIndex,
 			mMaterialCB->GetGPUVirtualAddress(matOffset),
-			mMaterialCB->GetByteSize(), viewFrustum, isSO);
+			mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
 
 		matOffset += mRenderObjects[i]->GetMeshCount();
 	}

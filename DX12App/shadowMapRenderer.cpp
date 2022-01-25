@@ -24,7 +24,7 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 		float index = (i / (float)mMapCount);
 		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
 		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
-		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.3f);
+		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.5f);
 	}
 }
 
@@ -280,7 +280,7 @@ void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, Li
 
 	for (int i = 1; i < mMapCount + 1; ++i)
 	{
-		cmdList->SetGraphicsRoot32BitConstants(7, 1, &mZSplits[i], i - 1);
+		cmdList->SetGraphicsRoot32BitConstants(8, 1, &mZSplits[i], i - 1);
 	}
 }
 
@@ -320,12 +320,12 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int 
 		{
 			cmdList->SetPipelineState(mTerrainPSO.Get());
 
-			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false);
+			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false, false);
 
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
 		else
-			pso->SetAndDraw(cmdList, false, false);
+			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), true, false, false);
 	}
 }
 

@@ -122,7 +122,7 @@ void GameFramework::Draw()
 
 	Update();
 
-	mScenes.top()->PreRender(mCommandList.Get());
+	mScenes.top()->PreRender(mCommandList.Get(), mTimer.ElapsedTime());
 
 	mCommandList->RSSetViewports(1, &mViewPort);
 	mCommandList->RSSetScissorRects(1, &mScissorRect);

@@ -74,7 +74,6 @@ float4 PS(VertexOut pin) : SV_Target
     float4 result = ambient + directLight;
     result.a = diffuse.a;
 
-    
     float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
     //if (idx == 2)
     //{
