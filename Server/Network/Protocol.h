@@ -74,24 +74,24 @@ namespace CS
 
 	struct packet_switch_map : packet_header
 	{
+		int room_id;
 		char map_id;
-		char room_id;
 	};
 
 	struct packet_press_ready : packet_header
 	{
-		char room_id;
+		int room_id;
 	};
 }
 
 namespace SC
 {
-	struct PlayerState
+	struct PlayerInfo
 	{
 		char name[MAX_NAME_SIZE];
-		bool empty;
-		bool ready;
-		char color;
+		uint8_t color : 4;
+		bool empty : 1;
+		bool ready : 1;
 	};
 
 	const char FORCE_LOGOUT		  = 0;
@@ -104,6 +104,7 @@ namespace SC
 	const char UPDATE_PLAYER_INFO = 7;
 	const char UPDATE_MAP_INFO    = 8;
 	const char REMOVE_PLAYER	  = 9;
+	const char GAME_START_RESULT  = 10;
 
 	struct packet_force_logout : packet_header { };
 
@@ -129,16 +130,18 @@ namespace SC
 
 	struct packet_room_inside_info : packet_header
 	{
-		char map_id;
-		int room_id;		
-		PlayerState player_stats[MAX_ROOM_CAPACITY];
+		int room_id;
+		uint8_t admin_idx : 4;
+		uint8_t player_idx : 4;
+		uint8_t map_id;
+		PlayerInfo player_stats[MAX_ROOM_CAPACITY];
 	};
 
 	struct packet_room_outside_info : packet_header
 	{
 		int room_id;
-		unsigned char player_count : 4;
-		unsigned char map_id : 1;
+		uint8_t player_count : 4;
+		uint8_t map_id : 1;
 		bool game_started : 1;
 		bool room_closed : 1;
 	};
@@ -146,8 +149,9 @@ namespace SC
 	struct packet_update_player_info : packet_header
 	{
 		int room_id;
-		char index;
-		PlayerState player_info;
+		uint8_t admin_idx : 4;
+		uint8_t player_idx : 4;
+		PlayerInfo player_info;
 	};
 
 	struct packet_update_map_info : packet_header
@@ -159,7 +163,14 @@ namespace SC
 	struct packet_remove_player : packet_header
 	{
 		int room_id;
-		char index;
+		uint8_t admin_idx : 4;
+		uint8_t player_idx : 4;
+	};
+
+	struct packet_game_start_result : packet_header
+	{
+		int room_id;
+		bool succeeded;
 	};
 }
 #pragma pack(pop)
