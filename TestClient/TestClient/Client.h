@@ -51,7 +51,6 @@ public:
 	SOCKET GetSocket() const { return m_socket.GetSocket(); }
 
 	bool SceneEmpty() const { return mSceneStack.empty(); }
-	bool Admin() const { return mIsAdmin; }
 
 public:
 	void InsertRoom(SC::packet_room_outside_info* packet);
@@ -60,7 +59,7 @@ public:
 	void ClearRoomList();
 
 	void UpdateWaitRoomInfo(SC::packet_room_inside_info* info);
-	void UpdatePlayer(int idx, SC::PlayerState& state);
+	void UpdatePlayer(int idx, SC::PlayerInfo& state);
 	void RemovePlayer(int idx);
 	void UpdateMap(int map_id);
 
@@ -89,9 +88,12 @@ public:
 public:
 	int ID;
 	std::atomic_int RoomID;
+	std::atomic_int AdminIdx;
+	std::atomic_int PlayerIdx;
 
 	std::string LoginResult;
 	std::string EnterRoomResult;
+	std::string GameStartResult;
 
 private:
 	Socket m_socket;
@@ -99,7 +101,6 @@ private:
 	std::mutex mSceneStackLock;
 	std::stack<SCENE> mSceneStack;
 	std::atomic_char mMapIdx;
-	std::atomic_bool mIsAdmin;
 
 	std::atomic_bool mEnteredRoomFlag;
 	std::atomic_bool mEnteredLobbyFlag;

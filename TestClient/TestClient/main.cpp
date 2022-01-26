@@ -62,6 +62,8 @@ void HandleWaitPlayersInfo(SC::packet_room_inside_info* pck, int id)
 		std::cout << "Invalid room id\n";
 		return;
 	}
+	gClients[id]->PlayerIdx = pck->player_idx;
+	gClients[id]->AdminIdx = pck->admin_idx;
 	gClients[id]->UpdateWaitRoomInfo(pck);
 }
 
@@ -70,6 +72,10 @@ void HandleAccessRoomDenyPacket(SC::packet_access_room_deny* pck, int id)
 	gClients[id]->EnterRoomResult = "Room access denied(reason: ";
 	switch (pck->reason)
 	{
+	case (char)ROOM_STAT::ROOM_IS_CLOSED:
+		gClients[id]->EnterRoomResult += "Room is closed.)\n\n";
+		break;
+
 	case (char)ROOM_STAT::ROOM_IS_FULL:
 		gClients[id]->EnterRoomResult += "Room is full.)\n\n";
 		break;
@@ -144,7 +150,8 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 			SC::packet_update_player_info* pck = reinterpret_cast<SC::packet_update_player_info*>(packet);
 			if (pck->room_id == gClients[id]->RoomID)
 			{
-				gClients[id]->UpdatePlayer(pck->index, pck->player_info);
+				gClients[id]->AdminIdx = pck->admin_idx;
+				gClients[id]->UpdatePlayer(pck->player_idx, pck->player_info);
 			}
 			break;
 		}
@@ -162,7 +169,22 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 			SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 			if (gClients[id]->RoomID == pck->room_id)
 			{
-				gClients[id]->RemovePlayer(pck->index);
+				gClients[id]->AdminIdx = pck->admin_idx;
+				gClients[id]->RemovePlayer(pck->player_idx);
+			}
+			break;
+		}
+		case SC::GAME_START_RESULT:
+		{
+			SC::packet_game_start_result* pck = reinterpret_cast<SC::packet_game_start_result*>(packet);
+			if (gClients[id]->RoomID == pck->room_id)
+			{
+				if (pck->succeeded) {
+					gClients[id]->PushScene(SCENE::IN_GAME);
+					std::cout << "Game Started! (Input any value)\n";
+				}
+				else
+					gClients[id]->GameStartResult = "Game Start failed: players are not all ready.\n";
 			}
 			break;
 		}

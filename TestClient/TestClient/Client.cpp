@@ -3,7 +3,8 @@
 #define AUTO_LOGIN
 
 Client::Client(int id)
-	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1)
+	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1), 
+	  PlayerIdx(-1), mMapIdx(0)
 {
 	LoginResult = "";
 	EnterRoomResult = "";
@@ -131,7 +132,7 @@ void Client::UpdateWaitRoomInfo(SC::packet_room_inside_info* info)
 	}
 }
 
-void Client::UpdatePlayer(int idx, SC::PlayerState& state)
+void Client::UpdatePlayer(int idx, SC::PlayerInfo& state)
 {
 	mPlayerList[idx].Name = state.name;
 	mPlayerList[idx].Color = state.color;
@@ -169,6 +170,8 @@ void Client::EraseRoom(int room_id)
 
 void Client::PrintWaitRoomInfo()
 {
+	std::cout << "Admin index: " << AdminIdx << "\n";
+	std::cout << "Map index: " << (int)mMapIdx << "\n";
 	int i = 1;
 	for (const PlayerInfo& info : mPlayerList)
 	{
@@ -287,6 +290,7 @@ void Client::PrintWaitRoomInterface()
 void Client::ShowWaitRoomScreen()
 {
 	std::cout << EnterRoomResult;
+	std::cout << GameStartResult;
 	PrintWaitRoomInterface();
 	mEnteredRoomFlag = true;
 
@@ -307,7 +311,7 @@ void Client::ShowWaitRoomScreen()
 		return;
 
 	case 1:
-		if (Admin()) SwitchMap();
+		SwitchMap();
 		break;
 
 	case 2:
@@ -397,18 +401,23 @@ void Client::RevertScene()
 
 void Client::SwitchMap()
 {
-	char new_map_id = (mMapIdx == 0) ? 1 : 0;
-	CS::packet_switch_map pck{};
-	pck.size = sizeof(CS::packet_switch_map);
-	pck.type = CS::SWITCH_MAP;
-	pck.room_id = RoomID;
-	pck.map_id = new_map_id;
-	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	Client::Send();
+	if (AdminIdx == PlayerIdx) {
+		mMapIdx = (mMapIdx == 0) ? 1 : 0;
+		CS::packet_switch_map pck{};
+		pck.size = sizeof(CS::packet_switch_map);
+		pck.type = CS::SWITCH_MAP;
+		pck.room_id = RoomID;
+		pck.map_id = mMapIdx;
+		PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+		Client::Send();
+	}
 }
 
 void Client::SetOrUnsetReady()
 {
+	if(AdminIdx != PlayerIdx)
+		mPlayerList[PlayerIdx].Ready = !mPlayerList[PlayerIdx].Ready;
+
 	CS::packet_press_ready pck{};
 	pck.size = sizeof(CS::packet_press_ready);
 	pck.type = CS::PRESS_READY;
