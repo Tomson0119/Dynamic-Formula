@@ -6,13 +6,14 @@ struct PlayerInfo
 	char Color;
 	bool Ready;
 	int ID;
-	std::string Name;
+	char Name[MAX_NAME_SIZE];
 };
 
 class LoginServer;
 
 class InGameRoom
 {
+	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
 public:
 	InGameRoom(int id, LoginServer* ptr);
 	~InGameRoom();
@@ -38,23 +39,25 @@ public:
 
 	void SendUpdatePlayerInfoToAll(int target, int ignore=-1, bool instSend=true);
 	void SendRemovePlayerInfoToAll(int target, bool instSend=true);
-	void SendUpdateMapInfoToAll(bool instSend=true);
+	void SendUpdateMapInfoToAll(int ignore=-1, bool instSend=true);
 
 	void SendRoomInsideInfo(int id, bool instSend=true);
 	void SendRoomOutsideInfo(int id, bool instSend=true);
 
 private:
+	void GameStartIfAllReady(int admin, bool instSend=true);
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
-
 
 private:
 	int mID;
-	std::atomic_int mPlayerCount;
+	std::atomic_char mPlayerCount;
 	std::atomic_bool mOpen;
 	std::atomic_bool mGameRunning;
 	std::atomic_char mMapIndex;
 
-	std::array<PlayerInfo, MAX_ROOM_CAPACITY> mPlayers;
+	std::atomic_char mAdminIndex;
+
+	PlayerList mPlayers;
 
 	LoginServer* mLoginPtr;
 };
