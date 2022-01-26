@@ -40,7 +40,7 @@ public:
 	int ID;
 	std::string Name;	
 	std::atomic_int RoomID;
-	std::atomic_int PlayerIndex;
+	std::atomic_char PlayerIndex;
 
 private:
 	WSAOVERLAPPEDEX mRecvOverlapped;

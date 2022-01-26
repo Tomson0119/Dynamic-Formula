@@ -8,8 +8,7 @@ LobbyServer::RoomList LobbyServer::gRooms;
 
 LobbyServer::LobbyServer()
 	: mLoginPtr{}
-{
-	
+{	
 }
 
 LobbyServer::~LobbyServer()
@@ -30,8 +29,10 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	{
 	case CS::OPEN_ROOM:
 	{
-		CS::packet_open_room* pck = reinterpret_cast<CS::packet_open_room*>(packet);
+#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received open room packet\n";
+#endif
+		CS::packet_open_room* pck = reinterpret_cast<CS::packet_open_room*>(packet);
 
 		if (mRoomCount < MAX_ROOM_SIZE)
 		{
@@ -47,8 +48,10 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	}
 	case CS::ENTER_ROOM:
 	{
-		CS::packet_enter_room* pck = reinterpret_cast<CS::packet_enter_room*>(packet);
+#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received enter room packet\n";
+#endif
+		CS::packet_enter_room* pck = reinterpret_cast<CS::packet_enter_room*>(packet);
 		
 		if (TryAddPlayer(pck->room_id, id))
 			AcceptEnterRoom(pck->room_id, id);

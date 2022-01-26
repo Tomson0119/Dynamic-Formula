@@ -133,14 +133,18 @@ void LoginServer::Logout(int id)
 
 void LoginServer::Disconnect(int id)
 {
+#ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "[" << id << "] Disconnect.\n";
+#endif
 	Logout(id);
 	gClients[id]->Disconnect();
 }
 
 void LoginServer::AcceptNewClient(int id, SOCKET sck)
 {
+#ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "[" << id << "] Accepted client.\n";
+#endif
 	gClients[id]->AssignAcceptedID(id, sck);
 	mIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
@@ -180,7 +184,9 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	{
 	case CS::LOGIN:
 	{
+#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received login packet\n";
+#endif
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
 
 		if (strcmp(pck->name, "GM") == 0) 
@@ -209,8 +215,10 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	}
 	case CS::REGISTER:
 	{
-		CS::packet_register* pck = reinterpret_cast<CS::packet_register*>(packet);
+#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received register packet.\n";
+#endif
+		CS::packet_register* pck = reinterpret_cast<CS::packet_register*>(packet);
 
 		if (std::string(pck->name).find("GM") != std::string::npos)
 		{
@@ -226,7 +234,9 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	}
 	case CS::REVERT_SCENE:
 	{
+#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received revert scene.\n";
+#endif
 		auto currentState = gClients[id]->GetCurrentState();
 		if (currentState == CLIENT_STAT::LOBBY)
 			Logout(id);
