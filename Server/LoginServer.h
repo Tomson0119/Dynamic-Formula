@@ -29,15 +29,16 @@ public:
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
 	static void NetworkThreadFunc(LoginServer& server);
-	static const int MaxThreads = 4;
+	static const int MAX_THREADS = 1;
 
 private:
 	Socket mListenSck;
 	IOCP mIOCP;
 
+	std::map<std::thread::id, int> mThreadIDs;
+	std::array<DBHandler, MAX_THREADS> mDBHandlers;
 	std::vector<std::thread> mThreads;
 	std::atomic_bool mLoop;		
 
 	LobbyServer mLobby;
-	DBHandler mDBHandler;
 };

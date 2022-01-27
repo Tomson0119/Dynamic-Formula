@@ -8,10 +8,13 @@ std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
 LoginServer::LoginServer(const EndPoint& ep)
 	: mLoop(true)
 {
-	if (mDBHandler.ConnectToDB(L"sql_server") == false)
-		std::cout << "failed to connect to DB\n";
+	for (int i = 0; i < MAX_THREADS; i++)
+	{
+		if (mDBHandlers[i].ConnectToDB(L"sql_server"))
+			mDBHandlers[i].ResetAllHost();
+		else std::cout << "failed to connect to DB\n";
+	}
 
-	mDBHandler.ResetAllHost();
 	mLobby.Init(this);
 	
 	for (int i = 0; i < gClients.size(); i++)
@@ -34,9 +37,11 @@ void LoginServer::Run()
 	WSAOVERLAPPEDEX acceptEx;
 	mListenSck.AsyncAccept(&acceptEx);
 
-	for (int i = 0; i < MaxThreads; i++)
+	for (int i = 0; i < MAX_THREADS; i++)
+	{
 		mThreads.emplace_back(NetworkThreadFunc, std::ref(*this));
-
+		mThreadIDs[mThreads.back().get_id()] = i;
+	}
 	for (std::thread& thrd : mThreads)
 		thrd.join();
 }
@@ -127,7 +132,8 @@ void LoginServer::Logout(int id)
 	mLobby.TryRemovePlayer(gClients[id]->RoomID, id);
 	mLobby.DecreasePlayerCount();
 
-	mDBHandler.SaveUserInfo(id);
+	int thread_id = mThreadIDs[std::this_thread::get_id()];
+	mDBHandlers[thread_id].SaveUserInfo(id);
 	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 }
 
@@ -188,16 +194,9 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		std::cout << "[" << id << "] Received login packet\n";
 #endif
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
-
-		if (strcmp(pck->name, "GM") == 0) 
-		{
-			std::string number = std::to_string(id);
-			strncat_s(pck->name, number.c_str(), number.size());
-			AcceptLogin(pck->name, id);
-			break;
-		}
 		
-		int	conn_id = mDBHandler.SearchIdAndPwd(pck->name, pck->pwd, id);
+		int thread_id = mThreadIDs[std::this_thread::get_id()];
+		int	conn_id = mDBHandlers[thread_id].SearchIdAndPwd(pck->name, pck->pwd, id);
 		if(conn_id >= (int)LOGIN_STAT::ACCEPTED)
 		{
 			if (conn_id >= 0)
@@ -209,6 +208,13 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		}
 		else if (conn_id == (int)LOGIN_STAT::INVALID_IDPWD)
 		{
+			if (strcmp(pck->name, "GM") == 0) // TEST
+			{
+				std::string number = std::to_string(id);
+				strncat_s(pck->name, number.c_str(), number.size());
+				AcceptLogin(pck->name, id);
+				break;
+			}
 			gClients[id]->SendLoginResult(LOGIN_STAT::INVALID_IDPWD);
 		}
 		break;
@@ -226,7 +232,8 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 			break;
 		}
 
-		if (mDBHandler.RegisterIdAndPwd(pck->name, pck->pwd))
+		int thread_id = mThreadIDs[std::this_thread::get_id()];
+		if (mDBHandlers[thread_id].RegisterIdAndPwd(pck->name, pck->pwd))
 			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
 		else
 			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
