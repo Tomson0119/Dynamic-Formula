@@ -23,6 +23,7 @@ extern "C" {
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 
