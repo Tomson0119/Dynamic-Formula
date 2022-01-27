@@ -51,6 +51,9 @@ public:
 	SOCKET GetSocket() const { return m_socket.GetSocket(); }
 
 	bool SceneEmpty() const { return mSceneStack.empty(); }
+	size_t GetRoomCount() const { return mRoomList.size(); }
+
+	int GetRoomIdByIndex(int idx) const;
 
 public:
 	void InsertRoom(SC::packet_room_outside_info* packet);
@@ -95,6 +98,9 @@ public:
 	std::string EnterRoomResult;
 	std::string GameStartResult;
 
+	// for stress test
+	std::chrono::system_clock::time_point PacketSendTime;
+
 private:
 	Socket m_socket;
 
@@ -102,6 +108,7 @@ private:
 	std::stack<SCENE> mSceneStack;
 	std::atomic_char mMapIdx;
 
+	std::atomic_bool mLoginRequestFlag;
 	std::atomic_bool mEnteredRoomFlag;
 	std::atomic_bool mEnteredLobbyFlag;
 

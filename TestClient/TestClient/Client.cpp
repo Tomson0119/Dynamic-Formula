@@ -6,11 +6,14 @@ Client::Client(int id)
 	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1), 
 	  PlayerIdx(-1), mMapIdx(0)
 {
+	mLoginRequestFlag = false;
+
 	LoginResult = "";
 	EnterRoomResult = "";
 	
 	ClearPlayerList();
 
+	mSceneStack.push(SCENE::LOGIN);
 	m_socket.Init();
 }
 
@@ -95,6 +98,13 @@ void Client::ClearRoomList()
 	mRoomList.clear();
 }
 
+int Client::GetRoomIdByIndex(int idx) const
+{
+	auto beg = mRoomList.begin();
+	std::advance(beg, idx);
+	return beg->first;
+}
+
 void Client::InsertRoom(SC::packet_room_outside_info* packet)
 {
 	std::lock_guard<std::mutex> lck(mRoomListLock);
@@ -116,7 +126,9 @@ void Client::UpdateWaitRoomInfo(SC::packet_room_inside_info* info)
 {
 	if (RoomID == info->room_id)
 	{
+		AdminIdx = info->admin_idx;
 		mMapIdx = info->map_id;
+		PlayerIdx = info->player_idx;
 		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 		{
 			mPlayerList[i].Name = info->player_stats[i].name;
@@ -126,10 +138,10 @@ void Client::UpdateWaitRoomInfo(SC::packet_room_inside_info* info)
 		}
 	}
 
-	if (mEnteredRoomFlag) {
+	/*if (mEnteredRoomFlag) {
 		system("cls");
 		PrintWaitRoomInterface();
-	}
+	}*/
 }
 
 void Client::UpdatePlayer(int idx, SC::PlayerInfo& state)
@@ -139,24 +151,24 @@ void Client::UpdatePlayer(int idx, SC::PlayerInfo& state)
 	mPlayerList[idx].Empty = state.empty;
 	mPlayerList[idx].Ready = state.ready;
 
-	system("cls");
-	PrintWaitRoomInterface();
+	/*system("cls");
+	PrintWaitRoomInterface();*/
 }
 
 void Client::RemovePlayer(int idx)
 {
 	mPlayerList[idx].Empty = true;
 
-	system("cls");
-	PrintWaitRoomInterface();
+	/*system("cls");
+	PrintWaitRoomInterface();*/
 }
 
 void Client::UpdateMap(int map_id)
 {
 	mMapIdx = map_id;
 
-	system("cls");
-	PrintWaitRoomInterface();
+	/*system("cls");
+	PrintWaitRoomInterface();*/
 }
 
 void Client::EraseRoom(int room_id)
@@ -164,8 +176,8 @@ void Client::EraseRoom(int room_id)
 	std::lock_guard<std::mutex> lck(mRoomListLock);
 	mRoomList.erase(room_id);
 
-	system("cls");
-	PrintLobbyInterface();
+	/*system("cls");
+	PrintLobbyInterface();*/
 }
 
 void Client::PrintWaitRoomInfo()
@@ -347,19 +359,23 @@ void Client::ShowInGameScreen()
 
 void Client::RequestLogin(const std::string& name, const std::string& pwd)
 {
-	std::cout << "[" << ID << "] Requesting login.\n";
-	CS::packet_login pck{};
-	pck.size = sizeof(CS::packet_login);
-	pck.type = CS::LOGIN;	
-	strncpy_s(pck.name, name.c_str(), MAX_NAME_SIZE-1);
-	strncpy_s(pck.pwd, pwd.c_str(), MAX_PWD_SIZE-1);
-	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	Client::Send();
+	if (mLoginRequestFlag == false)
+	{
+		mLoginRequestFlag = true;
+		//std::cout << "[" << ID << "] Requesting login.\n";
+		CS::packet_login pck{};
+		pck.size = sizeof(CS::packet_login);
+		pck.type = CS::LOGIN;
+		strncpy_s(pck.name, name.c_str(), MAX_NAME_SIZE - 1);
+		strncpy_s(pck.pwd, pwd.c_str(), MAX_PWD_SIZE - 1);
+		PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+		Client::Send();
+	}
 }
 
 void Client::RequestRegister(const std::string& name, const std::string& pwd)
 {
-	std::cout << "[" << ID << "] Requesting register.\n";
+	//std::cout << "[" << ID << "] Requesting register.\n";
 	CS::packet_register pck{};
 	pck.size = sizeof(CS::packet_register);
 	pck.type = CS::REGISTER;
@@ -371,7 +387,7 @@ void Client::RequestRegister(const std::string& name, const std::string& pwd)
 
 void Client::RequestNewRoom()
 {
-	std::cout << "[" << ID << "] Requesting new room.\n";
+	//std::cout << "[" << ID << "] Requesting new room.\n";
 	CS::packet_open_room pck{};
 	pck.size = sizeof(CS::packet_open_room);
 	pck.type = CS::OPEN_ROOM;
@@ -381,7 +397,7 @@ void Client::RequestNewRoom()
 
 void Client::RequestEnterRoom(int room_id)
 {
-	std::cout << "[" << ID << "] Requesting enter room (" << room_id << ").\n";
+	//std::cout << "[" << ID << "] Requesting enter room (" << room_id << ").\n";
 	CS::packet_enter_room pck{};
 	pck.size = sizeof(CS::packet_enter_room);
 	pck.type = CS::ENTER_ROOM;
