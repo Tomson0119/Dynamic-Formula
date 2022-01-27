@@ -20,7 +20,7 @@ public:
 	int SearchIdAndPwd(const char* id, const char* pwd, int host_id);
 
 private:
-	bool PrintIfError(SQLHANDLE handle, SQLSMALLINT type, RETCODE retCode);
+	bool PrintIfError(const std::wstring& funcName, SQLHANDLE handle, SQLSMALLINT type, RETCODE retCode);
 
 private:
 	SQLHENV m_hEnv;
