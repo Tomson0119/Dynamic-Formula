@@ -41,7 +41,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 				AcceptEnterRoom(mRoomCount, id);
 				mRoomCount.fetch_add(1);
 			}
-			else std::cout << "Failed to open room\n";
+			//else std::cout << "Failed to open room\n";
 		}
 		else client->SendAccessRoomDeny(ROOM_STAT::MAX_ROOM_REACHED);
 		break;
@@ -53,6 +53,9 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 #endif
 		CS::packet_enter_room* pck = reinterpret_cast<CS::packet_enter_room*>(packet);
 		
+		// for stress test
+		gClients[id]->AccessRoomSendTime = pck->send_time;
+
 		if (TryAddPlayer(pck->room_id, id))
 			AcceptEnterRoom(pck->room_id, id);
 		break;
@@ -65,8 +68,6 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		return false;
 	}
 	}
-	//TEST
-	//PrintRoomList();
 	return true;
 }
 
@@ -156,9 +157,9 @@ void LobbyServer::PrintRoomList()
 	std::cout << "Lobby player count: " << mLobbyPlayerCount << "\n";
 
 	int roomCount = mRoomCount;
-	for (int i = 0; i < roomCount;)
+	for (int i = 0; i < MAX_ROOM_SIZE && roomCount > 0;i++)
 	{
-		if (gRooms.empty() == false)
+		if (gRooms[i]->Empty() == false)
 		{
 			std::cout << "---------- " << i + 1 << " ----------\n";
 			std::cout << "Room id: " << i << "\n";
@@ -166,8 +167,8 @@ void LobbyServer::PrintRoomList()
 			std::cout << "Game running: " << std::boolalpha << gRooms[i]->GameRunning() << "\n";
 			std::cout << "Player count: " << (int)gRooms[i]->GetPlayerCount() << "\n";
 			gRooms[i]->PrintWaitPlayers();
-			i += 1;
-		}		
+			roomCount -= 1;
+		}
 	}
 	std::cout << "-----------------------\n";
 }

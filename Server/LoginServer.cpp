@@ -139,18 +139,14 @@ void LoginServer::Logout(int id)
 
 void LoginServer::Disconnect(int id)
 {
-#ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "[" << id << "] Disconnect.\n";
-#endif
+	//std::cout << "[" << id << "] Disconnect.\n";
 	Logout(id);
 	gClients[id]->Disconnect();
 }
 
 void LoginServer::AcceptNewClient(int id, SOCKET sck)
 {
-#ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "[" << id << "] Accepted client.\n";
-#endif
+	//std::cout << "[" << id << "] Accepted client.\n";
 	gClients[id]->AssignAcceptedID(id, sck);
 	mIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
@@ -186,6 +182,9 @@ void LoginServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
 
 bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 {
+	// TEST
+	//mLobby.PrintRoomList();
+
 	switch (type)
 	{
 	case CS::LOGIN:
