@@ -6,7 +6,9 @@ Client::Client(int id)
 	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1), 
 	  PlayerIdx(-1), mMapIdx(0)
 {
-	mLoginRequestFlag = false;
+	MaxPing = 0;
+
+	LoginRequestFlag = false;
 
 	LoginResult = "";
 	EnterRoomResult = "";
@@ -95,13 +97,16 @@ void Client::PrintRoomList()
 
 void Client::ClearRoomList()
 {
+	std::lock_guard<std::mutex> lck(mRoomListLock);
 	mRoomList.clear();
 }
 
-int Client::GetRoomIdByIndex(int idx) const
+int Client::GetRoomIdByIndex(int idx)
 {
+	std::lock_guard<std::mutex> lck(mRoomListLock);
 	auto beg = mRoomList.begin();
 	std::advance(beg, idx);
+	if (beg == mRoomList.end()) return -1;
 	return beg->first;
 }
 
@@ -359,9 +364,9 @@ void Client::ShowInGameScreen()
 
 void Client::RequestLogin(const std::string& name, const std::string& pwd)
 {
-	if (mLoginRequestFlag == false)
+	if (LoginRequestFlag == false)
 	{
-		mLoginRequestFlag = true;
+		LoginRequestFlag = true;
 		//std::cout << "[" << ID << "] Requesting login.\n";
 		CS::packet_login pck{};
 		pck.size = sizeof(CS::packet_login);
@@ -402,6 +407,8 @@ void Client::RequestEnterRoom(int room_id)
 	pck.size = sizeof(CS::packet_enter_room);
 	pck.type = CS::ENTER_ROOM;
 	pck.room_id = room_id;
+	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::system_clock::now().time_since_epoch()).count();
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	Client::Send();
 }
@@ -438,6 +445,28 @@ void Client::SetOrUnsetReady()
 	pck.size = sizeof(CS::packet_press_ready);
 	pck.type = CS::PRESS_READY;
 	pck.room_id = RoomID;
+	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::system_clock::now().time_since_epoch()).count();
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	Client::Send();
+}
+
+void Client::CalculateAccessRoomPing(uint64_t time)
+{
+	if (time == 0) return;
+
+	uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::system_clock::now().time_since_epoch()).count();
+	uint64_t duration = now - time;
+	//if (MaxPing < duration) MaxPing = duration;
+}
+
+void Client::CalculateReadyPing(uint64_t time)
+{
+	if (time == 0) return;
+
+	uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::system_clock::now().time_since_epoch()).count();
+	uint64_t duration = now - time;
+	if (MaxPing < duration) MaxPing = duration;
 }

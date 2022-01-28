@@ -53,7 +53,7 @@ public:
 	bool SceneEmpty() const { return mSceneStack.empty(); }
 	size_t GetRoomCount() const { return mRoomList.size(); }
 
-	int GetRoomIdByIndex(int idx) const;
+	int GetRoomIdByIndex(int idx);
 
 public:
 	void InsertRoom(SC::packet_room_outside_info* packet);
@@ -88,6 +88,10 @@ public:
 	void SwitchMap();
 	void SetOrUnsetReady();
 
+	// for stress test
+	void CalculateAccessRoomPing(uint64_t time);
+	void CalculateReadyPing(uint64_t time);
+
 public:
 	int ID;
 	std::atomic_int RoomID;
@@ -98,8 +102,10 @@ public:
 	std::string EnterRoomResult;
 	std::string GameStartResult;
 
+	std::atomic_bool LoginRequestFlag;
+
 	// for stress test
-	std::chrono::system_clock::time_point PacketSendTime;
+	std::atomic_uint64_t MaxPing;
 
 private:
 	Socket m_socket;
@@ -108,7 +114,6 @@ private:
 	std::stack<SCENE> mSceneStack;
 	std::atomic_char mMapIdx;
 
-	std::atomic_bool mLoginRequestFlag;
 	std::atomic_bool mEnteredRoomFlag;
 	std::atomic_bool mEnteredLobbyFlag;
 

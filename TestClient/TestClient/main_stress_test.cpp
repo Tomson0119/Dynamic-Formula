@@ -3,8 +3,9 @@
 
 const std::string SERVER_IP = "127.0.0.1";
 
-const int MAX_TRIAL = 10;
+const int MAX_TRIAL = 10000;
 const int MAX_NET_THREADS = 4;
+const uint64_t PING_LIMIT = 1000;
 
 HANDLE hHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -16,8 +17,8 @@ IOCP gIOCP;
 
 std::random_device rd;
 std::mt19937 gen(rd());
-std::uniform_int_distribution type_gen{ 0, 3 };
-std::uniform_int_distribution room_gen{ 0, MAX_ROOM_SIZE };
+std::uniform_int_distribution type_gen{ 0, 2 };
+std::uniform_int_distribution room_gen{ 0, MAX_ROOM_SIZE-1 };
 
 void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 {
@@ -33,8 +34,9 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 			SC::packet_login_result* pck = reinterpret_cast<SC::packet_login_result*>(packet);
 			
 			if (pck->result == (char)LOGIN_STAT::ACCEPTED) {
-				std::cout << "[" << id << "] Login accepted.\n";
-				/*gClients[id]->PushScene(SCENE::LOBBY);*/
+				//std::cout << "[" << id << "] Login accepted.\n";
+				gClients[id]->PushScene(SCENE::LOBBY);
+				gClients[id]->LoginRequestFlag = false;
 			}
 			break;
 		}
@@ -58,6 +60,7 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 		case SC::ACCESS_ROOM_ACCEPT:
 		{
 			SC::packet_access_room_accept* pck = reinterpret_cast<SC::packet_access_room_accept*>(packet);
+			gClients[id]->CalculateAccessRoomPing(pck->send_time);
 			gClients[id]->EnterRoomResult = "Room entered(ID: " + std::to_string(pck->room_id) + ").\n";
 			gClients[id]->RoomID = pck->room_id;
 			gClients[id]->PushScene(SCENE::ROOM);
@@ -66,7 +69,7 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 		case SC::ACCESS_ROOM_DENY:
 		{
 			SC::packet_access_room_deny* pck = reinterpret_cast<SC::packet_access_room_deny*>(packet);
-			//
+			gClients[id]->CalculateAccessRoomPing(pck->send_time);
 			break;
 		}
 		case SC::ROOM_OUTSIDE_INFO:
@@ -84,6 +87,8 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 			SC::packet_update_player_info* pck = reinterpret_cast<SC::packet_update_player_info*>(packet);
 			if (pck->room_id == gClients[id]->RoomID)
 			{
+				if (gClients[id]->PlayerIdx == pck->player_idx)
+					gClients[id]->CalculateReadyPing(pck->send_time);
 				gClients[id]->AdminIdx = pck->admin_idx;
 				gClients[id]->UpdatePlayer(pck->player_idx, pck->player_info);
 			}
@@ -113,6 +118,8 @@ void ProcessPacket(WSAOVERLAPPEDEX* over, int id, int bytes)
 			SC::packet_game_start_result* pck = reinterpret_cast<SC::packet_game_start_result*>(packet);
 			if (gClients[id]->RoomID == pck->room_id)
 			{
+				if (gClients[id]->PlayerIdx == gClients[id]->AdminIdx)
+					gClients[id]->CalculateReadyPing(pck->send_time);
 				if (pck->succeeded)
 					gClients[id]->PushScene(SCENE::IN_GAME);
 			}
@@ -211,9 +218,14 @@ bool DoLobbyTask(int id)
 
 	case 2:
 	{
-		int idx = room_gen(gen) % gClients[id]->GetRoomCount();
+		int room_count = gClients[id]->GetRoomCount();
+		if (room_count <= 0) break;
+
+		int idx = room_gen(gen) % room_count;
 		int room_id = gClients[id]->GetRoomIdByIndex(idx);
-		gClients[id]->RequestEnterRoom(room_id);
+		if (room_id >= 0) {
+			gClients[id]->RequestEnterRoom(room_id);
+		}
 		break;
 	}
 	default:
@@ -281,31 +293,81 @@ bool DoRandomTask(int id)
 	return false;
 }
 
+void PrintEveryClientInfo()
+{
+	int lobbyCount = 0;
+	for (int i = 0; i < MAX_TRIAL; i++)
+	{
+		SCENE scene = gClients[i]->GetCurrentScene();
+		std::cout << "[" << i << "] ping: ";
+		std::cout << gClients[i]->MaxPing << " , scene: ";
+		switch (scene)
+		{
+		case SCENE::LOGIN:
+			std::cout << "LOGIN                                  \n";
+			break;
+
+		case SCENE::LOBBY:
+			std::cout << "LOBBY,  room count: " << gClients[i]->GetRoomCount() << "                                   \n";
+			lobbyCount++;
+			break;
+
+		case SCENE::ROOM:
+			std::cout << "ROOM  , room id: " << gClients[i]->RoomID << "                                 \n";
+			break;
+
+		case SCENE::IN_GAME:
+			std::cout << "INGAME                                 \n";
+			break;
+		}
+	}
+	std::cout << "Lobby players count: " << lobbyCount << "                \n";
+}
+
+uint64_t MaxClientsPing()
+{
+	uint64_t max_value = 0;
+	for (int i = 0; i < MAX_TRIAL; i++)
+	{
+		if (max_value < gClients[i]->MaxPing)
+			max_value = gClients[i]->MaxPing;
+	}
+	return max_value;
+}
+
 void ClientFunc()
 {
 	int connections = 0;
 	int i = 0;
 	while (gLoop)
 	{
-		//SetConsoleCursorPosition(hHandle, { 0,0 });
-		//std::cout << "Connections: " << connections << "                                           ";
+		SetConsoleCursorPosition(hHandle, { 0,0 });
+		std::cout << "connections: " << connections << "                        \n";
+		//PrintEveryClientInfo();
 
-		if (connections >= MAX_TRIAL)
-			goto Max_connection;
+		if (MaxClientsPing() >= PING_LIMIT)
+			goto MaxPing;
 
-		if (ConnectToServer(connections++) == false)
-			goto ConnectionFail;
+		if (connections < MAX_TRIAL)
+		{
+			if (ConnectToServer(connections++) == false)
+				goto ConnectionFail;
+		}
 
+		auto beg = std::chrono::system_clock::now();
 		for (i = 0; i < connections; i++)
 		{
-			if (DoRandomTask(i) == false) 
-				goto TaskFailed;
-			//std::this_thread::sleep_for(500ms);
+			if (DoRandomTask(i) == false)
+				goto TaskFailed;			
 		}
+		auto end = std::chrono::system_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - beg);
+		if (duration < 0ms) duration = 0ms;
+		if(duration < 100ms) std::this_thread::sleep_for(100ms - duration);
 	}
 
-Max_connection:
-	std::cout << "\n\nMax connection reached.\n";
+MaxPing:
+	std::cout << "\n\nMax ping has reached..\n";
 	return;
 
 ConnectionFail:
