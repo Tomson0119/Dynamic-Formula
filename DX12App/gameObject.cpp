@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "gameObject.h"
-#include "gameScene.h"
+#include "inGameScene.h"
 
 
 GameObject::GameObject()

@@ -5,7 +5,7 @@
 #include "camera.h"
 #include "texture.h"
 
-class GameScene;
+class InGameScene;
 
 class GameObject
 {
@@ -69,7 +69,7 @@ public:
 	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
 
 public:
-	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene, const UINT& cubemapIndex) { }
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) { }
 	
 	virtual void BuildDsvRtvView(ID3D12Device* device) { }
 

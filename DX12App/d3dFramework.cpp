@@ -1,10 +1,12 @@
 #include "stdafx.h"
 #include "d3dFramework.h"
 #include "UI.h"
+#include "NetLib/NetClient.h"
 
 D3DFramework::D3DFramework()
 	: mViewPort{ }, mScissorRect{ }, mFenceValues{ }
 {
+	mNetClient = std::make_unique<NetClient>();
 }
 
 D3DFramework::~D3DFramework()

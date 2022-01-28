@@ -762,7 +762,7 @@ void PhysicsPlayer::BuildCameras()
 	}
 }
 
-void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene, const UINT& cubemapIndex)
+void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex)
 {
 	BuildCameras();
 

@@ -1,24 +1,25 @@
 #include "stdafx.h"
-#include "gameScene.h"
+#include "inGameScene.h"
 #include "shadowMapRenderer.h"
 
 using namespace std;
 
-GameScene::GameScene()
+InGameScene::InGameScene()
+	: Scene(SCENE_STAT::IN_GAME)
 {
 }
 
-GameScene::~GameScene()
+InGameScene::~InGameScene()
 {
 }
 
-void GameScene::OnResize(float aspect)
+void InGameScene::OnResize(float aspect)
 {
 	if(mMainCamera)
 		mMainCamera->SetLens(aspect);
 }
 
-void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
 {
 	mMainCamera = make_unique<Camera>();
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
@@ -50,7 +51,7 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	BuildDescriptorHeap(device);
 }
 
-void GameScene::BuildRootSignature(ID3D12Device* device)
+void InGameScene::BuildRootSignature(ID3D12Device* device)
 {
 	D3D12_DESCRIPTOR_RANGE descRanges[4];
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 4);
@@ -98,7 +99,7 @@ void GameScene::BuildRootSignature(ID3D12Device* device)
 		IID_PPV_ARGS(&mRootSignature)));
 }
 
-void GameScene::BuildComputeRootSignature(ID3D12Device* device)
+void InGameScene::BuildComputeRootSignature(ID3D12Device* device)
 {
 	D3D12_DESCRIPTOR_RANGE descRanges[2];
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
@@ -124,7 +125,7 @@ void GameScene::BuildComputeRootSignature(ID3D12Device* device)
 		IID_PPV_ARGS(&mComputeRootSignature)));
 }
 
-void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void InGameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
 	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
 	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
@@ -151,7 +152,7 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
 }
 
-void GameScene::BuildConstantBuffers(ID3D12Device* device)
+void InGameScene::BuildConstantBuffers(ID3D12Device* device)
 {
 	mLightCB = std::make_unique<ConstantBuffer<LightConstants>>(device, 2);
 	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(device, 10); // 메인 카메라 1개, 그림자 매핑 카메라 3개, 다이나믹 큐브매핑 카메라 6개
@@ -164,14 +165,14 @@ void GameScene::BuildConstantBuffers(ID3D12Device* device)
 	}
 }
 
-void GameScene::BuildDescriptorHeap(ID3D12Device* device)
+void InGameScene::BuildDescriptorHeap(ID3D12Device* device)
 {
 	mShadowMapRenderer->BuildDescriptorHeap(device, 3, 4, 5);
 	for (const auto& [_, pso] : mPipelines)
 		pso->BuildDescriptorHeap(device, 3, 4, 5);
 }
 
-void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
 {
 	auto box = make_shared<GameObject>();
 	box->LoadModel(device, cmdList, L"Models\\road_sign2.obj");
@@ -224,7 +225,7 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 }
 
 
-void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList, const float& elapsed)
+void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 {
 	if (mShadowMapRenderer)
 		mShadowMapRenderer->PreRender(cmdList, this);
@@ -249,7 +250,7 @@ void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList, const float& elaps
 	mPlayer->SetCubemapSrv(cmdList, 7);
 }
 
-void GameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+void InGameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 {
 	if ((buttonState) && !GetCapture())
 	{
@@ -259,12 +260,12 @@ void GameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 	}
 }
 
-void GameScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
+void InGameScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
 {
 	ReleaseCapture();
 }
 
-void GameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
+void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
 	// 마우스로 화면 돌리는 기능
 	if ((buttonState & MK_LBUTTON) && GetCapture())
@@ -280,11 +281,11 @@ void GameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 	}
 }
 
-void GameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
+void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 }
 
-void GameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed)
+void InGameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed)
 {
 	if (mMissileInterval < 0.0f)
 	{
@@ -302,7 +303,7 @@ void GameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandLis
 	if(mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 }
 
-void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, const GameTimer& timer)
+void InGameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
 {
 	float elapsed = timer.ElapsedTime();
 
@@ -322,7 +323,7 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	UpdateConstants(timer);
 }
 
-void GameScene::UpdateLight(float elapsed)
+void InGameScene::UpdateLight(float elapsed)
 {
 	//XMMATRIX R = XMMatrixRotationY(0.1f * elapsed);
 	//for (int i = 0; i < NUM_LIGHTS; i++)
@@ -333,7 +334,7 @@ void GameScene::UpdateLight(float elapsed)
 	//}
 }
 
-void GameScene::UpdateLightConstants()
+void InGameScene::UpdateLightConstants()
 {
 	for(int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
 		mMainLight.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(i));
@@ -341,13 +342,13 @@ void GameScene::UpdateLightConstants()
 	mLightCB->CopyData(0, mMainLight);
 }
 
-void GameScene::UpdateCameraConstant(int idx, Camera* camera)
+void InGameScene::UpdateCameraConstant(int idx, Camera* camera)
 {
 	// 카메라로부터 상수를 받는다.
 	mCameraCB->CopyData(idx, camera->GetConstants());
 }
 
-void GameScene::UpdateConstants(const GameTimer& timer)
+void InGameScene::UpdateConstants(const GameTimer& timer)
 {
 	UpdateCameraConstant(0, mMainCamera.get());
 	UpdateLightConstants();	
@@ -369,20 +370,20 @@ void GameScene::UpdateConstants(const GameTimer& timer)
 		pso->UpdateConstants();
 }
 
-void GameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
+void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 {
 	cmdList->SetGraphicsRootConstantBufferView(0, mCameraCB->GetGPUVirtualAddress(cameraCBIndex));
 	cmdList->SetGraphicsRootConstantBufferView(1, mLightCB->GetGPUVirtualAddress(0));
 	cmdList->SetGraphicsRootConstantBufferView(2, mGameInfoCB->GetGPUVirtualAddress(0));
 }
 
-void GameScene::Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer)
+void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer)
 {
 	cmdList->SetGraphicsRootSignature(mRootSignature.Get());
 	RenderPipelines(cmdList, 0);
 }
 
-void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
+void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 {	
 	SetCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
@@ -398,7 +399,7 @@ void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCB
 	}
 }
 
-void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera ,int cameraCBIndex)
+void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera ,int cameraCBIndex)
 {
 	SetCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
@@ -417,7 +418,7 @@ void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* came
 	}
 }
 
-void GameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void InGameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	mMissileMesh = std::make_shared<BoxMesh>(device, cmdList, 5, 5, 5);
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
@@ -429,7 +430,7 @@ void GameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::Default]->ResetPipeline(device);
 }
 
-void GameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void InGameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	bool flag = false;
 	for (auto i = mMissileObjects.begin(); i < mMissileObjects.end();)

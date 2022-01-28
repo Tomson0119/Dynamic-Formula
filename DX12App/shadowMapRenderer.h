@@ -2,7 +2,7 @@
 
 #include "pipeline.h"
 
-class GameScene;
+class InGameScene;
 
 class ShadowMapRenderer : public Pipeline
 {
@@ -14,7 +14,7 @@ public:
 	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex) override;
 
 	void UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, LightConstants& lightCnst);
-	void PreRender(ID3D12GraphicsCommandList* cmdList, GameScene* scene);
+	void PreRender(ID3D12GraphicsCommandList* cmdList, InGameScene* scene);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int idx);
 
 	void AppendTargetPipeline(Layer layer, Pipeline* pso);
