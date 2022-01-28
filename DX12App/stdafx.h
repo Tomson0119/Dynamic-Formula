@@ -38,6 +38,16 @@
 #pragma comment(lib, "dxgi.lib")
 
 
+//D2D11 헤더파일:
+#include <d2d1_3.h>
+#include <d3d11on12.h>
+#include <dwrite.h>
+
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dwrite.lib")
+#pragma comment(lib, "dxguid.lib")
+
 // C++ 헤더 파일:
 #include <array>
 #include <vector>
@@ -53,6 +63,7 @@
 #include <cmath>
 #include <chrono>
 #include <algorithm>
+#include <tchar.h>
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
@@ -146,7 +157,7 @@ struct LightInfo
 
 struct LightConstants
 {
-	XMFLOAT4X4 ShadowTransform;
+	XMFLOAT4X4 ShadowTransform[3];
 	XMFLOAT4 Ambient;
 	LightInfo Lights[NUM_LIGHTS];
 };
@@ -250,6 +261,14 @@ namespace Vector3
 		XMStoreFloat3(&ret, scalar * XMLoadFloat3(&v));
 		return ret;
 	}
+
+	inline XMFLOAT3 Divide(float scalar, XMFLOAT3& v)
+	{
+		XMFLOAT3 ret;
+		XMStoreFloat3(&ret, XMLoadFloat3(&v) / scalar);
+		return ret;
+	}
+
 
 	inline XMFLOAT3 MultiplyAdd(float delta, XMFLOAT3& src, XMFLOAT3& dst)
 	{		

@@ -54,9 +54,6 @@
     <ClCompile Include="texture.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="dynamicCubeRenderer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="d3dFramework.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -73,6 +70,9 @@
       <Filter>소스 파일\Helper</Filter>
     </ClCompile>
     <ClCompile Include="shadowMapRenderer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="UI.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -110,9 +110,6 @@
     <ClInclude Include="vertex.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="dynamicCubeRenderer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="d3dFramework.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -138,6 +135,9 @@
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
     <ClInclude Include="shadowMapRenderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -176,6 +176,9 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="Shaders\color.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\shadowTerrain.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>

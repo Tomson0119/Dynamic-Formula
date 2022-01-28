@@ -43,9 +43,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="dynamicCubeRenderer.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="gameFramework.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
@@ -121,6 +118,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basewin.h" />
@@ -130,7 +128,6 @@
     <ClInclude Include="d3dFramework.h" />
     <ClInclude Include="DDSTextureLoader12.h" />
     <ClInclude Include="dxException.h" />
-    <ClInclude Include="dynamicCubeRenderer.h" />
     <ClInclude Include="gameFramework.h" />
     <ClInclude Include="gameObject.h" />
     <ClInclude Include="gameScene.h" />
@@ -143,6 +140,7 @@
     <ClInclude Include="shadowMapRenderer.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="texture.h" />
+    <ClInclude Include="UI.h" />
     <ClInclude Include="vertex.h" />
   </ItemGroup>
   <ItemGroup>
@@ -204,6 +202,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\color.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\shadowTerrain.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

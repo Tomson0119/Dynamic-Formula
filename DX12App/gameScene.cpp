@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "gameScene.h"
-#include "dynamicCubeRenderer.h"
 #include "shadowMapRenderer.h"
 
 using namespace std;
@@ -22,7 +21,7 @@ void GameScene::OnResize(float aspect)
 void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -31,15 +30,15 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	mMainLight.Lights[0].SetInfo(
 		XMFLOAT3(0.6f, 0.6f, 0.6f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(1.0f, 0.75f, -1.0f),
+		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
 	mMainLight.Lights[1].SetInfo(
-		XMFLOAT3(0.3f, 0.3f, 0.3f),
+		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
 	mMainLight.Lights[2].SetInfo(
-		XMFLOAT3(0.15f, 0.15f, 0.15f),
+		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, 1.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
@@ -53,20 +52,23 @@ void GameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 
 void GameScene::BuildRootSignature(ID3D12Device* device)
 {
-	D3D12_DESCRIPTOR_RANGE descRanges[3];
+	D3D12_DESCRIPTOR_RANGE descRanges[4];
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 4);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0);
-	descRanges[2] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 1);
+	descRanges[2] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 1);
+	descRanges[3] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 2);
 
-	D3D12_ROOT_PARAMETER parameters[7];
+	D3D12_ROOT_PARAMETER parameters[9];
 	parameters[0] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 0, D3D12_SHADER_VISIBILITY_ALL);    // CameraCB
 	parameters[1] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_ALL);    // LightCB
 	parameters[2] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 2, D3D12_SHADER_VISIBILITY_ALL);    // GameInfoCB
 	parameters[3] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 3, D3D12_SHADER_VISIBILITY_ALL);	 // MaterialCB
 	parameters[4] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);			     // Object,  CBV
 	parameters[5] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);				 // Texture, SRV
-	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap 																	   
-    
+	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap
+	parameters[7] = Extension::DescriptorTable(1, &descRanges[3], D3D12_SHADER_VISIBILITY_ALL);				 // CubeMap
+	parameters[8] = Extension::Constants(3, 5, D3D12_SHADER_VISIBILITY_ALL);                                 // Shadow ViewProjection
+
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[5];
 	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_ANISOTROPIC, D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 	samplerDesc[1] = Extension::SamplerDesc(1, D3D12_FILTER_ANISOTROPIC, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
@@ -132,7 +134,6 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 	mPipelines[Layer::SkyBox]->BuildPipeline(device, mRootSignature.Get());
 
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
-	//mPipelines[Layer::Default]->SetCullClockwise();
 	mPipelines[Layer::Default]->BuildPipeline(device, mRootSignature.Get(), defaultShader.get());
 
 	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
@@ -142,20 +143,30 @@ void GameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandL
 
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
+
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 1024, 1024, 3, mMainCamera.get());
+	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
+	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
+	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
+	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
 }
 
 void GameScene::BuildConstantBuffers(ID3D12Device* device)
 {
 	mLightCB = std::make_unique<ConstantBuffer<LightConstants>>(device, 2);
-	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(device, 1 + 2);
+	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(device, 10); // 메인 카메라 1개, 그림자 매핑 카메라 3개, 다이나믹 큐브매핑 카메라 6개
 	mGameInfoCB = std::make_unique<ConstantBuffer<GameInfoConstants>>(device, 1);
 
 	for (const auto& [_, pso] : mPipelines)
-		pso->BuildConstantBuffer(device);
+	{
+		if(pso)
+			pso->BuildConstantBuffer(device);
+	}
 }
 
 void GameScene::BuildDescriptorHeap(ID3D12Device* device)
 {
+	mShadowMapRenderer->BuildDescriptorHeap(device, 3, 4, 5);
 	for (const auto& [_, pso] : mPipelines)
 		pso->BuildDescriptorHeap(device, 3, 4, 5);
 }
@@ -174,10 +185,10 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 	grid->Rotate(90.0f, 0.0f, 0.0f);
 	mPipelines[Layer::Default]->AppendObject(grid);
 
-	auto terrain = make_shared<TerrainObject>(512, 512, XMFLOAT3(8.0f, 1.0f, 8.0f));
+	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
 	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 33, 33);
+	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 45, 45);
 	terrain->LoadTexture(device, cmdList, L"Resources\\terrainTexture.dds");
 	terrain->LoadTexture(device, cmdList, L"Resources\\rocky.dds");
 	terrain->LoadTexture(device, cmdList, L"Resources\\road.dds");
@@ -203,16 +214,39 @@ void GameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
 	carObj->BuildRigidBody(dynamicsWorld);
+	carObj->BuildDsvRtvView(device);
 	mPipelines[Layer::Color]->AppendObject(carObj);
 
 	float aspect = mMainCamera->GetAspect();
 	mPlayer = carObj.get();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 5000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
 }
 
-void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList)
+
+void GameScene::PreRender(ID3D12GraphicsCommandList* cmdList, const float& elapsed)
 {
+	if (mShadowMapRenderer)
+		mShadowMapRenderer->PreRender(cmdList, this);
+
+	if (mCubemapInterval < 0.0f)
+	{
+		mCubemapInterval = 0.01f;
+		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
+
+		if (mCubemapDrawIndex < 5)
+			mCubemapDrawIndex++;
+		else
+		{
+			mPlayer->ChangeCurrentRenderTarget();
+			mCubemapDrawIndex = 0;
+		}
+	}
+	else
+	{
+		mCubemapInterval -= elapsed;
+	}
+	mPlayer->SetCubemapSrv(cmdList, 7);
 }
 
 void GameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
@@ -277,6 +311,9 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 	UpdateLight(elapsed);
 	mMainCamera->Update(elapsed);
 
+	mShadowMapRenderer->UpdateSplitFrustum(mMainCamera.get());
+	mShadowMapRenderer->UpdateDepthCamera(cmdList, mMainLight);
+
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mMainCamera.get());
 
@@ -287,17 +324,20 @@ void GameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 
 void GameScene::UpdateLight(float elapsed)
 {
-	XMMATRIX R = XMMatrixRotationY(0.1f * elapsed);
-	for (int i = 0; i < NUM_LIGHTS; i++)
-	{
-		// rotate each direction..
-		mMainLight.Lights[i].Direction = Vector3::TransformNormal(mMainLight.Lights[i].Direction,R);
-		mMainLight.Lights[i].Position = Vector3::Multiply(2.0f, mMainLight.Lights[i].Direction);
-	}
+	//XMMATRIX R = XMMatrixRotationY(0.1f * elapsed);
+	//for (int i = 0; i < NUM_LIGHTS; i++)
+	//{
+	//	// rotate each direction..
+	//	mMainLight.Lights[i].Direction = Vector3::TransformNormal(mMainLight.Lights[i].Direction,R);
+	//	mMainLight.Lights[i].Position = Vector3::Multiply(2.0f, mMainLight.Lights[i].Direction);
+	//}
 }
 
 void GameScene::UpdateLightConstants()
 {
+	for(int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
+		mMainLight.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(i));
+
 	mLightCB->CopyData(0, mMainLight);
 }
 
@@ -345,9 +385,35 @@ void GameScene::Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuf
 void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 {	
 	SetCBV(cmdList, cameraCBIndex);
+	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
 
-	for (const auto& [layer, pso] : mPipelines) {
-		pso->SetAndDraw(cmdList, (bool)mLODSet);
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if (layer != Layer::Terrain && layer != Layer::SkyBox)
+			pso->SetAndDraw(cmdList, mMainCamera->GetWorldFrustum(), true, (bool)mLODSet);
+		else if (layer != Layer::SkyBox)
+			pso->SetAndDraw(cmdList, mMainCamera->GetWorldFrustum(), false, (bool)mLODSet);
+		else
+			pso->SetAndDraw(cmdList, (bool)mLODSet);
+	}
+}
+
+void GameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera ,int cameraCBIndex)
+{
+	SetCBV(cmdList, cameraCBIndex);
+	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
+
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if (layer == Layer::Color)
+			continue;
+
+		if (layer != Layer::Terrain && layer != Layer::SkyBox)
+			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), true, (bool)mLODSet);
+		else if(layer != Layer::SkyBox)
+			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), false, (bool)mLODSet);
+		else
+			pso->SetAndDraw(cmdList, (bool)mLODSet);
 	}
 }
 
@@ -356,10 +422,11 @@ void GameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandL
 	mMissileMesh = std::make_shared<BoxMesh>(device, cmdList, 5, 5, 5);
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
 	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), dynamicsWorld);
+	missile->LoadTexture(device, cmdList, L"Resources\\brick.dds");
 
 	mMissileObjects.push_back(missile);
-	mPipelines[Layer::Color]->AppendObject(missile);
-	mPipelines[Layer::Color]->ResetPipeline(device);
+	mPipelines[Layer::Default]->AppendObject(missile);
+	mPipelines[Layer::Default]->ResetPipeline(device);
 }
 
 void GameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
