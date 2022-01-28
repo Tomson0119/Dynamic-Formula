@@ -96,7 +96,7 @@ bool InGameRoom::RemovePlayer(int hostID)
 void InGameRoom::PrintWaitPlayers()
 {
 	int playerCount = mPlayerCount;
-	for (int j = 0; j < playerCount;)
+	for (int j = 0; j < MAX_ROOM_CAPACITY && playerCount > 0; j++)
 	{
 		if (mPlayers[j].Empty == false)
 		{
@@ -104,7 +104,7 @@ void InGameRoom::PrintWaitPlayers()
 			std::cout << "\t   Color: " << (int)mPlayers[j].Color << "\n";
 			std::cout << "\t   Ready: " << std::boolalpha << mPlayers[j].Empty << "\n";
 			std::cout << "\t   Host ID: " << mPlayers[j].ID << "\n\n";
-			j += 1;
+			playerCount -= 1;
 		}
 	}
 }
@@ -137,6 +137,10 @@ bool InGameRoom::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		std::cout << "[" << id << "] Received press ready packet.\n";
 #endif
 		CS::packet_press_ready* pck = reinterpret_cast<CS::packet_press_ready*>(packet);
+		
+		// for stress test
+		gClients[id]->ReadySendTime = pck->send_time;
+
 		if (pck->room_id != mID || gClients[id]->PlayerIndex < 0)
 		{
 			mLoginPtr->Disconnect(id);
@@ -170,7 +174,7 @@ void InGameRoom::GameStartIfAllReady(int admin, bool instSend)
 			if (mPlayers[i].Empty == false && mPlayers[i].Ready == false)
 				return false;
 		}
-		return true;
+		return (mPlayerCount > 1);
 	}();
 
 	SC::packet_game_start_result pck{};
@@ -178,7 +182,9 @@ void InGameRoom::GameStartIfAllReady(int admin, bool instSend)
 	pck.type = SC::GAME_START_RESULT;
 	pck.room_id = mID;
 	pck.succeeded = allReady;
-
+	// for stress test
+	pck.send_time = gClients[mPlayers[admin].ID]->ReadySendTime;
+	
 	if (allReady)
 	{
 #ifdef DEBUG_PACKET_TRANSFER
@@ -218,6 +224,8 @@ void InGameRoom::SendUpdatePlayerInfoToAll(int target, int ignore, bool instSend
 	pck.player_info.color = mPlayers[idx].Color;
 	pck.player_info.empty = mPlayers[idx].Empty;
 	pck.player_info.ready = mPlayers[idx].Ready;
+	// for stress test
+	pck.send_time = gClients[mPlayers[idx].ID]->ReadySendTime;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, ignore, instSend);	
 }
 

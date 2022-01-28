@@ -68,6 +68,7 @@ namespace CS
 	struct packet_enter_room : packet_header
 	{
 		int room_id;
+		uint64_t send_time;
 	};
 
 	struct packet_revert_scene : packet_header { };
@@ -81,6 +82,7 @@ namespace CS
 	struct packet_press_ready : packet_header
 	{
 		int room_id;
+		uint64_t send_time;
 	};
 }
 
@@ -121,11 +123,13 @@ namespace SC
 	struct packet_access_room_accept : packet_header
 	{
 		int room_id;
+		uint64_t send_time;
 	};
 
 	struct packet_access_room_deny : packet_header
 	{
 		char reason;
+		uint64_t send_time;
 	};
 
 	struct packet_room_inside_info : packet_header
@@ -152,6 +156,7 @@ namespace SC
 		uint8_t admin_idx : 4;
 		uint8_t player_idx : 4;
 		PlayerInfo player_info;
+		uint64_t send_time;
 	};
 
 	struct packet_update_map_info : packet_header
@@ -171,6 +176,7 @@ namespace SC
 	{
 		int room_id;
 		bool succeeded;
+		uint64_t send_time;
 	};
 }
 #pragma pack(pop)
