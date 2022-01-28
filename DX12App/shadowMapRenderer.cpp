@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "shadowMapRenderer.h"
-#include "gameScene.h"
+#include "inGameScene.h"
 
 ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount, const Camera* mainCamera)
 	: mMapWidth(width), mMapHeight(height), mMapCount(lightCount)
@@ -19,7 +19,7 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 
 	mZSplits[0] = mainCamera->GetNearZ();
 	mZSplits[mMapCount] = 1000;
-	for (int i = 1; i < mMapCount; ++i)
+	for (UINT i = 1; i < mMapCount; ++i)
 	{
 		float index = (i / (float)mMapCount);
 		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
@@ -139,7 +139,7 @@ void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
 	float vFov = tanf(mainCamera->GetFov().y / 2);
 	float hFov = vFov * mainCamera->GetAspect();
 
-	for (int i = 0; i < mMapCount; ++i)
+	for (UINT i = 0; i < mMapCount; ++i)
 	{
 		float xn = mZSplits[i] * hFov;
 		float xf = mZSplits[i + 1] * hFov;
@@ -242,7 +242,7 @@ void ShadowMapRenderer::BuildDescriptorViews(ID3D12Device* device)
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvCPUHandle = mDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	D3D12_CPU_DESCRIPTOR_HANDLE cbvSrvCPUHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	for (int i = 0; i < mMapCount; ++i)
+	for (UINT i = 0; i < mMapCount; ++i)
 	{
 		ComPtr<ID3D12Resource> shadowMap;
 		shadowMap = CreateTexture2DResource(
@@ -268,7 +268,7 @@ void ShadowMapRenderer::BuildDescriptorViews(ID3D12Device* device)
 
 void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, LightConstants& lightCnst)
 {
-	for (int i = 0; i < (int)mMapCount; i++)
+	for (UINT i = 0; i < mMapCount; i++)
 	{
 		XMFLOAT3 look = Vector3::Normalize(lightCnst.Lights[0].Direction);
 		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange[i], look, mCenter[i]);
@@ -278,13 +278,13 @@ void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, Li
 		mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
 	}
 
-	for (int i = 1; i < mMapCount + 1; ++i)
+	for (UINT i = 1; i < mMapCount + 1; ++i)
 	{
 		cmdList->SetGraphicsRoot32BitConstants(8, 1, &mZSplits[i], i - 1);
 	}
 }
 
-void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, GameScene* scene)
+void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, InGameScene* scene)
 {
 	cmdList->RSSetViewports(1, &mViewPort);
 	cmdList->RSSetScissorRects(1, &mScissorRect);
