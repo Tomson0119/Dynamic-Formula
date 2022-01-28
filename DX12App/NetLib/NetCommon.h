@@ -1,9 +1,9 @@
 #pragma once
 
-#include <stdafx.h>
-#include <IOCP.h>
-#include <Socket.h>
-#include <WSAOverlappedEx.h>
-#include <MemoryPool.h>
-#include <EndPoint.h>
-#include <BufferQueue.h>
+#include "../../Server/Network/stdafx.h"
+#include "../../Server/Network/IOCP.h"
+#include "../../Server/Network/Socket.h"
+#include "../../Server/Network/WSAOverlappedEx.h"
+#include "../../Server/Network/MemoryPool.h"
+#include "../../Server/Network/BufferQueue.h"
+#include "../../Server/Network/EndPoint.h"
