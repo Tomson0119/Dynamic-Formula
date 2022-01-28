@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.31613.86
+VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DX12App", "DX12App.vcxproj", "{3A61944B-2D76-4770-87BC-CB667984A52B}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Network", "..\Server\Network\Network.vcxproj", "{819E1CC8-B6E9-472E-A653-90056803488C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Network", "Network.vcxproj", "{819E1CC8-B6E9-472E-A653-90056803488C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,14 +13,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3A61944B-2D76-4770-87BC-CB667984A52B}.Debug|x64.ActiveCfg = Debug|x64
-		{3A61944B-2D76-4770-87BC-CB667984A52B}.Debug|x64.Build.0 = Debug|x64
-		{3A61944B-2D76-4770-87BC-CB667984A52B}.Debug|x86.ActiveCfg = Debug|Win32
-		{3A61944B-2D76-4770-87BC-CB667984A52B}.Debug|x86.Build.0 = Debug|Win32
-		{3A61944B-2D76-4770-87BC-CB667984A52B}.Release|x64.ActiveCfg = Release|x64
-		{3A61944B-2D76-4770-87BC-CB667984A52B}.Release|x64.Build.0 = Release|x64
-		{3A61944B-2D76-4770-87BC-CB667984A52B}.Release|x86.ActiveCfg = Release|Win32
-		{3A61944B-2D76-4770-87BC-CB667984A52B}.Release|x86.Build.0 = Release|Win32
 		{819E1CC8-B6E9-472E-A653-90056803488C}.Debug|x64.ActiveCfg = Debug|x64
 		{819E1CC8-B6E9-472E-A653-90056803488C}.Debug|x64.Build.0 = Debug|x64
 		{819E1CC8-B6E9-472E-A653-90056803488C}.Debug|x86.ActiveCfg = Debug|Win32
@@ -36,6 +26,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {2470771C-D323-4615-BEB3-57696207F767}
+		SolutionGuid = {645FDC4A-7BB2-445F-A48C-003C2FE6F748}
 	EndGlobalSection
 EndGlobal

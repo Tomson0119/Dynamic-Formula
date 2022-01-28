@@ -19,6 +19,12 @@
     <Filter Include="소스 파일\Helper">
       <UniqueIdentifier>{bc5629bc-a220-47ff-ae24-559e3d905bc1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Network">
+      <UniqueIdentifier>{b912546f-4b37-469b-a8af-e0201b21b024}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Network">
+      <UniqueIdentifier>{00349845-83d4-44d9-9829-ac2ecb3a63fe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp">
@@ -74,6 +80,9 @@
     </ClCompile>
     <ClCompile Include="UI.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="NetLib\NetClient.cpp">
+      <Filter>소스 파일\Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +148,12 @@
     </ClInclude>
     <ClInclude Include="UI.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="NetLib\NetCommon.h">
+      <Filter>헤더 파일\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="NetLib\NetClient.h">
+      <Filter>헤더 파일\Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
