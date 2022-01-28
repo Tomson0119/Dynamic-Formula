@@ -1,10 +1,10 @@
 #pragma once
 
 #include "d3dFramework.h"
-#include "gameScene.h"
-class UI;
 
+class UI;
 class Camera;
+class Scene;
 
 class GameFramework : public D3DFramework
 {
@@ -30,5 +30,5 @@ private:
 	void OnPreciseKeyInput();
 
 private:
-	std::stack<std::unique_ptr<GameScene>> mScenes;
+	std::stack<std::unique_ptr<Scene>> mScenes;
 };

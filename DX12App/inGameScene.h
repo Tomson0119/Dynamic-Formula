@@ -1,5 +1,7 @@
 #pragma once
 
+#include "scene.h"
+
 #include "gameTimer.h"
 #include "camera.h"
 #include "constantBuffer.h"
@@ -13,42 +15,50 @@
 class DynamicCubeRenderer;
 class ShadowMapRenderer;
 
-class GameScene
+class InGameScene : public Scene
 {
 public:
-	GameScene();
-	GameScene(const GameScene& rhs) = delete;
-	GameScene& operator=(const GameScene& rhs) = delete;
-	virtual ~GameScene();
+	InGameScene();
+	virtual ~InGameScene();
 
-	void OnResize(float aspect);
+public:
+	virtual void OnResize(float aspect) override;
 
-	void BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	virtual void BuildObjects(
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		float aspect,
+		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) override;
 	
+	virtual void Update(
+		ID3D12Device* device, 
+		ID3D12GraphicsCommandList* cmdList, 
+		const GameTimer& timer,
+		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) override;
+	
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer) override;
+	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
+
+public:
 	void UpdateLight(float elapsed);
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
-	void UpdateConstants(const GameTimer& timer);
-	
-	void Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, const GameTimer& timer);
+	void UpdateConstants(const GameTimer& timer);	
 
 	void SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
-	void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer);
 
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0);
 
-	void PreRender(ID3D12GraphicsCommandList* cmdList, const float& elapsed);
-
-	void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y);
-	void OnProcessMouseUp(WPARAM buttonState, int x, int y);
-	void OnProcessMouseMove(WPARAM buttonState, int x, int y);
-	void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 	void OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed);
 
-	XMFLOAT4 GetFrameColor() const { return mFrameColor; }
-	ID3D12RootSignature* GetRootSignature() const { return mRootSignature.Get(); }
+public:
+	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y) override;
+	virtual void OnProcessMouseUp(WPARAM buttonState, int x, int y) override;
+	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
+	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+	virtual ID3D12RootSignature* GetRootSignature() const override { return mRootSignature.Get(); }
 
 private:
 	void BuildRootSignature(ID3D12Device* device);
@@ -62,8 +72,6 @@ private:
 	void UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 
 private:
-	XMFLOAT4 mFrameColor = (XMFLOAT4)Colors::LightSkyBlue;
-
 	std::unique_ptr<Camera> mMainCamera;
 	POINT mLastMousePos{};
 
