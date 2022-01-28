@@ -1,16 +1,8 @@
 #pragma once
 
-struct PlayerInfo
-{
-	bool Empty;
-	char Color;
-	bool Ready;
-	char Name[MAX_NAME_SIZE];
-};
-
 class NetClient
 {
-	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
+	
 public:
 	NetClient();
 	~NetClient();
