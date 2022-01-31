@@ -41,10 +41,17 @@ struct DsOut
 {
     float4 PosH         : SV_POSITION;
     float3 PosW         : POSITION0;
+    float3 oldPosWVP    : POSITION1;
     float3 NormalW      : NORMAL;
     float2 TexCoord0    : TEXCOORD0;
     float2 TexCoord1    : TEXCOORD1;
     float4 Tessellation : TEXCOORD2;
+};
+
+struct PixelOut
+{
+    float4 f4Color : SV_TARGET0;
+    float4 f4Direction : SV_TARGET1;
 };
 
 VertexOut VS(VertexIn vin)
@@ -148,8 +155,10 @@ DsOut DS(HsConstant hconst, float2 uv : SV_DomainLocation, OutputPatch<HsOut, 25
     
     float3 pos = CubicBezierSum5x5(patch, uB, vB, false);
     float4 posW = mul(float4(pos, 1.0f), gWorld);
-    
-    dout.PosW = posW;
+    float4 oldPosWVP = mul(mul(mul(float4(pos, 1.0f), gOldWorld), gOldView), gProj);
+
+    dout.oldPosWVP = oldPosWVP.xyz;
+    dout.PosW = posW.xyz;
     dout.PosH = mul(mul(float4(pos, 1.0f), gWorld), gViewProj);
     float3 normalL = CubicBezierSum5x5(patch, uB, vB, true);
     float4x4 tWorld = transpose(gWorld);
@@ -161,8 +170,10 @@ DsOut DS(HsConstant hconst, float2 uv : SV_DomainLocation, OutputPatch<HsOut, 25
     return dout;
 }
 
-float4 PS(DsOut din) : SV_Target
+PixelOut PS(DsOut din)
 {
+    PixelOut pout;
+
     float4 result = 0.0f;
     
     if(gKeyInput)
@@ -238,5 +249,8 @@ float4 PS(DsOut din) : SV_Target
         result *= debugColor;
     }
 
-    return result;
+    pout.f4Color = result;
+    pout.f4Direction = distance(din.oldPosWVP, din.PosH.xyz);
+
+    return pout;
 }

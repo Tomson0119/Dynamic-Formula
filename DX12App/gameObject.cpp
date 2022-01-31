@@ -296,6 +296,8 @@ void GameObject::Draw(
 
 void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 {
+	mOldWorld = mWorld;
+
 	mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;	
 	mWorld(0, 2) = mRight.z;
@@ -483,9 +485,15 @@ ObjectConstants GameObject::GetObjectConstants()
 {
 	ObjectConstants objCnst = {};
 	if (mReflected)
+	{
 		objCnst.World = Matrix4x4::Transpose(Matrix4x4::Multiply(mWorld, mReflectMatrix));
+		objCnst.oldWorld = Matrix4x4::Transpose(Matrix4x4::Multiply(mOldWorld, mReflectMatrix));
+	}
 	else
+	{
 		objCnst.World = Matrix4x4::Transpose(mWorld);
+		objCnst.oldWorld = Matrix4x4::Transpose(mOldWorld);
+	}
 	return objCnst;
 }
 

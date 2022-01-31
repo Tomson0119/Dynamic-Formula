@@ -139,12 +139,18 @@ void GameFramework::Draw()
 
 	// 화면 버퍼와 깊이 스텐실 버퍼를 초기화한다.
 	const XMFLOAT4& color = mScenes.top()->GetFrameColor();
+	XMFLOAT4 velocity = {0.0f, 0.0f, 0.0f, 0.0f};
 
 	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), (FLOAT*)&color, 0, nullptr);
 	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
+	mCommandList->ClearRenderTargetView(mVelocityMapHandle, (FLOAT*)&velocity, 0, nullptr);
+
 	// 렌더링할 버퍼를 구체적으로 설정한다.
-	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), TRUE, &DepthStencilView());
+
+	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { CurrentBackBufferView(), mVelocityMapHandle };
+
+	mCommandList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &DepthStencilView());
 
 	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBuffer());
 

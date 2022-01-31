@@ -237,7 +237,7 @@ void D3DFramework::CreateRtvDsvDescriptorHeaps()
 {
 	// For Render Target Descriptor Heap
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc = {};
-	d3dDescriptorHeapDesc.NumDescriptors = mSwapChainBufferCount;
+	d3dDescriptorHeapDesc.NumDescriptors = mSwapChainBufferCount + 1;
 	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	d3dDescriptorHeapDesc.NodeMask = 0;
 	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -305,6 +305,9 @@ void D3DFramework::CreateRenderTargetViews()
 		mD3dDevice->CreateRenderTargetView(mSwapChainBuffers[i].Get(), nullptr, rtvHandle);
 		rtvHandle.ptr += gRtvDescriptorSize;
 	}
+
+	mD3dDevice->CreateRenderTargetView(mVelocityMap.Get(), nullptr, rtvHandle);
+	mVelocityMapHandle = rtvHandle;
 }
 
 void D3DFramework::CreateDepthStencilView()

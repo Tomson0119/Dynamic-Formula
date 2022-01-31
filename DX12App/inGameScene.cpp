@@ -232,7 +232,7 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 
 	if (mCubemapInterval < 0.0f)
 	{
-		mCubemapInterval = 0.01f;
+		mCubemapInterval = 0.1f;
 		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
 		if (mCubemapDrawIndex < 5)

@@ -118,6 +118,7 @@ protected:
 	XMFLOAT3 mScaling = { 1.0f, 1.0f, 1.0f };
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
 
 	btRigidBody* mBtRigidBody;
 	std::vector<std::shared_ptr<Mesh>> mMeshes;

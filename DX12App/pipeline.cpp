@@ -60,8 +60,9 @@ void Pipeline::BuildPipeline(
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = mPrimitive;
-	psoDesc.NumRenderTargets = 1;
+	psoDesc.NumRenderTargets = 2;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
+	psoDesc.RTVFormats[1] = mBackBufferFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	psoDesc.SampleDesc.Count = 1;
 	//psoDesc.SampleDesc.Quality = gMsaaStateDesc.Quality;
@@ -331,8 +332,9 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = mPrimitive;
-	psoDesc.NumRenderTargets = 1;
+	psoDesc.NumRenderTargets = 2;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
+	psoDesc.RTVFormats[1] = mBackBufferFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	psoDesc.SampleDesc.Count = 1;
 

@@ -16,6 +16,7 @@ cbuffer CameraCB : register(b0)
     matrix gViewProj        : packoffset(c8);
     float3 gCameraPos       : packoffset(c12);
     float  gAspect          : packoffset(c12.w);
+    matrix gOldView         : packoffset(c16);
 }
 
 cbuffer LightCB : register(b1)
@@ -43,6 +44,7 @@ cbuffer MaterialCB : register(b3)
 cbuffer ObjectCB : register(b4)
 {
     matrix gWorld : packoffset(c0);
+    matrix gOldWorld : packoffset(c4);
 }
 
 cbuffer ShadowCB : register(b5)

@@ -172,6 +172,7 @@ struct CameraConstants
 	XMFLOAT4X4 ViewProj;
 	XMFLOAT3 CameraPos;
 	float Aspect;
+	XMFLOAT4X4 oldView;
 };
 
 struct Material
@@ -197,6 +198,7 @@ struct Material
 struct ObjectConstants
 {
 	XMFLOAT4X4 World;
+	XMFLOAT4X4 oldWorld;
 	//Material Mat;
 };
 

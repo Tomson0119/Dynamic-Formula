@@ -83,6 +83,9 @@ protected:
 	ComPtr<ID3D12Resource> mSwapChainBuffers[mSwapChainBufferCount];
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
+	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityMapHandle;
+	ComPtr<ID3D12Resource> mVelocityMap;
+
 	ComPtr<ID3D12Fence> mFence;
 	UINT64 mFenceValues[mSwapChainBufferCount];
 	HANDLE mFenceEvent = NULL;
@@ -102,6 +105,7 @@ protected:
 	//UI 
 	//std:: vector<UI> mpUI;
 	//UI				*mpUI = NULL;
+
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
 
