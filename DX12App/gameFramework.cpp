@@ -145,7 +145,7 @@ void GameFramework::Draw()
 
 	// 렌더링할 버퍼를 구체적으로 설정한다.
 
-	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView());
+	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView());
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(

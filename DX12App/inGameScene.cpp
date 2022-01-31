@@ -176,13 +176,13 @@ void InGameScene::BuildDescriptorHeap(ID3D12Device* device)
 
 void InGameScene::CreateVelocityMapViews(ID3D12Device* device)
 {
-	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,1.0f} };
+	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,0.0f} };
 
 	mVelocityMap = CreateTexture2DResource(
 		device, gFrameWidth, gFrameHeight, 1, 1,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_GENERIC_READ, &clearValue);
+		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mVelocityMapRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	device->CreateRenderTargetView(mVelocityMap.Get(), nullptr, rtvHandle);
@@ -209,7 +209,7 @@ void InGameScene::CreateVelocityMapDescriptorHeaps(ID3D12Device* device)
 			1,
 			D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
-		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
+		IID_PPV_ARGS(&mVelocityMapRtvDescriptorHeap)));
 
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
@@ -426,10 +426,10 @@ void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 
 void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView)
 {
-	XMFLOAT4 velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
-	cmdList->ClearRenderTargetView(mVelocityMapHandle, (FLOAT*)&velocity, 0, nullptr);
+	const XMFLOAT4& velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
+	cmdList->ClearRenderTargetView(mVelocityMapRtvHandle, (FLOAT*)&velocity, 0, nullptr);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { backBufferview, mVelocityMapHandle };
+	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { backBufferview, mVelocityMapRtvHandle };
 
 	cmdList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &depthStencilView);
 
