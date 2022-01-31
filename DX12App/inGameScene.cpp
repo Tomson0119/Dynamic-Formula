@@ -45,6 +45,7 @@ void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* 
 		3000.0f, DIRECTIONAL_LIGHT);
 
 	BuildRootSignature(device);
+	BuildComputeRootSignature(device);
 	BuildShadersAndPSOs(device, cmdList);
 	BuildGameObjects(device, cmdList, dynamicsWorld);
 	BuildConstantBuffers(device);
@@ -130,6 +131,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsComman
 	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
 	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
+	//auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\MotionBlur.hlsl");
 
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(device, cmdList);
 	mPipelines[Layer::SkyBox]->BuildPipeline(device, mRootSignature.Get());
@@ -144,6 +146,9 @@ void InGameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsComman
 
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
+
+	/*mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(device);
+	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(device, mComputeRootSignature.Get(), motionBlurShader.get());*/
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 2048, 2048, 3, mMainCamera.get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
@@ -176,11 +181,11 @@ void InGameScene::BuildDescriptorHeap(ID3D12Device* device)
 
 void InGameScene::CreateVelocityMapViews(ID3D12Device* device)
 {
-	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,0.0f} };
+	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R32G32B32A32_FLOAT, {0.0f,0.0f,0.0f,0.0f} };
 
 	mVelocityMap = CreateTexture2DResource(
 		device, gFrameWidth, gFrameHeight, 1, 1,
-		DXGI_FORMAT_R8G8B8A8_UNORM,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue);
 
@@ -190,7 +195,7 @@ void InGameScene::CreateVelocityMapViews(ID3D12Device* device)
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
@@ -372,13 +377,6 @@ void InGameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdLis
 
 void InGameScene::UpdateLight(float elapsed)
 {
-	//XMMATRIX R = XMMatrixRotationY(0.1f * elapsed);
-	//for (int i = 0; i < NUM_LIGHTS; i++)
-	//{
-	//	// rotate each direction..
-	//	mMainLight.Lights[i].Direction = Vector3::TransformNormal(mMainLight.Lights[i].Direction,R);
-	//	mMainLight.Lights[i].Position = Vector3::Multiply(2.0f, mMainLight.Lights[i].Direction);
-	//}
 }
 
 void InGameScene::UpdateLightConstants()

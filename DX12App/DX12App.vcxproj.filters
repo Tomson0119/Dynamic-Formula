@@ -226,5 +226,8 @@
     <None Include="Shaders\shadowTerrain.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="Shaders\motionBlur.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>

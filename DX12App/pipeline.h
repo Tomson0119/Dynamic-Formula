@@ -16,7 +16,8 @@ enum class Layer : int
 	Particle,
 	Transparent,
 	ShadowDebug,
-	DynamicCubeMap
+	DynamicCubeMap,
+	MotionBlur
 };
 
 class Pipeline

@@ -228,7 +228,6 @@ PixelOut PS(DsOut din)
     result *= debugColor;
 
     pout.f4Color = result;
-    pout.f4Direction = distance(din.oldPosWVP, din.PosH.xyz);
-
+    pout.f4Direction = float4(din.PosH.xyz / din.PosH.w - din.oldPosWVP, 1.0f);
     return pout;
 }

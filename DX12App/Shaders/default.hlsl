@@ -102,7 +102,8 @@ PixelOut PS(VertexOut pin)
     result *= debugColor;
 
     pout.f4Color = result;
-    pout.f4Direction = distance(pin.oldPosWVP, pin.PosH.xyz);
+    pout.f4Direction = float4(pin.PosH.xyz / pin.PosH.w - pin.oldPosWVP, 1.0f);
+
 
     return pout;
 }
