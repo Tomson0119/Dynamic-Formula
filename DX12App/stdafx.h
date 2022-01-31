@@ -212,7 +212,6 @@ struct GameInfoConstants
 {
 	XMFLOAT4 RandFloat4;
 	XMFLOAT3 PlayerPosition;
-	UINT KeyInput;
 	float CurrentTime;
 	float ElapsedTime;
 };

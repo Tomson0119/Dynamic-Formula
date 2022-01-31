@@ -176,78 +176,56 @@ PixelOut PS(DsOut din)
 
     float4 result = 0.0f;
     
-    if(gKeyInput)
+    int idx = -1;
+    float4 PosV = mul(float4(din.PosW, 1.0f), gView);
+        
+    float zSplits[3] = { gZSplit0, gZSplit1, gZSplit2 };
+    for (int j = 2; j >= 0; j--)
     {
-        if (din.Tessellation.w <= 5.0f) 
-            result = float4(1.0f, 0.0f, 0.0f, 1.0f);
-        else if (din.Tessellation.w <= 10.0f) 
-            result = float4(0.0f, 1.0f, 0.0f, 1.0f);
-        else if (din.Tessellation.w <= 20.0f)
-            result = float4(0.0f, 0.0f, 1.0f, 1.0f);
-        else if (din.Tessellation.w <= 30.0f)
-            result = float4(1.0f, 1.0f, 0.0f, 1.0f);
-        else if (din.Tessellation.w <= 40.0f)
-            result = float4(1.0f, 0.0f, 1.0f, 1.0f);
-        else if (din.Tessellation.w <= 50.0f)
-            result = float4(0.0f, 1.0f, 1.0f, 1.0f);
-        else if (din.Tessellation.w <= 60.0f)
-            result = float4(1.0f, 1.0f, 1.0f, 1.0f);
-        else
-            result = float4(1.0f, 0.5f, 0.5f, 1.0f);
+        if (PosV.z < zSplits[j])
+        {
+            idx = j;
+        }
+    }
+    float4 PosS = mul(float4(din.PosW, 1.0f), gShadowTransform[idx]);
+
+    float4 diffuse = 0.0f;
+        
+    float4 baseTexDiffuse = gBaseTexture.Sample(gAnisotropicWrap, din.TexCoord0) * gMat.Diffuse;
+    float4 detailedTexDiffuse = gDetailedTexture.Sample(gAnisotropicWrap, din.TexCoord1) * gMat.Diffuse;
+    float4 roadTexDiffuse = gRoadTexture.Sample(gAnisotropicWrap, din.TexCoord0) * gMat.Diffuse;
+    
+    if (roadTexDiffuse.a < 0.4f)
+    {
+        diffuse = saturate(baseTexDiffuse * 0.6f + detailedTexDiffuse * 0.4f);
     }
     else
     {
-        int idx = -1;
-        float4 PosV = mul(float4(din.PosW, 1.0f), gView);
-        
-        float zSplits[3] = { gZSplit0, gZSplit1, gZSplit2 };
-        for (int j = 2; j >= 0; j--)
-        {
-            if (PosV.z < zSplits[j])
-            {
-                idx = j;
-            }
-        }
-        float4 PosS = mul(float4(din.PosW, 1.0f), gShadowTransform[idx]);
-
-        float4 diffuse = 0.0f;
-        
-        float4 baseTexDiffuse = gBaseTexture.Sample(gAnisotropicWrap, din.TexCoord0) * gMat.Diffuse;
-        float4 detailedTexDiffuse = gDetailedTexture.Sample(gAnisotropicWrap, din.TexCoord1) * gMat.Diffuse;
-        float4 roadTexDiffuse = gRoadTexture.Sample(gAnisotropicWrap, din.TexCoord0) * gMat.Diffuse;
-    
-        if (roadTexDiffuse.a < 0.4f)
-        {
-            diffuse = saturate(baseTexDiffuse * 0.6f + detailedTexDiffuse * 0.4f);
-        }
-        else
-        {
-            diffuse = roadTexDiffuse;
-        }
-        
-        float3 view = normalize(gCameraPos - din.PosW);
-        float4 ambient = gAmbient * float4(gMat.Ambient, 1.0f) * diffuse;
-
-        float shadowFactor[3] = { 1.0f, 1.0f, 1.0f };
-        for (int i = 0; i < 3; i++)
-            shadowFactor[i] = CalcShadowFactor(PosS, idx);
-        
-        float4 directLight;
-        float shadowFactorOut[3] = { 1.0f, 1.0f, 1.0f };
-        if (PosS.x < 0.0f || PosS.x > 1.0f || PosS.z < 0.0f || PosS.z > 1.0f || PosS.y < 0.0f || PosS.y > 1.0f || idx == -1)
-            directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactorOut);
-        else
-        {
-            directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactor);
-        }
-
-        result = ambient + directLight;
-        result.a = gMat.Diffuse.a;
-
-        float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-        result *= debugColor;
+        diffuse = roadTexDiffuse;
     }
+        
+    float3 view = normalize(gCameraPos - din.PosW);
+    float4 ambient = gAmbient * float4(gMat.Ambient, 1.0f) * diffuse;
+
+    float shadowFactor[3] = { 1.0f, 1.0f, 1.0f };
+    for (int i = 0; i < 3; i++)
+        shadowFactor[i] = CalcShadowFactor(PosS, idx);
+        
+    float4 directLight;
+    float shadowFactorOut[3] = { 1.0f, 1.0f, 1.0f };
+    if (PosS.x < 0.0f || PosS.x > 1.0f || PosS.z < 0.0f || PosS.z > 1.0f || PosS.y < 0.0f || PosS.y > 1.0f || idx == -1)
+        directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactorOut);
+    else
+    {
+        directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactor);
+    }
+
+    result = ambient + directLight;
+    result.a = gMat.Diffuse.a;
+
+    float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    result *= debugColor;
 
     pout.f4Color = result;
     pout.f4Direction = distance(din.oldPosWVP, din.PosH.xyz);

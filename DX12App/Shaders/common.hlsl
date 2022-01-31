@@ -30,9 +30,8 @@ cbuffer GameInfoCB : register(b2)
 {
     float4 gRandFloat4  : packoffset(c0);
     float3 gPlayerPos   : packoffset(c1);
-    uint   gKeyInput    : packoffset(c1.w);
-    float  gCurrentTime : packoffset(c2.x);
-    float  gElapsedTime : packoffset(c2.y);
+    float  gCurrentTime : packoffset(c1.w);
+    float  gElapsedTime : packoffset(c2.x);
 }
 
 cbuffer MaterialCB : register(b3)

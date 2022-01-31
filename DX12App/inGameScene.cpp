@@ -145,7 +145,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsComman
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 1024, 1024, 3, mMainCamera.get());
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 2048, 2048, 3, mMainCamera.get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
@@ -407,7 +407,6 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 		Math::RandFloat(-1.0f, 1.0f),
 		Math::RandFloat(1.0f, 5.0f));
 	gameInfo.PlayerPosition = { 0.0f,0.0f,0.0f };
-	gameInfo.KeyInput = mLODSet;
 	gameInfo.CurrentTime = timer.CurrentTime();
 	gameInfo.ElapsedTime = timer.ElapsedTime();
 
