@@ -7,12 +7,12 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "MSWSock.lib")
 
-extern "C" {
-#include "include/lua.h"
-#include "include\lauxlib.h"
-#include "include\lualib.h"
-}
-#pragma comment (lib, "lua54.lib")
+//extern "C" {
+//#include "include/lua.h"
+//#include "include\lauxlib.h"
+//#include "include\lualib.h"
+//}
+//#pragma comment (lib, "lua54.lib")
 
 #include <iostream>
 #include <vector>

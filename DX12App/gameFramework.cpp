@@ -36,7 +36,7 @@ bool GameFramework::InitFramework()
 	// 초기화하는 명령어를 넣기 위해 커맨드 리스트를 개방한다.
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
-	mScenes.push(make_unique<LoginScene>());
+	mScenes.push(make_unique<InGameScene>());
 	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
 
 	// Command List를 닫고 Queue에 명령어를 싣는다.
@@ -139,20 +139,13 @@ void GameFramework::Draw()
 
 	// 화면 버퍼와 깊이 스텐실 버퍼를 초기화한다.
 	const XMFLOAT4& color = mScenes.top()->GetFrameColor();
-	XMFLOAT4 velocity = {0.0f, 0.0f, 0.0f, 0.0f};
 
 	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), (FLOAT*)&color, 0, nullptr);
 	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-	mCommandList->ClearRenderTargetView(mVelocityMapHandle, (FLOAT*)&velocity, 0, nullptr);
-
 	// 렌더링할 버퍼를 구체적으로 설정한다.
 
-	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { CurrentBackBufferView(), mVelocityMapHandle };
-
-	mCommandList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &DepthStencilView());
-
-	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBuffer());
+	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView());
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(

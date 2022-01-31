@@ -36,7 +36,7 @@ public:
 		const GameTimer& timer,
 		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) override;
 	
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer) override;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView) override;
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
 
 public:
@@ -68,6 +68,9 @@ private:
 	void BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap(ID3D12Device* device);
 
+	void CreateVelocityMapViews(ID3D12Device* device);
+	void CreateVelocityMapDescriptorHeaps(ID3D12Device* device);
+
 	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 	void UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 
@@ -79,6 +82,13 @@ private:
 
 	LightConstants mMainLight;
 
+	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityMapRtvHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityMapSrvHandle;
+	ComPtr<ID3D12Resource> mVelocityMap;
+
+	ComPtr<ID3D12DescriptorHeap> mVelocityMapRtvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mVelocityMapSrvDescriptorHeap;
+
 	std::unique_ptr<ConstantBuffer<CameraConstants>> mCameraCB;
 	std::unique_ptr<ConstantBuffer<LightConstants>> mLightCB;
 	std::unique_ptr<ConstantBuffer<GameInfoConstants>> mGameInfoCB;
@@ -88,7 +98,8 @@ private:
 
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
-	
+
+
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
 
 	Player* mPlayer = nullptr;

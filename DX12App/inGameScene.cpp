@@ -167,9 +167,56 @@ void InGameScene::BuildConstantBuffers(ID3D12Device* device)
 
 void InGameScene::BuildDescriptorHeap(ID3D12Device* device)
 {
+	CreateVelocityMapDescriptorHeaps(device);
+	CreateVelocityMapViews(device);
 	mShadowMapRenderer->BuildDescriptorHeap(device, 3, 4, 5);
 	for (const auto& [_, pso] : mPipelines)
 		pso->BuildDescriptorHeap(device, 3, 4, 5);
+}
+
+void InGameScene::CreateVelocityMapViews(ID3D12Device* device)
+{
+	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,1.0f} };
+
+	mVelocityMap = CreateTexture2DResource(
+		device, gFrameWidth, gFrameHeight, 1, 1,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_GENERIC_READ, &clearValue);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mVelocityMapRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	device->CreateRenderTargetView(mVelocityMap.Get(), nullptr, rtvHandle);
+	mVelocityMapRtvHandle = rtvHandle;
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	srvDesc.Texture2D.PlaneSlice = 0;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = mVelocityMapSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	device->CreateShaderResourceView(mVelocityMap.Get(), &srvDesc, srvHandle);
+	mVelocityMapSrvHandle = srvHandle;
+}
+
+void InGameScene::CreateVelocityMapDescriptorHeaps(ID3D12Device* device)
+{
+	ThrowIfFailed(device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			1,
+			D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
+		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
+
+	ThrowIfFailed(device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			1,
+			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
+		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
 }
 
 void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
@@ -377,8 +424,15 @@ void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 	cmdList->SetGraphicsRootConstantBufferView(2, mGameInfoCB->GetGPUVirtualAddress(0));
 }
 
-void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer)
+void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView)
 {
+	XMFLOAT4 velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
+	cmdList->ClearRenderTargetView(mVelocityMapHandle, (FLOAT*)&velocity, 0, nullptr);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { backBufferview, mVelocityMapHandle };
+
+	cmdList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &depthStencilView);
+
 	cmdList->SetGraphicsRootSignature(mRootSignature.Get());
 	RenderPipelines(cmdList, 0);
 }
