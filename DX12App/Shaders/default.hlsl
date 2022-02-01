@@ -104,7 +104,7 @@ PixelOut PS(VertexOut pin)
 
     pout.f4Color = result;
     pout.f4Direction = float4(pin.newPosWVP.xyz / pin.newPosWVP.z - pin.oldPosWVP.xyz / pin.oldPosWVP.z, 1.0f);
-
+    pout.f4Direction.z = result.y;
 
     return pout;
 }

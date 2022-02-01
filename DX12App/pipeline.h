@@ -152,8 +152,7 @@ public:
 		ID3D12RootSignature* rootSig,
 		ComputeShader* shader = nullptr);
 
-	void SetPrevBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer);
-	void SetCurrBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer);
+	void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx);
 
 	void CreateTextures(ID3D12Device* device);
 	void BuildDescriptorHeap(ID3D12Device* device);
