@@ -14,7 +14,8 @@ struct VertexOut
 {
 	float4 PosH     : SV_POSITION;
     float3 PosW     : POSITION0;
-    float3 oldPosWVP: POSITION1;
+    float4 oldPosWVP : POSITION1;
+    float4 newPosWVP : POSITION2;
     float3 NormalW  : NORMAL;
     float3 TangentW : TANGENT;
     float2 TexCoord : TEXCOORD;
@@ -34,8 +35,8 @@ VertexOut VS(VertexIn vin)
     vout.PosW = posW.xyz;
     vout.PosH = mul(posW, gViewProj);
 
-    float4 oldPosWVP = mul(mul(mul(float4(vin.PosL, 1.0f), gOldWorld), gOldView), gProj);
-    vout.oldPosWVP = oldPosWVP.xyz;
+    vout.oldPosWVP = mul(mul(float4(vin.PosL, 1.0f), gOldWorld), gOldViewProj);
+    vout.newPosWVP = vout.PosH;
 
     float4x4 tWorld = transpose(gWorld);
     vout.NormalW = mul((float3x3)tWorld, vin.NormalL);
@@ -102,7 +103,7 @@ PixelOut PS(VertexOut pin)
     result *= debugColor;
 
     pout.f4Color = result;
-    pout.f4Direction = float4(pin.PosH.xyz / pin.PosH.w - pin.oldPosWVP, 1.0f);
+    pout.f4Direction = float4(pin.newPosWVP.xyz / pin.newPosWVP.z - pin.oldPosWVP.xyz / pin.oldPosWVP.z, 1.0f);
 
 
     return pout;

@@ -296,8 +296,6 @@ void GameObject::Draw(
 
 void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 {
-	mOldWorld = mWorld;
-
 	mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;	
 	mWorld(0, 2) = mRight.z;

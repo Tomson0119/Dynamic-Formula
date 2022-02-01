@@ -41,7 +41,8 @@ struct DsOut
 {
     float4 PosH         : SV_POSITION;
     float3 PosW         : POSITION0;
-    float3 oldPosWVP    : POSITION1;
+    float4 oldPosWVP    : POSITION1;
+    float4 newPosWVP    : POSITION2;
     float3 NormalW      : NORMAL;
     float2 TexCoord0    : TEXCOORD0;
     float2 TexCoord1    : TEXCOORD1;
@@ -155,11 +156,11 @@ DsOut DS(HsConstant hconst, float2 uv : SV_DomainLocation, OutputPatch<HsOut, 25
     
     float3 pos = CubicBezierSum5x5(patch, uB, vB, false);
     float4 posW = mul(float4(pos, 1.0f), gWorld);
-    float4 oldPosWVP = mul(mul(mul(float4(pos, 1.0f), gOldWorld), gOldView), gProj);
-
-    dout.oldPosWVP = oldPosWVP.xyz;
+    dout.oldPosWVP = mul(mul(float4(pos, 1.0f), gOldWorld), gOldViewProj);
     dout.PosW = posW.xyz;
     dout.PosH = mul(mul(float4(pos, 1.0f), gWorld), gViewProj);
+    dout.newPosWVP = dout.PosH;
+
     float3 normalL = CubicBezierSum5x5(patch, uB, vB, true);
     float4x4 tWorld = transpose(gWorld);
     dout.NormalW = mul((float3x3) tWorld, normalize(normalL));
@@ -169,6 +170,7 @@ DsOut DS(HsConstant hconst, float2 uv : SV_DomainLocation, OutputPatch<HsOut, 25
     
     return dout;
 }
+
 
 PixelOut PS(DsOut din)
 {
@@ -228,6 +230,6 @@ PixelOut PS(DsOut din)
     result *= debugColor;
 
     pout.f4Color = result;
-    pout.f4Direction = float4(din.PosH.xyz / din.PosH.w - din.oldPosWVP, 1.0f);
+    pout.f4Direction = float4(din.newPosWVP.xyz / din.newPosWVP.z - din.oldPosWVP.xyz / din.oldPosWVP.z, 1.0f);
     return pout;
 }

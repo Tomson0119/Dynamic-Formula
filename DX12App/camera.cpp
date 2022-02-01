@@ -122,7 +122,7 @@ CameraConstants Camera::GetConstants() const
 	cameraCnst.ViewProj = Matrix4x4::Transpose(Matrix4x4::Multiply(GetView(), GetProj()));
 	cameraCnst.CameraPos = GetPosition();
 	cameraCnst.Aspect = mAspect;
-	cameraCnst.oldView = Matrix4x4::Transpose(GetOldView());
+	cameraCnst.oldView = Matrix4x4::Transpose(Matrix4x4::Multiply(GetOldView(), GetProj()));
 	return cameraCnst;
 }
 
