@@ -16,12 +16,12 @@ groupshared float4 RenderTargetSharedCache[32 + 2][32 + 2];
 void MotionBlur(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
 {
     float3 convolutionXMask = gf3ToLuminance;
-    convolutionXMask.x -= VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].r;
-    convolutionXMask.z += VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].r;
+    convolutionXMask.x -= VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].r * 2;
+    convolutionXMask.z += VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].r * 2;
 
     float3 convolutionYMask = gf3ToLuminance;
-    convolutionYMask.x -= VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].g;
-    convolutionYMask.z += VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].g;
+    convolutionYMask.x -= VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].g * 2;
+    convolutionYMask.z += VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].g * 2;
 
     float3 f3HorizontalEdge = (convolutionXMask.x * RenderTargetSharedCache[n3GroupThreadID.x][n3GroupThreadID.y + 1].rgb) + (convolutionXMask.y * RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y + 1].rgb) + (convolutionXMask.z * RenderTargetSharedCache[n3GroupThreadID.x + 2][n3GroupThreadID.y + 1].rgb);
     float3 f3VerticalEdge = (convolutionYMask.x * RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y].rgb) + (convolutionYMask.y * RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y + 1].rgb) + (convolutionYMask.z * RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y + 2].rgb);

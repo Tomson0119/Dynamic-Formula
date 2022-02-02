@@ -481,7 +481,7 @@ void InGameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsComman
 	mMissileMesh = std::make_shared<BoxMesh>(device, cmdList, 5, 5, 5);
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
 	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), dynamicsWorld);
-	missile->LoadTexture(device, cmdList, L"Resources\\brick.dds");
+	missile->LoadTexture(device, cmdList, L"Resources\\tile.dds");
 
 	mMissileObjects.push_back(missile);
 	mPipelines[Layer::Default]->AppendObject(missile);
