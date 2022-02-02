@@ -7,10 +7,6 @@ NetClient::NetClient()
 	mSocket.Init();
 }
 
-NetClient::~NetClient()
-{
-}
-
 bool NetClient::Connect(const char* ip, short port)
 {
 	return mSocket.Connect(EndPoint(ip, port));
