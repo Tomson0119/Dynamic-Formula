@@ -69,6 +69,25 @@ void Mesh::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 	}
 }
 
+void Mesh::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool isSO)
+{
+	if (viewFrustum.Intersects(mOOBB))
+	{
+		cmdList->IASetVertexBuffers(mSlot, 1, &mVertexBufferView);
+		cmdList->IASetPrimitiveTopology(mPrimitiveTopology);
+
+		if (mIndexCount > 0)
+		{
+			cmdList->IASetIndexBuffer(&mIndexBufferView);
+			cmdList->DrawIndexedInstanced(mIndexCount, 1, mStartIndex, mBaseVertex, 0);
+		}
+		else
+		{
+			cmdList->DrawInstanced(mVerticesCount, 1, mBaseVertex, 0);
+		}
+	}
+}
+
 void Mesh::LoadMesh(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList,
@@ -448,7 +467,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	const UINT verticesCount = 25;
 
 	std::vector<TerrainVertex> vertices(verticesCount);
-	int increasement = 11;
+	int increasement = 22;
 
 	int heightmapWidth = context->GetWidth();
 	int heightmapDepth = context->GetDepth();
@@ -471,6 +490,16 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 			vertices[k++].TexCoord1 = XMFLOAT2((float)x / float(mScale.x * 0.5f), (float)z / float(mScale.z * 0.5f));
 		}
 	}
+
+	const auto& [min_x, max_x] = std::minmax_element(vertices.begin(), vertices.end(),
+		[](const TerrainVertex& a, const TerrainVertex& b) { return (a.Position.x < b.Position.x); });
+	const auto& [min_y, max_y] = std::minmax_element(vertices.begin(), vertices.end(),
+		[](const TerrainVertex& a, const TerrainVertex& b) {return (a.Position.y < b.Position.y); });
+	const auto& [min_z, max_z] = std::minmax_element(vertices.begin(), vertices.end(),
+		[](const TerrainVertex& a, const TerrainVertex& b) {return (a.Position.z < b.Position.z); });
+
+	mOOBB.Center = { (min_x->Position.x + max_x->Position.x) / 2, (min_y->Position.y + max_y->Position.y) / 2, (min_z->Position.z + max_z->Position.z) / 2 };
+	mOOBB.Extents = { (max_x->Position.x - min_x->Position.x) / 2, (max_y->Position.y - min_y->Position.y) / 2, (max_z->Position.z - min_z->Position.z) / 2 };
 
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(TerrainVertex), 0,
 		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, vertices.data(), (UINT)vertices.size(), nullptr, 0);

@@ -2,7 +2,6 @@
 #include "player.h"
 #include "camera.h"
 
-
 Player::Player()
 	: GameObject()
 {
@@ -266,7 +265,14 @@ void TerrainPlayer::OnCameraUpdate(float elapsedTime)
 
 PhysicsPlayer::PhysicsPlayer() : Player()
 {
+	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
+	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
 
+	for (std::unique_ptr<Camera>& camera : mCameras)
+	{
+		camera = std::make_unique<Camera>();
+		camera->SetLens(0.5f * Math::PI, 1.0f, 0.1f, 100.0f);
+	}
 }
 
 PhysicsPlayer::~PhysicsPlayer()
@@ -461,7 +467,9 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
 	btMat.getOpenGLMatrix(m);
 
+	mOldWorld = mWorld;
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+	UpdateBoundingBox();
 
 	OnPlayerUpdate(elapsedTime);
 
@@ -569,6 +577,16 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 	}
 }
 
+void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+
+	auto gpuStart = mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	gpuStart.ptr += gCbvSrvUavDescriptorSize * (1 - mCurrentRenderTarget);
+	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuStart);
+}
+
 void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
 {
 	mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
@@ -589,7 +607,6 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dyna
 
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
 	dynamicsWorld->addVehicle(mVehicle.get());
-
 
 	mVehicle->setCoordinateSystem(0, 1, 2);
 
@@ -634,6 +651,143 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dyna
 	}
 }
 
+void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)
+{
+	assert(mCubeMapSize > 0 && "CubeMapSize is not assigned.");
+
+	device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			1,
+			D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
+		IID_PPV_ARGS(&mDsvDescriptorHeap));
+
+	device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			RtvCounts,
+			D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
+		IID_PPV_ARGS(&mRtvDescriptorHeap));
+
+	device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			2,
+			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
+		IID_PPV_ARGS(&mSrvDescriptorHeap));
+
+	auto rtvHandle = mRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	auto dsvHandle = mDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	auto srvHandle = mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,1.0f} };
+
+	for (int i = 0; i < 2; ++i)
+	{
+		std::unique_ptr<Texture> textureCube = std::make_unique<Texture>();
+		textureCube->SetDimension(D3D12_SRV_DIMENSION_TEXTURECUBE);
+		textureCube->CreateTexture(
+			device, mCubeMapSize, mCubeMapSize, RtvCounts / 2, 1,
+			DXGI_FORMAT_R8G8B8A8_UNORM,
+			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_GENERIC_READ, &clearValue);
+
+		mCubeMap[i] = std::move(textureCube);
+
+
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+		rtvDesc.Texture2DArray.MipSlice = 0;
+		rtvDesc.Texture2DArray.PlaneSlice = 0;
+		rtvDesc.Texture2DArray.ArraySize = 1;
+
+		for (int j = i * 6; j < (i + 1) * 6; j++)
+		{
+			mRtvCPUDescriptorHandles[j] = rtvHandle;
+			rtvDesc.Texture2DArray.FirstArraySlice = j % 6;
+			device->CreateRenderTargetView(mCubeMap[i]->GetResource(), &rtvDesc, mRtvCPUDescriptorHandles[j]);
+			rtvHandle.ptr += gRtvDescriptorSize;
+		}
+	}
+	clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	clearValue.DepthStencil.Depth = 1.0f;
+	clearValue.DepthStencil.Stencil = 0;
+
+	mDepthStencilBuffer = CreateTexture2DResource(
+		device,
+		mCubeMapSize, mCubeMapSize,
+		1, 1, DXGI_FORMAT_D24_UNORM_S8_UINT,
+		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue);
+
+	mDsvCPUDescriptorHandle = dsvHandle;
+	device->CreateDepthStencilView(mDepthStencilBuffer.Get(), NULL, mDsvCPUDescriptorHandle);
+	
+	for (int i = 0; i < 2; ++i)
+	{
+		mSrvCPUDescriptorHandle = srvHandle;
+		device->CreateShaderResourceView(mCubeMap[i]->GetResource(), &mCubeMap[i]->ShaderResourceView(), mSrvCPUDescriptorHandle);
+		srvHandle.ptr += gCbvSrvUavDescriptorSize;
+	}
+}
+
+void PhysicsPlayer::BuildCameras()
+{
+	static XMFLOAT3 lookAts[RtvCounts / 2] =
+	{
+		XMFLOAT3(+1.0f, 0.0f,  0.0f),
+		XMFLOAT3(-1.0f, 0.0f,  0.0f),
+		XMFLOAT3(0.0f, +1.0f,  0.0f),
+		XMFLOAT3(0.0f, -1.0f,  0.0f),
+		XMFLOAT3(0.0f,  0.0f, +1.0f),
+		XMFLOAT3(0.0f,  0.0f, -1.0f)
+	};
+
+	static XMFLOAT3 ups[RtvCounts / 2] =
+	{
+		XMFLOAT3(0.0f, +1.0f,  0.0f),
+		XMFLOAT3(0.0f, +1.0f,  0.0f),
+		XMFLOAT3(0.0f,  0.0f, -1.0f),
+		XMFLOAT3(0.0f,  0.0f, +1.0f),
+		XMFLOAT3(0.0f, +1.0f,  0.0f),
+		XMFLOAT3(0.0f, +1.0f,  0.0f)
+	};
+
+	XMFLOAT3 pos = GetPosition();
+	for (int i = 0; i < RtvCounts / 2; i++)
+	{
+		mCameras[i]->SetPosition(pos);
+		mCameras[i]->LookAt(pos, Vector3::Add(lookAts[i % 6], pos), ups[i % 6]);
+		mCameras[i]->UpdateViewMatrix();
+	}
+}
+
+void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex)
+{
+	BuildCameras();
+
+	cmdList->RSSetViewports(1, &mViewPort);
+	cmdList->RSSetScissorRects(1, &mScissorRect);
+
+	// resource barrier
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mCubeMap[mCurrentRenderTarget]->GetResource(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	FLOAT clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+	cmdList->ClearRenderTargetView(mRtvCPUDescriptorHandles[cubemapIndex + (mCurrentRenderTarget * 6)], clearValue, 0, NULL);
+	cmdList->ClearDepthStencilView(mDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
+	cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[cubemapIndex + (mCurrentRenderTarget * 6)], TRUE, &mDsvCPUDescriptorHandle);
+
+	scene->UpdateCameraConstant(cubemapIndex + 4, mCameras[cubemapIndex].get());
+	scene->RenderPipelines(cmdList, mCameras[cubemapIndex].get(), cubemapIndex + 4);
+
+	// resource barrier
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mCubeMap[mCurrentRenderTarget]->GetResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+}
+
 WheelObject::WheelObject() : GameObject()
 {
 }
@@ -646,6 +800,7 @@ void WheelObject::UpdateRigidBody(float Elapsed, btTransform wheelTransform)
 {
 	btScalar m[16];
 	wheelTransform.getOpenGLMatrix(m);
+	mOldWorld = mWorld;
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 
 	mPosition.x = mWorld(3, 0);

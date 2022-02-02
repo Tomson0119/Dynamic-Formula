@@ -60,8 +60,9 @@ void Pipeline::BuildPipeline(
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = mPrimitive;
-	psoDesc.NumRenderTargets = 1;
+	psoDesc.NumRenderTargets = 2;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
+	psoDesc.RTVFormats[1] = mBackBufferFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	psoDesc.SampleDesc.Count = 1;
 	//psoDesc.SampleDesc.Quality = gMsaaStateDesc.Quality;
@@ -108,6 +109,8 @@ void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbv
 
 void Pipeline::BuildCBV(ID3D12Device* device)
 {
+	if (mObjectCB == nullptr) return;
+
 	UINT stride = mObjectCB->GetByteSize();
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
@@ -178,6 +181,22 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 	Draw(cmdList);
 }
 
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+	cmdList->OMSetStencilRef(mStencilRef);
+
+	if (setPipeline) {
+		if (mIsWiredFrame && drawWiredFrame)
+			cmdList->SetPipelineState(mPSO[1].Get());
+		else
+			cmdList->SetPipelineState(mPSO[0].Get());
+	}
+
+	Draw(cmdList, viewFrustum, objectOOBB);
+}
+
 void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 {
 	UINT matOffset = 0;
@@ -190,6 +209,23 @@ void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 			mRootParamSRVIndex,
 			mMaterialCB->GetGPUVirtualAddress(matOffset), 
 			mMaterialCB->GetByteSize(), isSO);
+
+		matOffset += mRenderObjects[i]->GetMeshCount();
+	}
+}
+
+void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
+{
+	UINT matOffset = 0;
+	for (int i = 0; i < mRenderObjects.size(); i++)
+	{
+		mRenderObjects[i]->Draw(
+			cmdList,
+			mRootParamMatIndex,
+			mRootParamCBVIndex,
+			mRootParamSRVIndex,
+			mMaterialCB->GetGPUVirtualAddress(matOffset),
+			mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
 
 		matOffset += mRenderObjects[i]->GetMeshCount();
 	}
@@ -296,8 +332,9 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = mPrimitive;
-	psoDesc.NumRenderTargets = 1;
+	psoDesc.NumRenderTargets = 2;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
+	psoDesc.RTVFormats[1] = mBackBufferFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	psoDesc.SampleDesc.Count = 1;
 
@@ -439,16 +476,14 @@ void ComputePipeline::BuildPipeline(
 	mPSOs.push_back({});
 	ThrowIfFailed(device->CreateComputePipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSOs.back())));
+
+	CreateTextures(device);
+	BuildDescriptorHeap(device);
 }
 
-void ComputePipeline::SetPrevBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer)
+void ComputePipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx)
 {
-	CopyRTToMap(cmdList, buffer, mBlurMapInput[0]->GetResource());
-}
-
-void ComputePipeline::SetCurrBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer)
-{
-	CopyRTToMap(cmdList, buffer, mBlurMapInput[1]->GetResource());
+	CopyRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
 }
 
 void ComputePipeline::CopyRTToMap(

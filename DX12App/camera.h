@@ -70,11 +70,15 @@ public:
 	XMFLOAT2 GetFarWindow() const { return mFarWindow; }
 
 	XMFLOAT4X4 GetView() const;
+	XMFLOAT4X4 GetOldView() const;
+	XMFLOAT4X4 GetInverseView() const;
 	XMFLOAT4X4 GetProj() const { return mProj; }
 
 	CameraConstants GetConstants() const;
 
 	CameraMode GetMode() const { return mMode; }
+	BoundingFrustum GetWorldFrustum() const { return mFrustumWorld; }
+	BoundingFrustum GetViewFrustum() const { return mFrustumView; }
 
 protected:
 	bool mViewDirty = false;
@@ -98,6 +102,7 @@ protected:
 	XMFLOAT4X4 mView = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mProj = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mInvView = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mOldView = Matrix4x4::Identity4x4();
 
 	BoundingFrustum mFrustumView;
 	BoundingFrustum mFrustumWorld;

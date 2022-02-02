@@ -16,8 +16,8 @@ enum class Layer : int
 	Particle,
 	Transparent,
 	ShadowDebug,
-	//ShadowMap,
-	//DynamicCubeMap
+	DynamicCubeMap,
+	MotionBlur
 };
 
 class Pipeline
@@ -57,7 +57,9 @@ public:
 
 	virtual void Update(const float elapsed, Camera* camera=nullptr);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true);
+	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
 
 	void UpdateConstants();
 
@@ -150,8 +152,7 @@ public:
 		ID3D12RootSignature* rootSig,
 		ComputeShader* shader = nullptr);
 
-	void SetPrevBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer);
-	void SetCurrBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer);
+	void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx);
 
 	void CreateTextures(ID3D12Device* device);
 	void BuildDescriptorHeap(ID3D12Device* device);

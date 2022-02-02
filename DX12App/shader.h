@@ -60,6 +60,30 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
+class ShadowShader : public Shader
+{
+public:
+	ShadowShader(const std::wstring& path);
+	virtual ~ShadowShader() { }
+
+	virtual void Compile(const std::wstring& path) override;
+	virtual void BuildInputLayout() override;
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+class ShadowTerrainShader : public Shader
+{
+public:
+	ShadowTerrainShader(const std::wstring& path);
+	virtual ~ShadowTerrainShader() { }
+
+	virtual void Compile(const std::wstring& path) override;
+	virtual void BuildInputLayout() override;
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//
 class BillboardShader : public Shader
 {
 public:

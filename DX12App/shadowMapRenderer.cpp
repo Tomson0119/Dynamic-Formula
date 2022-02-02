@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "shadowMapRenderer.h"
-#include "gameScene.h"
+#include "inGameScene.h"
 
-ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount)
+ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount, const Camera* mainCamera)
 	: mMapWidth(width), mMapHeight(height), mMapCount(lightCount)
 {
 	mViewPort = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
@@ -10,9 +10,22 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 	
 	for (int i = 0; i < (int)mMapCount; i++)
 		mDepthCamera.push_back(std::make_unique<Camera>());
-	mRtvCPUDescriptorHandles.resize(mMapCount, {});
 
-	CreateTexture(device);
+	mDsvCPUDescriptorHandles.resize(mMapCount, {});
+	mCbvSrvCPUDescriptorHandles.resize(mMapCount, {});
+	mCenter.resize(mMapCount, {});
+	mSunRange.resize(mMapCount, {});
+	mZSplits.resize(mMapCount + 1);
+
+	mZSplits[0] = mainCamera->GetNearZ();
+	mZSplits[mMapCount] = 1000;
+	for (UINT i = 1; i < mMapCount; ++i)
+	{
+		float index = (i / (float)mMapCount);
+		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
+		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
+		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.5f);
+	}
 }
 
 ShadowMapRenderer::~ShadowMapRenderer()
@@ -21,15 +34,152 @@ ShadowMapRenderer::~ShadowMapRenderer()
 
 void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader)
 {
-	auto shadowMapShader = std::make_unique<DefaultShader>(L"Shaders\\shadow.hlsl");
-		
+	auto shadowMapShader = std::make_unique<ShadowShader>(L"Shaders\\shadow.hlsl");
+	auto shadowMapTerrainShader = std::make_unique<ShadowTerrainShader>(L"Shaders\\shadowTerrain.hlsl");
+
 	mRasterizerDesc.DepthBias = 100000;
 	mRasterizerDesc.DepthBiasClamp = 0.0f;
 	mRasterizerDesc.SlopeScaledDepthBias = 1.0f;
 	mBackBufferFormat = DXGI_FORMAT_R32_FLOAT;
-	mDepthStencilFormat = DXGI_FORMAT_D32_FLOAT;
+	mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
-	Pipeline::BuildPipeline(device, rootSig, shadowMapShader.get());
+	auto layout = shadowMapShader->GetInputLayout();
+
+	psoDesc.pRootSignature = rootSig;
+	psoDesc.InputLayout = {
+		layout.data(),
+		(UINT)layout.size()
+	};
+	psoDesc.VS = {
+		reinterpret_cast<BYTE*>(shadowMapShader->GetVS()->GetBufferPointer()),
+		shadowMapShader->GetVS()->GetBufferSize()
+	};
+	if (shadowMapShader->GetGS() != nullptr)
+	{
+		psoDesc.GS = {
+			reinterpret_cast<BYTE*>(shadowMapShader->GetGS()->GetBufferPointer()),
+			shadowMapShader->GetGS()->GetBufferSize()
+		};
+	}
+	if (shadowMapShader->GetDS() != nullptr)
+	{
+		psoDesc.DS = {
+			reinterpret_cast<BYTE*>(shadowMapShader->GetDS()->GetBufferPointer()),
+			shadowMapShader->GetDS()->GetBufferSize()
+		};
+	}
+	if (shadowMapShader->GetHS() != nullptr)
+	{
+		psoDesc.HS = {
+			reinterpret_cast<BYTE*>(shadowMapShader->GetHS()->GetBufferPointer()),
+			shadowMapShader->GetHS()->GetBufferSize()
+		};
+	}
+
+	psoDesc.RasterizerState = mRasterizerDesc;
+	psoDesc.BlendState = mBlendDesc;
+	psoDesc.DepthStencilState = mDepthStencilDesc;
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.PrimitiveTopologyType = mPrimitive;
+	psoDesc.NumRenderTargets = 0;
+	psoDesc.DSVFormat = mDepthStencilFormat;
+	psoDesc.SampleDesc.Count = 1;
+
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mPSO[0])));
+
+	if (mIsWiredFrame) {
+		psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+		ThrowIfFailed(device->CreateGraphicsPipelineState(
+			&psoDesc, IID_PPV_ARGS(&mPSO[1])));
+	}
+	
+	auto TerrainLayout = shadowMapTerrainShader->GetInputLayout();
+
+	psoDesc.InputLayout = {
+	TerrainLayout.data(),
+	(UINT)TerrainLayout.size()
+	};
+	psoDesc.VS = {
+		reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetVS()->GetBufferPointer()),
+		shadowMapTerrainShader->GetVS()->GetBufferSize()
+	};
+	if (shadowMapTerrainShader->GetGS() != nullptr)
+	{
+		psoDesc.GS = {
+			reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetGS()->GetBufferPointer()),
+			shadowMapTerrainShader->GetGS()->GetBufferSize()
+		};
+	}
+	if (shadowMapTerrainShader->GetDS() != nullptr)
+	{
+		psoDesc.DS = {
+			reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetDS()->GetBufferPointer()),
+			shadowMapTerrainShader->GetDS()->GetBufferSize()
+		};
+	}
+	if (shadowMapTerrainShader->GetHS() != nullptr)
+	{
+		psoDesc.HS = {
+			reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetHS()->GetBufferPointer()),
+			shadowMapTerrainShader->GetHS()->GetBufferSize()
+		};
+	}
+
+	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mTerrainPSO)));
+}
+
+void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
+{
+	auto invView = mainCamera->GetInverseView();
+	float vFov = tanf(mainCamera->GetFov().y / 2);
+	float hFov = vFov * mainCamera->GetAspect();
+
+	for (UINT i = 0; i < mMapCount; ++i)
+	{
+		float xn = mZSplits[i] * hFov;
+		float xf = mZSplits[i + 1] * hFov;
+		float yn = mZSplits[i] * vFov;
+		float yf = mZSplits[i + 1] * vFov;
+
+		XMFLOAT3 frustumCorners[8] =
+		{
+			//near Face
+			{xn, yn, mZSplits[i]},
+			{-xn, yn, mZSplits[i]},
+			{xn, -yn ,mZSplits[i]},
+			{-xn, -yn, mZSplits[i]},
+			//far Face
+			{xf, yf, mZSplits[i + 1]},
+			{-xf, yf, mZSplits[i + 1]},
+			{xf, -yf, mZSplits[i + 1]},
+			{-xf, -yf, mZSplits[i + 1]}
+		};
+
+		XMFLOAT3 centerPos = { 0.0f, 0.0f, 0.0f };
+
+		for (int j = 0; j < 8; ++j)
+		{
+			frustumCorners[j] = Vector3::Transform(frustumCorners[j], XMLoadFloat4x4(&invView));
+			centerPos = Vector3::Add(centerPos, frustumCorners[j]);
+		}
+ 		centerPos = Vector3::Divide(8, centerPos);
+
+		mCenter[i] = centerPos;
+
+		float sunRange = 0.0f;
+		for (int j = 0; j < 8; ++j)
+		{
+			float distance = Vector3::Length(Vector3::Subtract(frustumCorners[j], centerPos));
+			sunRange = std::max(sunRange, distance);
+		}
+
+		mSunRange[i] = sunRange;
+	}
 }
 
 XMFLOAT4X4 ShadowMapRenderer::GetShadowTransform(int idx) const
@@ -43,41 +193,27 @@ XMFLOAT4X4 ShadowMapRenderer::GetShadowTransform(int idx) const
 	return shadowT;
 }
 
-void ShadowMapRenderer::CreateTexture(ID3D12Device* device)
-{
-	D3D12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32_FLOAT, {1.0f,1.0f,1.0f,1.0f} };
-
-	for (int i = 0; i < (int)mMapCount; i++)
-	{
-		auto shadowMap = std::make_unique<Texture>();
-		shadowMap->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
-
-		shadowMap->CreateTexture(
-			device, mMapWidth, mMapHeight, 1, 1,
-			DXGI_FORMAT_R32_FLOAT,
-			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_COMMON, &clearValue);
-
-		mShadowMaps.push_back(std::move(shadowMap));
-	}
-}
-
 void ShadowMapRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex)
 {
-	Pipeline::BuildDescriptorHeap(device, matIndex, cbvIndex, srvIndex);
-
-	ThrowIfFailed(device->CreateDescriptorHeap(
-		&Extension::DescriptorHeapDesc(1,
-			D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
-		IID_PPV_ARGS(&mDsvDescriptorHeap)));
-
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
 			mMapCount,
-			D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
+		IID_PPV_ARGS(&mCbvSrvDescriptorHeap)));
+
+	mRootParamMatIndex = matIndex;
+	mRootParamCBVIndex = cbvIndex;
+	mRootParamSRVIndex = srvIndex;
+
+	BuildCBV(device);
+	BuildSRV(device);
+
+	ThrowIfFailed(device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(mMapCount,
+			D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
-		IID_PPV_ARGS(&mRtvDescriptorHeap)));
+		IID_PPV_ARGS(&mDsvDescriptorHeap)));
 
 	BuildDescriptorViews(device);
 }
@@ -85,75 +221,70 @@ void ShadowMapRenderer::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex,
 void ShadowMapRenderer::BuildDescriptorViews(ID3D12Device* device)
 {
 	D3D12_CLEAR_VALUE clearValue{};
-	clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	clearValue.DepthStencil.Depth = 1.0f;
 	clearValue.DepthStencil.Stencil = 0;
 
-	mDepthBuffer = CreateTexture2DResource(
-		device, mMapWidth, mMapHeight, 1, 1,
-		DXGI_FORMAT_D32_FLOAT,
-		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&clearValue);
-
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
-	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
-	mDsvCPUDescriptorHandle = mDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	device->CreateDepthStencilView(mDepthBuffer.Get(), &dsvDesc, mDsvCPUDescriptorHandle);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	srvDesc.Texture2D.PlaneSlice = 0;
 
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-	rtvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	rtvDesc.Texture2DArray.MipSlice = 0;
-	rtvDesc.Texture2DArray.PlaneSlice = 0;
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvCPUHandle = mDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE cbvSrvCPUHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvCPUHandle = mRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	for (int i = 0; i < (int)mMapCount; i++)
+	for (UINT i = 0; i < mMapCount; ++i)
 	{
-		mRtvCPUDescriptorHandles[i] = rtvCPUHandle;
-		rtvCPUHandle.ptr += gRtvDescriptorSize;
+		ComPtr<ID3D12Resource> shadowMap;
+		shadowMap = CreateTexture2DResource(
+			device, mMapWidth, mMapHeight, 1, 1,
+			DXGI_FORMAT_D24_UNORM_S8_UINT,
+			D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			&clearValue);
 
-		device->CreateRenderTargetView(
-			mShadowMaps[i]->GetResource(),
-			&rtvDesc, 
-			mRtvCPUDescriptorHandles[i]);
+		mCbvSrvCPUDescriptorHandles[i] = cbvSrvCPUHandle;
+		cbvSrvCPUHandle.ptr += gCbvSrvUavDescriptorSize;
+
+		device->CreateShaderResourceView(shadowMap.Get(), &srvDesc, mCbvSrvCPUDescriptorHandles[i]);
+
+		mDsvCPUDescriptorHandles[i] = dsvCPUHandle;
+		dsvCPUHandle.ptr += gDsvDescriptorSize;
+
+		device->CreateDepthStencilView(shadowMap.Get(), &dsvDesc, mDsvCPUDescriptorHandles[i]);
+
+		mShadowMaps.push_back(shadowMap);
 	}
 }
 
-void ShadowMapRenderer::UpdateDepthCamera(LightConstants& lightCnst)
+void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, LightConstants& lightCnst)
 {
-	for (int i = 0; i < (int)mMapCount; i++)
+	for (UINT i = 0; i < mMapCount; i++)
 	{
-		XMFLOAT3 look = lightCnst.Lights[i].Direction;
-		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange, look, mCenter);
+		XMFLOAT3 look = Vector3::Normalize(lightCnst.Lights[0].Direction);
+		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange[i], look, mCenter[i]);
 
-		mDepthCamera[i]->LookAt(position, mCenter, XMFLOAT3(0.0f, 1.0f, 0.0f));
+		mDepthCamera[i]->LookAt(position, mCenter[i], XMFLOAT3(0.0f, 1.0f, 0.0f));
+		
+		mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
+	}
 
-		switch (lightCnst.Lights[i].Type)
-		{
-		case DIRECTIONAL_LIGHT:
-			mDepthCamera[i]->SetOrthographicLens(mCenter, mSunRange);
-			break;
-
-		case SPOT_LIGHT:
-			mDepthCamera[i]->SetLens(Math::PI * 0.333f,
-				(float)mMapWidth / (float)mMapHeight,
-				1.0f, lightCnst.Lights[i].Range);
-			break;
-
-		case POINT_LIGHT:
-			// need 6 shadow maps
-			break;
-		}
-
-		mDepthCamera[i]->UpdateViewMatrix();
+	for (UINT i = 1; i < mMapCount + 1; ++i)
+	{
+		cmdList->SetGraphicsRoot32BitConstants(8, 1, &mZSplits[i], i - 1);
 	}
 }
 
-void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, GameScene* scene)
+void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, InGameScene* scene)
 {
 	cmdList->RSSetViewports(1, &mViewPort);
 	cmdList->RSSetScissorRects(1, &mScissorRect);
@@ -163,29 +294,44 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, GameScene*
 	for (int i = 0; i < (int)mMapCount; i++)
 	{
 		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-			mShadowMaps[i]->GetResource(),
-			D3D12_RESOURCE_STATE_COMMON,
-			D3D12_RESOURCE_STATE_RENDER_TARGET));
+			mShadowMaps[i].Get(),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
-		cmdList->ClearRenderTargetView(mRtvCPUDescriptorHandles[i], clearValue, 0, NULL);
-		cmdList->ClearDepthStencilView(mDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
-		cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[i], TRUE, &mDsvCPUDescriptorHandle);		
+		cmdList->ClearDepthStencilView(mDsvCPUDescriptorHandles[i], D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
+		cmdList->OMSetRenderTargets(0, nullptr, false, &mDsvCPUDescriptorHandles[i]);
 
 		scene->UpdateCameraConstant(i + 1, mDepthCamera[i].get());
 		scene->SetCBV(cmdList, i + 1);
-		RenderPipelines(cmdList);
+		RenderPipelines(cmdList, i);
 
 		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-			mShadowMaps[i]->GetResource(),
-			D3D12_RESOURCE_STATE_RENDER_TARGET, 
-			D3D12_RESOURCE_STATE_COMMON));
+			mShadowMaps[i].Get(),
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			D3D12_RESOURCE_STATE_GENERIC_READ));
 	}
 }
 
-void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList)
+void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int idx)
 {
-	for (const auto& pso : mShadowTargetPSOs)
-		pso->SetAndDraw(cmdList, false, false);
+	for (const auto& [layer, pso] : mShadowTargetPSOs)
+	{
+		if (layer == Layer::Terrain)
+		{
+			cmdList->SetPipelineState(mTerrainPSO.Get());
+
+			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false, false);
+
+			cmdList->SetPipelineState(mPSO[0].Get());
+		}
+		else
+			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), true, false, false);
+	}
+}
+
+void ShadowMapRenderer::AppendTargetPipeline(Layer layer, Pipeline* pso)
+{
+	mShadowTargetPSOs.insert(std::make_pair(layer, pso));
 }
 
 void ShadowMapRenderer::SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)

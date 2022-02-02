@@ -42,7 +42,6 @@ void Camera::SetLens(float aspect)
 
 void Camera::SetLens(float fovY, float aspect, float zn, float zf)
 {
-
 	mNearWindow.y = 2.0f * tanf(fovY * 0.5f) * zn;
 	mNearWindow.x = aspect * mNearWindow.y;
 
@@ -105,6 +104,16 @@ XMFLOAT4X4 Camera::GetView() const
 	return mView;
 }
 
+XMFLOAT4X4 Camera::GetOldView() const
+{
+	return mOldView;
+}
+
+XMFLOAT4X4 Camera::GetInverseView() const
+{
+	return mInvView;
+}
+
 CameraConstants Camera::GetConstants() const
 {
 	CameraConstants cameraCnst;
@@ -113,6 +122,7 @@ CameraConstants Camera::GetConstants() const
 	cameraCnst.ViewProj = Matrix4x4::Transpose(Matrix4x4::Multiply(GetView(), GetProj()));
 	cameraCnst.CameraPos = GetPosition();
 	cameraCnst.Aspect = mAspect;
+	cameraCnst.oldView = Matrix4x4::Transpose(Matrix4x4::Multiply(GetOldView(), GetProj()));
 	return cameraCnst;
 }
 
@@ -177,6 +187,8 @@ void Camera::UpdateViewMatrix()
 		mLook = Vector3::Normalize(mLook);
 		mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
 		mRight = Vector3::Cross(mUp, mLook);
+
+		mOldView = mView;
 
 		mView(0, 0) = mRight.x; mView(0, 1) = mUp.x; mView(0, 2) = mLook.x;
 		mView(1, 0) = mRight.y; mView(1, 1) = mUp.y; mView(1, 2) = mLook.y;

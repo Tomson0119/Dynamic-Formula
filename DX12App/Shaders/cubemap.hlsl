@@ -1,7 +1,5 @@
 #include "common.hlsl"
 
-TextureCube gCubeMap : register(t0);
-
 struct VertexIn
 {
 	float3 PosL		: POSITION;
