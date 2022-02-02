@@ -467,6 +467,7 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
 	btMat.getOpenGLMatrix(m);
 
+	mOldWorld = mWorld;
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 	UpdateBoundingBox();
 
@@ -762,7 +763,7 @@ void PhysicsPlayer::BuildCameras()
 	}
 }
 
-void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene, const UINT& cubemapIndex)
+void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex)
 {
 	BuildCameras();
 
@@ -799,6 +800,7 @@ void WheelObject::UpdateRigidBody(float Elapsed, btTransform wheelTransform)
 {
 	btScalar m[16];
 	wheelTransform.getOpenGLMatrix(m);
+	mOldWorld = mWorld;
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 
 	mPosition.x = mWorld(3, 0);

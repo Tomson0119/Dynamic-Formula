@@ -2,7 +2,7 @@
 
 #include "gameObject.h"
 #include "camera.h"
-#include "gameScene.h"
+#include "inGameScene.h"
 
 class Player : public GameObject
 {
@@ -135,7 +135,7 @@ public:
 
 	void BuildCameras();
 
-	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene, const UINT& cubemapIndex) override;
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) override;
 	virtual void ChangeCurrentRenderTarget() { mCurrentRenderTarget = 1 - mCurrentRenderTarget; }
 
 public:

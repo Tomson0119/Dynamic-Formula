@@ -5,7 +5,7 @@
 #include "camera.h"
 #include "texture.h"
 
-class GameScene;
+class InGameScene;
 
 class GameObject
 {
@@ -69,7 +69,7 @@ public:
 	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
 
 public:
-	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, GameScene* scene, const UINT& cubemapIndex) { }
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) { }
 	
 	virtual void BuildDsvRtvView(ID3D12Device* device) { }
 
@@ -118,6 +118,7 @@ protected:
 	XMFLOAT3 mScaling = { 1.0f, 1.0f, 1.0f };
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
 
 	btRigidBody* mBtRigidBody;
 	std::vector<std::shared_ptr<Mesh>> mMeshes;

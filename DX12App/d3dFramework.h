@@ -3,7 +3,9 @@
 #include "gameTimer.h"
 #include "dxException.h"
 #include "stdafx.h"
+
 class UI;
+class NetClient;
 
 class D3DFramework : public BaseWin<D3DFramework>
 {
@@ -100,6 +102,7 @@ protected:
 	//UI 
 	//std:: vector<UI> mpUI;
 	//UI				*mpUI = NULL;
+
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
 
@@ -110,4 +113,5 @@ protected:
 	std::shared_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
 	std::shared_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
 
+	std::unique_ptr<NetClient> mNetClient;
 };

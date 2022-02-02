@@ -4,19 +4,27 @@ Texture2D gDiffuseMap : register(t0);
 
 struct VertexIn
 {
-    float3 PosL : POSITION;
-    float3 NormalL : NORMAL;
+    float3 PosL     : POSITION;
+    float3 NormalL  : NORMAL;
     float3 TangentL : TANGENT;
     float2 TexCoord : TEXCOORD;
 };
 
 struct VertexOut
 {
-    float4 PosH     : SV_POSITION;
-    float3 PosW     : POSITION0;
-    float3 NormalW  : NORMAL;
-    float3 TangentW : TANGENT;
-    float2 TexCoord : TEXCOORD;
+    float4 PosH      : SV_POSITION;
+    float3 PosW      : POSITION0;
+    float4 oldPosWVP : POSITION1;
+    float4 newPosWVP : POSITION2;
+    float3 NormalW   : NORMAL;
+    float3 TangentW  : TANGENT;
+    float2 TexCoord  : TEXCOORD;
+};
+
+struct PixelOut
+{
+    float4 f4Color : SV_TARGET0;
+    float4 f4Direction : SV_TARGET1;
 };
 
 VertexOut VS(VertexIn vin)
@@ -27,6 +35,9 @@ VertexOut VS(VertexIn vin)
     vout.PosW = posW.xyz;
     vout.PosH = mul(posW, gViewProj);
     
+    vout.oldPosWVP = mul(mul(float4(vin.PosL, 1.0f), gOldWorld), gOldViewProj);
+    vout.newPosWVP = vout.PosH;
+
     float4x4 tWorld = transpose(gWorld);
     vout.NormalW = mul((float3x3) tWorld, vin.NormalL);
     vout.TangentW = mul((float3x3) tWorld, vin.TangentL);
@@ -37,7 +48,7 @@ VertexOut VS(VertexIn vin)
     return vout;
 }
 
-float4 PS(VertexOut pin) : SV_Target
+PixelOut PS(VertexOut pin)
 {
     int idx = -1;
     float4 PosV = mul(float4(pin.PosW, 1.0f), gView);
@@ -68,6 +79,9 @@ float4 PS(VertexOut pin) : SV_Target
     {
         directLight = ComputeLighting(gLights, gMat, normalize(pin.NormalW), view, shadowFactor);
     }
+
+    PixelOut pout;
+
     float4 result = ambient + directLight;
     result.a = gMat.Diffuse.a;
     
@@ -93,5 +107,10 @@ float4 PS(VertexOut pin) : SV_Target
     //    debugColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
     //}
     result *= debugColor;
-    return result;
+
+    pout.f4Color = result;
+    pout.f4Direction = float4(pin.newPosWVP.xyz / pin.newPosWVP.z - pin.oldPosWVP.xyz / pin.oldPosWVP.z, 1.0f);
+    pout.f4Direction.z = result.y;
+
+    return pout;
 }

@@ -60,8 +60,9 @@ void Pipeline::BuildPipeline(
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = mPrimitive;
-	psoDesc.NumRenderTargets = 1;
+	psoDesc.NumRenderTargets = 2;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
+	psoDesc.RTVFormats[1] = mBackBufferFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	psoDesc.SampleDesc.Count = 1;
 	//psoDesc.SampleDesc.Quality = gMsaaStateDesc.Quality;
@@ -331,8 +332,9 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = mPrimitive;
-	psoDesc.NumRenderTargets = 1;
+	psoDesc.NumRenderTargets = 2;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
+	psoDesc.RTVFormats[1] = mBackBufferFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	psoDesc.SampleDesc.Count = 1;
 
@@ -474,16 +476,14 @@ void ComputePipeline::BuildPipeline(
 	mPSOs.push_back({});
 	ThrowIfFailed(device->CreateComputePipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSOs.back())));
+
+	CreateTextures(device);
+	BuildDescriptorHeap(device);
 }
 
-void ComputePipeline::SetPrevBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer)
+void ComputePipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx)
 {
-	CopyRTToMap(cmdList, buffer, mBlurMapInput[0]->GetResource());
-}
-
-void ComputePipeline::SetCurrBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer)
-{
-	CopyRTToMap(cmdList, buffer, mBlurMapInput[1]->GetResource());
+	CopyRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
 }
 
 void ComputePipeline::CopyRTToMap(

@@ -16,6 +16,7 @@ cbuffer CameraCB : register(b0)
     matrix gViewProj        : packoffset(c8);
     float3 gCameraPos       : packoffset(c12);
     float  gAspect          : packoffset(c12.w);
+    matrix gOldViewProj     : packoffset(c13);
 }
 
 cbuffer LightCB : register(b1)
@@ -29,9 +30,8 @@ cbuffer GameInfoCB : register(b2)
 {
     float4 gRandFloat4  : packoffset(c0);
     float3 gPlayerPos   : packoffset(c1);
-    uint   gKeyInput    : packoffset(c1.w);
-    float  gCurrentTime : packoffset(c2.x);
-    float  gElapsedTime : packoffset(c2.y);
+    float  gCurrentTime : packoffset(c1.w);
+    float  gElapsedTime : packoffset(c2.x);
 }
 
 cbuffer MaterialCB : register(b3)
@@ -43,6 +43,7 @@ cbuffer MaterialCB : register(b3)
 cbuffer ObjectCB : register(b4)
 {
     matrix gWorld : packoffset(c0);
+    matrix gOldWorld : packoffset(c4);
 }
 
 cbuffer ShadowCB : register(b5)

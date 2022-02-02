@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "gameObject.h"
-#include "gameScene.h"
+#include "inGameScene.h"
 
 
 GameObject::GameObject()
@@ -483,9 +483,15 @@ ObjectConstants GameObject::GetObjectConstants()
 {
 	ObjectConstants objCnst = {};
 	if (mReflected)
+	{
 		objCnst.World = Matrix4x4::Transpose(Matrix4x4::Multiply(mWorld, mReflectMatrix));
+		objCnst.oldWorld = Matrix4x4::Transpose(Matrix4x4::Multiply(mOldWorld, mReflectMatrix));
+	}
 	else
+	{
 		objCnst.World = Matrix4x4::Transpose(mWorld);
+		objCnst.oldWorld = Matrix4x4::Transpose(mOldWorld);
+	}
 	return objCnst;
 }
 

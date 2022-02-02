@@ -12,9 +12,15 @@ struct VertexIn
 struct VertexOut
 {
 	float4 PosH     : SV_POSITION;
-    float3 PosW     : POSITION;
+    float3 PosW   : POSITION;
     float3 NormalW  : NORMAL;
     float2 TexCoord : TEXCOORD;
+};
+
+struct PixelOut
+{
+    float4 f4Color : SV_TARGET0;
+    float4 f4Direction : SV_TARGET1;
 };
 
 VertexOut VS(VertexIn vin)
@@ -32,10 +38,15 @@ VertexOut VS(VertexIn vin)
 	return vout;
 }
 
-float4 PS(VertexOut pin, uint primID : SV_PrimitiveID) : SV_Target
+PixelOut PS(VertexOut pin, uint primID : SV_PrimitiveID)
 {
+    PixelOut pout;
+
     float3 uvw = float3(pin.TexCoord, primID / 2);
     float4 diffuse = gTexture.Sample(gAnisotropicClamp, uvw) * gMat.Diffuse;
     
-    return diffuse;
+    pout.f4Color = diffuse;
+    pout.f4Direction = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    return pout;
 }

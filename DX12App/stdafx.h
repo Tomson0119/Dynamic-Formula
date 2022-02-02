@@ -3,6 +3,10 @@
 #define BT_NO_SIMD_OPERATOR_OVERLOADS
 #define NOMINMAX
 
+// Network 헤더 파일:
+#include "NetLib/NetCommon.h"
+
+
 #ifndef _DEBUG
 #define _DEBUG
 #else
@@ -18,7 +22,6 @@
 #include <sdkddkver.h>
 #include <wrl.h>
 #include <comdef.h>
-
 
 // D3D12 헤더 파일:
 #include <d3d12.h>
@@ -169,6 +172,7 @@ struct CameraConstants
 	XMFLOAT4X4 ViewProj;
 	XMFLOAT3 CameraPos;
 	float Aspect;
+	XMFLOAT4X4 oldView;
 };
 
 struct Material
@@ -194,6 +198,7 @@ struct Material
 struct ObjectConstants
 {
 	XMFLOAT4X4 World;
+	XMFLOAT4X4 oldWorld;
 	//Material Mat;
 };
 
@@ -207,7 +212,6 @@ struct GameInfoConstants
 {
 	XMFLOAT4 RandFloat4;
 	XMFLOAT3 PlayerPosition;
-	UINT KeyInput;
 	float CurrentTime;
 	float ElapsedTime;
 };
