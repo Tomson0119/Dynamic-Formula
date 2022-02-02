@@ -434,6 +434,11 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	RenderPipelines(cmdList, 0);
 
 	mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, mVelocityMap.Get(), 0);
+	mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, backBuffer, 1);
+
+	mPostProcessingPipelines[Layer::MotionBlur]->Dispatch(cmdList);
+
+	mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
