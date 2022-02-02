@@ -2,6 +2,7 @@
 
 #include "LobbyServer.h"
 #include "DBHandler.h"
+#include "BPHandler.h"
 
 class Client;
 class InGameRoom;
@@ -12,7 +13,7 @@ class LoginServer
 {
 public:
 	LoginServer(const EndPoint& ep);
-	virtual ~LoginServer();
+	~LoginServer() = default;
 
 public:
 	void Run();
@@ -41,4 +42,5 @@ private:
 	std::atomic_bool mLoop;		
 
 	LobbyServer mLobby;
+	BPHandler mPhysicsEngine;
 };

@@ -12,10 +12,6 @@ InGameRoom::InGameRoom(int id, LoginServer* ptr)
 		mPlayers[i] = PlayerInfo{ true, -1, false, -1, "" };
 }
 
-InGameRoom::~InGameRoom()
-{
-}
-
 bool InGameRoom::OpenRoom(int hostID)
 {
 	if (Empty() && AddPlayer(hostID))

@@ -16,7 +16,7 @@ class InGameRoom
 	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
 public:
 	InGameRoom(int id, LoginServer* ptr);
-	~InGameRoom();
+	~InGameRoom() = default;
 
 	bool OpenRoom(int hostID);	
 	

@@ -6,15 +6,6 @@
 
 LobbyServer::RoomList LobbyServer::gRooms;
 
-LobbyServer::LobbyServer()
-	: mLoginPtr{}
-{	
-}
-
-LobbyServer::~LobbyServer()
-{
-}
-
 void LobbyServer::Init(LoginServer* ptr)
 {
 	mLoginPtr = ptr;

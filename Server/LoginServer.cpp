@@ -15,6 +15,7 @@ LoginServer::LoginServer(const EndPoint& ep)
 		else std::cout << "failed to connect to DB\n";
 	}
 
+	mPhysicsEngine.Init(-10.0f);
 	mLobby.Init(this);
 	
 	for (int i = 0; i < gClients.size(); i++)
@@ -22,10 +23,6 @@ LoginServer::LoginServer(const EndPoint& ep)
 
 	mListenSck.Init();
 	mListenSck.Bind(ep);
-}
-
-LoginServer::~LoginServer()
-{
 }
 
 void LoginServer::Run()
@@ -139,14 +136,18 @@ void LoginServer::Logout(int id)
 
 void LoginServer::Disconnect(int id)
 {
-	//std::cout << "[" << id << "] Disconnect.\n";
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[" << id << "] Disconnect.\n";
+#endif
 	Logout(id);
 	gClients[id]->Disconnect();
 }
 
 void LoginServer::AcceptNewClient(int id, SOCKET sck)
 {
-	//std::cout << "[" << id << "] Accepted client.\n";
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[" << id << "] Accepted client.\n";
+#endif
 	gClients[id]->AssignAcceptedID(id, sck);
 	mIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
