@@ -1,10 +1,10 @@
 #pragma once
 
 #include "d3dFramework.h"
+#include "scene.h"
 
 class UI;
 class Camera;
-class Scene;
 
 class GameFramework : public D3DFramework
 {
@@ -27,7 +27,10 @@ private:
 	virtual void Draw() override;
 
 private:
+	void InitScene(SCENE_STAT state);
 	void OnPreciseKeyInput();
+	
+	void CheckAndPushNextScene();
 
 private:
 	std::stack<std::unique_ptr<Scene>> mScenes;
