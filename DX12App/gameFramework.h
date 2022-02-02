@@ -5,7 +5,9 @@
 //class UI;
 class InGameUI;
 
+class UI;
 class Camera;
+class Scene;
 
 class GameFramework : public D3DFramework
 {

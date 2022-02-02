@@ -3,6 +3,10 @@
 #define BT_NO_SIMD_OPERATOR_OVERLOADS
 #define NOMINMAX
 
+// Network 헤더 파일:
+#include "NetLib/NetCommon.h"
+
+
 #ifndef _DEBUG
 #define _DEBUG
 #else
@@ -18,7 +22,6 @@
 #include <sdkddkver.h>
 #include <wrl.h>
 #include <comdef.h>
-
 
 // D3D12 헤더 파일:
 #include <d3d12.h>
@@ -157,7 +160,7 @@ struct LightInfo
 
 struct LightConstants
 {
-	XMFLOAT4X4 ShadowTransform;
+	XMFLOAT4X4 ShadowTransform[3];
 	XMFLOAT4 Ambient;
 	LightInfo Lights[NUM_LIGHTS];
 };
@@ -169,6 +172,7 @@ struct CameraConstants
 	XMFLOAT4X4 ViewProj;
 	XMFLOAT3 CameraPos;
 	float Aspect;
+	XMFLOAT4X4 oldView;
 };
 
 struct Material
@@ -194,6 +198,7 @@ struct Material
 struct ObjectConstants
 {
 	XMFLOAT4X4 World;
+	XMFLOAT4X4 oldWorld;
 	//Material Mat;
 };
 
@@ -207,7 +212,6 @@ struct GameInfoConstants
 {
 	XMFLOAT4 RandFloat4;
 	XMFLOAT3 PlayerPosition;
-	UINT KeyInput;
 	float CurrentTime;
 	float ElapsedTime;
 };
@@ -261,6 +265,14 @@ namespace Vector3
 		XMStoreFloat3(&ret, scalar * XMLoadFloat3(&v));
 		return ret;
 	}
+
+	inline XMFLOAT3 Divide(float scalar, XMFLOAT3& v)
+	{
+		XMFLOAT3 ret;
+		XMStoreFloat3(&ret, XMLoadFloat3(&v) / scalar);
+		return ret;
+	}
+
 
 	inline XMFLOAT3 MultiplyAdd(float delta, XMFLOAT3& src, XMFLOAT3& dst)
 	{		

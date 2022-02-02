@@ -5,6 +5,7 @@
 #include "stdafx.h"
 //class UI;
 class InGameUI;
+class NetClient;
 
 class D3DFramework : public BaseWin<D3DFramework>
 {
@@ -109,4 +110,5 @@ protected:
 	std::shared_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
 	std::shared_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
 
+	std::unique_ptr<NetClient> mNetClient;
 };

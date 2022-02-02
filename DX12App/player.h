@@ -2,7 +2,7 @@
 
 #include "gameObject.h"
 #include "camera.h"
-
+#include "inGameScene.h"
 
 class Player : public GameObject
 {
@@ -37,6 +37,8 @@ public:
 public:
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	virtual float GetCurrentVelocity() { return 0.0f; }
+
+	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex) {};
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
 	virtual void OnPlayerUpdate(float elapsedTime) { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
@@ -96,6 +98,7 @@ public:
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
 	virtual void OnPreciseKeyInput(float Elapsed);
 	virtual void UpdateTransform(XMFLOAT4X4* parent) { }
+	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
 
@@ -128,4 +131,39 @@ private:
 	float mMaxSpeed = 1000.0f;
 
 	float mFovCoefficient = 1.0f;
+
+public:
+	virtual void BuildDsvRtvView(
+		ID3D12Device* device) override;
+
+	void BuildCameras();
+
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) override;
+	virtual void ChangeCurrentRenderTarget() { mCurrentRenderTarget = 1 - mCurrentRenderTarget; }
+
+public:
+	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
+
+private:
+	static const int RtvCounts = 12;
+
+	ULONG mCubeMapSize = 500;
+
+	std::array<std::unique_ptr<Camera>, RtvCounts / 2> mCameras;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE mRtvCPUDescriptorHandles[RtvCounts];
+	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mSrvCPUDescriptorHandle;
+
+	ComPtr<ID3D12Resource> mDepthStencilBuffer;
+	std::unique_ptr<Texture> mCubeMap[2];
+
+	D3D12_VIEWPORT mViewPort;
+	D3D12_RECT mScissorRect;
+
+	ComPtr<ID3D12DescriptorHeap> mRtvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mDsvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap;
+
+	UINT mCurrentRenderTarget = 0;
 };

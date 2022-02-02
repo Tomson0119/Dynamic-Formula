@@ -3,6 +3,12 @@
 #include "camera.h"
 #include "UI.h"
 
+#include "scene.h"
+#include "loginScene.h"
+#include "lobbyScene.h"
+#include "roomScene.h"
+#include "inGameScene.h"
+
 using namespace std;
 
 GameFramework::GameFramework()
@@ -24,7 +30,7 @@ bool GameFramework::InitFramework()
 	// 초기화하는 명령어를 넣기 위해 커맨드 리스트를 개방한다.
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
-	mScenes.push(make_unique<GameScene>());
+	mScenes.push(make_unique<InGameScene>());
 	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
 	
 	//InGameUI Build
@@ -230,7 +236,7 @@ void GameFramework::Update()
 	//UpdateUI(TextUI, TextUI.size());
 
 	//mCamera->Update(mTimer.ElapsedTime());
-	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mBtDynamicsWorld, mTimer);
+	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
 }
 
 void GameFramework::Draw()
@@ -245,7 +251,7 @@ void GameFramework::Draw()
 
 	Update();
 
-	mScenes.top()->PreRender(mCommandList.Get());
+	mScenes.top()->PreRender(mCommandList.Get(), mTimer.ElapsedTime());
 
 	mCommandList->RSSetViewports(1, &mViewPort);
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
@@ -255,15 +261,14 @@ void GameFramework::Draw()
 		CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	// 화면 버퍼와 깊이 스텐실 버퍼를 초기화한다.
-	XMFLOAT4 color = mScenes.top()->GetFrameColor();
+	const XMFLOAT4& color = mScenes.top()->GetFrameColor();
 
 	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), (FLOAT*)&color, 0, nullptr);
 	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 	// 렌더링할 버퍼를 구체적으로 설정한다.
-	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), TRUE, &DepthStencilView());
 
-	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBuffer());
+	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer());
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
