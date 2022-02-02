@@ -11,10 +11,12 @@ enum class SCENE_STAT : char
 	IN_GAME
 };
 
+class NetModule;
+
 class Scene
 {
 public:
-	Scene(SCENE_STAT stat);
+	explicit Scene(SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr);
 	Scene(const Scene& rhs) = delete;
 	Scene& operator=(const Scene& rhs) = delete;
 	virtual ~Scene() = default;
@@ -45,10 +47,17 @@ public:
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
 
 public:
+	void SetSceneFlag(bool flag) { mSceneChangeFlag = flag; }
+
+	bool NeedToChangeScene() const { return mSceneChangeFlag; }
 	SCENE_STAT GetSceneState() const { return mSceneState; }
 	const XMFLOAT4& GetFrameColor() { return mFrameColor; }
 
 protected:
 	SCENE_STAT mSceneState;
 	XMFLOAT4 mFrameColor;
+
+	NetModule* mNetPtr;
+
+	std::atomic_bool mSceneChangeFlag;
 };

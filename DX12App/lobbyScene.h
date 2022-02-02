@@ -2,10 +2,12 @@
 
 #include "scene.h"
 
+class NetModule;
+
 class LobbyScene : public Scene
 {
 public:
-	LobbyScene();
+	LobbyScene(NetModule* netPtr);
 	virtual ~LobbyScene() = default;
 
 public:

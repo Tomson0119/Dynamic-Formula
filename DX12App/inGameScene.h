@@ -14,11 +14,12 @@
 
 class DynamicCubeRenderer;
 class ShadowMapRenderer;
+class NetModule;
 
 class InGameScene : public Scene
 {
 public:
-	InGameScene();
+	InGameScene(NetModule* netPtr);
 	virtual ~InGameScene();
 
 public:

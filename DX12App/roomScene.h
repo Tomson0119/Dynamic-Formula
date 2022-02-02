@@ -10,11 +10,13 @@ struct PlayerInfo
 	char Name[MAX_NAME_SIZE];
 };
 
+class NetModule;
+
 class RoomScene : public Scene
 {
 	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
 public:
-	RoomScene();
+	RoomScene(NetModule* netPtr);
 	virtual ~RoomScene() = default;
 
 public:
