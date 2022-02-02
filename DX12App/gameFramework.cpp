@@ -109,13 +109,41 @@ void GameFramework::TextUIUpdate()
 	//ThrowIfFailed(m_pdwTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
 	////TextUI Set
 	TextUI.clear();
-	TextUI.resize(4);
-	//Time Set
+	TextUI.resize(5);
+	
+	//StartTime Set
+	UINT Countdown = 3;
+	float CountdownTime = 5.0f;
+	if (mTimer.TotalTime() > 4.0f) 
+	{
+		for (auto wc : L"Start")
+			TextUI[4].push_back(wc);
+	}
+	else if (mTimer.TotalTime() > 3.0f)
+	{
+		TextUI[4].push_back('0'+Countdown - 2);
+	}
+	else if (mTimer.TotalTime() > 2.0f)
+	{
+		TextUI[4].push_back('0' + Countdown - 1);
+	}
+	else if (mTimer.TotalTime() > 1.0f)
+	{
+		TextUI[4].push_back('0' + Countdown);
+	}
 
+	
+	//Time Set
+	if (mTimer.TotalTime() < CountdownTime)
+		return;
+	TextUI[4].clear();
+
+	float LapTime = mTimer.TotalTime() - CountdownTime;
 	UINT Min = 0;
 	float Sec = 0.0;
-	Min = mTimer.TotalTime() / 60.0f;
-	Sec = mTimer.TotalTime() - (Min * 60.0f);
+	Min = LapTime / 60.0f;
+	Sec = LapTime - (Min * 60.0f);
+
 	if (Min < 10)
 		TextUI[0].push_back('0');
 	for (auto wc : to_wstring(Min))
@@ -130,7 +158,7 @@ void GameFramework::TextUIUpdate()
 	//Lap Count Set
 	if(static_cast<int>(mTimer.TotalTime()/60)>0)
 	{
-		for (auto wc : to_wstring(static_cast<int>(mTimer.TotalTime() / 60)))
+		for (auto wc : to_wstring(static_cast<int>(LapTime / 60)))
 			TextUI[1].push_back(wc);
 		for (auto wc : std::wstring{ L"Lap" })
 			TextUI[1].push_back(wc);
@@ -182,6 +210,10 @@ void GameFramework::TextUIUpdate()
 	}
 	for(auto wc : std::wstring(L"km/h"))
 		TextUI[3].push_back(wc);
+
+
+
+	//TextUI[4].push_back();
 }
 
 void GameFramework::Update()
@@ -236,7 +268,8 @@ void GameFramework::Draw()
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));*/
-
+	/*mCommandList->ResourceBarrier(1,&CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), 
+		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST));*/
 	ThrowIfFailed(mCommandList->Close());
 
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };

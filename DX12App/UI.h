@@ -5,7 +5,7 @@ struct TextBlock
     IDWriteTextFormat* pdwFormat;
 };
 
-class UI
+class UI // Producing
 {
 public:
     UI() {}
@@ -53,9 +53,12 @@ public:
     void OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice, 
         ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
 
+    void CreateFontFormat();
     void SetVectorSize(UINT nFrame, UINT TextCnt);
     void SetTextRect();
     void SetDraftGage();
+    //char wcinput;
+    //std::wstring wsInputText;
 
 private:
     UINT GetRenderTargetsCount() { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
@@ -74,6 +77,7 @@ private:
 
     UINT TextCnt;
     UINT UICnt;
+
 
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;

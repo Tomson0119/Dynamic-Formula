@@ -2,7 +2,7 @@
 #include "UI.h"
 
 InGameUI::InGameUI(UINT nFrame, ID3D12Device* pd3dDevice, 
-    ID3D12CommandQueue* pd3dCommandQueue) : TextCnt(4), UICnt(3)
+    ID3D12CommandQueue* pd3dCommandQueue) : TextCnt(5), UICnt(3)
 {
     SetVectorSize(nFrame, TextCnt);
     Initialize(pd3dDevice, pd3dCommandQueue);
@@ -64,9 +64,8 @@ void InGameUI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dComm
     }
     pd3dInfoQueue->Release();
 #endif
-    mpd3d11On12Device->QueryInterface(__uuidof(IDXGIDevice), (void**)&pdxgiDevice);
-    //ThrowIfFailed(m_pd3d11On12Device.As(&pdxgiDevice));
-   
+    //mpd3d11On12Device->QueryInterface(__uuidof(IDXGIDevice), (void**)&pdxgiDevice);
+    ThrowIfFailed(mpd3d11On12Device.As(&pdxgiDevice));
     ThrowIfFailed(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory3), &d2dFactoryOptions, &mpd2dFactory));
     ThrowIfFailed(mpd2dFactory->CreateDevice(pdxgiDevice.Get(), &mpd2dDevice));
     ThrowIfFailed(mpd2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &mpd2dDeviceContext));
@@ -128,6 +127,12 @@ void InGameUI::Draw(UINT nFrame)
     mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (19.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (8.0f / 9.0f)),
         mvd2dTextBrush[TextCnt+3].Get());//BrushColor : Aqua
 
+    //Input TextRect
+    /*mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (3.0f / 32.0f), m_fHeight * (2.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (3.0f / 6.0f)), 
+        mvd2dTextBrush[TextCnt].Get());
+    mpd2dDeviceContext.Get()->DrawTextW(wsInputText.c_str(), static_cast<UINT>(wsInputText.length()),
+        mvdwTextFormat[0].Get(), mvTextBlocks[4].d2dLayoutRect, mvd2dTextBrush[0].Get());*/
+
     mpd2dDeviceContext.Get()->EndDraw();
    
     mpd3d11On12Device->ReleaseWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 0);
@@ -141,6 +146,24 @@ void InGameUI::ReleaseResources()
 
 }
 
+void InGameUI::CreateFontFormat()
+{
+    float fFontSize = m_fHeight / 15.0f;
+    //All System Font
+    mpd2dWriteFactory->CreateTextFormat(L"Tahoma", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[0].GetAddressOf());
+    mpd2dWriteFactory->CreateTextFormat(L"Vladimir Script º¸Åë", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[1].GetAddressOf());
+    mpd2dWriteFactory->CreateTextFormat(L"¹ÙÅÁÃ¼", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[2].GetAddressOf());
+    mpd2dWriteFactory->CreateTextFormat(L"±¼¸²Ã¼", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[3].GetAddressOf());
+    mpd2dWriteFactory->CreateTextFormat(L"±¼¸²Ã¼", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[4].GetAddressOf());
+
+
+    for (int i = 0; i < TextCnt; ++i)
+    {
+        ThrowIfFailed(mvdwTextFormat[i]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
+        ThrowIfFailed(mvdwTextFormat[i]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
+    }
+}
+
 void InGameUI::SetTextRect()
 {
     for (auto Text : mvTextBlocks)
@@ -150,7 +173,7 @@ void InGameUI::SetTextRect()
     mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f, m_fWidth / 6, m_fHeight / 6);
     mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (m_fWidth / 6), 0.0f, m_fWidth, m_fHeight / 6);
     mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (m_fWidth / 6), 5 * (m_fHeight / 6), m_fWidth, m_fHeight);
-
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(m_fWidth * 1/8, m_fHeight/2 - m_fHeight * (1/11), m_fWidth * 7/8, m_fHeight/2 + m_fHeight * (1/11));
  }
 
 void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
@@ -169,22 +192,9 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
         mvWrappedRenderTargets[i]->QueryInterface(__uuidof(IDXGISurface), (void**)&pdxgiSurface);
         mpd2dDeviceContext->CreateBitmapFromDxgiSurface(pdxgiSurface.Get(), &d2dBitmapProperties, &mvd2dRenderTargets[i]);
     }
-
-    float fFontSize = m_fHeight / 15.0f;
-
-    //All System Font
-    mpd2dWriteFactory->CreateTextFormat(L"Tahoma", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[0].GetAddressOf());
-    mpd2dWriteFactory->CreateTextFormat(L"Vladimir Script º¸Åë", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[1].GetAddressOf());
-    mpd2dWriteFactory->CreateTextFormat(L"¹ÙÅÁÃ¼", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[2].GetAddressOf());
-    mpd2dWriteFactory->CreateTextFormat(L"±¼¸²Ã¼", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[3].GetAddressOf());
-
-    for (int i = 0; i < TextCnt; ++i)
-    {
-        ThrowIfFailed(mvdwTextFormat[i]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
-        ThrowIfFailed(mvdwTextFormat[i]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
-    }
+    CreateFontFormat();
     
-    D2D1::ColorF colorList[8] = { D2D1::ColorF::Black, D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::Black, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
+    D2D1::ColorF colorList[9] = { D2D1::ColorF::Black, D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::OrangeRed, D2D1::ColorF::Black, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
     BuildBrush(TextCnt + 4, colorList); //SolidBrush and LinearBrush(Gradient)
 
     SetTextRect();
