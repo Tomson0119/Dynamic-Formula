@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BPHandler.h"
+
 struct PlayerInfo
 {
 	bool Empty;
@@ -58,6 +60,6 @@ private:
 	std::atomic_char mAdminIndex;
 
 	PlayerList mPlayers;
-
 	LoginServer* mLoginPtr;
+	BPHandler mPhysicsEngine;
 };
