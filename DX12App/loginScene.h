@@ -2,10 +2,12 @@
 
 #include "scene.h"
 
+class NetModule;
+
 class LoginScene : public Scene
 {
 public:
-	LoginScene();
+	LoginScene(NetModule* netPtr);
 	virtual ~LoginScene() = default;
 
 public:
@@ -22,6 +24,8 @@ public:
 		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) override;
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) override;
+
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 
 private:
 

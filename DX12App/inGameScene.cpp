@@ -1,12 +1,14 @@
 #include "stdafx.h"
 #include "inGameScene.h"
 #include "shadowMapRenderer.h"
+#include "NetLib/NetModule.h"
 
 using namespace std;
 
-InGameScene::InGameScene()
-	: Scene(SCENE_STAT::IN_GAME)
+InGameScene::InGameScene(NetModule* netPtr)
+	: Scene(SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr)
 {
+	OutputDebugStringW(L"In Game Scene Entered.\n");
 }
 
 InGameScene::~InGameScene()
@@ -300,6 +302,11 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 		mCubemapInterval -= elapsed;
 	}
 	mPlayer->SetCubemapSrv(cmdList, 7);
+}
+
+bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
+{
+	return false;
 }
 
 void InGameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)

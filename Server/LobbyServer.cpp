@@ -7,11 +7,7 @@
 LobbyServer::RoomList LobbyServer::gRooms;
 
 LobbyServer::LobbyServer()
-	: mLoginPtr{}
-{	
-}
-
-LobbyServer::~LobbyServer()
+	: mLoginPtr{ nullptr }
 {
 }
 

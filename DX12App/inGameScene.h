@@ -14,11 +14,12 @@
 
 class DynamicCubeRenderer;
 class ShadowMapRenderer;
+class NetModule;
 
 class InGameScene : public Scene
 {
 public:
-	InGameScene();
+	InGameScene(NetModule* netPtr);
 	virtual ~InGameScene();
 
 public:
@@ -38,6 +39,8 @@ public:
 	
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) override;
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
+
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 
 public:
 	void UpdateLight(float elapsed);

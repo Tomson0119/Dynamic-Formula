@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BPHandler.h"
+
 struct PlayerInfo
 {
 	bool Empty;
@@ -16,7 +18,7 @@ class InGameRoom
 	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
 public:
 	InGameRoom(int id, LoginServer* ptr);
-	~InGameRoom();
+	~InGameRoom() = default;
 
 	bool OpenRoom(int hostID);	
 	
@@ -58,6 +60,6 @@ private:
 	std::atomic_char mAdminIndex;
 
 	PlayerList mPlayers;
-
 	LoginServer* mLoginPtr;
+	BPHandler mPhysicsEngine;
 };

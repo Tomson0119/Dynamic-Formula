@@ -10,10 +10,8 @@ InGameRoom::InGameRoom(int id, LoginServer* ptr)
 {
 	for (int i = 0; i < mPlayers.size(); i++)
 		mPlayers[i] = PlayerInfo{ true, -1, false, -1, "" };
-}
-
-InGameRoom::~InGameRoom()
-{
+	
+	mPhysicsEngine.Init(-10.0f);
 }
 
 bool InGameRoom::OpenRoom(int hostID)
