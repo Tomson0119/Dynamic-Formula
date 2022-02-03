@@ -27,7 +27,7 @@ D3DFramework::~D3DFramework()
 				delete body->getMotionState();
 			}
 			mBtDynamicsWorld->removeCollisionObject(obj);
-			delete obj;
+			if(obj) delete obj;
 		}
 	}
 
@@ -73,7 +73,7 @@ void D3DFramework::Run()
 			}
 			else
 			{
-				Sleep(100);
+				SleepEx(100, true);
 			}
 		}
 	}
