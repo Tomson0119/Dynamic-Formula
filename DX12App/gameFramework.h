@@ -1,8 +1,6 @@
 #pragma once
 
 #include "d3dFramework.h"
-#include "gameScene.h"
-//class UI;
 class InGameUI;
 
 class UI;
@@ -35,6 +33,6 @@ private:
 	void OnPreciseKeyInput();
 
 private:
-	std::stack<std::unique_ptr<GameScene>> mScenes;
+	std::stack<std::unique_ptr<Scene>> mScenes;
 	std::vector<std::wstring> TextUI;
 };

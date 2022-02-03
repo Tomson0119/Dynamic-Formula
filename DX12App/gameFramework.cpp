@@ -194,7 +194,7 @@ void GameFramework::TextUIUpdate()
 	}
 	//Speed
 	//float CurrentSpeed = mScenes.top().get()->GetPlayer()->GetCurrentVelocity();
-	if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 1000.0f)
+	/*if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 1000.0f)
 	{
 		for (int i = 0; i < 6; ++i)
 			TextUI[3].push_back(to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
@@ -213,7 +213,7 @@ void GameFramework::TextUIUpdate()
 	{
 		for (int i = 0; i < 3; ++i)
 			TextUI[3].push_back(to_wstring(0.0f)[i]);
-	}
+	}*/
 	for(auto wc : std::wstring(L"km/h"))
 		TextUI[3].push_back(wc);
 
@@ -236,7 +236,7 @@ void GameFramework::Update()
 	//UpdateUI(TextUI, TextUI.size());
 
 	//mCamera->Update(mTimer.ElapsedTime());
-	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
+	//mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
 }
 
 void GameFramework::Draw()
