@@ -64,8 +64,8 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_ESCAPE:
-			if (mScenes.size() > 0)
-				mScenes.pop();
+			if (mScenes.size() > 0);
+				//mScenes.pop();
 
 			if (mScenes.empty()) {
 				PostQuitMessage(0);
@@ -123,13 +123,31 @@ void GameFramework::OnPreciseKeyInput()
 {
 }
 
-void GameFramework::CheckAndPushNextScene()
+void GameFramework::CheckAndChangeScene()
 {
-	if (mScenes.top()->NeedToChangeScene())
+	switch (mScenes.top()->GetSceneChangeFlag())
 	{
-		mScenes.top()->SetSceneFlag(false);
+	case SCENE_CHANGE_FLAG::PUSH:
+	{
+		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
 		InitScene(static_cast<SCENE_STAT>(nextScene));
+		break;
+	}
+	case SCENE_CHANGE_FLAG::POP:
+	{
+		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
+		mScenes.pop();
+		break;
+	}
+	case SCENE_CHANGE_FLAG::LOGOUT:
+	{
+		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
+		while (mScenes.size() > 1) mScenes.pop();
+		break;
+	}
+	default:
+		break;
 	}
 }
 
@@ -151,7 +169,7 @@ void GameFramework::Update()
 
 void GameFramework::Draw()
 {
-	CheckAndPushNextScene();
+	CheckAndChangeScene();
 
 	// 명령어 할당자를 먼저 초기화해준다.
 	ThrowIfFailed(mCommandAllocator->Reset());

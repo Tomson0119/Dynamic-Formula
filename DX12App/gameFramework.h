@@ -30,7 +30,7 @@ private:
 	void InitScene(SCENE_STAT state);
 	void OnPreciseKeyInput();
 	
-	void CheckAndPushNextScene();
+	void CheckAndChangeScene();
 
 private:
 	std::stack<std::unique_ptr<Scene>> mScenes;
