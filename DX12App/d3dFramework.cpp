@@ -268,8 +268,8 @@ void D3DFramework::OnResize()
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 	for (int i = 0; i < mSwapChainBufferCount; ++i)
 		mSwapChainBuffers[i].Reset();
-	/*if(mpInGameUI)
-		mpInGameUI.get()->Reset();*/
+	if(mpInGameUI)
+		mpInGameUI.get()->Reset();
 
 	ThrowIfFailed(mSwapChain->ResizeBuffers(
 		mSwapChainBufferCount,

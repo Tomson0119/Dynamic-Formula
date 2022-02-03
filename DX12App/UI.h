@@ -64,8 +64,8 @@ private:
     UINT GetRenderTargetsCount() { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
     void Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
 
-    float m_fWidth = 0.0f;
-    float m_fHeight = 0.0f;
+    float mfWidth = 0.0f;
+    float mfHeight = 0.0f;
 
     float GradientPoint = 0.0f;
 

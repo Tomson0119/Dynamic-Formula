@@ -23,43 +23,24 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-
-	// 초기화하는 명령어를 넣기 위해 커맨드 리스트를 개방한다.
-	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
-
-	//mScenes.push(make_unique<InGameScene>());
-	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
+	InitScene(SCENE_STAT::IN_GAME); 
 	
-	//InGameUI Build
 	mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
 	mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 
-	// Command List를 닫고 Queue에 명령어를 싣는다.
-	ThrowIfFailed(mCommandList->Close());
-	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
-
-	// 초기화가 진행될 때까지 기다린다.
-	WaitUntilGPUComplete();
-
-	////UI Build
-	//if (!mpUI)
-	//{
-	//	mpUI = new UI(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-	//	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
-	//}
-	InitScene(SCENE_STAT::LOGIN);
 	return true;
+
+	//InGameUI Build
 }
 
 void GameFramework::OnResize()
 {
-	//if (mpInGameUI.get())
-		//mpInGameUI.get()->Reset();
+	/*if (mpInGameUI.get())
+		mpInGameUI.get()->Reset();*/
 	D3DFramework::OnResize();
 	//mpUI.get()->Initialize(mD3dDevice.Get(), mCommandQueue.Get());
-	//if(mpInGameUI.get())
-		//mpInGameUI.get()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+	if(mpInGameUI.get())
+		mpInGameUI.get()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
 }
 
@@ -147,8 +128,8 @@ void GameFramework::OnPreciseKeyInput()
 
 void GameFramework::TextUIUpdate()
 {
-	//const float fFontSize = m_fHeight / 25.0f;
-	//const float fSmallFontSize = m_fHeight / 40.0f;
+	//const float fFontSize = mfHeight / 25.0f;
+	//const float fSmallFontSize = mfHeight / 40.0f;
 
 	//mpUI.get(). m_pd2dWriteFactory->CreateTextFormat(L"휴먼둥근헤드라인", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", &m_pdwTextFormat);
 
@@ -300,9 +281,12 @@ void GameFramework::Update()
 	
 	OnPreciseKeyInput();
 
+	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
+	
 	//UI Update
-	TextUIUpdate();
-	mpInGameUI->Update(TextUI);
+	/*TextUIUpdate();
+	mpInGameUI->Update(TextUI);*/
+	
 }
 
 void GameFramework::Draw()
@@ -347,15 +331,12 @@ void GameFramework::Draw()
 
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
-	//mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 	
 	mpInGameUI->Draw(mCurrBackBufferIndex);
 
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
-	//mpUI.get()->GetD3D11DeviceContext()->Flush();
 	
-
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	
 

@@ -107,28 +107,28 @@ void InGameUI::Draw(UINT nFrame)
     }
     
     //Fill Draft gage
-    mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (3.0f / 16.0f) + (m_fWidth * (1.0f / 2.0f) - m_fWidth * (3.0f / 16.0f)) * fDraftGage, m_fHeight * (8.0f / 9.0f)),
+    mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(mfWidth * (3.0f / 16.0f), mfHeight * (5.0f / 6.0f), mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)) * fDraftGage, mfHeight * (8.0f / 9.0f)),
         md2dLinearGradientBrush.Get());//LinearBrush - Color[4] : ForestGreen, Yellow, Orange, Red 
     //Draft gage
-    mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f/9.0f)), 
+    mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(mfWidth * (3.0f / 16.0f), mfHeight * (5.0f / 6.0f), mfWidth * (1.0f / 2.0f), mfHeight * (8.0f/9.0f)), 
         mvd2dTextBrush[TextCnt].Get()); //BrushColor : Black
     
     // Item Slot1
-    mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (17.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (18.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), 
+    mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(mfWidth * (17.0f / 32.0f), mfHeight * (5.0f / 6.0f), mfWidth * (18.0f / 32.0f), mfHeight * (8.0f / 9.0f)), 
         mvd2dTextBrush[TextCnt].Get());//BrushColor : Black
     if (uItemCnt > 0)
-    mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (17.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (18.0f / 32.0f), m_fHeight * (8.0f / 9.0f)),
+    mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(mfWidth * (17.0f / 32.0f), mfHeight * (5.0f / 6.0f), mfWidth * (18.0f / 32.0f), mfHeight * (8.0f / 9.0f)),
         mvd2dTextBrush[TextCnt+2].Get()); //BrusuhColor : Red
 
     // Item Slot2
-    mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (19.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (8.0f / 9.0f)), 
+    mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(mfWidth * (19.0f / 32.0f), mfHeight * (5.0f / 6.0f), mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)), 
         mvd2dTextBrush[TextCnt].Get());//BrushColor : Black
     if(uItemCnt>1)
-    mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(m_fWidth * (19.0f / 32.0f), m_fHeight * (5.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (8.0f / 9.0f)),
+    mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(mfWidth * (19.0f / 32.0f), mfHeight * (5.0f / 6.0f), mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)),
         mvd2dTextBrush[TextCnt+3].Get());//BrushColor : Aqua
 
     //Input TextRect
-    /*mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(m_fWidth * (3.0f / 32.0f), m_fHeight * (2.0f / 6.0f), m_fWidth * (20.0f / 32.0f), m_fHeight * (3.0f / 6.0f)), 
+    /*mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(mfWidth * (3.0f / 32.0f), mfHeight * (2.0f / 6.0f), mfWidth * (20.0f / 32.0f), mfHeight * (3.0f / 6.0f)), 
         mvd2dTextBrush[TextCnt].Get());
     mpd2dDeviceContext.Get()->DrawTextW(wsInputText.c_str(), static_cast<UINT>(wsInputText.length()),
         mvdwTextFormat[0].Get(), mvTextBlocks[4].d2dLayoutRect, mvd2dTextBrush[0].Get());*/
@@ -148,7 +148,7 @@ void InGameUI::ReleaseResources()
 
 void InGameUI::CreateFontFormat()
 {
-    float fFontSize = m_fHeight / 15.0f;
+    float fFontSize = mfHeight / 15.0f;
     //All System Font
     mpd2dWriteFactory->CreateTextFormat(L"Tahoma", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[0].GetAddressOf());
     mpd2dWriteFactory->CreateTextFormat(L"Vladimir Script ∫∏≈Î", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", mvdwTextFormat[1].GetAddressOf());
@@ -169,20 +169,20 @@ void InGameUI::SetTextRect()
     for (auto Text : mvTextBlocks)
         Text.pdwFormat = mvdwTextFormat[0].Get();
 
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f + m_fHeight / 6, m_fWidth / 6, 23.0f + (m_fHeight / 6));
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f, m_fWidth / 6, m_fHeight / 6);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (m_fWidth / 6), 0.0f, m_fWidth, m_fHeight / 6);
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (m_fWidth / 6), 5 * (m_fHeight / 6), m_fWidth, m_fHeight);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(m_fWidth * 1/8, m_fHeight/2 - m_fHeight * (1/11), m_fWidth * 7/8, m_fHeight/2 + m_fHeight * (1/11));
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f + mfHeight / 6, mfWidth / 6, 23.0f + (mfHeight / 6));
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f, mfWidth / 6, mfHeight / 6);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 0.0f, mfWidth, mfHeight / 6);
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 5 * (mfHeight / 6), mfWidth, mfHeight);
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 1/8, mfHeight/2 - mfHeight * (1/11), mfWidth * 7/8, mfHeight/2 + mfHeight * (1/11));
  }
 
 void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
-    m_fWidth = static_cast<float>(nWidth);
-    m_fHeight = static_cast<float>(nHeight);
+    mfWidth = static_cast<float>(nWidth);
+    mfHeight = static_cast<float>(nHeight);
 
     D2D1_BITMAP_PROPERTIES1 d2dBitmapProperties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW, 
-        D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), m_fWidth, m_fHeight); 
+        D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), mfWidth, mfHeight); 
     ComPtr<IDXGISurface> pdxgiSurface;
     for (UINT i = 0; i < GetRenderTargetsCount(); ++i)
     {
@@ -202,32 +202,33 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
 
 void InGameUI::Reset()
 {
-    /*m_d2dLinearGradientBrush.Reset();
-    m_pd3d11DeviceContext.Reset();
-    m_pd3d11On12Device.Reset();
-    m_pd2dFactory.Reset();
-    m_pd2dWriteFactory.Reset();
-    m_pd2dDevice.Reset();
+    md2dLinearGradientBrush.Reset();
+    mpd3d11DeviceContext.Reset();
+    mpd3d11On12Device.Reset();
+    mpd2dFactory.Reset();
+    mpd2dWriteFactory.Reset();
+    mpd2dDevice.Reset();
     pd3d11Device.Reset();
     pdxgiDevice.Reset();
-    m_pd2dDeviceContext.Reset();
+    mpd2dDeviceContext.Reset();
     
-    m_vTextBlocks.clear();
-    m_vd2dTextBrush.clear();*/
-    /*for (auto renderTarget : mvWrappedRenderTargets)
+    mvTextBlocks.clear();
+    mvd2dTextBrush.clear();
+    for(auto renderTarget : mvWrappedRenderTargets)
         renderTarget.Reset();
     for (auto bitmap : mvd2dRenderTargets)
-        bitmap.Reset();*/
+        bitmap.Reset();
 
-    //m_vWrappedRenderTargets.clear();
-    //m_vd2dRenderTargets.clear();
+    mvWrappedRenderTargets.clear();
+    mvd2dRenderTargets.clear();
 }
 
 void InGameUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice, 
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
-    /*SetVectorSize(nFrame, TextCnt);
-    Initialize(pd3dDevice, pd3dCommandQueue);*/
+    //Reset();
+    SetVectorSize(nFrame, TextCnt);
+    Initialize(pd3dDevice, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }
 
@@ -259,7 +260,7 @@ void InGameUI::BuildLinearGradientBrush()
     }
 
     ThrowIfFailed(mpd2dDeviceContext->CreateGradientStopCollection(gradientStops, 4, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &pGradientStops));
-    ThrowIfFailed(mpd2dDeviceContext->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2D1::Point2F(m_fWidth * (3.0f / 16.0f), m_fHeight * (5.0f / 6.0f)), D2D1::Point2F(m_fWidth * (1.0f / 2.0f), m_fHeight * (8.0f / 9.0f))), pGradientStops, &md2dLinearGradientBrush));
+    ThrowIfFailed(mpd2dDeviceContext->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2D1::Point2F(mfWidth * (3.0f / 16.0f), mfHeight * (5.0f / 6.0f)), D2D1::Point2F(mfWidth * (1.0f / 2.0f), mfHeight * (8.0f / 9.0f))), pGradientStops, &md2dLinearGradientBrush));
 
     pGradientStops->Release();
 }
