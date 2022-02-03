@@ -25,6 +25,8 @@ public:
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer) override;
 
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
+
 private:
 
 };

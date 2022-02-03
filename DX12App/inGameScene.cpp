@@ -252,6 +252,11 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 	mPlayer->SetCubemapSrv(cmdList, 7);
 }
 
+bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
+{
+	return false;
+}
+
 void InGameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 {
 	if ((buttonState) && !GetCapture())

@@ -2,6 +2,15 @@
 
 #include "scene.h"
 
+struct Room
+{
+	int ID;
+	unsigned char PlayerCount;
+	unsigned char MapID;
+	bool GameStarted;
+	bool Closed;
+};
+
 class NetModule;
 
 class LobbyScene : public Scene
@@ -25,6 +34,11 @@ public:
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer) override;
 
-private:
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 
+private:
+	
+
+private:
+	std::unordered_map<int, Room> mRoomList;
 };

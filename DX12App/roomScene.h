@@ -2,19 +2,10 @@
 
 #include "scene.h"
 
-struct PlayerInfo
-{
-	bool Empty;
-	char Color;
-	bool Ready;
-	char Name[MAX_NAME_SIZE];
-};
-
 class NetModule;
 
 class RoomScene : public Scene
 {
-	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
 public:
 	RoomScene(NetModule* netPtr);
 	virtual ~RoomScene() = default;
@@ -33,12 +24,9 @@ public:
 		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) override;
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer) override;
-
-public:
-	std::atomic_bool mMapIdx;
-	std::atomic_char mAdminIdx;
-	std::atomic_char mPlayerIdx;
+	
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 
 private:
-	PlayerList mPlayerList;
+	
 };

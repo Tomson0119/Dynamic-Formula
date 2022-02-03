@@ -40,6 +40,8 @@ public:
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer) override;
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
 
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
+
 public:
 	void UpdateLight(float elapsed);
 	void UpdateLightConstants();
