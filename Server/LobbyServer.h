@@ -8,7 +8,7 @@ class LobbyServer
 {
 	using RoomList = std::array<std::unique_ptr<InGameRoom>, MAX_ROOM_SIZE>;
 public:
-	LobbyServer() = default;
+	LobbyServer();
 	~LobbyServer() = default;
 
 	void Init(LoginServer* ptr);
