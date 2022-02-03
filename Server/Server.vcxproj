@@ -201,6 +201,10 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">common.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">common.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="MeshData.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">common.h</PrecompiledHeaderFile>
+    </ClCompile>
     <ClCompile Include="Timer.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">common.h</PrecompiledHeaderFile>
@@ -216,6 +220,7 @@
     <ClInclude Include="DBHandler.h" />
     <ClInclude Include="LobbyServer.h" />
     <ClInclude Include="LoginServer.h" />
+    <ClInclude Include="MeshData.h" />
     <ClInclude Include="Timer.h" />
   </ItemGroup>
   <ItemGroup>
