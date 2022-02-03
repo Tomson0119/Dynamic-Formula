@@ -1,12 +1,12 @@
 #include "stdafx.h"
 #include "d3dFramework.h"
 #include "UI.h"
-#include "NetLib/NetClient.h"
+#include "NetLib/NetModule.h"
 
 D3DFramework::D3DFramework()
 	: mViewPort{ }, mScissorRect{ }, mFenceValues{ }
 {
-	mNetClient = std::make_unique<NetClient>();
+	mNetwork = std::make_unique<NetModule>();
 }
 
 D3DFramework::~D3DFramework()
@@ -27,7 +27,7 @@ D3DFramework::~D3DFramework()
 				delete body->getMotionState();
 			}
 			mBtDynamicsWorld->removeCollisionObject(obj);
-			delete obj;
+			if(obj) delete obj;
 		}
 	}
 
@@ -73,7 +73,7 @@ void D3DFramework::Run()
 			}
 			else
 			{
-				Sleep(100);
+				SleepEx(100, true);
 			}
 		}
 	}

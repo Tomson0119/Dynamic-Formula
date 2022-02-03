@@ -1,12 +1,12 @@
 #pragma once
 
 class NetClient
-{
-	
+{	
 public:
 	NetClient();
-	~NetClient();
+	~NetClient() = default;
 
+public:
 	bool Connect(const char* ip, short port);
 	void Disconnect();
 
@@ -25,6 +25,9 @@ public:
 	void RevertScene();
 	void SwitchMap(int roomID);
 	void ToggleReady(int roomID);
+
+public:
+	SOCKET GetSocket() const { return mSocket.GetSocket(); }
 
 private:
 	Socket mSocket;

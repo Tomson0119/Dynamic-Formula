@@ -42,6 +42,12 @@
     <ClCompile Include="LobbyServer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="BPHandler.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshData.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -63,6 +69,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="LobbyServer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="BPHandler.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshData.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

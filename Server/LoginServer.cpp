@@ -24,10 +24,6 @@ LoginServer::LoginServer(const EndPoint& ep)
 	mListenSck.Bind(ep);
 }
 
-LoginServer::~LoginServer()
-{
-}
-
 void LoginServer::Run()
 {
 	mListenSck.Listen();
@@ -139,14 +135,18 @@ void LoginServer::Logout(int id)
 
 void LoginServer::Disconnect(int id)
 {
-	//std::cout << "[" << id << "] Disconnect.\n";
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[" << id << "] Disconnect.\n";
+#endif
 	Logout(id);
 	gClients[id]->Disconnect();
 }
 
 void LoginServer::AcceptNewClient(int id, SOCKET sck)
 {
-	//std::cout << "[" << id << "] Accepted client.\n";
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[" << id << "] Accepted client.\n";
+#endif
 	gClients[id]->AssignAcceptedID(id, sck);
 	mIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
