@@ -5,7 +5,7 @@
 Scene::Scene(SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr)
 	: mSceneState{ stat },
 	  mFrameColor{ color },
-	  mSceneChangeFlag{ false },
+	  mSceneChangeFlag{ SCENE_CHANGE_FLAG::NONE },
 	  mNetPtr{ netPtr }
 {
 	mNetPtr->SetInterface(this);

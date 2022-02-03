@@ -2,6 +2,9 @@
 
 #include "gameTimer.h"
 
+#define STANDALONE
+//#define START_GAME_INSTANT
+
 enum class SCENE_STAT : char
 {
 	NONE = 0,
@@ -9,6 +12,14 @@ enum class SCENE_STAT : char
 	LOBBY,
 	ROOM,
 	IN_GAME
+};
+
+enum class SCENE_CHANGE_FLAG : char
+{
+	NONE=0,
+	PUSH,
+	POP,
+	LOGOUT
 };
 
 class NetModule;
@@ -36,6 +47,8 @@ public:
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer) = 0;
 	
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) = 0;
+
 	virtual void OnResize(float aspect) { }
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) { }
 
@@ -47,9 +60,9 @@ public:
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
 
 public:
-	void SetSceneFlag(bool flag) { mSceneChangeFlag = flag; }
+	SCENE_CHANGE_FLAG GetSceneChangeFlag() const { return mSceneChangeFlag; }
+	void SetSceneChangeFlag(SCENE_CHANGE_FLAG flag) { mSceneChangeFlag = flag; }
 
-	bool NeedToChangeScene() const { return mSceneChangeFlag; }
 	SCENE_STAT GetSceneState() const { return mSceneState; }
 	const XMFLOAT4& GetFrameColor() { return mFrameColor; }
 
@@ -59,5 +72,5 @@ protected:
 
 	NetModule* mNetPtr;
 
-	std::atomic_bool mSceneChangeFlag;
+	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;
 };
