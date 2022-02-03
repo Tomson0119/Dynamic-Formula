@@ -27,7 +27,7 @@ bool GameFramework::InitFramework()
 	// 초기화하는 명령어를 넣기 위해 커맨드 리스트를 개방한다.
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
-	mScenes.push(make_unique<InGameScene>());
+	//mScenes.push(make_unique<InGameScene>());
 	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
 	
 	//InGameUI Build
@@ -193,19 +193,19 @@ void GameFramework::TextUIUpdate()
 
 	if (Min < 10)
 		TextUI[0].push_back('0');
-	for (auto wc : to_wstring(Min))
+	for (auto wc : std::to_wstring(Min))
 		TextUI[0].push_back(wc);
 	
 	TextUI[0].push_back(':');
 	if (Sec < 10)
 		TextUI[0].push_back('0');
 	for (int i = 0; i < 3+!(Sec<10); ++i)
-		TextUI[0].push_back(to_wstring(Sec)[i]);
+		TextUI[0].push_back(std::to_wstring(Sec)[i]);
 	
 	//Lap Count Set
 	if(static_cast<int>(mTimer.TotalTime()/60)>0)
 	{
-		for (auto wc : to_wstring(static_cast<int>(LapTime / 60)))
+		for (auto wc : std::to_wstring(static_cast<int>(LapTime / 60)))
 			TextUI[1].push_back(wc);
 		for (auto wc : std::wstring{ L"Lap" })
 			TextUI[1].push_back(wc);
@@ -263,8 +263,6 @@ void GameFramework::TextUIUpdate()
 	//TextUI[4].push_back();
 }
 
-}
-
 void GameFramework::CheckAndChangeScene()
 {
 	switch (mScenes.top()->GetSceneChangeFlag())
@@ -305,10 +303,6 @@ void GameFramework::Update()
 	//UI Update
 	TextUIUpdate();
 	mpInGameUI->Update(TextUI);
-	//UpdateUI(TextUI, TextUI.size());
-
-	//mCamera->Update(mTimer.ElapsedTime());
-	//mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
 }
 
 void GameFramework::Draw()
