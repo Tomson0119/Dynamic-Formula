@@ -1,5 +1,6 @@
 #pragma once
 
+const char* const SERVER_IP = "127.0.0.1";
 const short SERVER_PORT = 4000;
 
 const int MAX_NAME_SIZE = 20;

@@ -2,10 +2,10 @@
 
 #include "d3dFramework.h"
 class InGameUI;
+#include "scene.h"
 
 class UI;
 class Camera;
-class Scene;
 
 class GameFramework : public D3DFramework
 {
@@ -30,7 +30,10 @@ private:
 	virtual void Draw() override;
 
 private:
+	void InitScene(SCENE_STAT state);
 	void OnPreciseKeyInput();
+	
+	void CheckAndChangeScene();
 
 private:
 	std::stack<std::unique_ptr<Scene>> mScenes;

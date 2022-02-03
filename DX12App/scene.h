@@ -2,6 +2,9 @@
 
 #include "gameTimer.h"
 
+#define STANDALONE
+//#define START_GAME_INSTANT
+
 enum class SCENE_STAT : char
 {
 	NONE = 0,
@@ -11,10 +14,20 @@ enum class SCENE_STAT : char
 	IN_GAME
 };
 
+enum class SCENE_CHANGE_FLAG : char
+{
+	NONE=0,
+	PUSH,
+	POP,
+	LOGOUT
+};
+
+class NetModule;
+
 class Scene
 {
 public:
-	Scene(SCENE_STAT stat);
+	explicit Scene(SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr);
 	Scene(const Scene& rhs) = delete;
 	Scene& operator=(const Scene& rhs) = delete;
 	virtual ~Scene() = default;
@@ -34,6 +47,8 @@ public:
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) = 0;
 	
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) = 0;
+
 	virtual void OnResize(float aspect) { }
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) { }
 
@@ -45,10 +60,17 @@ public:
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
 
 public:
+	SCENE_CHANGE_FLAG GetSceneChangeFlag() const { return mSceneChangeFlag; }
+	void SetSceneChangeFlag(SCENE_CHANGE_FLAG flag) { mSceneChangeFlag = flag; }
+
 	SCENE_STAT GetSceneState() const { return mSceneState; }
 	const XMFLOAT4& GetFrameColor() { return mFrameColor; }
 
 protected:
 	SCENE_STAT mSceneState;
 	XMFLOAT4 mFrameColor;
+
+	NetModule* mNetPtr;
+
+	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;
 };

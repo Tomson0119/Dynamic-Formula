@@ -12,7 +12,7 @@ class LoginServer
 {
 public:
 	LoginServer(const EndPoint& ep);
-	virtual ~LoginServer();
+	~LoginServer() = default;
 
 public:
 	void Run();
@@ -29,7 +29,7 @@ public:
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
 	static void NetworkThreadFunc(LoginServer& server);
-	static const int MAX_THREADS = 1;
+	static const int MAX_THREADS = 4;
 
 private:
 	Socket mListenSck;

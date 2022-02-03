@@ -3,13 +3,10 @@
 #include "camera.h"
 #include "UI.h"
 
-#include "scene.h"
 #include "loginScene.h"
 #include "lobbyScene.h"
 #include "roomScene.h"
 #include "inGameScene.h"
-
-using namespace std;
 
 GameFramework::GameFramework()
 	: D3DFramework()
@@ -45,6 +42,13 @@ bool GameFramework::InitFramework()
 	// 초기화가 진행될 때까지 기다린다.
 	WaitUntilGPUComplete();
 
+	////UI Build
+	//if (!mpUI)
+	//{
+	//	mpUI = new UI(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
+	//	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+	//}
+	InitScene(SCENE_STAT::LOGIN);
 	return true;
 }
 
@@ -82,8 +86,8 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_ESCAPE:
-			if (mScenes.size() > 0)
-				mScenes.pop();
+			if (mScenes.size() > 0);
+				//mScenes.pop();
 
 			if (mScenes.empty()) {
 				PostQuitMessage(0);
@@ -98,6 +102,43 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	mScenes.top()->OnProcessKeyInput(uMsg, wParam, lParam);
+}
+
+void GameFramework::InitScene(SCENE_STAT state)
+{
+	ThrowIfFailed(mCommandAllocator->Reset());
+	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
+
+	switch (state)
+	{
+	case SCENE_STAT::LOGIN:
+		mScenes.push(std::make_unique<LoginScene>(mNetwork.get()));
+		break;
+
+	case SCENE_STAT::LOBBY:
+		mScenes.push(std::make_unique<LobbyScene>(mNetwork.get()));
+		break;
+
+	case SCENE_STAT::ROOM:
+		mScenes.push(std::make_unique<RoomScene>(mNetwork.get()));
+		break;
+
+	case SCENE_STAT::IN_GAME:
+		mScenes.push(std::make_unique<InGameScene>(mNetwork.get()));
+		break;
+
+	default:
+		OutputDebugStringW(L"Wrong scene!!.\n");
+		break;
+	}
+
+	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
+
+	ThrowIfFailed(mCommandList->Close());
+	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
+
+	WaitUntilGPUComplete();
 }
 
 void GameFramework::OnPreciseKeyInput()
@@ -222,9 +263,40 @@ void GameFramework::TextUIUpdate()
 	//TextUI[4].push_back();
 }
 
+}
+
+void GameFramework::CheckAndChangeScene()
+{
+	switch (mScenes.top()->GetSceneChangeFlag())
+	{
+	case SCENE_CHANGE_FLAG::PUSH:
+	{
+		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
+		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
+		InitScene(static_cast<SCENE_STAT>(nextScene));
+		break;
+	}
+	case SCENE_CHANGE_FLAG::POP:
+	{
+		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
+		mScenes.pop();
+		break;
+	}
+	case SCENE_CHANGE_FLAG::LOGOUT:
+	{
+		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
+		while (mScenes.size() > 1) mScenes.pop();
+		break;
+	}
+	default:
+		break;
+	}
+}
+
 void GameFramework::Update()
 {
-	mBtDynamicsWorld->stepSimulation(mTimer.ElapsedTime());
+	if(mBtDynamicsWorld) 
+		mBtDynamicsWorld->stepSimulation(mTimer.ElapsedTime());
 
 	D3DFramework::UpdateFrameStates();
 	
@@ -241,6 +313,8 @@ void GameFramework::Update()
 
 void GameFramework::Draw()
 {
+	CheckAndChangeScene();
+
 	// 명령어 할당자를 먼저 초기화해준다.
 	ThrowIfFailed(mCommandAllocator->Reset());
 
