@@ -661,6 +661,7 @@ void MissileObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 	btMat.getOpenGLMatrix(m);
 
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+	UpdateBoundingBox();
 
 	mPosition.x = mWorld(3, 0);
 	mPosition.y = mWorld(3, 1);
