@@ -2,7 +2,6 @@
 
 #include "LobbyServer.h"
 #include "DBHandler.h"
-#include "BPHandler.h"
 
 class Client;
 class InGameRoom;
@@ -30,7 +29,7 @@ public:
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
 	static void NetworkThreadFunc(LoginServer& server);
-	static const int MAX_THREADS = 1;
+	static const int MAX_THREADS = 4;
 
 private:
 	Socket mListenSck;
@@ -42,5 +41,4 @@ private:
 	std::atomic_bool mLoop;		
 
 	LobbyServer mLobby;
-	BPHandler mPhysicsEngine;
 };

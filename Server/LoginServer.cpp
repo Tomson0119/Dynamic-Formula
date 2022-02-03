@@ -15,7 +15,6 @@ LoginServer::LoginServer(const EndPoint& ep)
 		else std::cout << "failed to connect to DB\n";
 	}
 
-	mPhysicsEngine.Init(-10.0f);
 	mLobby.Init(this);
 	
 	for (int i = 0; i < gClients.size(); i++)
