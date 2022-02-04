@@ -265,11 +265,12 @@ void D3DFramework::OnResize()
 	WaitUntilGPUComplete();
 
 	// 커맨드 리스트를 초기화하고, 리소스들의 Com 포인터를 Release한다.
+	if (mpInGameUI)
+		mpInGameUI.get()->Reset();
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 	for (int i = 0; i < mSwapChainBufferCount; ++i)
 		mSwapChainBuffers[i].Reset();
-	if(mpInGameUI)
-		mpInGameUI.get()->Reset();
+	
 
 	ThrowIfFailed(mSwapChain->ResizeBuffers(
 		mSwapChainBufferCount,
