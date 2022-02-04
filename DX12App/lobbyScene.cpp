@@ -87,6 +87,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::FORCE_LOGOUT:
 	{
 		OutputDebugString(L"Received force logout packet.\n");
+		SetSceneChangeFlag(SCENE_CHANGE_FLAG::LOGOUT);
 		break;
 	}
 	default:
