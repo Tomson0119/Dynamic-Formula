@@ -1,7 +1,5 @@
 #pragma once
 
-#include "BPHandler.h"
-
 struct PlayerInfo
 {
 	bool Empty;
@@ -20,46 +18,53 @@ public:
 	WaitRoom(int id, LoginServer* ptr);
 	~WaitRoom() = default;
 
-	bool OpenRoom(int hostID);
+	bool OpenRoom();
+	bool CloseRoom();
+
+	int FindAvaliableSpace();
 
 	bool AddPlayer(int hostID);
 	bool RemovePlayer(int hostID);
 
-	// TEST
-	void PrintWaitPlayers();
+	void SwitchMap(int hostID);
+	void ToggleReady(int hostID);
 
 public:
+	void IncreasePlayerCount();
+	void DecreasePlayerCount();
+
 	char GetPlayerCount() const { return mPlayerCount; }
 	char GetMapIndex() const { return mMapIndex; }
+	char GetAdminIndex() const { return mAdminIndex; }
 
-	bool Full() const { return (Empty() == false && mPlayerCount == MAX_ROOM_CAPACITY); }
-	bool Empty() const { return (mOpen == false); }
-	bool GameRunning() const { return mGameRunning; }
+	bool Empty() const { return (mPlayerCount == 0); }
+	bool Available() const { return (mState == ROOM_STAT::AVAILABLE); }
+	bool Full() const { return (mState == ROOM_STAT::ROOM_IS_FULL); }
+	bool Closed() const { return (mState == ROOM_STAT::ROOM_IS_CLOSED); }
+	bool GameRunning() const { return (mState == ROOM_STAT::GAME_STARTED); }
+
+	ROOM_STAT GetRoomState() const { return mState; }
 
 public:
-	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
+	void SendGameStartResult(int hostID, bool result, bool instSend = true);
 
-	void SendUpdatePlayerInfoToAll(int target, int ignore = -1, bool instSend = true);
-	void SendRemovePlayerInfoToAll(int target, bool instSend = true);
-	void SendUpdateMapInfoToAll(int ignore = -1, bool instSend = true);
+	void SendUpdatePlayerInfoToAll(int target, int ignore=-1, bool instSend=true);
+	void SendRemovePlayerInfoToAll(int target, bool instSend=true);
+	void SendUpdateMapInfoToAll(int ignore=-1, bool instSend=true);
 
-	void SendRoomInsideInfo(int id, bool instSend = true);
-	void SendRoomOutsideInfo(int id, bool instSend = true);
+	void SendRoomInsideInfo(int id, bool instSend=true);
+	void SendRoomOutsideInfo(int id, bool instSend=true);
 
 private:
-	void GameStartIfAllReady(int admin, bool instSend = true);
-	void SendToAllPlayer(std::byte* pck, int size, int ignore = -1, bool instSend = true);
+	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
 
 private:
 	int mID;
-	std::atomic_char mPlayerCount;
-	std::atomic_bool mOpen;
-	std::atomic_bool mGameRunning;
+	std::atomic_char mPlayerCount;	
 	std::atomic_char mMapIndex;
-
 	std::atomic_char mAdminIndex;
 
+	std::atomic<ROOM_STAT> mState;
+
 	PlayerList mPlayers;
-	LoginServer* mLoginPtr;
-	BPHandler mPhysicsEngine;
 };

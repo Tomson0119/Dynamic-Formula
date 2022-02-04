@@ -18,15 +18,13 @@ public:
 
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
+	bool TryOpenRoom(int hostID);
+	bool TryEnterRoom(int roomID, int hostID);
 	void AcceptEnterRoom(int roomID, int hostID);
-	bool TryAddPlayer(int roomID, int hostID);
-	void RemovePlayer(int roomID, int hostID);
+	bool TryRemovePlayer(int roomID, int hostID);
 
-	void SendRoomInfoToLobbyPlayers(int roomID, bool instSend = true);
+	void SendRoomInfoToLobbyPlayers(int roomID, int ignore=-1, bool instSend = true);
 	void SendExistingRoomList(int id);
-
-	// TEST
-	void PrintRoomList();
 
 public:
 	void IncreasePlayerCount() { mLobbyPlayerCount.fetch_add(1); }
@@ -38,6 +36,11 @@ private:
 
 	static RoomList msRooms;
 	
+	/*
+		인게임서버는 여러 개가 존재할 수 있으며, 
+		지정한 개수만큼의 방에 대해 로직을 계산하여 처리한다.
+		실제로는 서버 컴퓨터가 하나이므로, 하나만 사용한다.
+	*/
 	InGameServer mInGameServer;
 	LoginServer* mLoginPtr;
 };
