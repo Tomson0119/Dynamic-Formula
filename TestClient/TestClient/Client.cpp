@@ -162,6 +162,7 @@ void Client::UpdatePlayer(int idx, SC::PlayerInfo& state)
 
 void Client::RemovePlayer(int idx)
 {
+	std::cout << "Hello\n";
 	mPlayerList[idx].Empty = true;
 
 	/*system("cls");

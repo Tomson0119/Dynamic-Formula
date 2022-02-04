@@ -1,8 +1,6 @@
 #include "Client.h"
 #include <random>
 
-const std::string SERVER_IP = "127.0.0.1";
-
 const int MAX_TRIAL = 10000;
 const int MAX_NET_THREADS = 4;
 const uint64_t PING_LIMIT = 1000;

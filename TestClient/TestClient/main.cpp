@@ -2,8 +2,6 @@
 #include <random>
 #include <conio.h>
 
-const std::string SERVER_IP = "127.0.0.1";
-
 const int MAX_TRIAL = 1;
 const int MAX_NET_THREADS = 1;
 
