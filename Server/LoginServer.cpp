@@ -123,7 +123,7 @@ void LoginServer::AcceptLogin(const char* name, int id)
 
 void LoginServer::Logout(int id)
 {
-	mLobby.RemovePlayer(gClients[id]->RoomID, id);
+	mLobby.TryRemovePlayer(gClients[id]->RoomID, id);
 
 	int thread_id = mThreadIDs[std::this_thread::get_id()];
 	mDBHandlers[thread_id].SaveUserInfo(id);
