@@ -1,9 +1,9 @@
 #include "common.h"
 #include "LoginServer.h"
-#include "InGameRoom.h"
+#include "WaitRoom.h"
 #include "Client.h"
 
-InGameRoom::InGameRoom(int id, LoginServer* ptr)
+WaitRoom::WaitRoom(int id, LoginServer* ptr)
 	: mID(id), mGameRunning(false), mOpen(false),
 	  mMapIndex(0), mPlayerCount(0), mAdminIndex(-1),
 	  mLoginPtr(ptr)
@@ -14,7 +14,7 @@ InGameRoom::InGameRoom(int id, LoginServer* ptr)
 	mPhysicsEngine.Init(-10.0f);
 }
 
-bool InGameRoom::OpenRoom(int hostID)
+bool WaitRoom::OpenRoom(int hostID)
 {
 	if (Empty() && AddPlayer(hostID))
 	{
@@ -26,7 +26,7 @@ bool InGameRoom::OpenRoom(int hostID)
 	return false;
 }
 
-bool InGameRoom::AddPlayer(int hostID)
+bool WaitRoom::AddPlayer(int hostID)
 {
 	const int idx = [&] {
 		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
@@ -59,7 +59,7 @@ bool InGameRoom::AddPlayer(int hostID)
 	return true;
 }
 
-bool InGameRoom::RemovePlayer(int hostID)
+bool WaitRoom::RemovePlayer(int hostID)
 {
 	if (mOpen)
 	{
@@ -91,7 +91,7 @@ bool InGameRoom::RemovePlayer(int hostID)
 	return false;
 }
 
-void InGameRoom::PrintWaitPlayers()
+void WaitRoom::PrintWaitPlayers()
 {
 	int playerCount = mPlayerCount;
 	for (int j = 0; j < MAX_ROOM_CAPACITY && playerCount > 0; j++)
@@ -107,7 +107,7 @@ void InGameRoom::PrintWaitPlayers()
 	}
 }
 
-bool InGameRoom::ProcessPacket(std::byte* packet, char type, int id, int bytes)
+bool WaitRoom::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 {
 	switch (type)
 	{
@@ -163,7 +163,7 @@ bool InGameRoom::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	return true;
 }
 
-void InGameRoom::GameStartIfAllReady(int admin, bool instSend)
+void WaitRoom::GameStartIfAllReady(int admin, bool instSend)
 {
 	bool allReady = [&] {
 		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
@@ -200,7 +200,7 @@ void InGameRoom::GameStartIfAllReady(int admin, bool instSend)
 	}
 }
 
-void InGameRoom::SendUpdatePlayerInfoToAll(int target, int ignore, bool instSend)
+void WaitRoom::SendUpdatePlayerInfoToAll(int target, int ignore, bool instSend)
 {
 	int idx = (int)gClients[target]->PlayerIndex;
 	if (idx < 0)
@@ -227,7 +227,7 @@ void InGameRoom::SendUpdatePlayerInfoToAll(int target, int ignore, bool instSend
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, ignore, instSend);	
 }
 
-void InGameRoom::SendRemovePlayerInfoToAll(int target, bool instSend)
+void WaitRoom::SendRemovePlayerInfoToAll(int target, bool instSend)
 {
 	int idx = (int)gClients[target]->PlayerIndex;
 	if (idx < 0)
@@ -247,7 +247,7 @@ void InGameRoom::SendRemovePlayerInfoToAll(int target, bool instSend)
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, target, instSend);
 }
 
-void InGameRoom::SendUpdateMapInfoToAll(int ignore, bool instSend)
+void WaitRoom::SendUpdateMapInfoToAll(int ignore, bool instSend)
 {
 #ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "[room id: " << mID << "] Sending map update packet to all.\n";
@@ -260,7 +260,7 @@ void InGameRoom::SendUpdateMapInfoToAll(int ignore, bool instSend)
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, ignore, instSend);	
 }
 
-void InGameRoom::SendRoomInsideInfo(int id, bool instSend)
+void WaitRoom::SendRoomInsideInfo(int id, bool instSend)
 {
 #ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "[" << id << "] Sending room inside info packet.\n";
@@ -283,7 +283,7 @@ void InGameRoom::SendRoomInsideInfo(int id, bool instSend)
 	if(instSend) gClients[id]->SendMsg();
 }
 
-void InGameRoom::SendRoomOutsideInfo(int id, bool instSend)
+void WaitRoom::SendRoomOutsideInfo(int id, bool instSend)
 {
 #ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "[" << id << "] Sending room outside info packet.\n";
@@ -300,7 +300,7 @@ void InGameRoom::SendRoomOutsideInfo(int id, bool instSend)
 	if (instSend) gClients[id]->SendMsg();
 }
 
-void InGameRoom::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instSend)
+void WaitRoom::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instSend)
 {
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{

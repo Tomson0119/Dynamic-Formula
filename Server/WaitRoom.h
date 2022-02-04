@@ -13,15 +13,15 @@ struct PlayerInfo
 
 class LoginServer;
 
-class InGameRoom
+class WaitRoom
 {
 	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
 public:
-	InGameRoom(int id, LoginServer* ptr);
-	~InGameRoom() = default;
+	WaitRoom(int id, LoginServer* ptr);
+	~WaitRoom() = default;
 
-	bool OpenRoom(int hostID);	
-	
+	bool OpenRoom(int hostID);
+
 	bool AddPlayer(int hostID);
 	bool RemovePlayer(int hostID);
 
@@ -39,16 +39,16 @@ public:
 public:
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
-	void SendUpdatePlayerInfoToAll(int target, int ignore=-1, bool instSend=true);
-	void SendRemovePlayerInfoToAll(int target, bool instSend=true);
-	void SendUpdateMapInfoToAll(int ignore=-1, bool instSend=true);
+	void SendUpdatePlayerInfoToAll(int target, int ignore = -1, bool instSend = true);
+	void SendRemovePlayerInfoToAll(int target, bool instSend = true);
+	void SendUpdateMapInfoToAll(int ignore = -1, bool instSend = true);
 
-	void SendRoomInsideInfo(int id, bool instSend=true);
-	void SendRoomOutsideInfo(int id, bool instSend=true);
+	void SendRoomInsideInfo(int id, bool instSend = true);
+	void SendRoomOutsideInfo(int id, bool instSend = true);
 
 private:
-	void GameStartIfAllReady(int admin, bool instSend=true);
-	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
+	void GameStartIfAllReady(int admin, bool instSend = true);
+	void SendToAllPlayer(std::byte* pck, int size, int ignore = -1, bool instSend = true);
 
 private:
 	int mID;
