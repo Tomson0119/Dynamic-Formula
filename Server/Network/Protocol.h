@@ -10,7 +10,7 @@ const int MAX_PLAYER_SIZE = 10000;
 const int MAX_ROOM_CAPACITY = 8;
 const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
-const int MaxBufferSize = 300;
+const int MaxBufferSize = 1024;
 
 enum class LOGIN_STAT : char
 {	
@@ -27,12 +27,11 @@ enum class REGI_STAT : char
 
 enum class ROOM_STAT : char
 {
-	GAME_STARTED = 0,
-	INVALID_ROOM_ID,
-	ROOM_IS_FULL,
+	AVAILABLE = 0, 
 	ROOM_IS_CLOSED,
+	ROOM_IS_FULL,
+	GAME_STARTED,
 	MAX_ROOM_REACHED,
-	AVAILABLE
 };
 
 #pragma pack (push, 1)
