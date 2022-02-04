@@ -1,7 +1,6 @@
 #include "common.h"
 #include "LoginServer.h"
 #include "Client.h"
-#include "InGameRoom.h"
 
 std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
 
@@ -119,14 +118,12 @@ void LoginServer::AcceptLogin(const char* name, int id)
 	gClients[id]->Name = name;
 	gClients[id]->SendLoginResult(LOGIN_STAT::ACCEPTED, false);
 	
-	mLobby.IncreasePlayerCount();
-	mLobby.SendExistingRoomList(id);
+	mLobby.TakeOverNewPlayer(id);
 }
 
 void LoginServer::Logout(int id)
 {
-	mLobby.TryRemovePlayer(gClients[id]->RoomID, id);
-	mLobby.DecreasePlayerCount();
+	mLobby.RemovePlayer(gClients[id]->RoomID, id);
 
 	int thread_id = mThreadIDs[std::this_thread::get_id()];
 	mDBHandlers[thread_id].SaveUserInfo(id);
@@ -236,21 +233,6 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
 		else
 			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
-		break;
-	}
-	case CS::REVERT_SCENE:
-	{
-#ifdef DEBUG_PACKET_TRANSFER
-		std::cout << "[" << id << "] Received revert scene.\n";
-#endif
-		auto currentState = gClients[id]->GetCurrentState();
-		if (currentState == CLIENT_STAT::LOBBY)
-			Logout(id);
-		else if (currentState == CLIENT_STAT::IN_ROOM)
-		{
-			mLobby.TryRemovePlayer(gClients[id]->RoomID, id);
-			mLobby.SendExistingRoomList(id);
-		}
 		break;
 	}
 	default:
