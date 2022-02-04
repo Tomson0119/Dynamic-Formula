@@ -9,7 +9,8 @@ enum class OP : char
 {
 	RECV,
 	SEND,
-	ACCEPT
+	ACCEPT,
+	DISCONNECT
 };
 
 struct WSAOVERLAPPEDEX

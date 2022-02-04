@@ -32,6 +32,12 @@ bool NetModule::Connect(const char* ip, short port)
 	return false;
 }
 
+void NetModule::PostDisconnect()
+{	
+	// Post disconnect operation to get out of the thread loop	
+	mIOCP.PostToCompletionQueue(new WSAOVERLAPPEDEX(OP::DISCONNECT), 0);
+}
+
 void NetModule::NetworkFunc(NetModule& net)
 {
 	CompletionInfo info{};
@@ -128,6 +134,14 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes)
 	{
 		if (bytes != over->WSABuffer.len)
 			mNetClient->Disconnect();
+		delete over;
+		break;
+	}
+	case OP::DISCONNECT:
+	{
+		bool b = true;
+		mLoop.compare_exchange_strong(b, false);
+		mNetClient->Disconnect();
 		delete over;
 		break;
 	}

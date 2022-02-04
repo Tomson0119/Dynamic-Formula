@@ -469,6 +469,7 @@ LRESULT D3DFramework::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return MAKELRESULT(0, MNC_CLOSE);
 
 	case WM_DESTROY:
+		if (mNetwork) mNetwork->PostDisconnect();
 		PostQuitMessage(0);
 		return 0;
 

@@ -20,6 +20,8 @@ public:
 	~NetModule();
 
 	bool Connect(const char* ip, short port);
+	void PostDisconnect();
+
 	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes);
 	void ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes);
 
