@@ -34,10 +34,10 @@ void InGameUI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dComm
 #endif
 
     ComPtr<ID3D12CommandQueue> ppd3dCommandQueues[] = { pd3dCommandQueue };
-    ::D3D11On12CreateDevice(pd3dDevice, d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown**>(ppd3dCommandQueues), 
-        _countof(ppd3dCommandQueues), 0, &pd3d11Device, &mpd3d11DeviceContext, nullptr);
-    pd3d11Device.Get()->QueryInterface(__uuidof(ID3D11On12Device), (void**)&mpd3d11On12Device);
-    //ThrowIfFailed(pd3d11Device.As(&m_pd3d11On12Device));
+    ThrowIfFailed(::D3D11On12CreateDevice(pd3dDevice, d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown**>(ppd3dCommandQueues), 
+        _countof(ppd3dCommandQueues), 0, &pd3d11Device, &mpd3d11DeviceContext, nullptr));
+    //pd3d11Device.Get()->QueryInterface(__uuidof(ID3D11On12Device), (void**)&mpd3d11On12Device);
+    ThrowIfFailed(pd3d11Device.As(&mpd3d11On12Device));
     //pd3d11Device->Release();
 
 #if defined(_DEBUG) || defined(DBG)
@@ -200,9 +200,15 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
     SetTextRect();
 }
 
-void InGameUI::Reset()
+void InGameUI::Flush()
 {
     mpd3d11DeviceContext.Get()->Flush();
+}
+
+void InGameUI::Reset()
+{
+    //mpd3d11DeviceContext.Get()->Flush();
+
     md2dLinearGradientBrush.Reset();
     mpd3d11DeviceContext.Reset();
     mpd3d11On12Device.Reset();
@@ -215,6 +221,7 @@ void InGameUI::Reset()
     
     mvTextBlocks.clear();
     mvd2dTextBrush.clear();
+
     for(auto renderTarget : mvWrappedRenderTargets)
         renderTarget.Reset();
     for (auto bitmap : mvd2dRenderTargets)

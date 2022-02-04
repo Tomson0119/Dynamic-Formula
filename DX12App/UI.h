@@ -57,6 +57,7 @@ public:
     void SetVectorSize(UINT nFrame, UINT TextCnt);
     void SetTextRect();
     void SetDraftGage();
+    void Flush();
     //char wcinput;
     //std::wstring wsInputText;
 
