@@ -14,21 +14,16 @@ groupshared float4 RenderTargetSharedCache[32 + 2][32 + 2];
 void MotionBlur(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
 {
     int numSample = 10;
-    float2 Velocity = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].xy;
-    float2 uv;
-
-    uv.x = n3DispatchThreadID.x / 1920;
-    uv.y = n3DispatchThreadID.y / 1080;
+    float2 Velocity = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].xy * 200;
 
     float4 cColor = RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y + 1];
 
     for (int i = 0; i < numSample; ++i)
     {
-        Velocity.xy;
-        cColor += RenderTarget.SampleLevel(gLinearWrap, uv + Velocity * i, 0);
+        cColor += RenderTargetSharedCache[n3GroupThreadID.x + 1 + floor(Velocity.x * i)][n3GroupThreadID.y + 1 + floor(Velocity.y * i)];
     }
     
-    cColor /= numSample;
+    cColor /= numSample + 1;
 
     RWOutput[n3DispatchThreadID.xy] = cColor;
 }
