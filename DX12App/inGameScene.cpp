@@ -24,7 +24,7 @@ void InGameScene::OnResize(float aspect)
 void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
 {
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -112,8 +112,11 @@ void InGameScene::BuildComputeRootSignature(ID3D12Device* device)
 	parameters[0] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);    // Inputs
 	parameters[1] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);    // Output																   
 
+	D3D12_STATIC_SAMPLER_DESC samplerDesc;
+	samplerDesc = Extension::SamplerDesc(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_COMPARISON_FUNC_ALWAYS, D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE, D3D12_SHADER_VISIBILITY_ALL);
+
 	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = Extension::RootSignatureDesc(_countof(parameters), parameters,
-		0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+		1, &samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	ComPtr<ID3DBlob> rootSigBlob = nullptr;
 	ComPtr<ID3DBlob> errorBlob = nullptr;
@@ -275,7 +278,7 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 	float aspect = mMainCamera->GetAspect();
 	mPlayer = carObj.get();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
 }
 
 
@@ -286,7 +289,7 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 
 	if (mCubemapInterval < 0.0f)
 	{
-		mCubemapInterval = 0.1f;
+		mCubemapInterval = 0.03f;
 		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
 		if (mCubemapDrawIndex < 5)

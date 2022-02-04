@@ -472,7 +472,7 @@ void ComputePipeline::BuildPipeline(
 	};
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 	psoDesc.NodeMask = 0;
-	
+
 	mPSOs.push_back({});
 	ThrowIfFailed(device->CreateComputePipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSOs.back())));

@@ -3,31 +3,34 @@
 Texture2D VelocityMap : register(t0);
 Texture2D RenderTarget : register(t1);
 
+SamplerState gLinearWrap : register(s0);
+
 RWTexture2D<float4> RWOutput : register(u0);
 
 static float3 gf3ToLuminance = float3(0.33f, 0.33f, 0.33f);
-
-#define _WITH_SOBEL_EDGE
-
-#define _WITH_GROUPSHARED_MEMORY
 
 groupshared float4 RenderTargetSharedCache[32 + 2][32 + 2];
 
 void MotionBlur(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
 {
-    float3 convolutionXMask = gf3ToLuminance;
-    convolutionXMask.x -= VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].r * 100;
-    convolutionXMask.z += VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].r * 100;
+    int numSample = 10;
+    float2 Velocity = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].xy;
+    float2 uv;
 
-    float3 convolutionYMask = gf3ToLuminance;
-    convolutionYMask.x -= VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].g * 100;
-    convolutionYMask.z += VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].g * 100;
+    uv.x = n3DispatchThreadID.x / 1920;
+    uv.y = n3DispatchThreadID.y / 1080;
 
-    float3 f3HorizontalEdge = (convolutionXMask.x * RenderTargetSharedCache[n3GroupThreadID.x][n3GroupThreadID.y + 1].rgb) + (convolutionXMask.y * RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y + 1].rgb) + (convolutionXMask.z * RenderTargetSharedCache[n3GroupThreadID.x + 2][n3GroupThreadID.y + 1].rgb);
-    float3 f3VerticalEdge = (convolutionYMask.x * RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y].rgb) + (convolutionYMask.y * RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y + 1].rgb) + (convolutionYMask.z * RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y + 2].rgb);
+    float4 cColor = RenderTargetSharedCache[n3GroupThreadID.x + 1][n3GroupThreadID.y + 1];
 
-    RWOutput[n3DispatchThreadID.xy] = float4(sqrt(f3HorizontalEdge * f3HorizontalEdge + f3VerticalEdge * f3VerticalEdge), 1.0f);
+    for (int i = 0; i < numSample; ++i)
+    {
+        Velocity.xy;
+        cColor += RenderTarget.SampleLevel(gLinearWrap, uv + Velocity * i, 0);
+    }
+    
+    cColor /= numSample;
 
+    RWOutput[n3DispatchThreadID.xy] = cColor;
 }
 
 [numthreads(32, 32, 1)]
