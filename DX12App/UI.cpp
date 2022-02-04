@@ -202,6 +202,7 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
 
 void InGameUI::Reset()
 {
+    mpd3d11DeviceContext.Get()->Flush();
     md2dLinearGradientBrush.Reset();
     mpd3d11DeviceContext.Reset();
     mpd3d11On12Device.Reset();
