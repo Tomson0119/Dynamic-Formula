@@ -74,7 +74,10 @@ void InGameUI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dComm
 
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&mpd2dWriteFactory));
 }
-
+void InGameUI::StartPrint(std::wstring& strUIText)
+{
+    mvTextBlocks[TextCnt - 1].strText = strUIText;
+}
 void InGameUI::Update(const std::vector<std::wstring>& strUIText)
 {
     for (int i = 0; i < TextCnt; ++i)
@@ -137,7 +140,8 @@ void InGameUI::Draw(UINT nFrame)
    
     mpd3d11On12Device->ReleaseWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 0);
 
-    mpd3d11DeviceContext.Get()->Flush();
+    Flush();
+    //mpd3d11DeviceContext.Get()->Flush();
 }
 
 void InGameUI::ReleaseResources()

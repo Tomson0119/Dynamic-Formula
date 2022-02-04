@@ -46,7 +46,6 @@ public:
 		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) = 0;
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) = 0;
-	
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) = 0;
 
 	virtual void OnResize(float aspect) { }
@@ -56,13 +55,13 @@ public:
 	virtual void OnProcessMouseUp(WPARAM btnState, int x, int y);
 	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y);
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
+	//virtual Player* GetPlayer() { return reinterpret_cast<Player*>(0); }
 
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
 
 public:
 	SCENE_CHANGE_FLAG GetSceneChangeFlag() const { return mSceneChangeFlag; }
 	void SetSceneChangeFlag(SCENE_CHANGE_FLAG flag) { mSceneChangeFlag = flag; }
-
 	SCENE_STAT GetSceneState() const { return mSceneState; }
 	const XMFLOAT4& GetFrameColor() { return mFrameColor; }
 

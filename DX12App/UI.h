@@ -56,6 +56,7 @@ public:
     void CreateFontFormat();
     void SetVectorSize(UINT nFrame, UINT TextCnt);
     void SetTextRect();
+    void StartPrint(std::wstring& strUIText);
     void SetDraftGage();
     void Flush();
     //char wcinput;

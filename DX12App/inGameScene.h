@@ -54,15 +54,14 @@ public:
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0);
 
 	void OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed);
-
+	
 public:
 	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessMouseUp(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-
 	virtual ID3D12RootSignature* GetRootSignature() const override { return mRootSignature.Get(); }
-
+	virtual Player* GetPlayer() { return mPlayer; }
 private:
 	void BuildRootSignature(ID3D12Device* device);
 	void BuildComputeRootSignature(ID3D12Device* device);

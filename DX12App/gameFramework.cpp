@@ -126,7 +126,7 @@ void GameFramework::OnPreciseKeyInput()
 {
 }
 
-void GameFramework::TextUIUpdate()
+void GameFramework::UIUpdate()
 {
 	//const float fFontSize = mfHeight / 25.0f;
 	//const float fSmallFontSize = mfHeight / 40.0f;
@@ -163,7 +163,10 @@ void GameFramework::TextUIUpdate()
 	
 	//Time Set
 	if (mTimer.TotalTime() < CountdownTime)
+	{
+		mpInGameUI.get()->StartPrint(TextUI[4]);
 		return;
+	}
 	TextUI[4].clear();
 
 	float LapTime = mTimer.TotalTime() - CountdownTime;
@@ -215,31 +218,31 @@ void GameFramework::TextUIUpdate()
 		break;
 	}
 	//Speed
-	//float CurrentSpeed = mScenes.top().get()->GetPlayer()->GetCurrentVelocity();
-	/*if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 1000.0f)
+	/*float CurrentSpeed = mScenes.top().get()->GetPlayer()->GetCurrentVelocity();
+	if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 1000.0f)
 	{
 		for (int i = 0; i < 6; ++i)
-			TextUI[3].push_back(to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+			TextUI[3].push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
 	}
 	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 100.0f)
 	{
 		for (int i = 0; i < 5; ++i)
-			TextUI[3].push_back(to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+			TextUI[3].push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
 	}
 	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 10.0f)
 	{
 		for (int i = 0; i < 4; ++i)
-			TextUI[3].push_back(to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+			TextUI[3].push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
 	}
 	else
 	{
 		for (int i = 0; i < 3; ++i)
-			TextUI[3].push_back(to_wstring(0.0f)[i]);
+			TextUI[3].push_back(std::to_wstring(0.0f)[i]);
 	}*/
 	for(auto wc : std::wstring(L"km/h"))
 		TextUI[3].push_back(wc);
 
-
+	mpInGameUI->Update(TextUI);
 
 	//TextUI[4].push_back();
 }
@@ -284,8 +287,8 @@ void GameFramework::Update()
 	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
 	
 	//UI Update
-	/*TextUIUpdate();
-	mpInGameUI->Update(TextUI);*/
+	UIUpdate();
+	
 	
 }
 
