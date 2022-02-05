@@ -14,8 +14,10 @@ LobbyServer::LobbyServer()
 void LobbyServer::Init(LoginServer* ptr)
 {
 	mLoginPtr = ptr;
+	mInGameServer.Init(ptr);
+
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
-		msRooms[i] = std::make_unique<WaitRoom>(i, ptr);
+		msRooms[i] = std::make_unique<WaitRoom>(i);
 }
 
 void LobbyServer::TakeOverNewPlayer(int hostID)
@@ -54,7 +56,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		}
 
 		if (TryEnterRoom(pck->room_id, id))
-			AcceptEnterRoom(mRoomCount, id);
+			AcceptEnterRoom(pck->room_id, id);
 		else 
 			gClients[id]->SendAccessRoomDeny(msRooms[pck->room_id]->GetRoomState());
 
@@ -89,7 +91,16 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 			mLoginPtr->Disconnect(id);
 			break;
 		}
-		msRooms[id]->ToggleReady(id);
+
+		if (msRooms[roomID]->TryGameStart(id))
+		{
+			// update game started flag of room
+			SendRoomInfoToLobbyPlayers(roomID);
+			
+			// Hand over this room to in game server
+			auto playerIDs = msRooms[roomID]->GetPlayersID();
+			mInGameServer.PrepareToStartGame(roomID, playerIDs);
+		}
 		break;
 	}
 	case CS::REVERT_SCENE:
@@ -107,7 +118,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		break;
 	}
 	default:		
-		return false;
+		return mInGameServer.ProcessPacket(packet, type, id, bytes);
 	}
 	return true;
 }
@@ -167,12 +178,14 @@ bool LobbyServer::TryRemovePlayer(int roomID, int hostID)
 			return false;
 		}
 
-		gClients[hostID]->RoomID = -1;
-		gClients[hostID]->PlayerIndex = -1;
-		
+		// Packet must be sended before initializing client.
 		SendRoomInfoToLobbyPlayers(roomID, hostID);
 		msRooms[roomID]->SendRemovePlayerInfoToAll(hostID);		
 
+		// Clearing information after packet transfer
+		gClients[hostID]->RoomID = -1;
+		gClients[hostID]->PlayerIndex = -1;
+		
 		DecreasePlayerCount();
 
 		return true;
