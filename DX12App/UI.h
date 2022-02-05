@@ -44,7 +44,6 @@ public:
     ~InGameUI();
     void Update(const std::vector<std::wstring>& strUIText);
     void Draw(UINT nFrame);
-    void ReleaseResources();
     void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
     void BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList);
     void BuildSolidBrush(UINT UI_Cnt, D2D1::ColorF* ColorList);

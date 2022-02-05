@@ -144,12 +144,6 @@ void InGameUI::Draw(UINT nFrame)
     //mpd3d11DeviceContext.Get()->Flush();
 }
 
-void InGameUI::ReleaseResources()
-{
-    
-
-}
-
 void InGameUI::CreateFontFormat()
 {
     float fFontSize = mfHeight / 15.0f;

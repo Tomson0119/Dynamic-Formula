@@ -335,11 +335,11 @@ void GameFramework::Draw()
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	
-	mpInGameUI->Draw(mCurrBackBufferIndex);
 
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
-	
+	mpInGameUI->Draw(mCurrBackBufferIndex);
+
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	
 
