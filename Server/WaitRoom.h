@@ -15,7 +15,7 @@ class WaitRoom
 {
 	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
 public:
-	WaitRoom(int id, LoginServer* ptr);
+	WaitRoom(int id);
 	~WaitRoom() = default;
 
 	bool OpenRoom();
@@ -27,7 +27,9 @@ public:
 	bool RemovePlayer(int hostID);
 
 	void SwitchMap(int hostID);
-	void ToggleReady(int hostID);
+	bool TryGameStart(int hostID);
+
+	std::array<int, MAX_ROOM_CAPACITY> GetPlayersID();
 
 public:
 	void IncreasePlayerCount();
@@ -66,5 +68,5 @@ private:
 
 	std::atomic<ROOM_STAT> mState;
 
-	PlayerList mPlayers;
+	static PlayerList msPlayers;
 };
