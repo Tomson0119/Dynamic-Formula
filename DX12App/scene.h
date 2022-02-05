@@ -3,7 +3,7 @@
 #include "gameTimer.h"
 
 #define STANDALONE
-//#define START_GAME_INSTANT
+#define START_GAME_INSTANT
 
 enum class SCENE_STAT : char
 {
