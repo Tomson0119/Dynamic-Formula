@@ -106,11 +106,11 @@ protected:
 	std::wstring mWndCaption = L"D3D12 App";
 
 	// 물리엔진 인터페이스
-	std::shared_ptr<btDefaultCollisionConfiguration> mBtCollisionConfiguration;
-	std::shared_ptr<btCollisionDispatcher> mBtDispatcher;
-	std::shared_ptr<btBroadphaseInterface> mBtOverlappingPairCache;
-	std::shared_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
-	std::shared_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
+	std::unique_ptr<btDefaultCollisionConfiguration> mBtCollisionConfiguration;
+	std::unique_ptr<btCollisionDispatcher> mBtDispatcher;
+	std::unique_ptr<btBroadphaseInterface> mBtOverlappingPairCache;
+	std::unique_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
+	std::unique_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
 
 	std::unique_ptr<NetModule> mNetwork;
 };

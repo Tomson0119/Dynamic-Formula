@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ #include "stdafx.h"
 #include "d3dFramework.h"
 #include "UI.h"
 #include "NetLib/NetModule.h"
@@ -100,11 +100,8 @@ bool D3DFramework::InitDirect3D()
 bool D3DFramework::InitBulletPhysics()
 {
 	mBtCollisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
-
 	mBtDispatcher = std::make_unique<btCollisionDispatcher>(mBtCollisionConfiguration.get());
-
 	mBtOverlappingPairCache = std::make_unique<btDbvtBroadphase>();
-
 	mBtSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
 
 	mBtDynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(mBtDispatcher.get(), mBtOverlappingPairCache.get(), mBtSolver.get(), mBtCollisionConfiguration.get());
