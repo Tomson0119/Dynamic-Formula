@@ -607,7 +607,7 @@ void ComputePipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetPipelineState(mPSOs[0].Get());
 
 	UINT numGroupX = (UINT)(ceilf(gFrameWidth / 32.0f));
-	UINT numGroupY = (UINT)(ceilf(gFrameHeight / 32.0f));
+	UINT numGroupY = (UINT)(ceilf(gFrameHeight / 30.0f));
 
 	cmdList->Dispatch(numGroupX, numGroupY, 1);
 
