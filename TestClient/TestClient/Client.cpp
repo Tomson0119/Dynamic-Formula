@@ -1,6 +1,6 @@
 #include "Client.h"
 
-#define AUTO_LOGIN
+//#define AUTO_LOGIN
 
 Client::Client(int id)
 	: m_sendOverlapped{ nullptr }, ID(id), RoomID(-1), 
@@ -162,7 +162,6 @@ void Client::UpdatePlayer(int idx, SC::PlayerInfo& state)
 
 void Client::RemovePlayer(int idx)
 {
-	std::cout << "Hello\n";
 	mPlayerList[idx].Empty = true;
 
 	/*system("cls");
@@ -227,6 +226,7 @@ void Client::ShowLoginScreen()
 	std::cin >> user_id;
 	std::cout << "PWD: ";
 	std::cin >> user_pwd;
+	LoginRequestFlag = false;
 #else
 	user_id = "GM";
 	user_pwd = "GM";

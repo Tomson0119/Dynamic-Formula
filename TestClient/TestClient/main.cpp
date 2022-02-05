@@ -85,10 +85,6 @@ void HandleAccessRoomDenyPacket(SC::packet_access_room_deny* pck, int id)
 	case (char)ROOM_STAT::MAX_ROOM_REACHED:
 		gClients[id]->EnterRoomResult += "Max room has reached.)\n\n";
 		break;
-
-	case (char)ROOM_STAT::INVALID_ROOM_ID:
-		gClients[id]->EnterRoomResult += "Invalid room id.)\n";
-		break;
 	}
 }
 
