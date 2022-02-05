@@ -9,6 +9,14 @@ InGameScene::InGameScene(NetModule* netPtr)
 	: Scene(SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr)
 {
 	OutputDebugStringW(L"In Game Scene Entered.\n");
+	
+	mKeyMap[VK_LEFT] = false;
+	mKeyMap[VK_RIGHT] = false;
+	mKeyMap[VK_UP] = false;
+	mKeyMap[VK_DOWN] = false;
+	mKeyMap[VK_LSHIFT] = false;
+	mKeyMap['Z'] = false;
+	mKeyMap['X'] = false;
 }
 
 InGameScene::~InGameScene()
@@ -294,6 +302,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void InGameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed)
 {
+#ifdef STANDALONE
 	if (mMissileInterval < 0.0f)
 	{
 		if (GetAsyncKeyState('X') & 0x8000)
@@ -308,6 +317,24 @@ void InGameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandL
 	}
 	
 	if(mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
+#else
+	for (auto& [key, val] : mKeyMap)
+	{
+		auto input = GetAsyncKeyState(key);
+		if (input && val == false)
+		{
+			// Key pressed
+			val = true;
+			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
+		}
+		else if (input == 0 && val == true)
+		{
+			// Key released
+			val = false;
+			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
+		}
+	}
+#endif
 }
 
 void InGameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)

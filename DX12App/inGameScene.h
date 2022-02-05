@@ -111,4 +111,7 @@ private:
 	float mCubemapInterval = 0.0f;
 
 	UINT mCubemapDrawIndex = 0;
+
+	// Key pressed flag
+	std::map<int, bool> mKeyMap;
 };
