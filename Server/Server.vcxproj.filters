@@ -16,6 +16,12 @@
     <Filter Include="Script">
       <UniqueIdentifier>{fceef36c-4be0-4d6a-b38a-438a679f7d50}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Server">
+      <UniqueIdentifier>{a6fdf0eb-ddae-43f2-a58c-cb242e09593f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Server">
+      <UniqueIdentifier>{f2eb9239-57e5-4b37-a5ad-179f20c38b4c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -33,23 +39,26 @@
     <ClCompile Include="Client.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="LoginServer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="LobbyServer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="BPHandler.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="MeshData.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="InGameServer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="WaitRoom.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameServer.cpp">
+      <Filter>소스 파일\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="LoginServer.cpp">
+      <Filter>소스 파일\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="LobbyServer.cpp">
+      <Filter>소스 파일\Server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -65,23 +74,26 @@
     <ClInclude Include="Client.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="LoginServer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="LobbyServer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="BPHandler.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="MeshData.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="InGameServer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="WaitRoom.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="InGameServer.h">
+      <Filter>헤더 파일\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="LobbyServer.h">
+      <Filter>헤더 파일\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="LoginServer.h">
+      <Filter>헤더 파일\Server</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
