@@ -42,10 +42,6 @@ public:
 	std::atomic_int RoomID;
 	std::atomic_char PlayerIndex;
 
-	// for stress test
-	std::atomic_uint64_t AccessRoomSendTime; 
-	std::atomic_uint64_t ReadySendTime;
-
 private:
 	WSAOVERLAPPEDEX mRecvOverlapped;
 	WSAOVERLAPPEDEX* mSendOverlapped;
