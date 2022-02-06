@@ -32,4 +32,35 @@ BulletWrapper::~BulletWrapper()
 		mBtDynamicsWorld->removeCollisionObject(obj);
 		if (obj) delete obj;
 	}
+
+	for (int j = 0; j < mCollisionShapes.size(); j++)
+	{
+		btCollisionShape* shape = mCollisionShapes[j];
+		mCollisionShapes[j] = 0;
+		delete shape;
+	}
+
+	mCollisionShapes.clear();
+}
+
+btRigidBody* BulletWrapper::CreateRigidBody(btScalar mass, const btTransform& startTransform, btCollisionShape* shape)
+{
+	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
+
+	bool isDynamic = (mass != 0.f);
+
+	btVector3 localInertia(0, 0, 0);
+	if (isDynamic)
+		shape->calculateLocalInertia(mass, localInertia);
+
+	btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+
+	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, myMotionState, shape, localInertia);
+
+	btRigidBody* body = new btRigidBody(cInfo);
+
+	mBtDynamicsWorld->addRigidBody(body);
+	AddShape(shape);
+
+	return body;
 }

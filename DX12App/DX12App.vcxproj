@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\BulletWrap\bulletWrap.cpp" />
     <ClCompile Include="camera.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
@@ -145,6 +146,7 @@
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\BulletWrap\bulletWrap.h" />
     <ClInclude Include="basewin.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="constantBuffer.h" />
@@ -316,11 +318,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(ProjectDir)\..\BulletWrap;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(ProjectDir)\..\BulletWrap;$(LibraryPath)</LibraryPath>
     <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

@@ -533,7 +533,6 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
 	btDynamicsWorld->addVehicle(mVehicle.get());
 
-
 	mVehicle->setCoordinateSystem(0, 1, 2);
 
 	btVector3 wheelDirectionCS0(0, -1, 0);
