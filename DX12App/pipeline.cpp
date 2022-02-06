@@ -622,11 +622,4 @@ void ComputePipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 		mBlurMapOutput->GetResource(),
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 		D3D12_RESOURCE_STATE_COMMON));
-
-	auto curr_time = std::chrono::system_clock::now();
-	if (mSetTime + mDuration < curr_time)
-	{
-		CopyCurrentToPreviousBuffer(cmdList);
-		mSetTime = curr_time;
-	}
 }
