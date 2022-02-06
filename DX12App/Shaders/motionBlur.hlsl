@@ -11,7 +11,7 @@ RWTexture2D<float4> RWOutput : register(u0);
 [numthreads(32, 30, 1)]
 void CS(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
 {
-    int numSample = 20;
+    int numSample = 10;
 
     float Depth = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].z;
 
