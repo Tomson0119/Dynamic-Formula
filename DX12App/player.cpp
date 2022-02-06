@@ -514,68 +514,7 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 {
 	GameObject::SetMesh(bodyMesh);
 
-	auto dynamicsWorld = physics->GetDynamicsWorld();
-
-	bodyMesh.get()->mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
-
-	XMFLOAT3 vehicleExtents = bodyMesh.get()->mOOBB.Extents;
-	XMFLOAT3 wheelExtents = wheelMesh.get()->mOOBB.Extents;
-
-	btCollisionShape* chassisShape = new btBoxShape(btVector3(vehicleExtents.x, vehicleExtents.y, vehicleExtents.z));
-
-	btTransform btCarTransform;
-	btCarTransform.setIdentity();
-	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
-
-	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, chassisShape);
-
-	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld.get());
-	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
-
-	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
-	dynamicsWorld->addVehicle(mVehicle.get());
-
-	mVehicle->setCoordinateSystem(0, 1, 2);
-
-	btVector3 wheelDirectionCS0(0, -1, 0);
-	btVector3 wheelAxleCS(-1, 0, 0);
-
-	float wheelWidth = wheelExtents.x;
-	float wheelRadius = wheelExtents.z;
-	float wheelFriction = 26.0f;
-	float suspensionStiffness = 20.f;
-	float suspensionDamping = 2.3f;
-	float suspensionCompression = 4.4f;
-	float rollInfluence = 0.01f;  //1.0f;
-
-	// ¾Õ¹ÙÄû
-	bool isFrontWheel = true;
-	float connectionHeight = -0.9f;
-
-	btVector3 connectionPointCS0(vehicleExtents.x - 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
-
-	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
-
-	// µÞ¹ÙÄû
-	isFrontWheel = false;
-
-	connectionPointCS0 = btVector3(vehicleExtents.x - 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
-
-	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
-
-	for (int i = 0; i < mVehicle->getNumWheels(); i++)
-	{
-		btWheelInfo& wheel = mVehicle->getWheelInfo(i);
-		wheel.m_suspensionStiffness = suspensionStiffness;
-		wheel.m_wheelsDampingRelaxation = suspensionDamping;
-		wheel.m_wheelsDampingCompression = suspensionCompression;
-		wheel.m_frictionSlip = wheelFriction;
-		wheel.m_rollInfluence = rollInfluence;
-	}
+	BuildRigidBody(physics);
 }
 
 void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
