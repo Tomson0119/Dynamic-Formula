@@ -105,7 +105,7 @@
     <ClCompile Include="NetLib\NetModule.cpp">
       <Filter>소스 파일\Network</Filter>
     </ClCompile>
-    <ClCompile Include="..\BulletWrap\bulletWrap.cpp">
+    <ClCompile Include="bulletWrap.cpp">
       <Filter>소스 파일\Helper</Filter>
     </ClCompile>
   </ItemGroup>
@@ -194,7 +194,7 @@
     <ClInclude Include="NetLib\NetModule.h">
       <Filter>헤더 파일\Network</Filter>
     </ClInclude>
-    <ClInclude Include="..\BulletWrap\bulletWrap.h">
+    <ClInclude Include="bulletWrap.h">
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
   </ItemGroup>

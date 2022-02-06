@@ -510,9 +510,11 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 	if (mSibling) mSibling->Update(elapsedTime, parent);
 }
 
-void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld)
+void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
 {
 	GameObject::SetMesh(bodyMesh);
+
+	auto dynamicsWorld = physics->GetDynamicsWorld();
 
 	bodyMesh.get()->mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
 
@@ -525,13 +527,13 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 	btCarTransform.setIdentity();
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
 
-	mBtRigidBody = BulletHelper::CreateRigidBody(1000.0f, btCarTransform, chassisShape, btDynamicsWorld);
+	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, chassisShape);
 
-	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(btDynamicsWorld.get());
+	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld.get());
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
-	btDynamicsWorld->addVehicle(mVehicle.get());
+	dynamicsWorld->addVehicle(mVehicle.get());
 
 	mVehicle->setCoordinateSystem(0, 1, 2);
 
@@ -586,8 +588,10 @@ void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIn
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuStart);
 }
 
-void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 {
+	auto dynamicsWorld = physics->GetDynamicsWorld();
+
 	mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
 
 	XMFLOAT3 vehicleExtents = mOOBB.Extents;
@@ -599,7 +603,7 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dyna
 	btCarTransform.setIdentity();
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
 
-	mBtRigidBody = BulletHelper::CreateRigidBody(1000.0f, btCarTransform, chassisShape, dynamicsWorld);
+	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, chassisShape);
 
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld.get());
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());

@@ -21,7 +21,7 @@ void InGameScene::OnResize(float aspect)
 		mMainCamera->SetLens(aspect);
 }
 
-void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<BulletWrapper> physics)
 {
 	mMainCamera = make_unique<Camera>();
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
@@ -49,7 +49,7 @@ void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* 
 	BuildRootSignature(device);
 	BuildComputeRootSignature(device);
 	BuildShadersAndPSOs(device, cmdList);
-	BuildGameObjects(device, cmdList, dynamicsWorld);
+	BuildGameObjects(device, cmdList, physics);
 	BuildConstantBuffers(device);
 	BuildDescriptorHeap(device);
 }
@@ -226,8 +226,10 @@ void InGameScene::CreateVelocityMapDescriptorHeaps(ID3D12Device* device)
 		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
 }
 
-void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics)
 {
+	auto dynamicsWorld = physics->GetDynamicsWorld();
+
 	auto box = make_shared<GameObject>();
 	box->LoadModel(device, cmdList, L"Models\\road_sign2.obj");
 	box->Move(0.0f, 10.0f, 0.0f);
@@ -268,7 +270,7 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 		carObj->SetWheel(wheelObj.get(), i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
-	carObj->BuildRigidBody(dynamicsWorld);
+	carObj->BuildRigidBody(physics);
 	carObj->BuildDsvRtvView(device);
 	mPipelines[Layer::Color]->AppendObject(carObj);
 
@@ -344,14 +346,14 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 }
 
-void InGameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed)
+void InGameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed)
 {
 	if (mMissileInterval < 0.0f)
 	{
 		if (GetAsyncKeyState('X') & 0x8000)
 		{
 			mMissileInterval = 1.0f;
-			AppendMissileObject(device, cmdList, dynamicsWorld);
+			AppendMissileObject(device, cmdList, physics);
 		}
 	}
 	else
@@ -362,11 +364,11 @@ void InGameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandL
 	if(mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 }
 
-void InGameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void InGameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
 	float elapsed = timer.ElapsedTime();
 
-	OnPreciseKeyInput(device, cmdList, dynamicsWorld, elapsed);
+	OnPreciseKeyInput(device, cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
 	mMainCamera->Update(elapsed);
@@ -377,7 +379,7 @@ void InGameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdLis
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mMainCamera.get());
 
-	UpdateMissileObject(device, dynamicsWorld);
+	UpdateMissileObject(device, physics->GetDynamicsWorld());
 	
 	UpdateConstants(timer);
 }
@@ -483,11 +485,11 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* ca
 	}
 }
 
-void InGameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void InGameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics)
 {
 	mMissileMesh = std::make_shared<BoxMesh>(device, cmdList, 5, 5, 5);
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
-	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), dynamicsWorld);
+	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), physics);
 	missile->LoadTexture(device, cmdList, L"Resources\\tile.dds");
 
 	mMissileObjects.push_back(missile);

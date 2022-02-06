@@ -143,7 +143,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\BulletWrap\bulletWrap.h" />
     <ClInclude Include="BufferQueue.h" />
     <ClInclude Include="EndPoint.h" />
     <ClInclude Include="IOCP.h" />
@@ -156,7 +155,6 @@
     <ClInclude Include="WSAOverlappedEx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\BulletWrap\bulletWrap.cpp" />
     <ClCompile Include="BufferQueue.cpp" />
     <ClCompile Include="EndPoint.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>

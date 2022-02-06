@@ -23,7 +23,7 @@ BulletWrapper::~BulletWrapper()
 
 	for (int i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
-		btCollisionObject* obj = mBtDynamicsWorld->getCollisionObjectArray()[i];
+		btCollisionObject* obj = mBtDynamicsWorld	->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
 		if (body && body->getMotionState())
 		{
@@ -50,6 +50,7 @@ btRigidBody* BulletWrapper::CreateRigidBody(btScalar mass, const btTransform& st
 	bool isDynamic = (mass != 0.f);
 
 	btVector3 localInertia(0, 0, 0);
+
 	if (isDynamic)
 		shape->calculateLocalInertia(mass, localInertia);
 

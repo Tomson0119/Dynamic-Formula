@@ -635,9 +635,12 @@ MissileObject::~MissileObject()
 {
 }
 
-void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics)
 {
 	GameObject::SetMesh(mesh);
+
+	auto dynamicsWorld = physics->GetDynamicsWorld();
+
 	auto missileExtents = btVector3(mMeshes[0]->mOOBB.Extents.x, mMeshes[0]->mOOBB.Extents.y, mMeshes[0]->mOOBB.Extents.z);
 	btCollisionShape* missileShape = new btBoxShape(missileExtents);
 
@@ -647,7 +650,7 @@ void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLO
 	btMissileTransform.setIdentity();
 	btMissileTransform.setOrigin(btVector3(position.x + bulletPosition.x(), position.y + bulletPosition.y(), position.z + bulletPosition.z()));
 
-	mBtRigidBody = BulletHelper::CreateRigidBody(1.0f, btMissileTransform, missileShape, dynamicsWorld);
+	mBtRigidBody = physics->CreateRigidBody(1.0f, btMissileTransform, missileShape);
 
 	mBtRigidBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
 	mBtRigidBody->setLinearVelocity(forward * 1000.0f);
