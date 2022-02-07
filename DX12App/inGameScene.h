@@ -66,7 +66,7 @@ public:
 private:
 	void BuildRootSignature(ID3D12Device* device);
 	void BuildComputeRootSignature(ID3D12Device* device);
-	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics);
+	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics);
 	void BuildConstantBuffers(ID3D12Device* device);
 	void BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap(ID3D12Device* device);
@@ -77,7 +77,7 @@ private:
 		bool isPlayer,
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld);
+		std::shared_ptr<BulletWrapper>& dynamicsWorld);
 
 	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 	void CreateVelocityMapViews(ID3D12Device* device);

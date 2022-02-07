@@ -234,8 +234,10 @@ void InGameScene::CreateVelocityMapDescriptorHeaps(ID3D12Device* device)
 		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
 }
 
-void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics)
+void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics)
 {
+	auto dynamicsWorld = physics->GetDynamicsWorld();
+
 	auto gridMesh = make_shared<GridMesh>(device, cmdList, 50.0f, 50.0f, 10.0f, 10.0f);
 	auto grid = make_shared<GameObject>();
 	grid->SetMesh(gridMesh);
@@ -246,7 +248,7 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
 	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(device, cmdList, physics, 89, 89);
+	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 89, 89);
 	terrain->LoadTexture(device, cmdList, L"Resources\\terrainTexture.dds");
 	terrain->LoadTexture(device, cmdList, L"Resources\\rocky.dds");
 	terrain->LoadTexture(device, cmdList, L"Resources\\road.dds");
@@ -263,7 +265,7 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-			BuildCarObjects(info.StartPosition, info.Color, isPlayer, device, cmdList, dynamicsWorld);
+			BuildCarObjects(info.StartPosition, info.Color, isPlayer, device, cmdList, physics);
 		}
 		i++;
 	}
@@ -279,7 +281,7 @@ void InGameScene::BuildCarObjects(
 	bool isPlayer, 
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
-	std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+	std::shared_ptr<BulletWrapper>& physics)
 {
 	auto carObj = make_shared<PhysicsPlayer>();
 	carObj->SetPosition(position);
