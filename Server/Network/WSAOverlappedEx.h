@@ -20,7 +20,7 @@ struct WSAOVERLAPPEDEX
 	OP Operation;
 	BufferQueue NetBuffer;
 
-	WSAOVERLAPPEDEX(OP op = OP::RECV)
+	WSAOVERLAPPEDEX(OP op=OP::RECV)
 		: Operation(op), WSABuffer{}
 	{
 		Reset(op);
@@ -37,7 +37,7 @@ struct WSAOVERLAPPEDEX
 		Operation = op;
 		ZeroMemory(&Overlapped, sizeof(Overlapped));
 
-		if (op == OP::RECV)	{
+		if (op == OP::RECV || op == OP::DISCONNECT)	{
 			WSABuffer.buf = reinterpret_cast<char*>(NetBuffer.BufWritePtr());
 			WSABuffer.len = (ULONG)NetBuffer.GetLeftBufLen();
 		}
