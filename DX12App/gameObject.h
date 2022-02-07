@@ -120,6 +120,7 @@ protected:
 	XMFLOAT3 mScaling = { 1.0f, 1.0f, 1.0f };
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
 
 	btRigidBody* mBtRigidBody;
 	std::vector<std::shared_ptr<Mesh>> mMeshes;
@@ -219,7 +220,7 @@ public:
 	MissileObject();
 	~MissileObject();
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
-	void SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	void SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
 private:
 	float mDuration = 3.0f;

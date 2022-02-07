@@ -102,15 +102,11 @@ protected:
 	//UI 
 	//std:: vector<UI> mpUI;
 	//UI				*mpUI = NULL;
+
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
 
-	// 물리엔진 인터페이스
-	std::unique_ptr<btDefaultCollisionConfiguration> mBtCollisionConfiguration;
-	std::unique_ptr<btCollisionDispatcher> mBtDispatcher;
-	std::unique_ptr<btBroadphaseInterface> mBtOverlappingPairCache;
-	std::unique_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
-	std::shared_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
+	std::shared_ptr<BulletWrapper> mBulletPhysics;
 
 	std::unique_ptr<NetModule> mNetwork;
 };

@@ -29,15 +29,15 @@ public:
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		float aspect,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) override;
+		std::shared_ptr<BulletWrapper> physics) override;
 	
 	virtual void Update(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) override;
+		std::shared_ptr<BulletWrapper> physics) override;
 	
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer) override;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) override;
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
@@ -53,7 +53,7 @@ public:
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0);
 
-	void OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed);
+	void OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed);
 
 public:
 	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y) override;
@@ -66,7 +66,7 @@ public:
 private:
 	void BuildRootSignature(ID3D12Device* device);
 	void BuildComputeRootSignature(ID3D12Device* device);
-	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld);
+	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics);
 	void BuildConstantBuffers(ID3D12Device* device);
 	void BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap(ID3D12Device* device);
@@ -80,6 +80,10 @@ private:
 		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld);
 
 	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	void CreateVelocityMapViews(ID3D12Device* device);
+	void CreateVelocityMapDescriptorHeaps(ID3D12Device* device);
+
+	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics);
 	void UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 
 private:
@@ -90,6 +94,13 @@ private:
 
 	LightConstants mMainLight;
 
+	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityMapRtvHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityMapSrvHandle;
+	ComPtr<ID3D12Resource> mVelocityMap;
+
+	ComPtr<ID3D12DescriptorHeap> mVelocityMapRtvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mVelocityMapSrvDescriptorHeap;
+
 	std::unique_ptr<ConstantBuffer<CameraConstants>> mCameraCB;
 	std::unique_ptr<ConstantBuffer<LightConstants>> mLightCB;
 	std::unique_ptr<ConstantBuffer<GameInfoConstants>> mGameInfoCB;
@@ -98,8 +109,10 @@ private:
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
 
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
+	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
-	
+
+
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
 
 	Player* mPlayer = nullptr;

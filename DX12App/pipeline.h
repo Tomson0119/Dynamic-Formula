@@ -16,7 +16,8 @@ enum class Layer : int
 	Particle,
 	Transparent,
 	ShadowDebug,
-	DynamicCubeMap
+	DynamicCubeMap,
+	MotionBlur
 };
 
 class Pipeline
@@ -74,6 +75,7 @@ protected:
 
 	DXGI_FORMAT mBackBufferFormat   = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	DXGI_FORMAT mVelocityMapFormat = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
 	D3D12_PRIMITIVE_TOPOLOGY_TYPE mPrimitive = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
@@ -151,8 +153,7 @@ public:
 		ID3D12RootSignature* rootSig,
 		ComputeShader* shader = nullptr);
 
-	void SetPrevBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer);
-	void SetCurrBackBuffer(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer);
+	void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx);
 
 	void CreateTextures(ID3D12Device* device);
 	void BuildDescriptorHeap(ID3D12Device* device);

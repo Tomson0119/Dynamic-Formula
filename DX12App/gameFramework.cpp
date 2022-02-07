@@ -29,9 +29,7 @@ bool GameFramework::InitFramework()
 	//	mpUI = new UI(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
 	//	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 	//}
-	
 	InitScene(SCENE_STAT::LOGIN);
-
 	return true;
 }
 
@@ -110,7 +108,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 		break;
 	}
 
-	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
+	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBulletPhysics);
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
@@ -154,8 +152,7 @@ void GameFramework::CheckAndChangeScene()
 
 void GameFramework::Update()
 {
-	if(mBtDynamicsWorld) 
-		mBtDynamicsWorld->stepSimulation(mTimer.ElapsedTime());
+	mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
 
 	D3DFramework::UpdateFrameStates();
 	
@@ -165,7 +162,7 @@ void GameFramework::Update()
 	//UpdateUI();
 
 	//mCamera->Update(mTimer.ElapsedTime());
-	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
+	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
 void GameFramework::Draw()
@@ -198,9 +195,8 @@ void GameFramework::Draw()
 	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 	// 렌더링할 버퍼를 구체적으로 설정한다.
-	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), TRUE, &DepthStencilView());
 
-	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBuffer());
+	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer());
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(

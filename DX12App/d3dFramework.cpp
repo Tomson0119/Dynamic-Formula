@@ -11,27 +11,6 @@ D3DFramework::D3DFramework()
 
 D3DFramework::~D3DFramework()
 {
-	if (mBtDynamicsWorld)
-	{
-		int i;
-		for (i = mBtDynamicsWorld->getNumConstraints() - 1; i >= 0; i--)
-		{
-			mBtDynamicsWorld->removeConstraint(mBtDynamicsWorld->getConstraint(i));
-		}
-		for (i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
-		{
-			btCollisionObject* obj = mBtDynamicsWorld->getCollisionObjectArray()[i];
-			btRigidBody* body = btRigidBody::upcast(obj);
-			if (body && body->getMotionState())
-			{
-				delete body->getMotionState();
-			}
-			mBtDynamicsWorld->removeCollisionObject(obj);
-			if(obj) delete obj;
-		}
-	}
-
-
 	//if(mD3dDevice) WaitUntilGPUComplete();
 	if (mFenceEvent) CloseHandle(mFenceEvent);
 }
@@ -99,13 +78,7 @@ bool D3DFramework::InitDirect3D()
 
 bool D3DFramework::InitBulletPhysics()
 {
-	mBtCollisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
-	mBtDispatcher = std::make_unique<btCollisionDispatcher>(mBtCollisionConfiguration.get());
-	mBtOverlappingPairCache = std::make_unique<btDbvtBroadphase>();
-	mBtSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
-
-	mBtDynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(mBtDispatcher.get(), mBtOverlappingPairCache.get(), mBtSolver.get(), mBtCollisionConfiguration.get());
-	mBtDynamicsWorld->setGravity(btVector3(0, -10, 0));
+	mBulletPhysics = std::make_shared<BulletWrapper>(-10);
 
 	return true;
 }

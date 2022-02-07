@@ -473,7 +473,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	const UINT verticesCount = 25;
 
 	std::vector<TerrainVertex> vertices(verticesCount);
-	int increasement = 11;
+	int increasement = 22;
 
 	int heightmapWidth = context->GetWidth();
 	int heightmapDepth = context->GetDepth();

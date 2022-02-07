@@ -37,15 +37,15 @@ public:
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		float aspect,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) = 0;
+		std::shared_ptr<BulletWrapper> physics) = 0;
 
 	virtual void Update(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) = 0;
+		std::shared_ptr<BulletWrapper> physics) = 0;
 
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer) = 0;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) = 0;
 	
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) = 0;
 
