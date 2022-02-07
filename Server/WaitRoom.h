@@ -1,19 +1,11 @@
 #pragma once
 
-struct PlayerInfo
-{
-	bool Empty;
-	char Color;
-	bool Ready;
-	int ID;
-	char Name[MAX_NAME_SIZE];
-};
-
 class LoginServer;
+class Player;
 
 class WaitRoom
 {
-	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
+	using PlayerList = std::array<std::unique_ptr<Player>, MAX_ROOM_CAPACITY>;
 public:
 	WaitRoom(int id);
 	~WaitRoom() = default;
@@ -27,9 +19,10 @@ public:
 	bool RemovePlayer(int hostID);
 
 	void SwitchMap(int hostID);
-	bool TryGameStart(int hostID);
+	bool TryGameStart();
+	void ToggleReady(int hostID);
 
-	std::array<int, MAX_ROOM_CAPACITY> GetPlayersID();
+	bool ChangeRoomState(ROOM_STAT expected, const ROOM_STAT& desired);
 
 public:
 	void IncreasePlayerCount();
@@ -45,10 +38,13 @@ public:
 	bool Closed() const { return (mState == ROOM_STAT::ROOM_IS_CLOSED); }
 	bool GameRunning() const { return (mState == ROOM_STAT::GAME_STARTED); }
 
+	bool IsAdmin(int hostID) const;
 	ROOM_STAT GetRoomState() const { return mState; }
 
+	Player* GetPlayerPtr(int idx) const { return msPlayers[idx].get(); }
+
 public:
-	void SendGameStartResult(int hostID, bool result, bool instSend = true);
+	void SendGameStartFail(bool instSend=true);
 
 	void SendUpdatePlayerInfoToAll(int target, int ignore=-1, bool instSend=true);
 	void SendRemovePlayerInfoToAll(int target, bool instSend=true);

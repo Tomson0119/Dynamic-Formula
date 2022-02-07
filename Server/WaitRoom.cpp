@@ -2,6 +2,7 @@
 #include "LoginServer.h"
 #include "WaitRoom.h"
 #include "Client.h"
+#include "Player.h"
 
 WaitRoom::PlayerList WaitRoom::msPlayers;
 
@@ -10,7 +11,7 @@ WaitRoom::WaitRoom(int id)
 	  mAdminIndex(-1), mState{ ROOM_STAT::ROOM_IS_CLOSED }
 {
 	for (int i = 0; i < msPlayers.size(); i++)
-		msPlayers[i] = PlayerInfo{ true, -1, false, -1, "" };
+		msPlayers[i] = std::make_unique<Player>();
 }
 
 bool WaitRoom::OpenRoom()
@@ -18,8 +19,7 @@ bool WaitRoom::OpenRoom()
 	if (Closed())
 	{
 		// Room can be opened only when room is closed.
-		ROOM_STAT expected{ ROOM_STAT::ROOM_IS_CLOSED };
-		return mState.compare_exchange_strong(expected, ROOM_STAT::AVAILABLE);
+		return ChangeRoomState(ROOM_STAT::ROOM_IS_CLOSED, ROOM_STAT::AVAILABLE);
 	}
 	return false;
 }
@@ -38,7 +38,7 @@ int WaitRoom::FindAvaliableSpace()
 {
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
-		if (msPlayers[i].Empty)
+		if (msPlayers[i]->Empty)
 			return i;
 	}
 	return -1;
@@ -54,11 +54,11 @@ bool WaitRoom::AddPlayer(int hostID)
 	client->PlayerIndex = (char)idx;
 	if (Empty()) mAdminIndex = idx;
 
-	msPlayers[idx].ID = hostID;
-	msPlayers[idx].Color = (char)idx;
-	msPlayers[idx].Empty = false;
-	msPlayers[idx].Ready = false;
-	strncpy_s(msPlayers[idx].Name, client->Name.c_str(), MAX_NAME_SIZE - 1);
+	msPlayers[idx]->ID = hostID;
+	msPlayers[idx]->Color = (char)idx;
+	msPlayers[idx]->Empty = false;
+	msPlayers[idx]->Ready = false;
+	strncpy_s(msPlayers[idx]->Name, client->Name.c_str(), MAX_NAME_SIZE - 1);
 
 	IncreasePlayerCount();
 
@@ -72,11 +72,11 @@ bool WaitRoom::RemovePlayer(int hostID)
 		int idx = (int)gClients[hostID]->PlayerIndex;
 		if (idx < 0) return false; // logic error
 
-		msPlayers[idx].Name[0] = 0;
-		msPlayers[idx].Color = -1;
-		msPlayers[idx].Empty = true;
-		msPlayers[idx].ID = -1;
-		msPlayers[idx].Ready = false;
+		msPlayers[idx]->Name[0] = 0;
+		msPlayers[idx]->Color = -1;
+		msPlayers[idx]->Empty = true;
+		msPlayers[idx]->ID = -1;
+		msPlayers[idx]->Ready = false;
 
 		DecreasePlayerCount();
 
@@ -84,7 +84,7 @@ bool WaitRoom::RemovePlayer(int hostID)
 		{
 			mAdminIndex = [&] {
 				for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
-					if (msPlayers[i].Empty == false) 
+					if (msPlayers[i]->Empty == false)
 						return i;
 				return -1;
 			}();
@@ -124,63 +124,42 @@ void WaitRoom::SwitchMap(int hostID)
 	}
 }
 
-bool WaitRoom::TryGameStart(int hostID)
+bool WaitRoom::TryGameStart()
 {
-	if (int idx = gClients[hostID]->PlayerIndex; idx == mAdminIndex)
-	{
-		bool allReady = [&] {
-			for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
-			{
-				if (i == mAdminIndex) continue;
-				if (msPlayers[i].Empty == false && msPlayers[i].Ready == false)
-					return false;
-			}
-			return (mPlayerCount > 1);
-		}();
-		SendGameStartResult(hostID, allReady);
-		return allReady;
-	}
-	else
-	{
-		msPlayers[idx].Ready = !msPlayers[idx].Ready;
-		SendUpdatePlayerInfoToAll(hostID, hostID);
-		return false;
-	}
+	bool allReady = [&] {
+		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
+		{
+			if (i == mAdminIndex) continue;
+			if (msPlayers[i]->Empty == false && msPlayers[i]->Ready == false)
+				return false;
+		}
+		return (mPlayerCount > 1);
+	}();
+	return allReady;	
 }
 
-std::array<int, MAX_ROOM_CAPACITY> WaitRoom::GetPlayersID()
+void WaitRoom::ToggleReady(int hostID)
 {
-	std::array<int, MAX_ROOM_CAPACITY> ids;
-	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
-		ids[i] = (msPlayers[i].Empty) ? -1 : msPlayers[i].ID;
-	return ids;
+	const int idx = gClients[hostID]->PlayerIndex;
+	msPlayers[idx]->Ready = !msPlayers[idx]->Ready;
+	SendUpdatePlayerInfoToAll(hostID, hostID);
 }
 
-void WaitRoom::SendGameStartResult(int hostID, bool result, bool instSend)
+bool WaitRoom::IsAdmin(int hostID) const
 {
-	SC::packet_game_start_result pck{};
-	pck.size = sizeof(SC::packet_game_start_result);
-	pck.type = SC::GAME_START_RESULT;
+	return (gClients[hostID]->PlayerIndex == mAdminIndex);
+}
+
+void WaitRoom::SendGameStartFail(bool instSend)
+{
+	SC::packet_game_start_fail pck{};
+	pck.size = sizeof(SC::packet_game_start_fail);
+	pck.type = SC::GAME_START_FAIL;
 	pck.room_id = mID;
-	pck.succeeded = result;
 	
-	if (result)
-	{
-#ifdef DEBUG_PACKET_TRANSFER
-		std::cout << "[room id: " << mID << "] Sending game start packet to all.\n";
-#endif
-		ROOM_STAT expected{ ROOM_STAT::AVAILABLE };
-		mState.compare_exchange_strong(expected, ROOM_STAT::GAME_STARTED);  // this should never fail : logic error
-		SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, -1, instSend);
-	}
-	else
-	{
-#ifdef DEBUG_PACKET_TRANSFER
-		std::cout << "[" << hostID << "] Sending game start fail packet.\n";
-#endif
-		gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-		if(instSend) gClients[hostID]->SendMsg();
-	}
+	const int hostID = msPlayers[mAdminIndex]->ID;
+	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if(instSend) gClients[hostID]->SendMsg();
 }
 
 void WaitRoom::SendUpdatePlayerInfoToAll(int target, int ignore, bool instSend)
@@ -196,10 +175,10 @@ void WaitRoom::SendUpdatePlayerInfoToAll(int target, int ignore, bool instSend)
 	pck.room_id = mID;
 	pck.player_idx = idx;
 	pck.admin_idx = mAdminIndex;
-	strncpy_s(pck.player_info.name, msPlayers[idx].Name, MAX_NAME_SIZE - 1);
-	pck.player_info.color = msPlayers[idx].Color;
-	pck.player_info.empty = msPlayers[idx].Empty;
-	pck.player_info.ready = msPlayers[idx].Ready;
+	strncpy_s(pck.player_info.name, msPlayers[idx]->Name, MAX_NAME_SIZE - 1);
+	pck.player_info.color = msPlayers[idx]->Color;
+	pck.player_info.empty = msPlayers[idx]->Empty;
+	pck.player_info.ready = msPlayers[idx]->Ready;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, ignore, instSend);	
 }
 
@@ -245,10 +224,10 @@ void WaitRoom::SendRoomInsideInfo(int id, bool instSend)
 	pck.admin_idx = mAdminIndex;
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
-		strncpy_s(pck.player_stats[i].name, msPlayers[i].Name, MAX_NAME_SIZE - 1);
-		pck.player_stats[i].color = msPlayers[i].Color;
-		pck.player_stats[i].empty = msPlayers[i].Empty;
-		pck.player_stats[i].ready = msPlayers[i].Ready;
+		strncpy_s(pck.player_stats[i].name, msPlayers[i]->Name, MAX_NAME_SIZE - 1);
+		pck.player_stats[i].color = msPlayers[i]->Color;
+		pck.player_stats[i].empty = msPlayers[i]->Empty;
+		pck.player_stats[i].ready = msPlayers[i]->Ready;
 	}
 	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if(instSend) gClients[id]->SendMsg();
@@ -275,11 +254,16 @@ void WaitRoom::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instSe
 {
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
-		if (msPlayers[i].Empty == false && msPlayers[i].ID != ignore)
+		if (msPlayers[i]->Empty == false && msPlayers[i]->ID != ignore)
 		{
-			int id = msPlayers[i].ID;
+			int id = msPlayers[i]->ID;
 			gClients[id]->PushPacket(pck, size);
 			if (instSend) gClients[id]->SendMsg();
 		}
 	}
+}
+
+bool WaitRoom::ChangeRoomState(ROOM_STAT expected, const ROOM_STAT& desired)
+{
+	return mState.compare_exchange_strong(expected, desired);
 }
