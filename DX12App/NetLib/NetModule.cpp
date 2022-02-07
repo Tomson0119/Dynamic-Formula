@@ -9,8 +9,7 @@
 #include "NetModule.h"
 
 NetModule::NetModule()
-	: mNetClient{ std::make_unique<NetClient>() },
-	  mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
+	: mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
 	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
@@ -34,8 +33,12 @@ bool NetModule::Connect(const char* ip, short port)
 
 void NetModule::PostDisconnect()
 {	
-	// Post disconnect operation to get out of the thread loop	
-	mIOCP.PostToCompletionQueue(new WSAOVERLAPPEDEX(OP::DISCONNECT), 0);
+	if (mNetClient)
+	{
+		// Post disconnect operation to get out of the thread loop	
+		WSAOVERLAPPEDEX* over = new WSAOVERLAPPEDEX(OP::DISCONNECT);
+		mIOCP.PostToCompletionQueue(over, 0);
+	}
 }
 
 void NetModule::NetworkFunc(NetModule& net)
@@ -48,7 +51,7 @@ void NetModule::NetworkFunc(NetModule& net)
 
 			int client_id = static_cast<int>(info.key);
 			WSAOVERLAPPEDEX* over_ex = reinterpret_cast<WSAOVERLAPPEDEX*>(info.overEx);
-
+			
 			if (over_ex == nullptr || info.success == FALSE)
 			{
 				net.mNetClient->Disconnect();
@@ -179,6 +182,7 @@ void NetModule::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes)
 
 void NetModule::Init()
 {
+	mNetClient = std::make_unique<NetClient>();
 	mIOCP.RegisterDevice(mNetClient->GetSocket(), 0);
 	mNetClient->RecvMsg();
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };
