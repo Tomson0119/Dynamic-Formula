@@ -86,7 +86,7 @@ void Client::SendRegisterResult(REGI_STAT result, bool instSend)
 void Client::SendAccessRoomAccept(int roomID, bool instSend)
 {
 #ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "[" << ID << "] Send access room accept packet\n";
+	std::cout << "[" << ID << "] Send access room accept packet. (room id: " << roomID << ")\n";
 #endif
 	SC::packet_access_room_accept pck{};
 	pck.size = sizeof(SC::packet_access_room_accept);
