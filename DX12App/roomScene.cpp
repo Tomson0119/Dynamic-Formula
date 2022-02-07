@@ -6,7 +6,13 @@ RoomScene::RoomScene(NetModule* netPtr)
 	: Scene{ SCENE_STAT::ROOM, (XMFLOAT4)Colors::Chocolate, netPtr }
 {
 	OutputDebugStringW(L"Room Scene Entered.\n");
+#ifdef STANDALONE
 	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+#elif defined(START_GAME_INSTANT)
+	mStartTime = std::chrono::high_resolution_clock::now();
+	mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
+	mSendFlag = false;
+#endif
 }
 
 void RoomScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld)
@@ -15,6 +21,15 @@ void RoomScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 
 void RoomScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld)
 {
+	// TEST
+#ifdef START_GAME_INSTANT
+	// send start packet again until game actually start
+	auto currTime = std::chrono::high_resolution_clock::now();
+	if ((currTime - mStartTime) > 600ms && mSendFlag) {
+		mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
+		mSendFlag = false;
+	}
+#endif
 }
 
 void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* backBuffer)
@@ -54,17 +69,27 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mNetPtr->RemovePlayer(pck);
 		break;
 	}
-	case SC::GAME_START_RESULT:
+	case SC::GAME_START_SUCCESS:
 	{
 		OutputDebugString(L"Received game start packet.\n");
-		
-		SC::packet_game_start_result* pck = reinterpret_cast<SC::packet_game_start_result*>(packet);
+
+		SC::packet_game_start_success* pck = reinterpret_cast<SC::packet_game_start_success*>(packet);
 		if (pck->room_id == mNetPtr->GetRoomID())
 		{
-			if (pck->succeeded)
-				SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
-			else
-				;
+			mNetPtr->InitPlayersPosition(pck);
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		}
+		break;
+	}
+	case SC::GAME_START_FAIL:
+	{		
+		SC::packet_game_start_fail* pck = reinterpret_cast<SC::packet_game_start_fail*>(packet);
+		if (pck->room_id == mNetPtr->GetRoomID())
+		{
+		#ifdef START_GAME_INSTANT
+			mStartTime = std::chrono::high_resolution_clock::now();
+			mSendFlag = true;	
+		#endif
 		}
 		break;
 	}
