@@ -502,8 +502,11 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 			mFovCoefficient = 1.0f;
 	}
 
-	mCamera->SetFovCoefficient(mFovCoefficient);
-	mCamera->SetLens(mCamera->GetAspect());
+	if (mCamera)
+	{
+		mCamera->SetFovCoefficient(mFovCoefficient);
+		mCamera->SetLens(mCamera->GetAspect());
+	}
 
 	if (mChild) mChild->Update(elapsedTime, &mWorld);
 	if (mSibling) mSibling->Update(elapsedTime, parent);
