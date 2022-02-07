@@ -13,23 +13,22 @@ void CS(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_Di
 {
     int numSample = 10;
 
-    float Depth = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].z;
+    float Depth = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].b;
 
     int BlurConst = 10000 / Depth;
 
-    float Blur = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].w;
-    float2 Velocity = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].xy * (BlurConst);
+    float Blur = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].a;
+    float2 Velocity = -VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].rg * (BlurConst);
 
-    float4 cColor = RenderTarget[int2(n3DispatchThreadID.x + 1, n3DispatchThreadID.y + 1)];
+    float4 cColor = RenderTarget[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)];
 
     int cnt = 0;
     if (Blur)
     {
         for (int i = 0; i < numSample; ++i)
         {
-            if (n3DispatchThreadID.x + 1 + round(Velocity.x * i) >= 0 && n3DispatchThreadID.x + 1 + round(Velocity.x * i) <= FRAME_WIDTH &&
-                n3DispatchThreadID.y + 1 + round(Velocity.y * i) >= 0 && n3DispatchThreadID.y + 1 + round(Velocity.y * i) <= FRAME_HEIGHT &&
-                Depth < VelocityMap[int2(n3DispatchThreadID.x + 1 + round(Velocity.x * i), n3DispatchThreadID.y + 1 + round(Velocity.y * i))].z)
+            if (n3DispatchThreadID.x + round(Velocity.x * i) >= 0 && n3DispatchThreadID.x + round(Velocity.x * i) < FRAME_WIDTH - 1 &&
+                n3DispatchThreadID.y + round(Velocity.y * i) >= 0 && n3DispatchThreadID.y + round(Velocity.y * i) < FRAME_HEIGHT - 1)
             {
                 cColor += RenderTarget[int2(n3DispatchThreadID.x + 1 + round(Velocity.x * i), n3DispatchThreadID.y + 1 + round(Velocity.y * i))];
                 cnt++;
