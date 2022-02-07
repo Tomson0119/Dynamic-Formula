@@ -110,7 +110,7 @@ protected:
 	std::unique_ptr<btCollisionDispatcher> mBtDispatcher;
 	std::unique_ptr<btBroadphaseInterface> mBtOverlappingPairCache;
 	std::unique_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
-	std::unique_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
+	std::shared_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
 
 	std::unique_ptr<NetModule> mNetwork;
 };

@@ -392,47 +392,27 @@ LRESULT D3DFramework::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch(uMsg)
 	{
 	case WM_ACTIVATE:  // 윈도우 창을 활성화 했을 때
-		if (LOWORD(wParam) == WA_INACTIVE)
-		{
-			mPaused = true;
-			mTimer.Stop();
-		}
-		else
-		{
-			mPaused = false;
-			mTimer.Start();
-		}
 		break;
 		
 	case WM_SIZE:  // 윈도우 창의 크기를 변경했을 때
 		gFrameWidth = LOWORD(lParam);
 		gFrameHeight = HIWORD(lParam);
-		if (wParam == SIZE_MINIMIZED)
+		if (wParam == SIZE_MAXIMIZED)
 		{
-			mPaused = true;
-		}
-		else if (wParam == SIZE_MAXIMIZED)
-		{
-			mPaused = false;
 			OnResize();
 		}
 		else if (wParam == SIZE_RESTORED)
 		{
 			if (mD3dDevice) {
-				mPaused = false;
 				OnResize();
 			}
 		}		
 		break;
 
 	case WM_ENTERSIZEMOVE:  // 윈도우 창의 크기 조절 바를 클릭했을 때
-		mPaused = true;
-		mTimer.Stop();
 		break;
 
 	case WM_EXITSIZEMOVE:  // 윈도우 창 크기 조절을 끝마쳤을 때
-		mPaused = false;
-		mTimer.Start();
 		OnResize();
 		break;
 
