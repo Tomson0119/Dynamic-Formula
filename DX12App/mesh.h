@@ -29,6 +29,7 @@ class Mesh
 {
 public:
 	Mesh();
+	Mesh(const std::string& name);
 	virtual ~Mesh() { }
 
 	void CreateResourceInfo(
@@ -52,12 +53,15 @@ public:
 		const std::vector<XMFLOAT2>& texcoords,
 		const MatInfo& mat);
 
+	void SetMatDiffuse(const XMFLOAT4& diffuse) { mMaterial.Mat.Diffuse = diffuse; }
 	void SetMaterial(Material mat) { mMaterial.Mat = mat; }
 	void SetSrvIndex(UINT idx) { mMaterial.SrvIndex = idx; }
 
 public:
 	MaterialConstants GetMaterialConstant() const;
 	UINT GetSrvIndex() const { return mMaterial.SrvIndex; }
+
+	const std::string& GetName() const { return mName; }
 
 protected:
 	ComPtr<ID3D12Resource> mVertexBufferGPU;
@@ -76,6 +80,8 @@ protected:
 	UINT mBaseVertex = 0;
 
 	MatInfo mMaterial = {};
+
+	std::string mName;
 
 public:
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView = {};

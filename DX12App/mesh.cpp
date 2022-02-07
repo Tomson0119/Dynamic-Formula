@@ -13,6 +13,12 @@ Mesh::Mesh()
 	mMaterial.SrvIndex = 0;
 }
 
+Mesh::Mesh(const std::string& name)
+	: Mesh()
+{
+	mName = name;
+}
+
 void Mesh::CreateResourceInfo(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList,
