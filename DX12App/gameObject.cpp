@@ -82,7 +82,7 @@ void GameObject::LoadModel(
 			std::string mtl_name;
 			ss >> mtl_name;
 
-			auto new_mesh = std::make_shared<Mesh>();
+			auto new_mesh = std::make_shared<Mesh>(mtl_name);
 			new_mesh->LoadMesh(
 				device, cmdList, in_file, 
 				positions, normals, texcoords, mats[mtl_name]);
@@ -361,6 +361,15 @@ void GameObject::SetPosition(float x, float y, float z)
 void GameObject::SetPosition(const XMFLOAT3& pos)
 {
 	SetPosition(pos.x, pos.y, pos.z);
+}
+
+void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
+{
+	auto p = std::find_if(mMeshes.begin(), mMeshes.end(),
+		[&name](const auto& mesh) { return (mesh->GetName() == name); });
+
+	if (p != mMeshes.end())
+		(*p)->SetMatDiffuse(color);
 }
 
 void GameObject::SetLook(XMFLOAT3& look)
