@@ -114,7 +114,8 @@ namespace SC
 	const char UPDATE_PLAYER_INFO = 7;
 	const char UPDATE_MAP_INFO    = 8;
 	const char REMOVE_PLAYER	  = 9;
-	const char GAME_START_RESULT  = 10;
+	const char GAME_START_FAIL	  = 10;
+	const char GAME_START_SUCCESS = 11;
 
 	struct packet_force_logout : packet_header { };
 
@@ -131,6 +132,7 @@ namespace SC
 	struct packet_access_room_accept : packet_header
 	{
 		int room_id;
+		bool game_started;
 		//uint64_t send_time;
 	};
 
@@ -180,11 +182,18 @@ namespace SC
 		uint8_t player_idx : 4;
 	};
 
-	struct packet_game_start_result : packet_header
+	struct packet_game_start_fail : packet_header
 	{
 		int room_id;
-		bool succeeded;
 		//uint64_t send_time;
+	};
+
+	struct packet_game_start_success : packet_header
+	{
+		int room_id;
+		float x[MAX_ROOM_CAPACITY];
+		float y[MAX_ROOM_CAPACITY];
+		float z[MAX_ROOM_CAPACITY];
 	};
 }
 #pragma pack(pop)
