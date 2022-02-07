@@ -14,7 +14,7 @@ NetModule::NetModule()
 	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
-		mPlayerList[i] = PlayerInfo{ true, -1, false, "" };
+		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
 }
 
 NetModule::~NetModule()
@@ -111,6 +111,17 @@ void NetModule::UpdatePlayerInfo(SC::packet_update_player_info* pck)
 		info.Color = pck->player_info.color;
 		info.Ready = pck->player_info.ready;
 		strncpy_s(info.Name, pck->player_info.name, MAX_NAME_SIZE - 1);
+	}
+}
+
+void NetModule::InitPlayersPosition(SC::packet_game_start_success* pck)
+{
+	if (mRoomID == pck->room_id)
+	{
+		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
+		{
+			mPlayerList[i].StartPosition = { pck->x[i], pck->y[i], pck->z[i] };
+		}
 	}
 }
 

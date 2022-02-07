@@ -8,6 +8,7 @@ struct PlayerInfo
 	char Color;
 	bool Ready;
 	char Name[MAX_NAME_SIZE];
+	XMFLOAT3 StartPosition;
 };
 
 class Scene;
@@ -33,13 +34,21 @@ public:
 	void UpdateMapIndex(SC::packet_update_map_info* pck);
 	void UpdatePlayerInfo(SC::packet_update_player_info* pck);
 
+	void InitPlayersPosition(SC::packet_game_start_success* pck);
+
+public:
 	void SetInterface(Scene* scenePtr) { mScenePtr = scenePtr; }
 	NetClient* Client() const { return mNetClient.get(); }
 
 	void SetRoomID(int roomID) { mRoomID = roomID; }
+	
 	int GetRoomID() const { return mRoomID; }
+	char GetPlayerIndex() const { return mPlayerIdx; }
+	char GetMapIndex() const { return mMapIdx; }
 
 	bool IsAdmin() const { return mPlayerIdx == mAdminIdx; }
+
+	const PlayerList& GetPlayersInfo() const { return mPlayerList; }
 
 private:
 	void Init();
@@ -48,8 +57,8 @@ private:
 	std::atomic_bool mLoop;
 
 	std::atomic_int mRoomID;
-	std::atomic_int mPlayerIdx;
-	std::atomic_int mAdminIdx;
+	std::atomic_char mPlayerIdx;
+	std::atomic_char mAdminIdx;
 	std::atomic_char mMapIdx;
 
 	PlayerList mPlayerList;
