@@ -267,7 +267,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-			BuildCarObjects(info.StartPosition, info.Color, isPlayer, device, cmdList, physics, i);
+			BuildCarObjects(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
 		}
 		i++;
 	}
