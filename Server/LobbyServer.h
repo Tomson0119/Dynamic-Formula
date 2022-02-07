@@ -8,6 +8,7 @@ class Client;
 
 class LobbyServer
 {
+public:
 	using RoomList = std::array<std::unique_ptr<WaitRoom>, MAX_ROOM_SIZE>;
 public:
 	LobbyServer();
@@ -21,7 +22,8 @@ public:
 	bool TryOpenRoom(int hostID);
 	bool TryEnterRoom(int roomID, int hostID);
 	void AcceptEnterRoom(int roomID, int hostID);
-	bool TryRemovePlayer(int roomID, int hostID);
+	void RevertScene(int hostID, bool logout=false);
+	void PressStartOrReady(int roomID, int hostID);
 
 	void SendRoomInfoToLobbyPlayers(int roomID, int ignore=-1, bool instSend = true);
 	void SendExistingRoomList(int id);
