@@ -123,11 +123,11 @@ void LoginServer::AcceptLogin(const char* name, int id)
 
 void LoginServer::Logout(int id)
 {
-	mLobby.TryRemovePlayer(gClients[id]->RoomID, id);
+	mLobby.RevertScene(id, true);
+	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 
 	int thread_id = mThreadIDs[std::this_thread::get_id()];
 	mDBHandlers[thread_id].SaveUserInfo(id);
-	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 }
 
 void LoginServer::Disconnect(int id)
