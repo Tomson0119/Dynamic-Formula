@@ -257,7 +257,7 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 #ifdef STANDALONE
-	BuildCarObjects({ 500.0f, 10.0f, 500.0f }, 4, true,	device, cmdList, physics);
+	BuildCarObjects({ 500.0f, 10.0f, 500.0f }, 4, true,	device, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -265,7 +265,7 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-			BuildCarObjects(info.StartPosition, info.Color, isPlayer, device, cmdList, physics);
+			BuildCarObjects(info.StartPosition, info.Color, isPlayer, device, cmdList, physics, i);
 		}
 		i++;
 	}
@@ -281,9 +281,10 @@ void InGameScene::BuildCarObjects(
 	bool isPlayer, 
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
-	std::shared_ptr<BulletWrapper>& physics)
+	std::shared_ptr<BulletWrapper>& physics,
+	UINT netID)
 {
-	auto carObj = make_shared<PhysicsPlayer>();
+	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
 	carObj->LoadModel(device, cmdList, L"Models\\Car_Body.obj");
 	carObj->SetDiffuse("Car_Texture", mColorMap[(int)color]);
@@ -336,7 +337,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 	case SC::REMOVE_PLAYER:
 	{
-		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);		
+		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 		mNetPtr->RemovePlayer(pck);
 		// TODO: remove car object by index
 		break;

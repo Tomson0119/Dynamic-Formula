@@ -77,7 +77,7 @@ private:
 		bool isPlayer,
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
-		std::shared_ptr<BulletWrapper>& dynamicsWorld);
+		std::shared_ptr<BulletWrapper>& dynamicsWorld, UINT netID);
 
 	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 	void CreateVelocityMapViews(ID3D12Device* device);

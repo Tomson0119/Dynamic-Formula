@@ -89,7 +89,7 @@ public:
 class PhysicsPlayer : public Player
 {
 public:
-	PhysicsPlayer();
+	PhysicsPlayer(UINT netID);
 	virtual ~PhysicsPlayer();
 
 	virtual void OnCameraUpdate(float elapsedTime);
@@ -163,4 +163,6 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap;
 
 	UINT mCurrentRenderTarget = 0;
+
+	UINT mNetID = -1;
 };
