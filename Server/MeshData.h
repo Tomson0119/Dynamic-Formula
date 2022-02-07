@@ -1,15 +1,14 @@
 #pragma once
 
+struct Vector3
+{
+	float x;
+	float y;
+	float z;
+};
+
 class MeshData
 {
-public:
-	struct Vector3
-	{
-		float x;
-		float y;
-		float z;
-	};
-
 public:
 	MeshData();
 	virtual ~MeshData() = default;
