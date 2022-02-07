@@ -363,7 +363,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			else
 				++i;
 		}
-		if (flag) mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
+		if (flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
 		break;
 	}
 	}
