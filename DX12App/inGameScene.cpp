@@ -184,11 +184,6 @@ void InGameScene::BuildDescriptorHeap(ID3D12Device* device)
 
 void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
 {
-	auto box = make_shared<GameObject>();
-	box->LoadModel(device, cmdList, L"Models\\road_sign2.obj");
-	box->Move(0.0f, 10.0f, 0.0f);
-	mPipelines[Layer::Default]->AppendObject(box);
-
 	auto gridMesh = make_shared<GridMesh>(device, cmdList, 50.0f, 50.0f, 10.0f, 10.0f);
 	auto grid = make_shared<GameObject>();
 	grid->SetMesh(gridMesh);
@@ -205,13 +200,39 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 	terrain->LoadTexture(device, cmdList, L"Resources\\road.dds");
 	terrain->LoadTexture(device, cmdList, L"Resources\\heightmap.dds");
 	terrain->LoadTexture(device, cmdList, L"Resources\\normalmap.dds");
-
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
+#ifdef STANDALONE
+	BuildCarObjects({ 500.0f, 10.0f, 500.0f }, 0, true,	device, cmdList, dynamicsWorld);
+#else
+	const auto& players = mNetPtr->GetPlayersInfo();
+	for (int i = 0; const PlayerInfo& info : players)
+	{
+		if (info.Empty == false)
+		{
+			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
+			BuildCarObjects(info.StartPosition, info.Color, isPlayer, device, cmdList, dynamicsWorld);
+		}
+		i++;
+	}
+#endif
+	float aspect = mMainCamera->GetAspect();
+	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
+}
 
+void InGameScene::BuildCarObjects(
+	const XMFLOAT3& position,
+	char color,
+	bool isPlayer, 
+	ID3D12Device* device, 
+	ID3D12GraphicsCommandList* cmdList, 
+	std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+{
 	auto carObj = make_shared<PhysicsPlayer>();
-	carObj->SetPosition(XMFLOAT3(500.0f, 10.0f, 500.0f));
+	carObj->SetPosition(position);
 	carObj->LoadModel(device, cmdList, L"Models\\Car_Body.obj");
+	carObj->SetDiffuse("Car_Texture", mColorMap[(int)color]);
 	for (int i = 0; i < 4; ++i)
 	{
 		auto wheelObj = make_shared<WheelObject>();
@@ -226,14 +247,9 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 	}
 	carObj->BuildRigidBody(dynamicsWorld);
 	carObj->BuildDsvRtvView(device);
+	if (isPlayer) mPlayer = carObj.get();
 	mPipelines[Layer::Color]->AppendObject(carObj);
-
-	float aspect = mMainCamera->GetAspect();
-	mPlayer = carObj.get();
-	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
 }
-
 
 void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 {
@@ -262,7 +278,17 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 
 bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 {
-	return false;
+	switch (type)
+	{
+	case SC::REMOVE_PLAYER:
+	{
+		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);		
+		mNetPtr->RemovePlayer(pck);
+		// TODO: remove car object by index
+		break;
+	}
+	}
+	return true;
 }
 
 void InGameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)

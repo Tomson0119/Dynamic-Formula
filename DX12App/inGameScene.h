@@ -71,6 +71,14 @@ private:
 	void BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap(ID3D12Device* device);
 
+	void BuildCarObjects(
+		const XMFLOAT3& position,
+		char color,
+		bool isPlayer,
+		ID3D12Device* device, 
+		ID3D12GraphicsCommandList* cmdList, 
+		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld);
+
 	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 	void UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 
@@ -114,4 +122,12 @@ private:
 
 	// Key pressed flag
 	std::map<int, bool> mKeyMap;
+
+	// color map
+	const std::array<XMFLOAT4, MAX_ROOM_CAPACITY> mColorMap = {
+		(XMFLOAT4)Colors::Red, (XMFLOAT4)Colors::Blue,
+		(XMFLOAT4)Colors::Green, (XMFLOAT4)Colors::Purple,
+		(XMFLOAT4)Colors::Black, (XMFLOAT4)Colors::White,
+		(XMFLOAT4)Colors::Orange, (XMFLOAT4)Colors::Yellow
+	};
 };
