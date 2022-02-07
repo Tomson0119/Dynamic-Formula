@@ -15,6 +15,7 @@
 class DynamicCubeRenderer;
 class ShadowMapRenderer;
 class NetModule;
+class PhysicsPlayer;
 
 class InGameScene : public Scene
 {
@@ -26,13 +27,12 @@ public:
 	virtual void OnResize(float aspect) override;
 
 	virtual void BuildObjects(
-		ID3D12Device* device,
+		ComPtr<ID3D12Device> device,
 		ID3D12GraphicsCommandList* cmdList,
 		float aspect,
 		std::shared_ptr<BulletWrapper> physics) override;
 	
 	virtual void Update(
-		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
 		std::shared_ptr<BulletWrapper> physics) override;
@@ -53,7 +53,7 @@ public:
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0);
 
-	void OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed);
+	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed);
 
 public:
 	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y) override;
@@ -64,27 +64,25 @@ public:
 	virtual ID3D12RootSignature* GetRootSignature() const override { return mRootSignature.Get(); }
 
 private:
-	void BuildRootSignature(ID3D12Device* device);
-	void BuildComputeRootSignature(ID3D12Device* device);
-	void BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics);
-	void BuildConstantBuffers(ID3D12Device* device);
-	void BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
-	void BuildDescriptorHeap(ID3D12Device* device);
+	void BuildRootSignature();
+	void BuildComputeRootSignature();
+	void BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics);
+	void BuildConstantBuffers();
+	void BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList);
+	void BuildDescriptorHeap();
 
 	void BuildCarObjects(
 		const XMFLOAT3& position,
 		char color,
 		bool isPlayer,
-		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		std::shared_ptr<BulletWrapper>& dynamicsWorld, UINT netID);
 
-	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
-	void CreateVelocityMapViews(ID3D12Device* device);
-	void CreateVelocityMapDescriptorHeaps(ID3D12Device* device);
+	void CreateVelocityMapViews();
+	void CreateVelocityMapDescriptorHeaps();
 
-	void AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics);
-	void UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	void AppendMissileObject(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics);
+	void UpdateMissileObject();
 
 private:
 	std::unique_ptr<Camera> mMainCamera;
@@ -107,7 +105,7 @@ private:
 
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
-
+	
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
@@ -117,10 +115,13 @@ private:
 
 	Player* mPlayer = nullptr;
 	std::vector<std::shared_ptr<MissileObject>> mMissileObjects;
+	std::vector<std::shared_ptr<PhysicsPlayer>> mPlayerObjects;
 
 	std::shared_ptr<Billboard> mFlameBillboard;
 	std::shared_ptr<Billboard> mDustBillboard;
 	std::shared_ptr<Mesh> mMissileMesh;
+	std::shared_ptr<btDiscreteDynamicsWorld> mDynamicsWorld;
+
 	std::chrono::high_resolution_clock::time_point mPrevTime;
 
 	const XMFLOAT3 mRoomCenter = { -1024, 0, 1024 };

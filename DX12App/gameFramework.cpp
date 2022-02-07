@@ -162,7 +162,7 @@ void GameFramework::Update()
 	//UpdateUI();
 
 	//mCamera->Update(mTimer.ElapsedTime());
-	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBulletPhysics);
+	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
 void GameFramework::Draw()
