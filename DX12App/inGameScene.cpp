@@ -257,7 +257,7 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 #ifdef STANDALONE
-	BuildCarObjects({ 500.0f, 10.0f, 500.0f }, 0, true,	device, cmdList, dynamicsWorld);
+	BuildCarObjects({ 500.0f, 10.0f, 500.0f }, 4, true,	device, cmdList, physics);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
