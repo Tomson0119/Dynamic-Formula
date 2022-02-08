@@ -83,7 +83,7 @@ public:
 	WheelObject();
 	virtual ~WheelObject();
 
-	void UpdateRigidBody(float Elapsed, btTransform wheelTransform);
+	void UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform);
 };
 
 class PhysicsPlayer : public Player

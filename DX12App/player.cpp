@@ -746,7 +746,7 @@ WheelObject::~WheelObject()
 {
 }
 
-void WheelObject::UpdateRigidBody(float Elapsed, btTransform wheelTransform)
+void WheelObject::UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform)
 {
 	btScalar m[16];
 	wheelTransform.getOpenGLMatrix(m);
