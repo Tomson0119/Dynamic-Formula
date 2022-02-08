@@ -238,14 +238,13 @@ void InGameScene::CreateVelocityMapDescriptorHeaps()
 
 void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics)
 {
-	mMissileMesh = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5, 5, 5);
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
-	mMeshList[MeshType::Missile] = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5, 5, 5);
-	mMeshList[MeshType::Grid] = make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f);
+	mMeshList[MeshType::Missile].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5, 5, 5));
+	mMeshList[MeshType::Grid].push_back(make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f));
 
 	auto grid = make_shared<GameObject>();
-	grid->SetMesh(mMeshList[MeshType::Grid]);
+	grid->SetMeshes(mMeshList[MeshType::Grid]);
 	grid->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
 	grid->Rotate(90.0f, 0.0f, 0.0f);
 	mPipelines[Layer::Default]->AppendObject(grid);
@@ -291,10 +290,10 @@ void InGameScene::BuildCarObjects(
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
 
-	if (mMeshList[MeshType::Car] == nullptr)
+	if (mMeshList[MeshType::Car].empty())
 		mMeshList[MeshType::Car] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
 	else
-		carObj->SetMesh(mMeshList[MeshType::Car]);
+		carObj->SetMeshes(mMeshList[MeshType::Car]);
 
 	carObj->SetDiffuse("Car_Texture", mColorMap[(int)color]);
 	for (int i = 0; i < 4; ++i)
@@ -303,17 +302,17 @@ void InGameScene::BuildCarObjects(
 
 		if (i % 2 == 0)
 		{
-			if (mMeshList[MeshType::Wheel_L] == nullptr)
+			if (mMeshList[MeshType::Wheel_L].empty())
 				mMeshList[MeshType::Wheel_L] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
 			else
-				wheelObj->SetMesh(mMeshList[MeshType::Wheel_L]);
+				wheelObj->SetMeshes(mMeshList[MeshType::Wheel_L]);
 		}
 		else
 		{
-			if (mMeshList[MeshType::Wheel_R] == nullptr)
+			if (mMeshList[MeshType::Wheel_R].empty())
 				mMeshList[MeshType::Wheel_R] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
 			else
-				wheelObj->SetMesh(mMeshList[MeshType::Wheel_R]);
+				wheelObj->SetMeshes(mMeshList[MeshType::Wheel_R]);
 		}
 
 		carObj->SetWheel(wheelObj.get(), i);
@@ -584,7 +583,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* ca
 void InGameScene::AppendMissileObject(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics)
 {
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
-	missile->SetMesh(mMeshList[MeshType::Missile], mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), physics);
+	missile->SetMesh(mMeshList[MeshType::Missile][0], mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), physics);
 	missile->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
 
 	mMissileObjects.push_back(missile);
