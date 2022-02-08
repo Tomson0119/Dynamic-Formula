@@ -83,12 +83,16 @@ void UI::TextDraw(UINT nFrame, UINT TextCnt, std::vector<TextBlock> mvTextBlocks
             mvdwTextFormat[i].Get(), mvTextBlocks[i].d2dLayoutRect, mvd2dTextBrush[i].Get());
     }
 }
-void UI::RectDraw(XMFLOAT4 LTRB[], UINT BrushCnt, std::vector<ID2D1Brush*> BrushList)
+void UI::RectDraw(XMFLOAT4 LTRB[])
 {
-    for (int i = 0; i < BrushCnt; ++i)
+    
+    mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(LTRB[0].x, LTRB[0].y, LTRB[0].z, LTRB[0].w), md2dLinearGradientBrush.Get());
+    mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(LTRB[0].x, LTRB[0].y, LTRB[0].z, LTRB[0].w), md2dLinearGradientBrush.Get());
+    
+    for (int i = 1; i < mvd2dTextBrush.size(); ++i)
     {
-        mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(LTRB[i].x, LTRB[i].y, LTRB[i].z, LTRB[i].w), BrushList[i]);
-        mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(LTRB[i].x, LTRB[i].y, LTRB[i].z, LTRB[i].w), BrushList[i]);
+        mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(LTRB[i].x, LTRB[i].y, LTRB[i].z, LTRB[i].w), mvd2dTextBrush[i-1].Get());
+        mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(LTRB[i].x, LTRB[i].y, LTRB[i].z, LTRB[i].w), mvd2dTextBrush[i-1].Get());
     }
 }
 
@@ -109,12 +113,12 @@ void UI::Update(const std::vector<std::wstring>& strUIText)
 
 }
 
-void UI::Draw(UINT nFrame, UINT TextCnt, std::vector<TextBlock> mvTextBlocks,
-    XMFLOAT4 LTRB[], UINT BrushCnt, std::vector<ID2D1Brush*> BrushList)
+void UI::Draw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks,
+    XMFLOAT4 LTRB[])
 {
     BeginDraw(nFrame);
     TextDraw(nFrame, TextCnt, mvTextBlocks);
-    RectDraw(LTRB, BrushCnt, BrushList);
+    RectDraw(LTRB);
     EndDraw(nFrame);
 }
 
@@ -144,7 +148,7 @@ void UI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
 
     //SetTextRect();
 }
-void UI::CreateFontFormat(float FontSize, std::vector<std::wstring> Fonts)
+void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts)
 {
     //ComPtr<IDWriteTextFormat> TestTextFormat;
     for (int i = 0; i < Fonts.size(); ++i)
@@ -180,7 +184,7 @@ void UI::BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF ColorList[])
         gradientStops[i].color = ColorList[i];
         gradientStops[i].position = static_cast<float>(i) * 1.0f / 3.0f;
     }
-    ThrowIfFailed(mpd2dDeviceContext->CreateGradientStopCollection(gradientStops, 4, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &pGradientStops));
+    ThrowIfFailed(mpd2dDeviceContext->CreateGradientStopCollection(gradientStops, ColorCnt, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &pGradientStops));
     ThrowIfFailed(mpd2dDeviceContext->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2D1::Point2F(mfWidth * (3.0f / 16.0f), mfHeight * (5.0f / 6.0f)), D2D1::Point2F(mfWidth * (1.0f / 2.0f), mfHeight * (8.0f / 9.0f))), pGradientStops, &md2dLinearGradientBrush));
 
     delete[] gradientStops;

@@ -118,12 +118,7 @@ void InGameUI::Draw(UINT nFrame)
         {mfWidth * (19.0f / 32.0f), mfHeight * (5.0f / 6.0f), 
         mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)}
     };
-    UINT RectCnt = UICnt;
-    std::vector<ID2D1Brush*> BrushList;
-    BrushList.push_back(md2dLinearGradientBrush.Get());
-    BrushList.push_back(mvd2dTextBrush[TextCnt + 2].Get());
-    BrushList.push_back(mvd2dTextBrush[TextCnt + 3].Get());
-    UI::Draw(nFrame, TextCnt, mvTextBlocks, LTRB, BrushList.size(), BrushList);
+    UI::Draw(nFrame, TextCnt, mvTextBlocks, LTRB);
     //Fill Draft gage
     //mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(mfWidth * (3.0f / 16.0f), mfHeight * (5.0f / 6.0f), mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)) * fDraftGage, mfHeight * (8.0f / 9.0f)),
     //    md2dLinearGradientBrush.Get());//LinearBrush - Color[4] : ForestGreen, Yellow, Orange, Red 
@@ -215,6 +210,8 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
         mvWrappedRenderTargets[i]->QueryInterface(__uuidof(IDXGISurface), (void**)&pdxgiSurface);
         mpd2dDeviceContext->CreateBitmapFromDxgiSurface(pdxgiSurface.Get(), &d2dBitmapProperties, &mvd2dRenderTargets[i]);
     }*/
+    mfWidth = static_cast<float>(nWidth);
+    mfHeight = static_cast<float>(nHeight);
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
 

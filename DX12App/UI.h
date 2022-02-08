@@ -11,8 +11,8 @@ public:
     explicit UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
     ~UI();
     virtual void Update(const std::vector<std::wstring>& strUIText);
-    virtual void Draw(UINT nFrame, UINT TextCnt, std::vector<TextBlock> mvTextBlocks,
-     XMFLOAT4 LTRB[], UINT BrushCnt, std::vector<ID2D1Brush*> BrushList);
+    virtual void Draw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks,
+     XMFLOAT4 LTRB[]);
     virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
     virtual void BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList, UINT gradientCnt, D2D1::ColorF* gradientColors);
     virtual void BuildSolidBrush(UINT UI_Cnt, D2D1::ColorF* ColorList);
@@ -21,10 +21,10 @@ public:
     virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
         ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height, UINT TextCnt);
     virtual void SetVectorSize(UINT nFrame, UINT TextCnt);
-    virtual void CreateFontFormat(float FontSize, std::vector<std::wstring> Fonts);
+    virtual void CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts);
     void BeginDraw(UINT nFrame);
     void TextDraw(UINT nFrame, UINT TextCnt, std::vector<TextBlock> mvTextBlocks);
-    void RectDraw(XMFLOAT4 LTRB[], UINT BrushCnt, std::vector<ID2D1Brush*> BrushList);
+    void RectDraw(XMFLOAT4 LTRB[]);
     void EndDraw(UINT nFrame);
     void Flush();
    ID3D11Resource* GetRenderTarget() { return mvWrappedRenderTargets[0].Get(); }
