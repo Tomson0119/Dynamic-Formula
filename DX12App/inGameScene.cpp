@@ -238,6 +238,7 @@ void InGameScene::CreateVelocityMapDescriptorHeaps()
 
 void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics)
 {
+	mMissileMesh = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5, 5, 5);
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
 	auto gridMesh = make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f);
@@ -565,7 +566,6 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* ca
 
 void InGameScene::AppendMissileObject(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics)
 {
-	mMissileMesh = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5, 5, 5);
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
 	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), physics);
 	missile->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
