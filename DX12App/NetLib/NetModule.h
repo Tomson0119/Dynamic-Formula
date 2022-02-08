@@ -68,4 +68,6 @@ private:
 
 	IOCP mIOCP;
 	Scene* mScenePtr;
+
+	bool mIsConnected;
 };

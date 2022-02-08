@@ -10,10 +10,13 @@
 
 NetModule::NetModule()
 	: mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
-	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 }
+	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 },
+	  mIsConnected{ false }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
 		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
+
+	mNetClient = std::make_unique<NetClient>();
 }
 
 NetModule::~NetModule()
@@ -23,9 +26,9 @@ NetModule::~NetModule()
 
 bool NetModule::Connect(const char* ip, short port)
 {
-	if (mNetClient->Connect(ip, port))
+	if (mIsConnected = mNetClient->Connect(ip, port))
 	{
-		Init();
+		Init();		
 		return true;
 	}
 	return false;
@@ -33,7 +36,7 @@ bool NetModule::Connect(const char* ip, short port)
 
 void NetModule::PostDisconnect()
 {	
-	if (mNetClient)
+	if (mIsConnected)
 	{
 		// Post disconnect operation to get out of the thread loop	
 		WSAOVERLAPPEDEX* over = new WSAOVERLAPPEDEX(OP::DISCONNECT);
@@ -182,7 +185,6 @@ void NetModule::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes)
 
 void NetModule::Init()
 {
-	mNetClient = std::make_unique<NetClient>();
 	mIOCP.RegisterDevice(mNetClient->GetSocket(), 0);
 	mNetClient->RecvMsg();
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };
