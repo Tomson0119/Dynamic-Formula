@@ -1,8 +1,10 @@
 #pragma once
 
 #include "gameTimer.h"
+#include "mesh.h"
+#include "gameObject.h"
 
-//#define STANDALONE
+#define STANDALONE
 #define START_GAME_INSTANT
 
 enum class SCENE_STAT : char
@@ -73,4 +75,6 @@ protected:
 
 	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;
 	ComPtr<ID3D12Device> mDevice;
+
+	std::map<MeshType, std::shared_ptr<Mesh>> mMeshList;
 };
