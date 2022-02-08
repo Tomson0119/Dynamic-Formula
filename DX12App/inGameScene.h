@@ -119,7 +119,6 @@ private:
 
 	std::shared_ptr<Billboard> mFlameBillboard;
 	std::shared_ptr<Billboard> mDustBillboard;
-	std::shared_ptr<Mesh> mMissileMesh;
 	std::shared_ptr<btDiscreteDynamicsWorld> mDynamicsWorld;
 
 	std::chrono::high_resolution_clock::time_point mPrevTime;

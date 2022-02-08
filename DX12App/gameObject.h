@@ -36,7 +36,7 @@ public:
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
 
 public:
-	virtual void LoadModel(
+	virtual std::shared_ptr<Mesh> LoadModel(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		const std::wstring& path);

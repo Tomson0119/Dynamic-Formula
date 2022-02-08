@@ -520,6 +520,11 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 	BuildRigidBody(physics);
 }
 
+void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& Mesh)
+{
+	GameObject::SetMesh(Mesh);
+}
+
 void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mSrvDescriptorHeap.Get() };
