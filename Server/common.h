@@ -17,7 +17,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
 
-
+//#define USE_DATABASE
 #define DEBUG_PACKET_TRANSFER
 
 namespace BulletHelper

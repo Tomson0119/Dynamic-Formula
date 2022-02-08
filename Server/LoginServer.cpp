@@ -7,12 +7,14 @@ std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
 LoginServer::LoginServer(const EndPoint& ep)
 	: mLoop(true)
 {
+#ifdef USE_DATABASE
 	for (int i = 0; i < MAX_THREADS; i++)
 	{
 		if (mDBHandlers[i].ConnectToDB(L"sql_server"))
 			mDBHandlers[i].ResetAllHost();
 		else std::cout << "failed to connect to DB\n";
 	}
+#endif
 
 	mLobby.Init(this);
 	
@@ -126,8 +128,10 @@ void LoginServer::Logout(int id)
 	mLobby.RevertScene(id, true);
 	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 
+#ifdef USE_DATABASE
 	int thread_id = mThreadIDs[std::this_thread::get_id()];
 	mDBHandlers[thread_id].SaveUserInfo(id);
+#endif
 }
 
 void LoginServer::Disconnect(int id)
@@ -186,13 +190,18 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	{
 	case CS::LOGIN:
 	{
-#ifdef DEBUG_PACKET_TRANSFER
+	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received login packet\n";
-#endif
+	#endif
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
 		
+	#ifdef USE_DATABASE
 		int thread_id = mThreadIDs[std::this_thread::get_id()];
 		int	conn_id = mDBHandlers[thread_id].SearchIdAndPwd(pck->name, pck->pwd, id);
+	#else
+		int conn_id = (int)LOGIN_STAT::INVALID_IDPWD;
+	#endif
+
 		if(conn_id >= (int)LOGIN_STAT::ACCEPTED)
 		{
 			if (conn_id >= 0)
@@ -217,9 +226,9 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	}
 	case CS::REGISTER:
 	{
-#ifdef DEBUG_PACKET_TRANSFER
+	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received register packet.\n";
-#endif
+	#endif
 		CS::packet_register* pck = reinterpret_cast<CS::packet_register*>(packet);
 
 		if (std::string(pck->name).find("GM") != std::string::npos)
@@ -228,11 +237,13 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 			break;
 		}
 
+	#ifdef USE_DATABASE
 		int thread_id = mThreadIDs[std::this_thread::get_id()];
 		if (mDBHandlers[thread_id].RegisterIdAndPwd(pck->name, pck->pwd))
 			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
 		else
 			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
+	#endif
 		break;
 	}
 	default:
