@@ -3,12 +3,14 @@
 #include "gameTimer.h"
 #include "dxException.h"
 #include "stdafx.h"
-//class UI;
-class InGameUI;
-class NetClient;
-//#include "stdafx.h"
+
+#include "UI.h"
 
 class UI;
+class InGameUI;
+
+class NetClient;
+
 class NetModule;
 
 class D3DFramework : public BaseWin<D3DFramework>

@@ -1,7 +1,13 @@
 #include "stdafx.h"
 #include "gameFramework.h"
 #include "camera.h"
-#include "UI.h"
+
+
+#include "InGameUI.h"
+#include "LobbyUI.h"
+#include "RoomUI.h"
+#include "LoginUI.h"
+
 
 #include "loginScene.h"
 #include "lobbyScene.h"
@@ -25,9 +31,6 @@ bool GameFramework::InitFramework()
 		return false;
 	InitScene(SCENE_STAT::IN_GAME); 
 	
-	mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-	mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
-
 	return true;
 
 	//InGameUI Build
@@ -94,18 +97,26 @@ void GameFramework::InitScene(SCENE_STAT state)
 	{
 	case SCENE_STAT::LOGIN:
 		mScenes.push(std::make_unique<LoginScene>(mNetwork.get()));
+		mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
+		mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::LOBBY:
 		mScenes.push(std::make_unique<LobbyScene>(mNetwork.get()));
+		mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
+		mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::ROOM:
 		mScenes.push(std::make_unique<RoomScene>(mNetwork.get()));
+		mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
+		mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::IN_GAME:
 		mScenes.push(std::make_unique<InGameScene>(mNetwork.get()));
+		mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
+		mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	default:
@@ -338,6 +349,7 @@ void GameFramework::Draw()
 
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
+
 	mpInGameUI->Draw(mCurrBackBufferIndex);
 
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());

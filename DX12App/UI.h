@@ -1,84 +1,40 @@
+#pragma once
 struct TextBlock
 {
     std::wstring        strText;
     D2D1_RECT_F         d2dLayoutRect;
     IDWriteTextFormat* pdwFormat;
 };
-
-class UI // Producing
+class UI 
 {
 public:
-    UI() {}
-    ~UI() {}
-    virtual void Update() {}
-    virtual void Draw() {}
-    virtual void PreDraw() {}
-    virtual void BuildBrush() {}
-    virtual void Reset() {}
-    virtual void OnResize() {}
-    
-private:
-    virtual void Initialize() {}
-    float mfHeight = 0.0f;
-    float mfWidth = 0.0f;
-
-    ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
-    ComPtr<ID3D11On12Device> mpd3d11On12Device;
-    ComPtr<ID2D1Factory3> mpd2dFactory;
-    ComPtr<IDWriteFactory> mpd2dWriteFactory;
-    ComPtr<ID2D1Device2> mpd2dDevice;
-    ComPtr<ID3D11Device> pd3d11Device;
-    ComPtr<IDXGIDevice> pdxgiDevice;
-    ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
-
-    std::vector<ComPtr<ID2D1SolidColorBrush>> mvd2dTextBrush;
-
-    std::vector<ComPtr<ID3D11Resource>>    mvWrappedRenderTargets;
-    std::vector<ComPtr<ID2D1Bitmap1>>      mvd2dRenderTargets;
-};
-
-class InGameUI
-{
-public:
-    InGameUI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
-    ~InGameUI();
-    void Update(const std::vector<std::wstring>& strUIText);
-    void Draw(UINT nFrame);
-    void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
-    void BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList);
-    void BuildSolidBrush(UINT UI_Cnt, D2D1::ColorF* ColorList);
-    void BuildLinearGradientBrush();
-    void Reset();
-    void OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice, 
-        ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
-
-    void CreateFontFormat();
-    void SetVectorSize(UINT nFrame, UINT TextCnt);
-    void SetTextRect();
-    void StartPrint(std::wstring& strUIText);
-    void SetDraftGage();
+    explicit UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
+    ~UI();
+    virtual void Update(const std::vector<std::wstring>& strUIText);
+    virtual void Draw(UINT nFrame, UINT TextCnt, std::vector<TextBlock> mvTextBlocks,
+     XMFLOAT4 LTRB[], UINT BrushCnt, std::vector<ID2D1Brush*> BrushList);
+    virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
+    virtual void BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList, UINT gradientCnt, D2D1::ColorF* gradientColors);
+    virtual void BuildSolidBrush(UINT UI_Cnt, D2D1::ColorF* ColorList);
+    virtual void BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF ColorList[]);
+    virtual void Reset();
+    virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
+        ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height, UINT TextCnt);
+    virtual void SetVectorSize(UINT nFrame, UINT TextCnt);
+    virtual void CreateFontFormat(float FontSize, std::vector<std::wstring> Fonts);
+    void BeginDraw(UINT nFrame);
+    void TextDraw(UINT nFrame, UINT TextCnt, std::vector<TextBlock> mvTextBlocks);
+    void RectDraw(XMFLOAT4 LTRB[], UINT BrushCnt, std::vector<ID2D1Brush*> BrushList);
+    void EndDraw(UINT nFrame);
     void Flush();
-    //char wcinput;
-    //std::wstring wsInputText;
-
+   ID3D11Resource* GetRenderTarget() { return mvWrappedRenderTargets[0].Get(); }
+   UINT GetRenderTargetsCount() { return mvWrappedRenderTargets.size(); }
 private:
-    UINT GetRenderTargetsCount() { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
-    void Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
+    virtual void Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
 
-    float mfWidth = 0.0f;
+    //virtual void Initialize() {}
     float mfHeight = 0.0f;
-
-    float GradientPoint = 0.0f;
-
-    UINT uItemCnt = 0;
-    float fDraftGage = 0.0f;
-
-    POINT DraftUIStart;
-    POINT DraftUIEnd;
-
-    UINT TextCnt;
-    UINT UICnt;
-
+    float mfWidth = 0.0f;
 
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;
@@ -88,14 +44,14 @@ private:
     ComPtr<ID3D11Device> pd3d11Device;
     ComPtr<IDXGIDevice> pdxgiDevice;
     ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
+
     std::vector<ComPtr<IDWriteTextFormat>> mvdwTextFormat;
 
-    ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
-
     std::vector<ComPtr<ID2D1SolidColorBrush>> mvd2dTextBrush;
-
+    ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
     std::vector<ComPtr<ID3D11Resource>>    mvWrappedRenderTargets;
     std::vector<ComPtr<ID2D1Bitmap1>>      mvd2dRenderTargets;
-    std::vector<TextBlock>          mvTextBlocks;
 };
+
+
 

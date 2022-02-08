@@ -1,6 +1,11 @@
 #include "stdafx.h"
 #include "d3dFramework.h"
-#include "UI.h"
+
+#include "InGameUI.h"
+#include "LobbyUI.h"
+#include "RoomUI.h"
+#include "LoginUI.h"
+
 #include "NetLib/NetModule.h"
 
 D3DFramework::D3DFramework()

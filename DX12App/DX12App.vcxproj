@@ -71,14 +71,17 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="InGameUI.cpp" />
     <ClCompile Include="lobbyScene.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="LobbyUI.cpp" />
     <ClCompile Include="loginScene.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="LoginUI.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
@@ -117,6 +120,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="RoomUI.cpp" />
     <ClCompile Include="scene.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
@@ -157,8 +161,11 @@
     <ClInclude Include="gameTimer.h" />
     <ClInclude Include="heightMapImage.h" />
     <ClInclude Include="inGameScene.h" />
+    <ClInclude Include="InGameUI.h" />
     <ClInclude Include="lobbyScene.h" />
+    <ClInclude Include="LobbyUI.h" />
     <ClInclude Include="loginScene.h" />
+    <ClInclude Include="LoginUI.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="NetLib\NetClient.h" />
     <ClInclude Include="NetLib\NetCommon.h" />
@@ -166,6 +173,7 @@
     <ClInclude Include="pipeline.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="roomScene.h" />
+    <ClInclude Include="RoomUI.h" />
     <ClInclude Include="scene.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="shadowMapRenderer.h" />

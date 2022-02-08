@@ -1,10 +1,9 @@
 #pragma once
 
 #include "d3dFramework.h"
-class InGameUI;
 #include "scene.h"
+#include "UI.h"
 
-class UI;
 class Camera;
 
 class GameFramework : public D3DFramework
