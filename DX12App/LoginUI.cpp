@@ -101,7 +101,7 @@ void LoginUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
 
-    D2D1::ColorF colorList[7] = { D2D1::ColorF::Black, D2D1::ColorF::Black, D2D1::ColorF::Black, D2D1::ColorF::Black, D2D1::ColorF::Black, D2D1::ColorF::Red, (D2D1::ColorF::Red, 0.01f) };
+    D2D1::ColorF colorList[7] = { (D2D1::ColorF::Black, 1.0f), (D2D1::ColorF::Black, 1.0f), (D2D1::ColorF::Black, 1.0f), (D2D1::ColorF::Black, 1.0f), (D2D1::ColorF::Black, 1.0f), D2D1::ColorF(0xFF0000, 0.1f), D2D1::ColorF(D2D1::ColorF::Red, 0.1f) };
     //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
     UI::BuildSolidBrush(UICnt, TextCnt, colorList);
 

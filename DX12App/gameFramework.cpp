@@ -115,7 +115,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 
 	case SCENE_STAT::IN_GAME:
 		mScenes.push(std::make_unique<InGameScene>(mNetwork.get()));
-		mpUI.push(std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		mpUI.push(std::make_unique<LoginUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
 		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
@@ -139,9 +139,9 @@ void GameFramework::OnPreciseKeyInput()
 
 void GameFramework::UIUpdate()
 {
-	if(mScenes.top()->GetPlayer())
+	/*if(mScenes.top()->GetPlayer())
 		mpUI.top()->Update(mTimer.TotalTime(), (Player*)(mScenes.top()->GetPlayer()));
-	else
+	else*/
 		mpUI.top()->Update(mTimer.TotalTime());
 }
 
