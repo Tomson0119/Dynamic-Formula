@@ -9,7 +9,9 @@ InGameServer::WorldList InGameServer::msWorlds;
 
 InGameServer::InGameServer()
 	: mLoginPtr{ nullptr }
-{	
+{
+	mBtShapes.push_back(std::make_unique<BtCarShape>("Resource\\Car_Data.bin"));
+	mBtShapes.push_back(std::make_unique<BtTerrainShape>("Resource\\PlaneMap_Data.bin"));
 }
 
 void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)

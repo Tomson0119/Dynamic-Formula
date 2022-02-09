@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BPHandler.h"
+#include "BtShape.h"
 
 class LoginServer;
 class WaitRoom;
@@ -15,6 +16,7 @@ struct GameWorld
 
 class InGameServer
 {
+	using ShapeList = std::vector<std::unique_ptr<BtShapeBase>>;
 	using RoomList = std::array<std::unique_ptr<WaitRoom>, MAX_ROOM_SIZE>;
 	using WorldList = std::array<std::unique_ptr<GameWorld>, MAX_ROOM_SIZE>;
 public:
@@ -36,8 +38,8 @@ private:
 private:
 	LoginServer* mLoginPtr;
 	static WorldList msWorlds;
-
-	std::atomic_int mPlayerCount;
-
+	
+	ShapeList mBtShapes;
+	
 	const btVector3 mStartPosition = { 500.0f, 10.0f, 500.0f };
 };
