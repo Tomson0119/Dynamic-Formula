@@ -8,7 +8,8 @@ public:
 		pd3dCommandQueue);
 	~LoginUI();
 	void SetVectorSize(UINT nFrame, UINT TextCnt);
-	void Update(float GTime);
+	virtual void Update(float GTime, Player* mPlayer) {}
+	virtual void Update(float GTime);
 	void Draw(UINT nFrame);
 	void CreateFontFormat();
 	void SetTextRect();

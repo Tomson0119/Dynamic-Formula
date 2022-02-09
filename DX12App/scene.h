@@ -55,7 +55,7 @@ public:
 	virtual void OnProcessMouseUp(WPARAM btnState, int x, int y);
 	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y);
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
-	//virtual Player* GetPlayer() { return reinterpret_cast<Player*>(0); }
+	virtual int GetPlayer() { return 1; }
 
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
 

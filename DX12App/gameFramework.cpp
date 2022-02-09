@@ -139,7 +139,10 @@ void GameFramework::OnPreciseKeyInput()
 
 void GameFramework::UIUpdate()
 {
-	mpUI.top()->Update(mTimer.TotalTime());
+	if(mScenes.top()->GetPlayer())
+		mpUI.top()->Update(mTimer.TotalTime(), (Player*)(mScenes.top()->GetPlayer()));
+	else
+		mpUI.top()->Update(mTimer.TotalTime());
 }
 
 void GameFramework::CheckAndChangeScene()

@@ -30,7 +30,7 @@ void InGameUI::StartPrint(const std::wstring& strUIText)
 {
     mvTextBlocks[TextCnt - 1].strText = strUIText;
 }
-void InGameUI::Update(float GTime)
+void InGameUI::Update(float GTime, Player* mPlayer)
 {
 	/*TextUI.clear();
 	TextUI.resize(5);*/
@@ -115,21 +115,21 @@ void InGameUI::Update(float GTime)
 		break;
 	}
 	//Speed
-	/*float CurrentSpeed = mScenes.top().get()->GetPlayer()->GetCurrentVelocity();
-	if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 1000.0f)
+	/*float CurrentSpeed = mPlayer->GetCurrentVelocity();
+	if (mPlayer->GetCurrentVelocity() >= 1000.0f)
 	{
 		for (int i = 0; i < 6; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+			mvTextBlocks[3].strText.push_back(std::to_wstring(mPlayer->GetCurrentVelocity())[i]);
 	}
-	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 100.0f)
+	else if (mPlayer->GetCurrentVelocity() >= 100.0f)
 	{
 		for (int i = 0; i < 5; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+			mvTextBlocks[3].strText.push_back(std::to_wstring(mPlayer->GetCurrentVelocity())[i]);
 	}
-	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 10.0f)
+	else if (mPlayer->GetCurrentVelocity() >= 10.0f)
 	{
 		for (int i = 0; i < 4; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+			mvTextBlocks[3].strText.push_back(std::to_wstring(mPlayer->GetCurrentVelocity())[i]);
 	}
 	else
 	{
@@ -191,8 +191,8 @@ void InGameUI::Draw(UINT nFrame)
         mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)
         }//Item2 UI
     };
+	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 2-uItemCnt, 1);
 	UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
-	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 1);
     //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 	UI::EndDraw(nFrame);
 }
@@ -212,7 +212,7 @@ void InGameUI::CreateFontFormat()
 
 void InGameUI::SetTextRect()
 {
-     mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f + mfHeight / 6, mfWidth / 6, 23.0f + (mfHeight / 6));
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f + mfHeight / 6, mfWidth / 6, 23.0f + (mfHeight / 6));
     mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f, mfWidth / 6, mfHeight / 6);
     mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 0.0f, mfWidth, mfHeight / 6);
     mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 5 * (mfHeight / 6), mfWidth, mfHeight);
@@ -228,7 +228,7 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
 
     D2D1::ColorF colorList[8] = { D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::Black, D2D1::ColorF::OrangeRed, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
     D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
-    UI::BuildBrush(UICnt, TextCnt, colorList, 4, gradientColors);
+    UI::BuildBrush(UICnt, TextCnt, colorList,  4, gradientColors);
     
     SetTextRect();
 }

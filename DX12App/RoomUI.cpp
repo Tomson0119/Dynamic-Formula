@@ -31,7 +31,8 @@ void RoomUI::Update(float GTime)
 
 void RoomUI::Draw(UINT nFrame)
 {
-    //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
+    UI::BeginDraw(nFrame);
+    UI::EndDraw(nFrame);
 }
 
 void RoomUI::CreateFontFormat()

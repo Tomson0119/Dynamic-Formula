@@ -61,7 +61,7 @@ public:
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	virtual ID3D12RootSignature* GetRootSignature() const override { return mRootSignature.Get(); }
-	virtual Player* GetPlayer() { return mPlayer; }
+	virtual int GetPlayer() { return (int)mPlayer; }
 private:
 	void BuildRootSignature(ID3D12Device* device);
 	void BuildComputeRootSignature(ID3D12Device* device);

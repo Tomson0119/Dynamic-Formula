@@ -6,7 +6,7 @@ class InGameUI : public UI
 public:
     InGameUI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
     ~InGameUI();
-    void Update(float GTime);
+    virtual void Update(float GTime, Player* mPlayer);
     void Draw(UINT nFrame);
     virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
     virtual void Reset();
@@ -29,6 +29,8 @@ private:
 
     UINT TextCnt;
     UINT UICnt;
+
+    //ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
 
     //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
     std::vector<TextBlock>          mvTextBlocks;

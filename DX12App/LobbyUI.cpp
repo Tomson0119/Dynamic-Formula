@@ -29,7 +29,8 @@ void LobbyUI::Update(float GTime)
 
 void LobbyUI::Draw(UINT nFrame)
 {
-    //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
+    UI::BeginDraw(nFrame);
+    UI::EndDraw(nFrame);
 }
 
 void LobbyUI::CreateFontFormat()

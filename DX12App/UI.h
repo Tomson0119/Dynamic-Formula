@@ -1,4 +1,5 @@
 #pragma once
+#include "player.h"
 struct TextBlock
 {
     std::wstring        strText;
@@ -10,12 +11,13 @@ class UI
 public:
     explicit UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
     ~UI();
+    virtual void Update(float GTime, Player* mPlayer) {}
     virtual void Update(float GTime);
     virtual void Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
      XMFLOAT4 RetLTRM[], XMFLOAT4 FillLTRB[]*/);
     virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
-    virtual void BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, UINT gradientCnt, 
-        D2D1::ColorF* gradientColors);
+    virtual void BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, 
+        UINT gradientCnt, D2D1::ColorF* gradientColors);
     virtual void BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList);
     virtual void BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList);
     virtual void Reset();
@@ -28,7 +30,7 @@ public:
 
     void BeginDraw(UINT nFrame);
     void TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks);
-    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT GradientCnt);
+    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt);
     void RoundedRectDraw() {}
     void EndDraw(UINT nFrame);
     void Flush();

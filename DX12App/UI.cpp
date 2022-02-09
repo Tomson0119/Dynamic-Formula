@@ -80,17 +80,25 @@ void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTex
             mvdwTextFormat[i].Get(), mvTextBlocks[i].d2dLayoutRect, mvd2dSolidBrush[i+1].Get());
     }
 }
-void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT GradientCnt)
+void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt)
 {
-    for (int i = 0; i < GradientCnt; ++i) 
+    if (md2dLinearGradientBrush.Get())
     {
-        mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), md2dLinearGradientBrush.Get());
-        mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
+        for (int i = 0; i < GradientCnt; ++i)
+        {
+            mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), md2dLinearGradientBrush.Get());
+            mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
+        }
     }
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt; ++i)
     {
-        mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mvd2dSolidBrush[i+TextCnt].Get());
+        //mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mvd2dSolidBrush[i + TextCnt].Get());
         mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
+    }
+    for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt-bias; ++i)
+    {
+        mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mvd2dSolidBrush[i+TextCnt].Get());
+        //mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
     }
 }
 
@@ -149,19 +157,19 @@ void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts
     }
 }
 
-void UI::BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, UINT gradientCnt, 
-    D2D1::ColorF* gradientColors)
+void UI::BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, 
+    UINT gradientCnt, D2D1::ColorF* gradientColors)
 {
    BuildSolidBrush(UICnt, TextCnt, ColorList);
     BuildLinearGradientBrush(gradientCnt, gradientColors);
 }
 
-void UI::BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList) 
+void UI::BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList)
 {
     //첫번째 SolidColorBrush는 무조건 Black으로 설정한 후 테두리로 사용할 것. 그게 편할 듯.
-    mvd2dSolidBrush.resize(TextCnt+UICnt+1);
+    mvd2dSolidBrush.resize(TextCnt+UICnt);
     ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[0]));
-    for (int i = 0; i < TextCnt+UICnt; ++i)
+    for (int i = 0; i < TextCnt+UICnt-1; ++i)
         ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(ColorList[i]), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[i+1]));
     // 0번 SolidBrush는 무조건 Black, 나머지는 인자로 받은 ColorList로 설정. 따라서 Resize할 때 UI와 Text 수에다가 1을 더해서 설정
     // 1번부터는 ColorList색. Text색 이후 UI 색으로 설정
