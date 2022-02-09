@@ -1,7 +1,5 @@
 #pragma once
 
-#include "MeshData.h"
-
 class Player
 {
 public:
