@@ -21,10 +21,8 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     ComPtr<ID3D12CommandQueue> ppd3dCommandQueues[] = { pd3dCommandQueue };
     ThrowIfFailed(::D3D11On12CreateDevice(pd3dDevice, d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown**>(ppd3dCommandQueues),
         _countof(ppd3dCommandQueues), 0, &pd3d11Device, &mpd3d11DeviceContext, nullptr));
-    //pd3d11Device.Get()->QueryInterface(__uuidof(ID3D11On12Device), (void**)&mpd3d11On12Device);
     ThrowIfFailed(pd3d11Device.As(&mpd3d11On12Device));
-    //pd3d11Device->Release();
-
+    
 #if defined(_DEBUG) || defined(DBG)
     ID3D12InfoQueue* pd3dInfoQueue;
     if (SUCCEEDED(pd3dDevice->QueryInterface(IID_PPV_ARGS(&pd3dInfoQueue))))
@@ -49,7 +47,6 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     }
     pd3dInfoQueue->Release();
 #endif
-    //mpd3d11On12Device->QueryInterface(__uuidof(IDXGIDevice), (void**)&pdxgiDevice);
     ThrowIfFailed(mpd3d11On12Device.As(&pdxgiDevice));
     ThrowIfFailed(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory3), &d2dFactoryOptions, &mpd2dFactory));
     ThrowIfFailed(mpd2dFactory->CreateDevice(pdxgiDevice.Get(), &mpd2dDevice));
@@ -65,8 +62,7 @@ void UI::SetVectorSize(UINT nFrame, UINT TextCnt)
     mvWrappedRenderTargets.resize(nFrame);
     mvdwTextFormat.resize(TextCnt);
     mvd2dRenderTargets.resize(nFrame);
-    //mvTextBlocks.resize(TextCnt);
-    //mvd2dLinearGradientBrush.resize(TextCnt);
+   //mvd2dLinearGradientBrush.resize(TextCnt);
 }
 void UI::BeginDraw(UINT nFrame)
 {
@@ -75,7 +71,7 @@ void UI::BeginDraw(UINT nFrame)
     mpd2dDeviceContext.Get()->SetTarget(mvd2dRenderTargets[nFrame].Get());
 }
 
-void UI::TextDraw(UINT nFrame, UINT TextCnt, std::vector<TextBlock> mvTextBlocks)
+void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks)
 {
     for (int i = 0; i < TextCnt; ++i)
     {
@@ -99,9 +95,7 @@ void UI::RectDraw(XMFLOAT4 LTRB[])
 void UI::EndDraw(UINT nFrame)
 {
     mpd2dDeviceContext.Get()->EndDraw();
-
     mpd3d11On12Device->ReleaseWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 0);
-
     Flush();
 }
 void UI::Flush()
@@ -129,6 +123,7 @@ void UI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
 
     D2D1_BITMAP_PROPERTIES1 d2dBitmapProperties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
         D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), mfWidth, mfHeight);
+    
     ComPtr<IDXGISurface> pdxgiSurface;
     for (UINT i = 0; i < GetRenderTargetsCount(); ++i)
     {
@@ -138,22 +133,11 @@ void UI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
         mvWrappedRenderTargets[i]->QueryInterface(__uuidof(IDXGISurface), (void**)&pdxgiSurface);
         mpd2dDeviceContext->CreateBitmapFromDxgiSurface(pdxgiSurface.Get(), &d2dBitmapProperties, &mvd2dRenderTargets[i]);
     }
-    //float fFontSize = mfHeight / 15.0f;
-    //std::vector<std::wstring> Fonts = { L"Tahoma" , L"Vladimir Script 보통" , L"바탕체" , L"굴림체" , L"굴림체" };
-    //CreateFontFormat(fFontSize, Fonts, mvdwTextFormat);
-    //CreateFontFormat();
-
-    //D2D1::ColorF colorList[9] = { D2D1::ColorF::Black, D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::OrangeRed, D2D1::ColorF::Black, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
-    //BuildBrush(TextCnt + 4, colorList); //SolidBrush and LinearBrush(Gradient)
-
-    //SetTextRect();
 }
 void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts)
 {
-    //ComPtr<IDWriteTextFormat> TestTextFormat;
     for (int i = 0; i < Fonts.size(); ++i)
         ThrowIfFailed(mpd2dWriteFactory->CreateTextFormat(Fonts[i].c_str(), nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, FontSize, L"en-us", mvdwTextFormat[i].GetAddressOf()));
-
     for (int i = 0; i < Fonts.size(); ++i)
     {
         ThrowIfFailed(mvdwTextFormat[i]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
@@ -161,7 +145,8 @@ void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts
     }
 }
 
-void UI::BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList, UINT gradientCnt, D2D1::ColorF* gradientColors)
+void UI::BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList, UINT gradientCnt, 
+    D2D1::ColorF* gradientColors)
 {
     BuildSolidBrush(UI_Cnt, ColorList);
     BuildLinearGradientBrush(gradientCnt, gradientColors);
@@ -169,12 +154,13 @@ void UI::BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList, UINT gradientCnt, D2D1
 
 void UI::BuildSolidBrush(UINT UI_Cnt, D2D1::ColorF* ColorList) 
 {
+    //첫번째 SolidColorBrush는 무조건 Black으로 설정한 후 테두리로 사용할 것. 그게 편할 듯.
     mvd2dTextBrush.resize(UI_Cnt+1);
-    for (int i = 0; i < UI_Cnt; ++i)
+    for (int i = 0; i < UI_Cnt+1; ++i)
         ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(ColorList[i]), (ID2D1SolidColorBrush**)&mvd2dTextBrush[i]));
 }
 
-void UI::BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF ColorList[]) 
+void UI::BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList) 
 {
     ID2D1GradientStopCollection* pGradientStops = NULL;
     D2D1_GRADIENT_STOP* gradientStops = new D2D1_GRADIENT_STOP[ColorCnt];

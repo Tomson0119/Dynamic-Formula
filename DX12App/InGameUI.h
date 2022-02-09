@@ -19,12 +19,10 @@ public:
     void CreateFontFormat();
     void SetVectorSize(UINT nFrame, UINT TextCnt);
     void SetTextRect();
-    void StartPrint(std::wstring& strUIText);
+    void StartPrint(const std::wstring& strUIText);
     void SetDraftGage();
     void Flush();
-    //char wcinput;
-    //std::wstring wsInputText;
-
+    
 private:
     UINT GetRenderTargetsCount() { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
     virtual void Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
@@ -42,16 +40,6 @@ private:
 
     UINT TextCnt;
     UINT UICnt;
-
-
-    /*ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
-    ComPtr<ID3D11On12Device> mpd3d11On12Device;
-    ComPtr<ID2D1Factory3> mpd2dFactory;
-    ComPtr<IDWriteFactory> mpd2dWriteFactory;
-    ComPtr<ID2D1Device2> mpd2dDevice;
-    ComPtr<ID3D11Device> pd3d11Device;
-    ComPtr<IDXGIDevice> pdxgiDevice;
-    ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;*/
 
     ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 
