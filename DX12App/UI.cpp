@@ -57,10 +57,10 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&mpd2dWriteFactory));
 }
 
-void UI::SetVectorSize(UINT nFrame, UINT TextCnt)
+void UI::SetVectorSize(UINT nFrame)
 {
     mvWrappedRenderTargets.resize(nFrame);
-    mvdwTextFormat.resize(TextCnt);
+    //mvdwTextFormat.resize(TextCnt);
     mvd2dRenderTargets.resize(nFrame);
    //mvd2dLinearGradientBrush.resize(TextCnt);
 }
@@ -104,18 +104,18 @@ void UI::Flush()
 {
     mpd3d11DeviceContext.Get()->Flush();
 }
-void UI::Update(const std::vector<std::wstring>& strUIText)
+void UI::Update(float GTime)
 {
 
 }
 
-void UI::Draw(UINT nFrame, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
-    XMFLOAT4 RectLTRB[],  XMFLOAT4 FillLTRB[])
+void UI::Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
+    XMFLOAT4 RectLTRB[],  XMFLOAT4 FillLTRB[]*/)
 {
-    BeginDraw(nFrame);
+    /*BeginDraw(nFrame);
     TextDraw(nFrame, TextCnt, mvTextBlocks);
     RectDraw(RectLTRB, FillLTRB, TextCnt, GradientCnt);
-    EndDraw(nFrame);
+    EndDraw(nFrame);*/
 }
 
 void UI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
@@ -136,8 +136,10 @@ void UI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
         mpd2dDeviceContext->CreateBitmapFromDxgiSurface(pdxgiSurface.Get(), &d2dBitmapProperties, &mvd2dRenderTargets[i]);
     }
 }
-void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts)
+void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts, UINT TextCnt)
 {
+    mvdwTextFormat.resize(TextCnt);
+
     for (int i = 0; i < Fonts.size(); ++i)
         ThrowIfFailed(mpd2dWriteFactory->CreateTextFormat(Fonts[i].c_str(), nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, FontSize, L"en-us", mvdwTextFormat[i].GetAddressOf()));
     for (int i = 0; i < Fonts.size(); ++i)
@@ -206,9 +208,9 @@ void UI::Reset()
     mvd2dRenderTargets.clear();
 }
 void UI::OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
-    ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height, UINT TextCnt)
+    ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
-    SetVectorSize(nFrame, TextCnt);
+    SetVectorSize(nFrame);
     Initialize(pd3dDevice, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }

@@ -3,6 +3,8 @@
 
 InGameUI::InGameUI(UINT nFrame, ID3D12Device* pd3dDevice,ID3D12CommandQueue* 
     pd3dCommandQueue) : UI(nFrame, pd3dDevice, pd3dCommandQueue), TextCnt(5), UICnt(3)
+    // Text: GameTime, LapCnt, Rank, StartCount, Velocity
+    //UI: DraftGage, Item1, Item2
 {
     SetVectorSize(nFrame, TextCnt);
     Initialize(pd3dDevice, pd3dCommandQueue);
@@ -15,7 +17,7 @@ InGameUI::~InGameUI()
 
 void InGameUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 {
-    UI::SetVectorSize(nFrame, TextCnt);
+    UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
@@ -28,10 +30,117 @@ void InGameUI::StartPrint(const std::wstring& strUIText)
 {
     mvTextBlocks[TextCnt - 1].strText = strUIText;
 }
-void InGameUI::Update(const std::vector<std::wstring>& strUIText)
+void InGameUI::Update(float GTime)
 {
-    for (int i = 0; i < TextCnt; ++i)
-        mvTextBlocks[i].strText = strUIText[i];
+	/*TextUI.clear();
+	TextUI.resize(5);*/
+	mvTextBlocks[4].strText.clear();
+	//StartTime Set
+	UINT Countdown = 3;
+	float CountdownTime = 5.0f;
+	if (GTime > 4.0f)
+	{
+		for (auto wc : L"Start")
+			mvTextBlocks[4].strText.push_back(wc);
+	}
+	else if (GTime > 3.0f)
+	{
+		mvTextBlocks[4].strText.push_back('0' + Countdown - 2);
+	}
+	else if (GTime > 2.0f)
+	{
+		mvTextBlocks[4].strText.push_back('0' + Countdown - 1);
+	}
+	else if (GTime > 1.0f)
+	{
+		mvTextBlocks[4].strText.push_back('0' + Countdown);
+	}
+
+
+	//Time Set
+	if (GTime < CountdownTime)
+	{
+		StartPrint(mvTextBlocks[4].strText);
+		return;
+	}
+	for(int i=0;i<TextCnt;++i)
+		mvTextBlocks[i].strText.clear();
+
+	float LapTime = GTime - CountdownTime;
+	UINT Min = 0;
+	float Sec = 0.0;
+	Min = LapTime / 60.0f;
+	Sec = LapTime - (Min * 60.0f);
+
+	if (Min < 10)
+		mvTextBlocks[0].strText.push_back('0');
+	for (auto wc : std::to_wstring(Min))
+		mvTextBlocks[0].strText.push_back(wc);
+
+	mvTextBlocks[0].strText.push_back(':');
+	if (Sec < 10)
+		mvTextBlocks[0].strText.push_back('0');
+	for (int i = 0; i < 3 + !(Sec < 10); ++i)
+		mvTextBlocks[0].strText.push_back(std::to_wstring(Sec)[i]);
+
+	//Lap Count Set
+	if (static_cast<int>(GTime / 60) > 0)
+	{
+		for (auto wc : std::to_wstring(static_cast<int>(LapTime / 60)))
+			mvTextBlocks[1].strText.push_back(wc);
+		for (auto wc : std::wstring{ L"Lap" })
+			mvTextBlocks[1].strText.push_back(wc);
+	}
+	//My Rank
+	UINT MyRank = 1;
+	mvTextBlocks[2].strText.push_back(('0' + MyRank));
+
+	switch (MyRank % 10)
+	{
+	case 1:
+		mvTextBlocks[2].strText.push_back('s');
+		mvTextBlocks[2].strText.push_back('t');
+		break;
+	case 2:
+		mvTextBlocks[2].strText.push_back('n');
+		mvTextBlocks[2].strText.push_back('d');
+		break;
+	case 3:
+		mvTextBlocks[2].strText.push_back('r');
+		mvTextBlocks[2].strText.push_back('d');
+		break;
+	default:
+		mvTextBlocks[2].strText.push_back('t');
+		mvTextBlocks[2].strText.push_back('h');
+		break;
+	}
+	//Speed
+	/*float CurrentSpeed = mScenes.top().get()->GetPlayer()->GetCurrentVelocity();
+	if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 1000.0f)
+	{
+		for (int i = 0; i < 6; ++i)
+			mvTextBlocks[3].strText.push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+	}
+	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 100.0f)
+	{
+		for (int i = 0; i < 5; ++i)
+			mvTextBlocks[3].strText.push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+	}
+	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 10.0f)
+	{
+		for (int i = 0; i < 4; ++i)
+			mvTextBlocks[3].strText.push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
+	}
+	else
+	{
+		for (int i = 0; i < 3; ++i)
+			mvTextBlocks[3].strText.push_back(std::to_wstring(0.0f)[i]);
+	}*/
+	for (auto wc : std::wstring(L"km/h"))
+		mvTextBlocks[3].strText.push_back(wc);
+
+   /* for (int i = 0; i < TextCnt; ++i)
+        mvTextBlocks[i].strText = TextUI[i];*/
     if (fDraftGage >= 1.0f)
     {
         fDraftGage = 0.0f;
@@ -49,6 +158,7 @@ void InGameUI::SetDraftGage()
 
 void InGameUI::Draw(UINT nFrame)
 {
+	UI::BeginDraw(nFrame);
     XMFLOAT4 RectLTRB[] =
     {
         {
@@ -81,7 +191,10 @@ void InGameUI::Draw(UINT nFrame)
         mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)
         }//Item2 UI
     };
-    UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
+	UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
+	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 1);
+    //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
+	UI::EndDraw(nFrame);
 }
 
 void InGameUI::CreateFontFormat()
@@ -94,7 +207,7 @@ void InGameUI::CreateFontFormat()
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
 
-    UI::CreateFontFormat(fFontSize, Fonts);         
+    UI::CreateFontFormat(fFontSize, Fonts, TextCnt);         
 }
 
 void InGameUI::SetTextRect()
@@ -118,11 +231,6 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
     UI::BuildBrush(UICnt, TextCnt, colorList, 4, gradientColors);
     
     SetTextRect();
-}
-
-void InGameUI::Flush()
-{
-    
 }
 
 void InGameUI::Reset()

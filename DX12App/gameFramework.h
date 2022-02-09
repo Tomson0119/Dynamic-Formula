@@ -36,5 +36,4 @@ private:
 
 private:
 	std::stack<std::unique_ptr<Scene>> mScenes;
-	std::vector<std::wstring> TextUI;
 };

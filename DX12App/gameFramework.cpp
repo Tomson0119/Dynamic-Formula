@@ -38,12 +38,12 @@ bool GameFramework::InitFramework()
 
 void GameFramework::OnResize()
 {
-	/*if (mpInGameUI.get())
-		mpInGameUI.get()->Reset();*/
+	/*if (mpUI.get())
+		mpUI.get()->Reset();*/
 	D3DFramework::OnResize();
 	//mpUI.get()->Initialize(mD3dDevice.Get(), mCommandQueue.Get());
-	if(mpInGameUI.get())
-		mpInGameUI.get()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+	if(!mpUI.empty())
+		mpUI.top()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
 }
 
@@ -97,26 +97,26 @@ void GameFramework::InitScene(SCENE_STAT state)
 	{
 	case SCENE_STAT::LOGIN:
 		mScenes.push(std::make_unique<LoginScene>(mNetwork.get()));
-		mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-		mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		mpUI.push( std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::LOBBY:
 		mScenes.push(std::make_unique<LobbyScene>(mNetwork.get()));
-		mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-		mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		mpUI.push(std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::ROOM:
 		mScenes.push(std::make_unique<RoomScene>(mNetwork.get()));
-		mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-		mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		mpUI.push(std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::IN_GAME:
 		mScenes.push(std::make_unique<InGameScene>(mNetwork.get()));
-		mpInGameUI = std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-		mpInGameUI->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		mpUI.push(std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	default:
@@ -139,123 +139,7 @@ void GameFramework::OnPreciseKeyInput()
 
 void GameFramework::UIUpdate()
 {
-	//const float fFontSize = mfHeight / 25.0f;
-	//const float fSmallFontSize = mfHeight / 40.0f;
-
-	//mpUI.get(). m_pd2dWriteFactory->CreateTextFormat(L"휴먼둥근헤드라인", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, fFontSize, L"en-us", &m_pdwTextFormat);
-
-	//ThrowIfFailed(m_pdwTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
-	//ThrowIfFailed(m_pdwTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
-	////TextUI Set
-	TextUI.clear();
-	TextUI.resize(5);
-	
-	//StartTime Set
-	UINT Countdown = 3;
-	float CountdownTime = 5.0f;
-	if (mTimer.TotalTime() > 4.0f) 
-	{
-		for (auto wc : L"Start")
-			TextUI[4].push_back(wc);
-	}
-	else if (mTimer.TotalTime() > 3.0f)
-	{
-		TextUI[4].push_back('0'+Countdown - 2);
-	}
-	else if (mTimer.TotalTime() > 2.0f)
-	{
-		TextUI[4].push_back('0' + Countdown - 1);
-	}
-	else if (mTimer.TotalTime() > 1.0f)
-	{
-		TextUI[4].push_back('0' + Countdown);
-	}
-
-	
-	//Time Set
-	if (mTimer.TotalTime() < CountdownTime)
-	{
-		mpInGameUI.get()->StartPrint(TextUI[4]);
-		return;
-	}
-	TextUI[4].clear();
-
-	float LapTime = mTimer.TotalTime() - CountdownTime;
-	UINT Min = 0;
-	float Sec = 0.0;
-	Min = LapTime / 60.0f;
-	Sec = LapTime - (Min * 60.0f);
-
-	if (Min < 10)
-		TextUI[0].push_back('0');
-	for (auto wc : std::to_wstring(Min))
-		TextUI[0].push_back(wc);
-	
-	TextUI[0].push_back(':');
-	if (Sec < 10)
-		TextUI[0].push_back('0');
-	for (int i = 0; i < 3+!(Sec<10); ++i)
-		TextUI[0].push_back(std::to_wstring(Sec)[i]);
-	
-	//Lap Count Set
-	if(static_cast<int>(mTimer.TotalTime()/60)>0)
-	{
-		for (auto wc : std::to_wstring(static_cast<int>(LapTime / 60)))
-			TextUI[1].push_back(wc);
-		for (auto wc : std::wstring{ L"Lap" })
-			TextUI[1].push_back(wc);
-	}
-	//My Rank
-	UINT MyRank = 1;
-	TextUI[2].push_back(('0' + MyRank));
-	
-	switch (MyRank % 10)
-	{
-	case 1:
-		TextUI[2].push_back('s');
-		TextUI[2].push_back('t');
-		break;
-	case 2:
-		TextUI[2].push_back('n');
-		TextUI[2].push_back('d');
-		break;
-	case 3:
-		TextUI[2].push_back('r');
-		TextUI[2].push_back('d');
-		break;
-	default:
-		TextUI[2].push_back('t');
-		TextUI[2].push_back('h');
-		break;
-	}
-	//Speed
-	/*float CurrentSpeed = mScenes.top().get()->GetPlayer()->GetCurrentVelocity();
-	if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 1000.0f)
-	{
-		for (int i = 0; i < 6; ++i)
-			TextUI[3].push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
-	}
-	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 100.0f)
-	{
-		for (int i = 0; i < 5; ++i)
-			TextUI[3].push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
-	}
-	else if (mScenes.top().get()->GetPlayer()->GetCurrentVelocity() >= 10.0f)
-	{
-		for (int i = 0; i < 4; ++i)
-			TextUI[3].push_back(std::to_wstring(mScenes.top().get()->GetPlayer()->GetCurrentVelocity())[i]);
-	}
-	else
-	{
-		for (int i = 0; i < 3; ++i)
-			TextUI[3].push_back(std::to_wstring(0.0f)[i]);
-	}*/
-	for(auto wc : std::wstring(L"km/h"))
-		TextUI[3].push_back(wc);
-
-	mpInGameUI->Update(TextUI);
-
-	//TextUI[4].push_back();
+	mpUI.top()->Update(mTimer.TotalTime());
 }
 
 void GameFramework::CheckAndChangeScene()
@@ -299,8 +183,6 @@ void GameFramework::Update()
 	
 	//UI Update
 	UIUpdate();
-	
-	
 }
 
 void GameFramework::Draw()
@@ -350,7 +232,7 @@ void GameFramework::Draw()
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 
-	mpInGameUI->Draw(mCurrBackBufferIndex);
+	mpUI.top()->Draw(mCurrBackBufferIndex);
 
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	

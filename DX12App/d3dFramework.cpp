@@ -267,13 +267,13 @@ void D3DFramework::CreateRtvDsvDescriptorHeaps()
 void D3DFramework::OnResize()
 {
 	// 사이즈를 변경하기 전에 명령 목록을 비운다.
-	if(mpInGameUI)
-		mpInGameUI.get()->Flush();
+	if(!mpUI.empty())
+		mpUI.top()->Flush();
 	WaitUntilGPUComplete();
 
 	// 커맨드 리스트를 초기화하고, 리소스들의 Com 포인터를 Release한다.
-	if (mpInGameUI)
-		mpInGameUI.get()->Reset();
+	if (!mpUI.empty())
+		mpUI.top()->Reset();
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 	for (int i = 0; i < mSwapChainBufferCount; ++i)
 		mSwapChainBuffers[i].Reset();

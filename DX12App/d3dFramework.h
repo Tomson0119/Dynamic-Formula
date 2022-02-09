@@ -105,7 +105,7 @@ protected:
 	DXGI_FORMAT mDepthStencilBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	//UI 
-	std::unique_ptr<InGameUI> mpInGameUI;
+	std::stack<std::unique_ptr<UI>> mpUI;
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
 
