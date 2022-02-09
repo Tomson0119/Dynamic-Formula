@@ -16,12 +16,8 @@ InGameUI::~InGameUI()
 void InGameUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 {
     UI::SetVectorSize(nFrame, TextCnt);
-    //mvWrappedRenderTargets.resize(nFrame);
-    //mvdwTextFormat.resize(TextCnt);
-    //mvd2dRenderTargets.resize(nFrame);
     mvTextBlocks.resize(TextCnt);
-    ////mvd2dLinearGradientBrush.resize(TextCnt);
-    mvd2dTextBrush.resize(TextCnt + UICnt + 1);
+    //mvd2dLinearGradientBrush.resize(TextCnt);
 }
 
 void InGameUI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
@@ -53,7 +49,23 @@ void InGameUI::SetDraftGage()
 
 void InGameUI::Draw(UINT nFrame)
 {
-    XMFLOAT4 LTRB[] = 
+    XMFLOAT4 RectLTRB[] =
+    {
+        {
+            mfWidth * (3.0f / 16.0f), mfHeight * (5.0f / 6.0f),
+        mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)),
+        mfHeight * (8.0f / 9.0f)
+        }, //DraftGage
+        {
+            mfWidth * (17.0f / 32.0f), mfHeight * (5.0f / 6.0f),
+        mfWidth * (18.0f / 32.0f), mfHeight * (8.0f / 9.0f)
+        }, //Item1 UI
+        {
+            mfWidth * (19.0f / 32.0f), mfHeight * (5.0f / 6.0f),
+        mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)
+        }//Item2 UI
+    };
+    XMFLOAT4 FillLTRB[] = 
     { 
         {
             mfWidth * (3.0f / 16.0f), mfHeight * (5.0f / 6.0f), 
@@ -69,7 +81,7 @@ void InGameUI::Draw(UINT nFrame)
         mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)
         }//Item2 UI
     };
-    UI::Draw(nFrame, TextCnt, mvTextBlocks, LTRB);
+    UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 }
 
 void InGameUI::CreateFontFormat()
@@ -101,9 +113,9 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
 
-    D2D1::ColorF colorList[9] = { D2D1::ColorF::Black, D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::OrangeRed, D2D1::ColorF::Black, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
+    D2D1::ColorF colorList[8] = { D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::Black, D2D1::ColorF::OrangeRed, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
     D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
-    UI::BuildBrush(TextCnt + 4, colorList, 4, gradientColors);
+    UI::BuildBrush(UICnt, TextCnt, colorList, 4, gradientColors);
     
     SetTextRect();
 }
@@ -126,22 +138,4 @@ void InGameUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dD
     SetVectorSize(nFrame, TextCnt);
     Initialize(pd3dDevice, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
-}
-
-void InGameUI::BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList, UINT gradientCnt, D2D1::ColorF* gradientColors)
-{
-    BuildSolidBrush(UI_Cnt, ColorList);
-    BuildLinearGradientBrush(gradientCnt, gradientColors);
-}
-
-void InGameUI::BuildSolidBrush(UINT UI_Cnt, D2D1::ColorF* ColorList)
-{
-    // 0: Lap, 1: Time, 2: Rank, 3: Speed, 4: Draft Gage, 5: Item Slot1, 6: Item Slot2
-    //Black, Black, DarkRed, DarkRed, Black, Yellow, Red, Aqua
-    UI::BuildSolidBrush(UI_Cnt, ColorList);
-}
-
-void InGameUI::BuildLinearGradientBrush(UINT gradientCnt, D2D1::ColorF* gradientColors)
-{
-   UI::BuildLinearGradientBrush(gradientCnt, gradientColors);
 }

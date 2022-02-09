@@ -73,22 +73,24 @@ void UI::BeginDraw(UINT nFrame)
 
 void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks)
 {
-    for (int i = 0; i < TextCnt; ++i)
+    //0번은 테두리 색.
+    for (int i =0; i < TextCnt; ++i)
     {
         mpd2dDeviceContext.Get()->DrawTextW(mvTextBlocks[i].strText.c_str(), static_cast<UINT>(mvTextBlocks[i].strText.length()),
-            mvdwTextFormat[i].Get(), mvTextBlocks[i].d2dLayoutRect, mvd2dTextBrush[i].Get());
+            mvdwTextFormat[i].Get(), mvTextBlocks[i].d2dLayoutRect, mvd2dSolidBrush[i+1].Get());
     }
 }
-void UI::RectDraw(XMFLOAT4 LTRB[])
+void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT GradientCnt)
 {
-    
-    mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(LTRB[0].x, LTRB[0].y, LTRB[0].z, LTRB[0].w), md2dLinearGradientBrush.Get());
-    mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(LTRB[0].x, LTRB[0].y, LTRB[0].z, LTRB[0].w), md2dLinearGradientBrush.Get());
-    
-    for (int i = 1; i < mvd2dTextBrush.size(); ++i)
+    for (int i = 0; i < GradientCnt; ++i) 
     {
-        mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(LTRB[i].x, LTRB[i].y, LTRB[i].z, LTRB[i].w), mvd2dTextBrush[i-1].Get());
-        mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(LTRB[i].x, LTRB[i].y, LTRB[i].z, LTRB[i].w), mvd2dTextBrush[i-1].Get());
+        mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), md2dLinearGradientBrush.Get());
+        mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
+    }
+    for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt; ++i)
+    {
+        mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mvd2dSolidBrush[i+TextCnt].Get());
+        mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
     }
 }
 
@@ -107,12 +109,12 @@ void UI::Update(const std::vector<std::wstring>& strUIText)
 
 }
 
-void UI::Draw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks,
-    XMFLOAT4 LTRB[])
+void UI::Draw(UINT nFrame, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
+    XMFLOAT4 RectLTRB[],  XMFLOAT4 FillLTRB[])
 {
     BeginDraw(nFrame);
     TextDraw(nFrame, TextCnt, mvTextBlocks);
-    RectDraw(LTRB);
+    RectDraw(RectLTRB, FillLTRB, TextCnt, GradientCnt);
     EndDraw(nFrame);
 }
 
@@ -145,19 +147,22 @@ void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts
     }
 }
 
-void UI::BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList, UINT gradientCnt, 
+void UI::BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, UINT gradientCnt, 
     D2D1::ColorF* gradientColors)
 {
-    BuildSolidBrush(UI_Cnt, ColorList);
+   BuildSolidBrush(UICnt, TextCnt, ColorList);
     BuildLinearGradientBrush(gradientCnt, gradientColors);
 }
 
-void UI::BuildSolidBrush(UINT UI_Cnt, D2D1::ColorF* ColorList) 
+void UI::BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList) 
 {
     //첫번째 SolidColorBrush는 무조건 Black으로 설정한 후 테두리로 사용할 것. 그게 편할 듯.
-    mvd2dTextBrush.resize(UI_Cnt+1);
-    for (int i = 0; i < UI_Cnt+1; ++i)
-        ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(ColorList[i]), (ID2D1SolidColorBrush**)&mvd2dTextBrush[i]));
+    mvd2dSolidBrush.resize(TextCnt+UICnt+1);
+    ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[0]));
+    for (int i = 0; i < TextCnt+UICnt; ++i)
+        ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(ColorList[i]), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[i+1]));
+    // 0번 SolidBrush는 무조건 Black, 나머지는 인자로 받은 ColorList로 설정. 따라서 Resize할 때 UI와 Text 수에다가 1을 더해서 설정
+    // 1번부터는 ColorList색. Text색 이후 UI 색으로 설정
 }
 
 void UI::BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList) 
@@ -189,7 +194,7 @@ void UI::Reset()
     pdxgiDevice.Reset();
     mpd2dDeviceContext.Reset();
 
-    mvd2dTextBrush.clear();
+    mvd2dSolidBrush.clear();
     mvdwTextFormat.clear();
 
     for (auto renderTarget : mvWrappedRenderTargets)

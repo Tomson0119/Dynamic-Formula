@@ -11,12 +11,12 @@ public:
     explicit UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
     ~UI();
     virtual void Update(const std::vector<std::wstring>& strUIText);
-    virtual void Draw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks,
-     XMFLOAT4 LTRB[]);
+    virtual void Draw(UINT nFrame, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
+     XMFLOAT4 RetLTRM[], XMFLOAT4 FillLTRB[]);
     virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
-    virtual void BuildBrush(UINT UI_Cnt, D2D1::ColorF* ColorList, UINT gradientCnt, 
+    virtual void BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, UINT gradientCnt, 
         D2D1::ColorF* gradientColors);
-    virtual void BuildSolidBrush(UINT UI_Cnt, D2D1::ColorF* ColorList);
+    virtual void BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList);
     virtual void BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList);
     virtual void Reset();
     virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
@@ -25,7 +25,7 @@ public:
     virtual void CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts);
     void BeginDraw(UINT nFrame);
     void TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks);
-    void RectDraw(XMFLOAT4 LTRB[]);
+    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT GradientCnt);
     void EndDraw(UINT nFrame);
     void Flush();
    ID3D11Resource* GetRenderTarget() { return mvWrappedRenderTargets[0].Get(); }
@@ -47,7 +47,7 @@ private:
 
     std::vector<ComPtr<IDWriteTextFormat>> mvdwTextFormat;
 
-    std::vector<ComPtr<ID2D1SolidColorBrush>> mvd2dTextBrush;
+    std::vector<ComPtr<ID2D1SolidColorBrush>> mvd2dSolidBrush;
     ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
     std::vector<ComPtr<ID3D11Resource>>    mvWrappedRenderTargets;
     std::vector<ComPtr<ID2D1Bitmap1>>      mvd2dRenderTargets;
