@@ -8,7 +8,9 @@ public:
 	~BPHandler();
 
 	void Init(float gravity);
-	void LoadCollisionMeshes();
+	void AddRigidBody(btRigidBody* rigidbody) { mBtDynamicsWorld->addRigidBody(rigidbody); }
+
+	btDiscreteDynamicsWorld* GetDynamicsWorld() const { return mBtDynamicsWorld.get(); }
 
 private:
 	std::unique_ptr<btDefaultCollisionConfiguration> mBtCollisionConfiguration;

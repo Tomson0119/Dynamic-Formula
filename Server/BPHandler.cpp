@@ -39,9 +39,3 @@ void BPHandler::Init(float gravity)
 	mBtDynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(mBtDispatcher.get(), mBtOverlappingPairCache.get(), mBtSolver.get(), mBtCollisionConfiguration.get());
 	mBtDynamicsWorld->setGravity(btVector3(0, gravity, 0));
 }
-
-void BPHandler::LoadCollisionMeshes()
-{
-	// TODO: Load meshes from file..(binary)
-	//		 Create rigid body
-}
