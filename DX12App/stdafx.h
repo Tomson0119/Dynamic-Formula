@@ -261,7 +261,7 @@ namespace Vector3
 		return VectorToFloat3(XMVectorReplicate(value));
 	}
 
-	inline XMFLOAT3 Multiply(float scalar, XMFLOAT3& v)
+	inline XMFLOAT3 Multiply(float scalar, const XMFLOAT3& v)
 	{
 		XMFLOAT3 ret;
 		XMStoreFloat3(&ret, scalar * XMLoadFloat3(&v));

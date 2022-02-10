@@ -173,6 +173,8 @@ public:
 	float GetWidth() const { return mWidth * mTerrainScale.x; }
 	float GetDepth() const { return mDepth * mTerrainScale.z; }
 
+	void BuildHeightmapData(float blockWidth, float blockDepth);
+
 private:
 	std::unique_ptr<HeightMapImage> mHeightMapImage;
 

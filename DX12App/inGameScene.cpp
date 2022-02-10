@@ -249,9 +249,9 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	grid->Rotate(90.0f, 0.0f, 0.0f);
 	mPipelines[Layer::Default]->AppendObject(grid);
 
-	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
+	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(1.0f, 1.0f, 1.0f));
 	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
-	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
+	terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, mDynamicsWorld, 89, 89);
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\rocky.dds");
@@ -261,7 +261,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 #ifdef STANDALONE
-	BuildCarObjects({ 500.0f, 10.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObjects({ 500.0f, 300.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
