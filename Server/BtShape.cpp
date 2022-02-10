@@ -1,5 +1,6 @@
 #include "common.h"
 #include "BtShape.h"
+#include "RigidBody.h"
 
 #include <fstream>
 
@@ -10,6 +11,7 @@
 BtBoxShape::BtBoxShape(std::string_view filename)
 {
 	LoadShapeData(filename);
+	BuildCollisionShape();
 }
 
 void BtBoxShape::LoadShapeData(std::string_view filename)
@@ -22,29 +24,95 @@ void BtBoxShape::LoadShapeData(std::string_view filename)
 	mExtents.setValue(x, y, z);
 }
 
+void BtBoxShape::BuildCollisionShape()
+{
+	mCollisionShape = std::make_unique<btBoxShape>(mExtents);
+}
+
 
 //
 //	BtCarShape
 //
 BtCarShape::BtCarShape(std::string_view filename)
+	: mWheelInfo{ }
 {
+	mWheelInfo.DirectionCS0 = { 0, -1, 0 };
+	mWheelInfo.AxleCS = { -1, 0, 0 };
+
 	LoadShapeData(filename);
+	BuildCollisionShape();
 }
 
 void BtCarShape::LoadShapeData(std::string_view filename)
 {
 	std::ifstream file{ filename.data(), std::ios::binary };
 
-	btScalar body_x{}, body_y{}, body_z{};
-	btScalar wheel_x{}, wheel_y{}, wheel_z{};
-
-	file >> body_x >> body_y >> body_z;
-	file >> wheel_x >> wheel_y >> wheel_z;
-
-	mExtents.setValue(body_x, body_y, body_z);
-	mWheelExtents.setValue(wheel_x, wheel_y, wheel_z);
+	btScalar x, y, z;
+	std::string type;
+	while (file >> type)
+	{
+		if (type == "BodyExtents")
+		{
+			file >> x >> y >> z;
+			mExtents.setValue(x, y, z);
+		}
+		else if (type == "WheelExtents")
+		{
+			file >> x >> y >> z;
+			mWheelInfo.Extents.setValue(x, y, z);
+		}
+		else if (type == "FrontOffset")
+		{
+			file >> x >> y >> z;
+			mWheelInfo.FrontOffset.setValue(x, y, z);
+		}
+		else if (type == "BackOffset")
+		{
+			file >> x >> y >> z;
+			mWheelInfo.BackOffset.setValue(x, y, z);
+		}
+		else if (type == "Friction")
+		{
+			file >> x;
+			mWheelInfo.Friction = x;
+		}
+		else if (type == "SuspensionStiffness")
+		{
+			file >> x;
+			mWheelInfo.SuspensionStiffness = x;
+		}
+		else if (type == "SuspensionDamping")
+		{
+			file >> x;
+			mWheelInfo.SuspensionDamping = x;
+		}
+		else if (type == "SuspensionCompression")
+		{
+			file >> x;
+			mWheelInfo.SuspensionCompression = x;
+		}
+		else if (type == "SuspensionRestLength")
+		{
+			file >> x;
+			mWheelInfo.SuspensionRestLength = x;
+		}
+		else if (type == "RollInfluence")
+		{
+			file >> x;
+			mWheelInfo.RollInfluence = x;
+		}
+		else if (type == "ConnectionHeight")
+		{
+			file >> x;
+			mWheelInfo.ConnectionHeight = x;
+		}
+	}
 }
 
+void BtCarShape::BuildCollisionShape()
+{
+	mCollisionShape = std::make_unique<btBoxShape>(mExtents);
+}
 
 //
 //	BtTerrainShape
@@ -53,6 +121,7 @@ BtTerrainShape::BtTerrainShape(std::string_view filename)
 	: mMapRow{ }, mMapCol{ }, mHeightMapData{ }
 {
 	LoadShapeData(filename);
+	BuildCollisionShape();
 }
 
 BtTerrainShape::~BtTerrainShape()
@@ -78,14 +147,27 @@ void BtTerrainShape::LoadShapeData(std::string_view filename)
 			file >> mHeightMapData[i * mMapCol + j];
 		}
 	}
+}
 
-	std::ofstream testfile{ "test.txt" };
-	for (int i = 0; i < mMapCol; i++)
-	{
-		for (int j = 0; j < mMapRow; j++)
+void BtTerrainShape::BuildCollisionShape()
+{
+	auto minmaxHeight = std::minmax_element(mHeightMapData, mHeightMapData + mMapRow*mMapCol,
+		[](float a, float b)
 		{
-			testfile << mHeightMapData[i * mMapCol + j] << " ";
-		}
-		testfile << "\n";
-	}
+			return (a < b);
+		});
+
+	float minHeight = *minmaxHeight.first;
+	float maxHeight = *minmaxHeight.second;
+
+	mCollisionShape = std::make_unique<btHeightfieldTerrainShape>(
+		mMapRow, mMapCol, mHeightMapData,
+		minHeight, maxHeight, 1, false);
+
+	mCollisionShape->setLocalScaling(mTerrainScale);
+
+	mOriginPosition = btVector3(
+		mMapRow * mTerrainScale.x() / 2,
+		(maxHeight + minHeight) * mTerrainScale.y() / 2,
+		mMapCol * mTerrainScale.z() / 2);
 }
