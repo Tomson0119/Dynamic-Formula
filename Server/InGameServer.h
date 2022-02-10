@@ -1,22 +1,13 @@
 #pragma once
 
-#include "BPHandler.h"
 #include "BtShape.h"
 
 class LoginServer;
 class WaitRoom;
-class Player;
-
-struct GameWorld
-{
-	BPHandler Physics;
-	uint8_t MapIdx;
-	std::array<Player*, MAX_ROOM_CAPACITY> PlayerList;
-};
+class GameWorld;
 
 class InGameServer
 {
-	using ShapeList = std::vector<std::unique_ptr<BtShapeBase>>;
 	using RoomList = std::array<std::unique_ptr<WaitRoom>, MAX_ROOM_SIZE>;
 	using WorldList = std::array<std::unique_ptr<GameWorld>, MAX_ROOM_SIZE>;
 public:
@@ -39,7 +30,11 @@ private:
 	LoginServer* mLoginPtr;
 	static WorldList msWorlds;
 	
-	ShapeList mBtShapes;
-	
+	std::unique_ptr<BtCarShape> mBtCarShape;
+	std::unique_ptr<BtBoxShape> mMissileShape;
+
+	std::array<std::unique_ptr<BtTerrainShape>, 2> mTerrainShapes;
+	std::vector<std::unique_ptr<BtBoxShape>> mObjRigidBodies;
+
 	const btVector3 mStartPosition = { 500.0f, 10.0f, 500.0f };
 };
