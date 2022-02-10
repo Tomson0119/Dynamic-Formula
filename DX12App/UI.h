@@ -24,7 +24,8 @@ public:
     virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
         ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
     virtual void SetVectorSize(UINT nFrame);
-    virtual void CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts, UINT TextCnt);
+    virtual void CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts, UINT TextCnt,
+        DWRITE_TEXT_ALIGNMENT Alignment = DWRITE_TEXT_ALIGNMENT_CENTER);
 
     //ID2D1DeviceContext2* GetDeviceContext() { return mpd2dDeviceContext.Get(); }
 
