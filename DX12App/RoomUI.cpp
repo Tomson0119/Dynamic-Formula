@@ -5,7 +5,8 @@ RoomUI::RoomUI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue*
     //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
     //UI: NicknameBox[8], StartBox, CarSelectBox[2], MapSelectBox[2]
 {
-
+    SetVectorSize(nFrame, TextCnt);
+    Initialize(pd3dDevice, pd3dCommandQueue);
 }
 RoomUI::~RoomUI()
 {
@@ -74,6 +75,20 @@ void RoomUI::Draw(UINT nFrame)
         mvTextBlocks[2].d2dLayoutRect.top,
         mvTextBlocks[2].d2dLayoutRect.right,
         mvTextBlocks[2].d2dLayoutRect.bottom
+        },
+        {
+        mvTextBlocks[1].d2dLayoutRect.left,
+        mvTextBlocks[1].d2dLayoutRect.top,
+        mvTextBlocks[1].d2dLayoutRect.right,
+        mvTextBlocks[1].d2dLayoutRect.bottom - 
+        (mvTextBlocks[1].d2dLayoutRect.top- mvTextBlocks[1].d2dLayoutRect.bottom)/4*3
+        },
+        {
+        mvTextBlocks[2].d2dLayoutRect.left,
+        mvTextBlocks[2].d2dLayoutRect.top,
+        mvTextBlocks[2].d2dLayoutRect.right,
+        mvTextBlocks[2].d2dLayoutRect.bottom -
+        (mvTextBlocks[2].d2dLayoutRect.top - mvTextBlocks[2].d2dLayoutRect.bottom) / 4 * 3
         },
         {
         mvTextBlocks[3].d2dLayoutRect.left,
@@ -145,6 +160,20 @@ void RoomUI::Draw(UINT nFrame)
         mvTextBlocks[2].d2dLayoutRect.bottom
         },
         {
+        mvTextBlocks[1].d2dLayoutRect.left,
+        mvTextBlocks[1].d2dLayoutRect.top,
+        mvTextBlocks[1].d2dLayoutRect.right,
+        mvTextBlocks[1].d2dLayoutRect.bottom -
+        (mvTextBlocks[1].d2dLayoutRect.top - mvTextBlocks[1].d2dLayoutRect.bottom) / 4 * 3
+        },
+        {
+        mvTextBlocks[2].d2dLayoutRect.left,
+        mvTextBlocks[2].d2dLayoutRect.top,
+        mvTextBlocks[2].d2dLayoutRect.right,
+        mvTextBlocks[2].d2dLayoutRect.bottom -
+        (mvTextBlocks[2].d2dLayoutRect.top - mvTextBlocks[2].d2dLayoutRect.bottom) / 4 * 3
+        },
+        {
         mvTextBlocks[3].d2dLayoutRect.left,
         mvTextBlocks[3].d2dLayoutRect.top,
         mvTextBlocks[3].d2dLayoutRect.right,
@@ -194,7 +223,7 @@ void RoomUI::Draw(UINT nFrame)
         }
     };
     UI::BeginDraw(nFrame); 
-    UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 0, 0);
+    UI::RectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0);
     UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     UI::EndDraw(nFrame);
 }
@@ -219,18 +248,18 @@ void RoomUI::CreateFontFormat()
 }
 
 void RoomUI::SetTextRect()
-{
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth / 2 - mfWidth * 3 / 32, mfHeight / 2 - mfHeight * 3 / 8, mfWidth / 2 + mfWidth * 3 / 32, mfHeight / 2 - mfHeight * 2 / 8);
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth / 2 - mfWidth * 3 / 32, mfHeight / 2 - mfHeight * 1 / 16, mfWidth / 2 + mfWidth * 3 / 32, mfHeight / 2);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 0.0f, mfWidth, mfHeight / 6);
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 5 * (mfHeight / 6), mfWidth, mfHeight);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 8, mfHeight / 2 - mfHeight * (1 / 11), mfWidth * 7 / 8, mfHeight / 2 + mfHeight * (1 / 11));
-    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 7, mfHeight / 2 - mfHeight * (1 / 11), mfWidth * 7 / 8, mfHeight / 2 + mfHeight * (1 / 11));
-    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth / 2 - mfWidth * 3 / 32, mfHeight / 2 - mfHeight * 3 / 8, mfWidth / 2 + mfWidth * 3 / 32, mfHeight / 2 - mfHeight * 2 / 8);
-    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(mfWidth / 2 - mfWidth * 3 / 32, mfHeight / 2 - mfHeight * 1 / 16, mfWidth / 2 + mfWidth * 3 / 32, mfHeight / 2);
-    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 0.0f, mfWidth, mfHeight / 6);
-    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 5 * (mfHeight / 6), mfWidth, mfHeight);
-    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 8, mfHeight / 2 - mfHeight * (1 / 11), mfWidth * 7 / 8, mfHeight / 2 + mfHeight * (1 / 11));
+{//Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth * 2 / 32,  mfHeight * 9 / 16,  mfWidth /4,  mfHeight *11/16 );
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth * 2 / 32, mfHeight * 23 / 32, mfWidth / 4, mfHeight * 27 / 32);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth * 26 / 32, mfHeight * 25 / 32, mfWidth*30/32, mfHeight * 29 / 32);
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 32, mfHeight * 1/ 32, mfWidth*7/32, mfHeight*8/32);
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 8 / 32, mfHeight * 1 / 32, mfWidth * 14 / 32, mfHeight * 8 / 32);
+    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth * 15 / 32, mfHeight * 1 / 32, mfWidth * 21 / 32, mfHeight * 8 / 32);
+    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth * 22 / 32, mfHeight * 1 / 32, mfWidth * 28 / 32, mfHeight * 8 / 32);
+    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 32, mfHeight * 9 / 32, mfWidth * 7 / 32, mfHeight * 16 / 32);
+    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(mfWidth * 8 / 32, mfHeight * 9 / 32, mfWidth * 14 / 32, mfHeight * 16 / 32);
+    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(mfWidth * 15 / 32, mfHeight * 9 / 32, mfWidth * 21 / 32, mfHeight * 16 / 32);
+    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(mfWidth * 22 / 32, mfHeight * 9 / 32, mfWidth * 28 / 32, mfHeight * 16 / 32);
 }
 
 void RoomUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
@@ -239,10 +268,21 @@ void RoomUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHei
     mfHeight = static_cast<float>(nHeight);
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
-
-    D2D1::ColorF colorList[11] = { D2D1::ColorF::Black, D2D1::ColorF::Black, D2D1::ColorF::Black, D2D1::ColorF::Red, D2D1::ColorF::Orange, D2D1::ColorF::Yellow, D2D1::ColorF::Green, D2D1::ColorF::Blue, D2D1::ColorF::Navy, D2D1::ColorF::Violet, D2D1::ColorF::Pink };
+    //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
+    //UI:  StartBox, CarSelectBox[2], NicknameBox[8], MapSelectBox[2]
+    D2D1::ColorF colorList[24] = { D2D1::ColorF::Black, D2D1::ColorF::Black, D2D1::ColorF::Black, 
+        D2D1::ColorF::Red, D2D1::ColorF::Orange, D2D1::ColorF::Yellow, D2D1::ColorF::Green, 
+        D2D1::ColorF::Blue, D2D1::ColorF::Navy, D2D1::ColorF::Violet, D2D1::ColorF::Pink,//Text
+    D2D1::ColorF(D2D1::ColorF::Red, 0.5f), D2D1::ColorF(D2D1::ColorF::Blue, 0.5f), 
+        D2D1::ColorF(D2D1::ColorF::Green, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
+        D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
+        D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
+       D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
+        D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
+        D2D1::ColorF(D2D1::ColorF::Gray, 0.5f)/*UI*/
+    };
     //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
-    UI::BuildSolidBrush(UICnt, TextCnt, colorList);
+    UI::BuildSolidBrush(UICnt, TextCnt+1, colorList);
 
     SetTextRect();
 }

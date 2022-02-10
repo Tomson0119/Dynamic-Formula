@@ -97,7 +97,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 	{
 	case SCENE_STAT::LOGIN:
 		mScenes.push(std::make_unique<LoginScene>(mNetwork.get()));
-		mpUI.push( std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		mpUI.push( std::make_unique<LoginUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
 		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
@@ -115,7 +115,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 
 	case SCENE_STAT::IN_GAME:
 		mScenes.push(std::make_unique<InGameScene>(mNetwork.get()));
-		mpUI.push(std::make_unique<LoginUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		mpUI.push(std::make_unique<RoomUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
 		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
