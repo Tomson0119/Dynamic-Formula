@@ -9,7 +9,8 @@ public:
 
 	void Init(float gravity);
 	void AddRigidBody(btRigidBody* rigidbody) { mBtDynamicsWorld->addRigidBody(rigidbody); }
-
+	void StepSimulation(float elapsed) { mBtDynamicsWorld->stepSimulation(elapsed); }
+	
 	btDiscreteDynamicsWorld* GetDynamicsWorld() const { return mBtDynamicsWorld.get(); }
 
 private:
