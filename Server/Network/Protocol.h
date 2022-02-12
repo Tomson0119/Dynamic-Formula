@@ -6,7 +6,7 @@ const short SERVER_PORT = 4000;
 const int MAX_NAME_SIZE = 20;
 const int MAX_PWD_SIZE  = 20;
 
-const int MAX_PLAYER_SIZE = 10000;
+const int MAX_PLAYER_SIZE = 1000;
 const int MAX_ROOM_CAPACITY = 8;
 const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
