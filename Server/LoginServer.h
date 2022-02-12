@@ -11,7 +11,7 @@ class LoginServer
 {
 public:
 	LoginServer(const EndPoint& ep);
-	~LoginServer() = default;
+	~LoginServer();
 
 public:
 	void Run();
@@ -29,6 +29,8 @@ public:
 
 	static void NetworkThreadFunc(LoginServer& server);
 	static const int MAX_THREADS = 4;
+
+	IOCP& GetIOCP() { return mIOCP; }
 
 private:
 	Socket mListenSck;
