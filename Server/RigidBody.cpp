@@ -2,12 +2,11 @@
 #include "RigidBody.h"
 
 RigidBody::RigidBody()
-	: mRigidBody{ nullptr }
+	: mRigidBody{ nullptr }, mFlag{ UPDATE_FLAG::NONE }
 {
 }
 
 void RigidBody::CreateRigidBody(
-	btDiscreteDynamicsWorld* physicsWorld,
 	btScalar mass, 
 	btCollisionShape* shape, 
 	const btVector3& position, 
@@ -27,8 +26,27 @@ void RigidBody::CreateRigidBody(
 	btDefaultMotionState* motionState = new btDefaultMotionState(originTransform);
 	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, motionState, shape, inertia);
 	mRigidBody = new btRigidBody(cInfo);
-	
-	physicsWorld->addRigidBody(mRigidBody);
+}
+
+void RigidBody::UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	switch (GetUpdateFlag())
+	{
+	case RigidBody::UPDATE_FLAG::CREATION:
+		physicsWorld->addRigidBody(GetRigidBody());
+		SetUpdateFlag(UPDATE_FLAG::NONE);
+		break;
+
+	case RigidBody::UPDATE_FLAG::UPDATE:
+		//
+		SetUpdateFlag(UPDATE_FLAG::NONE);
+		break;
+
+	case RigidBody::UPDATE_FLAG::DELETION:
+		physicsWorld->removeRigidBody(GetRigidBody());
+		SetUpdateFlag(UPDATE_FLAG::NONE);
+		break;
+	}	
 }
 
 
@@ -48,7 +66,6 @@ void VehicleRigidBody::CreateRaycastVehicle(
 		mVehicle = std::make_unique<btRaycastVehicle>(mTuning, mRigidBody, mVehicleRayCaster.get());
 		mVehicle->setCoordinateSystem(0, 1, 2);
 
-		physicsWorld->addVehicle(mVehicle.get());
 		AddWheel(bodyExtents, wheelInfo);
 	}
 }
@@ -93,26 +110,63 @@ void VehicleRigidBody::AddWheel(const btVector3& bodyExtents, const BtCarShape::
 	}
 }
 
+void VehicleRigidBody::UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	switch (GetUpdateFlag())
+	{
+	case RigidBody::UPDATE_FLAG::CREATION:
+		std::cout << "Adding vehicle.\n";
+		physicsWorld->addRigidBody(GetRigidBody());
+		physicsWorld->addVehicle(GetVehicle());
+		SetUpdateFlag(UPDATE_FLAG::NONE);
+		break;
+
+	case RigidBody::UPDATE_FLAG::UPDATE:
+		UpdateVehicleComponent(physicsWorld);
+		SetUpdateFlag(UPDATE_FLAG::NONE);
+		break;
+
+	case RigidBody::UPDATE_FLAG::DELETION:
+		physicsWorld->removeRigidBody(GetRigidBody());
+		physicsWorld->removeVehicle(GetVehicle());
+		SetUpdateFlag(UPDATE_FLAG::NONE);
+		break;
+	}
+	
+}
+
+void VehicleRigidBody::UpdateVehicleComponent(btDiscreteDynamicsWorld* physicsWorld)
+{
+	// TODO: Update vehicle/wheel components and apply it.
+}
+
 
 //
 //	MapRigidBody
 //
-void MapRigidBody::CreateTerrainRigidBody(btDiscreteDynamicsWorld* physics, BtTerrainShape* shape)
+void MapRigidBody::CreateTerrainRigidBody(BtTerrainShape* shape)
 {
-	RigidBody terrainRigidBody;
+	mStaticRigidBodies.emplace_back();
+
+	RigidBody& terrainRigidBody = mStaticRigidBodies.back();
 	terrainRigidBody.CreateRigidBody(
-		physics, 0.0f,
+		0.0f,
 		shape->GetCollisionShape(),
 		shape->GetOriginPosition());
 
-	mStaticRigidBodies.push_back(terrainRigidBody);
+	terrainRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 }
 
-void MapRigidBody::CreateStaticRigidBodies(
-	std::string_view filename, 
-	btDiscreteDynamicsWorld* 
-	physicsWorld, btCollisionShape* shape)
+void MapRigidBody::CreateStaticRigidBodies(std::string_view filename, btCollisionShape* shape)
 {
 	// TODO: Read position, scale, rotation values from file.
 	//		 and create all rigidboies
+}
+
+void MapRigidBody::UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	for (RigidBody& rigid : mStaticRigidBodies)
+	{
+		rigid.UpdateRigidBody(physicsWorld);
+	}
 }

@@ -5,20 +5,34 @@
 class RigidBody
 {
 public:
+	enum class UPDATE_FLAG : uint8_t
+	{
+		NONE = 0,
+		CREATION,
+		UPDATE,
+		DELETION
+	};
+
+public:
 	RigidBody();
 	virtual ~RigidBody() = default;
 
 	virtual void CreateRigidBody(
-		btDiscreteDynamicsWorld* physicsWorld,
 		btScalar mass,
 		btCollisionShape* shape,
 		const btVector3& position,
 		const btVector3& offset = btVector3{ 0.0f,0.0f,0.0f });
 
+	virtual void UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+
+	void SetUpdateFlag(UPDATE_FLAG flag) { mFlag = flag; }
+	UPDATE_FLAG GetUpdateFlag() const { return mFlag; }
+
 	btRigidBody* GetRigidBody() const { return mRigidBody; }
 
 protected:
 	btRigidBody* mRigidBody;
+	std::atomic<UPDATE_FLAG> mFlag;
 };
 
 class VehicleRigidBody : public RigidBody
@@ -28,12 +42,19 @@ public:
 	VehicleRigidBody() = default;
 	virtual ~VehicleRigidBody() = default;
 
+	virtual void UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+
+public:
 	void CreateRaycastVehicle(
 		btDiscreteDynamicsWorld* physicsWorld,
 		const btVector3& bodyExtents, 
 		const BtCarShape::WheelInfo& wheelInfo);
+	
 	void AddWheel(const btVector3& bodyExtents, const BtCarShape::WheelInfo& wheelInfo);
 
+	void UpdateVehicleComponent(btDiscreteDynamicsWorld* physicsWorld);
+
+public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }
 	const Tuning& GetTuning() const { return mTuning; }
 
@@ -49,13 +70,11 @@ public:
 	MapRigidBody() = default;
 	~MapRigidBody() = default;
 	
-	void CreateTerrainRigidBody(btDiscreteDynamicsWorld* physics, BtTerrainShape* shape);
+	void CreateTerrainRigidBody(BtTerrainShape* shape);
+	void CreateStaticRigidBodies(std::string_view filename,	btCollisionShape* shape);
 
-	void CreateStaticRigidBodies(
-		std::string_view filename,
-		btDiscreteDynamicsWorld* physicsWorld,
-		btCollisionShape* shape);
+	void UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld);
 
 private:
-	std::vector<RigidBody> mStaticRigidBodies;
+	std::deque<RigidBody> mStaticRigidBodies;
 };
