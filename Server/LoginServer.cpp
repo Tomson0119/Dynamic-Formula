@@ -1,5 +1,6 @@
 #include "common.h"
 #include "LoginServer.h"
+#include "InGameServer.h"
 #include "Client.h"
 
 std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
@@ -23,6 +24,11 @@ LoginServer::LoginServer(const EndPoint& ep)
 
 	mListenSck.Init();
 	mListenSck.Bind(ep);
+}
+
+LoginServer::~LoginServer()
+{
+	mLoop = false;
 }
 
 void LoginServer::Run()
@@ -105,6 +111,12 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 			AcceptNewClient(i, clientSck);
 		}
 		mListenSck.AsyncAccept(over);
+		break;
+	}
+	case OP::PHYSICS:
+	{
+		float timeStep = *reinterpret_cast<float*>(over->NetBuffer.BufStartPtr());
+		mLobby.GetInGameServer().RunPhysicsSimulation(id, timeStep);
 		break;
 	}
 	}
