@@ -18,6 +18,9 @@ public:
 		btDiscreteDynamicsWorld* physicsWorld, 
 		BtCarShape* shape);
 
+	void UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	void SetDeletionFlag() { mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION); }
+
 public:
 	bool Empty;
 	char Color;

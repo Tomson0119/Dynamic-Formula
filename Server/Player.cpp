@@ -1,6 +1,7 @@
 #include "common.h"
 #include "Player.h"
 #include "BtShape.h"
+#include "RigidBody.h"
 
 Player::Player()
 	: mPosition{ 0.0f, 0.0f, 0.0f },
@@ -22,11 +23,18 @@ void Player::CreateVehicleRigidBody(
 	if (shape && physicsWorld)
 	{
 		mVehicleRigidBody.CreateRigidBody(
-			physicsWorld, mass,
+			mass,
 			shape->GetCollisionShape(), mPosition);
 
 		mVehicleRigidBody.CreateRaycastVehicle(
 			physicsWorld, shape->GetExtents(),
 			shape->GetWheelInfo());
+
+		mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 	}
+}
+
+void Player::UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	mVehicleRigidBody.UpdateRigidBody(physicsWorld);
 }
