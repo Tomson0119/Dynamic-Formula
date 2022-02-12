@@ -517,7 +517,6 @@ TerrainObject::TerrainObject(int width, int depth, const XMFLOAT3& scale)
 
 TerrainObject::~TerrainObject()
 {
-	if (mHeightmapData) delete[] mHeightmapData;
 }
 
 void TerrainObject::BuildHeightMap(const std::wstring& path)
@@ -525,7 +524,7 @@ void TerrainObject::BuildHeightMap(const std::wstring& path)
 	mHeightMapImage = std::make_unique<HeightMapImage>(path, mWidth, mDepth, mTerrainScale);
 }
 
-void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, int blockWidth, int blockDepth)
+void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
 {	
 	int xBlocks = (mWidth - 1) / (blockWidth - 1);
 	int zBlocks = (mDepth - 1) / (blockDepth - 1);
@@ -539,7 +538,7 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 		{
 			xStart = x * (blockWidth - 1);
 			zStart = z * (blockDepth - 1);
-			auto gridMesh = std::make_shared<HeightMapPatchListMesh>(device, cmdList, xStart, zStart, blockWidth, blockDepth, mTerrainScale, mHeightMapImage.get());
+			auto gridMesh = std::make_shared<HeightMapPatchListMesh>(device, cmdList, xStart, zStart, blockWidth, blockDepth, mTerrainScale, mHeightMapImage.get(), physics);
 			SetMesh(gridMesh);
 
 			auto [gridMin, gridMax] = gridMesh->GetMinMax();
@@ -549,30 +548,6 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 				maxHeight = gridMax;
 		}
 	}
-
-	BuildHeightmapData(blockWidth, blockDepth);
-
-	mTerrainShape = std::make_shared<btHeightfieldTerrainShape>(mWidth * mTerrainScale.x, mDepth * mTerrainScale.z, mHeightmapData, minHeight, maxHeight, 1, false);
-	mTerrainShape->setLocalScaling(btVector3(1, mTerrainScale.y, 1));
-
-	btTransform btTerrainTransform;
-	btTerrainTransform.setIdentity();
-	btTerrainTransform.setOrigin(btVector3(mWidth * mTerrainScale.x / 2, (maxHeight + minHeight) * mTerrainScale.y / 2, mDepth * mTerrainScale.z / 2));
-
-	btScalar mass(0.0f);
-
-	//rigidbody is dynamic if and only if mass is non zero, otherwise static
-	bool isDynamic = (mass != 0.f);
-
-	btVector3 localInertia(0, 0, 0);
-	if (isDynamic)
-		mTerrainShape->calculateLocalInertia(mass, localInertia);
-
-	//using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
-	btDefaultMotionState* myMotionState = new btDefaultMotionState(btTerrainTransform);
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, mTerrainShape.get(), localInertia);
-	mBtRigidBody = new btRigidBody(rbInfo);
-	dynamicsWorld->addRigidBody(mBtRigidBody);
 }
 
 float TerrainObject::GetHeight(float x, float z) const
@@ -586,78 +561,6 @@ XMFLOAT3 TerrainObject::GetNormal(float x, float z) const
 	assert(mHeightMapImage && "HeightMapImage doesn't exist");
 	return mHeightMapImage->GetNormal((int)(x / mTerrainScale.x), (int)(z / mTerrainScale.z));
 }
-
-void TerrainObject::BuildHeightmapData(float blockWidth, float blockDepth)
-{
-	mHeightmapData = new float[mWidth * mTerrainScale.x * mDepth * mTerrainScale.z];
-
-	auto CubicBezierSum = [](const std::array<XMFLOAT3, 25>& patch, XMFLOAT2 t) {
-
-		// 4차 베지어 곡선 계수
-		std::array<float, 5> uB, vB;
-		float txInv{ 1.0f - t.x };
-		uB[0] = txInv * txInv * txInv * txInv;
-		uB[1] = 4.0f * t.x * txInv * txInv * txInv;
-		uB[2] = 6.0f * t.x * t.x * txInv * txInv;
-		uB[3] = 4.0f * t.x * t.x * t.x * txInv;
-		uB[4] = t.x * t.x * t.x * t.x;
-
-		float tyInv{ 1.0f - t.y };
-		vB[0] = tyInv * tyInv * tyInv * tyInv;
-		vB[1] = 4.0f * t.y * tyInv * tyInv * tyInv;
-		vB[2] = 6.0f * t.y * t.y * tyInv * tyInv;
-		vB[3] = 4.0f * t.y * t.y * t.y * tyInv;
-		vB[4] = t.y * t.y * t.y * t.y;
-
-		// 4차 베지에 곡면 계산
-		XMFLOAT3 sum{ 0.0f, 0.0f, 0.0f };
-		for (int i = 0; i < 5; ++i)
-		{
-			XMFLOAT3 subSum{ 0.0f, 0.0f, 0.0f };
-			for (int j = 0; j < 5; ++j)
-			{
-				XMFLOAT3 temp{ Vector3::Multiply(uB[j], patch[(i * 5) + j]) };
-				subSum = Vector3::Add(subSum, temp);
-			}
-			subSum = Vector3::Multiply(vB[i], subSum);
-			sum = Vector3::Add(sum, subSum);
-		}
-		return sum;
-	};
-
-
-	for (int k = 0; k < mWidth * mTerrainScale.x; ++k)
-	{
-		for (int l = 0; l < mDepth * mTerrainScale.z; ++l)
-		{
-			int left = k / blockWidth;
-			int bottom = l / blockDepth;
-
-			XMFLOAT3 LB = { left * blockWidth, 0, bottom * blockDepth };
-
-			// 베지에 평면 제어점 25개
-			std::array<XMFLOAT3, 25> vertices;
-			for (int i = 0, z = 4; z >= 0; --z)
-			{
-				for (int x = 0; x < 5; ++x)
-				{
-					vertices[i].x = LB.x + (x * blockWidth / 4 * mTerrainScale.x);
-					vertices[i].z = LB.z + (z * blockDepth / 4 * mTerrainScale.z);
-					vertices[i].y = GetHeight(vertices[i].x, vertices[i].z);
-					++i;
-				}
-			}
-
-			XMFLOAT2 uv{ (k - LB.x) / (blockWidth * mTerrainScale.x), 1.0f - ((l - LB.z) / (blockDepth * mTerrainScale.z)) };
-			XMFLOAT3 posOnBazier{ CubicBezierSum(vertices, uv) };
-
-			float h = GetHeight(k, l);
-			mHeightmapData[k + (int)(l * mDepth * mTerrainScale.z)] = posOnBazier.y;
-		}
-	}
-
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //

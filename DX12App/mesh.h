@@ -179,11 +179,13 @@ public:
 		int xStart, int zStart,
 		int width, int depth,
 		const XMFLOAT3& scale,
-		HeightMapImage* context);
+		HeightMapImage* context,
+		std::shared_ptr<BulletWrapper> physics);
 
 	virtual ~HeightMapPatchListMesh() { }
 
 	float GetHeight(int x, int z, HeightMapImage* context) const;
+	void BuildHeightmapData(const int& xStart, const int& zStart, const std::vector<TerrainVertex>& vertices, HeightMapImage* context);
 	std::pair<float, float> GetMinMax() { return std::pair<float, float>(mMinHeight, mMaxHeight); }; // min, max
 
 private:
@@ -194,6 +196,9 @@ private:
 
 	float mMinHeight = FLT_MAX;
 	float mMaxHeight = -FLT_MAX;
+
+	float* mHeightmapData = NULL;
+	btRigidBody* mBtRigidBody;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
