@@ -182,7 +182,7 @@ public:
 		HeightMapImage* context,
 		std::shared_ptr<BulletWrapper> physics);
 
-	virtual ~HeightMapPatchListMesh() { }
+	virtual ~HeightMapPatchListMesh();
 
 	float GetHeight(int x, int z, HeightMapImage* context) const;
 	void BuildHeightmapData(const int& xStart, const int& zStart, const std::vector<TerrainVertex>& vertices, HeightMapImage* context);

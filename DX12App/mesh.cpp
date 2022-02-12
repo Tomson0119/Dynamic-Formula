@@ -523,6 +523,11 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, vertices.data(), (UINT)vertices.size(), nullptr, 0);
 }
 
+HeightMapPatchListMesh::~HeightMapPatchListMesh()
+{
+	delete mHeightmapData;
+}
+
 float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) const
 {
 	float height = context->GetHeight(x * mScale.x, z * mScale.z, mScale);
