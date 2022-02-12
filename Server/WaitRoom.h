@@ -41,6 +41,7 @@ public:
 	bool IsAdmin(int hostID) const;
 	ROOM_STAT GetRoomState() const { return mState; }
 
+	int GetID() const { return mID; }
 	Player* GetPlayerPtr(int idx) const { return msPlayers[idx].get(); }
 
 public:
