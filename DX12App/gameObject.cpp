@@ -21,7 +21,7 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 	}
 }
 
-void GameObject::LoadModel(
+std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
 	const std::wstring& path)
@@ -33,6 +33,7 @@ void GameObject::LoadModel(
 	std::vector<XMFLOAT3> normals;
 	std::vector<XMFLOAT2> texcoords;
 	std::unordered_map<std::string, MatInfo> mats;
+	std::shared_ptr<Mesh> new_mesh;
 
 	std::string info;
 	while (std::getline(in_file, info))
@@ -82,7 +83,7 @@ void GameObject::LoadModel(
 			std::string mtl_name;
 			ss >> mtl_name;
 
-			auto new_mesh = std::make_shared<Mesh>(mtl_name);
+			new_mesh = std::make_shared<Mesh>(mtl_name);
 			new_mesh->LoadMesh(
 				device, cmdList, in_file, 
 				positions, normals, texcoords, mats[mtl_name]);
@@ -99,6 +100,8 @@ void GameObject::LoadModel(
 
 	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
 	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
+
+	return mMeshes;
 }
 
 void GameObject::LoadMaterial(

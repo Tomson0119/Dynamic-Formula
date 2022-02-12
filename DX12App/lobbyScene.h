@@ -21,13 +21,12 @@ public:
 
 public:
 	virtual void BuildObjects(
-		ID3D12Device* device,
+		ComPtr<ID3D12Device> device,
 		ID3D12GraphicsCommandList* cmdList,
 		float aspect,
 		std::shared_ptr<BulletWrapper> physics) override;
 
 	virtual void Update(
-		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		const GameTimer& timer,
 		std::shared_ptr<BulletWrapper> physics) override;

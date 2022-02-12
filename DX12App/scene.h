@@ -1,6 +1,8 @@
 #pragma once
 
 #include "gameTimer.h"
+#include "mesh.h"
+#include "gameObject.h"
 
 //#define STANDALONE
 #define START_GAME_INSTANT
@@ -34,13 +36,12 @@ public:
 
 public:
 	virtual void BuildObjects(
-		ID3D12Device* device, 
+		ComPtr<ID3D12Device> device,
 		ID3D12GraphicsCommandList* cmdList, 
 		float aspect,
 		std::shared_ptr<BulletWrapper> physics) = 0;
 
 	virtual void Update(
-		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
 		std::shared_ptr<BulletWrapper> physics) = 0;
@@ -73,4 +74,7 @@ protected:
 	NetModule* mNetPtr;
 
 	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;
+	ComPtr<ID3D12Device> mDevice;
+
+	std::map<MeshType, std::vector<std::shared_ptr<Mesh>>> mMeshList;
 };

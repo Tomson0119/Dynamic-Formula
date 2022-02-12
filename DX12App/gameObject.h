@@ -36,7 +36,7 @@ public:
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
 
 public:
-	virtual void LoadModel(
+	virtual std::vector<std::shared_ptr<Mesh>> LoadModel(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		const std::wstring& path);
@@ -60,6 +60,7 @@ public:
 
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
+	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes.insert(mMeshes.end(), meshes.begin(), meshes.end()); }
 
 	void SetRotation(XMFLOAT3& axis, float speed);
 	void SetMovement(XMFLOAT3& dir, float speed);

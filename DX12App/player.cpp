@@ -263,7 +263,7 @@ void TerrainPlayer::OnCameraUpdate(float elapsedTime)
 		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
 }
 
-PhysicsPlayer::PhysicsPlayer() : Player()
+PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
@@ -520,6 +520,11 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 	BuildRigidBody(physics);
 }
 
+void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& Mesh)
+{
+	GameObject::SetMesh(Mesh);
+}
+
 void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mSrvDescriptorHeap.Get() };
@@ -741,7 +746,7 @@ WheelObject::~WheelObject()
 {
 }
 
-void WheelObject::UpdateRigidBody(float Elapsed, btTransform wheelTransform)
+void WheelObject::UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform)
 {
 	btScalar m[16];
 	wheelTransform.getOpenGLMatrix(m);
