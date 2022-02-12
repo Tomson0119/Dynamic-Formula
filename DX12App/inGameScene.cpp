@@ -246,7 +246,6 @@ void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandLi
 	mPipelines[Layer::Default]->AppendObject(grid);
 
 	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
-	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
 	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 89, 89);
 	terrain->LoadTexture(device, cmdList, L"Resources\\terrainTexture.dds");

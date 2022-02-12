@@ -25,7 +25,7 @@ void RoomScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 #ifdef START_GAME_INSTANT
 	// send start packet again until game actually start
 	auto currTime = std::chrono::high_resolution_clock::now();
-	if ((currTime - mStartTime) > 600ms && mSendFlag) {
+	if ((currTime - mStartTime) > 1000ms && mSendFlag) {
 		mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
 		mSendFlag = false;
 	}
