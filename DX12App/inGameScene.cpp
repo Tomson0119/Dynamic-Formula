@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "inGameScene.h"
+#include "Mesh.h"
 #include "shadowMapRenderer.h"
 #include "NetLib/NetModule.h"
 
