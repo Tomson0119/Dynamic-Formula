@@ -360,28 +360,10 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 		mNetPtr->RemovePlayer(pck);
 
-		bool flag = false;
-		for (auto i = mPlayerObjects.begin(); i < mPlayerObjects.end();)
-		{
-			if (i->get()->GetNetID() == pck->player_idx)
-			{
-				flag = true;
-				mDynamicsWorld->removeRigidBody(i->get()->GetRigidBody());
-				auto& colorObjects = mPipelines[Layer::Color]->GetRenderObjects();
-				for (int j = 0; j < colorObjects.size(); ++j)
-				{
-					if (*i == colorObjects[j])
-					{
-						mPipelines[Layer::Color]->DeleteObject(j);
-					}
-				}
+		auto p = *std::find_if(mPlayerObjects.begin(), mPlayerObjects.end(),
+			[pck](const auto& p) { return (p->GetNetID() == pck->player_idx); });
 
-				i = mPlayerObjects.erase(i);
-			}
-			else
-				++i;
-		}
-		if (flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
+		p->SetRemoveFlag(true);
 		break;
 	}
 	}
@@ -463,6 +445,8 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::sha
 void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
 	float elapsed = timer.ElapsedTime();
+	
+	UpdatePlayerObjects();
 
 	OnPreciseKeyInput(cmdList, physics, elapsed);
 
@@ -616,6 +600,35 @@ void InGameScene::UpdateMissileObject()
 			++i;
 	}
 	if (flag) mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
+}
+
+void InGameScene::UpdatePlayerObjects()
+{
+	bool flag = false;
+	for (auto i = mPlayerObjects.begin(); i < mPlayerObjects.end();)
+	{
+		if (i->get()->GetRemoveFlag())
+		{
+			flag = true;
+			btRigidBody* rigidBody = i->get()->GetRigidBody();
+			delete rigidBody->getMotionState();
+			mDynamicsWorld->removeRigidBody(rigidBody);
+			delete rigidBody;
+			auto& colorObjects = mPipelines[Layer::Color]->GetRenderObjects();
+			for (int j = 0; j < colorObjects.size(); ++j)
+			{
+				if (*i == colorObjects[j])
+				{
+					mPipelines[Layer::Color]->DeleteObject(j);
+				}
+			}
+
+			i = mPlayerObjects.erase(i);
+		}
+		else
+			++i;
+	}
+	if (flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
 }
 
 

@@ -81,6 +81,9 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	}
 	case CS::PRESS_READY:
 	{
+	#ifdef DEBUG_PACKET_TRANSFER
+		std::cout << "[" << id << "] Received press ready.\n";
+	#endif
 		CS::packet_press_ready* pck = reinterpret_cast<CS::packet_press_ready*>(packet);
 		
 		int roomID = gClients[id]->RoomID;
@@ -169,6 +172,9 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 			mLoginPtr->Disconnect(hostID);
 			break;
 		}
+
+		if(currentState == CLIENT_STAT::IN_GAME)
+			mInGameServer.RemovePlayer(roomID, hostID);
 		
 		// Packet must be sended before initializing client.
 		msRooms[roomID]->SendRemovePlayerInfoToAll(hostID);

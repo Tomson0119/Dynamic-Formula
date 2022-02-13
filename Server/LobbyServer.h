@@ -28,6 +28,8 @@ public:
 	void SendRoomInfoToLobbyPlayers(int roomID, int ignore=-1, bool instSend = true);
 	void SendExistingRoomList(int id);
 
+	InGameServer& GetInGameServer() { return mInGameServer; }
+
 public:
 	void IncreasePlayerCount() { mLobbyPlayerCount.fetch_add(1); }
 	void DecreasePlayerCount() { mLobbyPlayerCount.fetch_sub(1); }

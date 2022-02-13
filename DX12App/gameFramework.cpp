@@ -108,7 +108,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 		break;
 	}
 
-	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBulletPhysics);
+	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
@@ -152,7 +152,7 @@ void GameFramework::CheckAndChangeScene()
 
 void GameFramework::Update()
 {
-	mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
+	//mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
 
 	D3DFramework::UpdateFrameStates();
 	

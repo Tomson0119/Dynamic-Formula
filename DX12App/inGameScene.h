@@ -84,6 +84,8 @@ private:
 	void AppendMissileObject(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics);
 	void UpdateMissileObject();
 
+	void UpdatePlayerObjects();
+
 private:
 	std::unique_ptr<Camera> mMainCamera;
 	POINT mLastMousePos{};
