@@ -18,14 +18,16 @@ public:
 		btDiscreteDynamicsWorld* physicsWorld, 
 		BtCarShape* shape);
 
-	void UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	void UpdatePlayerRigidBody(btDiscreteDynamicsWorld* physicsWorld);
 	void SetDeletionFlag() { mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION); }
 
+	void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+
 public:
-	bool Empty;
+	std::atomic_bool Empty;
+	std::atomic_bool Ready;
+	std::atomic_int ID;
 	char Color;
-	bool Ready;
-	int ID;
 	char Name[MAX_NAME_SIZE];
 
 private:

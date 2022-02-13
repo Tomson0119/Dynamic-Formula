@@ -30,11 +30,18 @@ void Player::CreateVehicleRigidBody(
 			physicsWorld, shape->GetExtents(),
 			shape->GetWheelInfo());
 
-		mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
+		mVehicleRigidBody.ChangeUpdateFlag(
+			RigidBody::UPDATE_FLAG::NONE,
+			RigidBody::UPDATE_FLAG::CREATION);
 	}
 }
 
-void Player::UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+void Player::UpdatePlayerRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
-	mVehicleRigidBody.UpdateRigidBody(physicsWorld);
+	mVehicleRigidBody.Update(physicsWorld);
+}
+
+void Player::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	mVehicleRigidBody.RemoveRigidBody(physicsWorld);
 }
