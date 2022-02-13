@@ -20,21 +20,28 @@ public:
 
 	void CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape);
 	void UpdatePhysicsWorld(float timeStep);
+	void FlushPhysicsWorld();
 
 	void RemovePlayerRigidBody(int idx);
 
 	void SendGameStartSuccess();
 
 public:
+	void SetActive(bool active) { mActive = active; }
+	bool IsActive() const { return mActive; }
+
 	const PlayerList& GetPlayerList() const { return mPlayerList; }
 	WSAOVERLAPPEDEX* GetOverlapped(float timeStep);
 
 private:
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
 
-public:
+private:
 	int mID;
 	WSAOVERLAPPEDEX mPhysicsOverlapped;
+
+	std::atomic_int mPlayerCount;
+	std::atomic_bool mActive;
 
 	BPHandler mPhysics;
 	MapRigidBody mMapRigidBody;

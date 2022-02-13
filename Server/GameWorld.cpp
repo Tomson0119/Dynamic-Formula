@@ -7,7 +7,8 @@
 #include "RigidBody.h"
 
 GameWorld::GameWorld()
-	: mID{ -1 },
+	: mID{ -1 }, mActive{ false },
+	  mPlayerCount{ 0 },
 	  mPhysicsOverlapped{ OP::PHYSICS }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
@@ -43,21 +44,31 @@ void GameWorld::InitPlayerList(const btVector3 startPosition, btScalar offsetX, 
 void GameWorld::CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape)
 {
 	mPlayerList[idx]->CreateVehicleRigidBody(mass, mPhysics.GetDynamicsWorld(), shape);
+	mPlayerCount += 1;
 }
 
 void GameWorld::UpdatePhysicsWorld(float timeStep)
 {
 	for (Player* player : GetPlayerList())
-		player->UpdateRigidBody(mPhysics.GetDynamicsWorld());
+		player->UpdatePlayerRigidBody(mPhysics.GetDynamicsWorld());
 
-	mMapRigidBody.UpdateRigidBody(mPhysics.GetDynamicsWorld());
+	mMapRigidBody.UpdateAllRigidBody(mPhysics.GetDynamicsWorld());
 
 	mPhysics.StepSimulation(timeStep);
+}
+
+void GameWorld::FlushPhysicsWorld()
+{
+	mPhysics.Flush();
 }
 
 void GameWorld::RemovePlayerRigidBody(int idx)
 {
 	mPlayerList[idx]->SetDeletionFlag();
+	mPlayerCount -= 1;
+
+	if (mPlayerCount == 0)
+		SetActive(false);
 }
 
 void GameWorld::SendGameStartSuccess()
