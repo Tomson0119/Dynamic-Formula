@@ -27,19 +27,22 @@ public:
 	void ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes);
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
+	static void SignalHandler(int signal);
+
 	static void NetworkThreadFunc(LoginServer& server);
 	static const int MAX_THREADS = 4;
 
-	IOCP& GetIOCP() { return mIOCP; }
+	IOCP& GetIOCP() { return msIOCP; }
 
 private:
 	Socket mListenSck;
-	IOCP mIOCP;
 
 	std::map<std::thread::id, int> mThreadIDs;
 	std::array<DBHandler, MAX_THREADS> mDBHandlers;
 	std::vector<std::thread> mThreads;
-	std::atomic_bool mLoop;		
+	
+	static IOCP msIOCP;
+	std::atomic_bool mLoop;
 
 	/*
 		로비서버는 분산 서버 시스템에서 여러 개가 존재할 수 있다.
