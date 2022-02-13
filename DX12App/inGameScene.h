@@ -84,6 +84,8 @@ private:
 	void AppendMissileObject(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics);
 	void UpdateMissileObject();
 
+	void UpdatePlayerObjects();
+
 private:
 	std::unique_ptr<Camera> mMainCamera;
 	POINT mLastMousePos{};
@@ -109,7 +111,6 @@ private:
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
-
 
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
 
