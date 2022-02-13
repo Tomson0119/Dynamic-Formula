@@ -11,6 +11,8 @@ public:
 	void AddRigidBody(btRigidBody* rigidbody) { mBtDynamicsWorld->addRigidBody(rigidbody); }
 	void StepSimulation(float elapsed) { mBtDynamicsWorld->stepSimulation(elapsed); }
 	
+	void Flush();
+
 	btDiscreteDynamicsWorld* GetDynamicsWorld() const { return mBtDynamicsWorld.get(); }
 
 private:
