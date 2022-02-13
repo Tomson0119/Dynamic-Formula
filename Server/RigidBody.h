@@ -23,9 +23,15 @@ public:
 		const btVector3& position,
 		const btVector3& offset = btVector3{ 0.0f,0.0f,0.0f });
 
-	virtual void UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	void Update(btDiscreteDynamicsWorld* physicsWorld);
 
+	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	virtual void UpdateRigidBody();
+	virtual void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+
+public:
 	void SetUpdateFlag(UPDATE_FLAG flag) { mFlag = flag; }
+	bool ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
 	UPDATE_FLAG GetUpdateFlag() const { return mFlag; }
 
 	btRigidBody* GetRigidBody() const { return mRigidBody; }
@@ -42,9 +48,6 @@ public:
 	VehicleRigidBody() = default;
 	virtual ~VehicleRigidBody() = default;
 
-	virtual void UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld);
-
-public:
 	void CreateRaycastVehicle(
 		btDiscreteDynamicsWorld* physicsWorld,
 		const btVector3& bodyExtents, 
@@ -52,7 +55,10 @@ public:
 	
 	void AddWheel(const btVector3& bodyExtents, const BtCarShape::WheelInfo& wheelInfo);
 
-	void UpdateVehicleComponent(btDiscreteDynamicsWorld* physicsWorld);
+public:
+	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void UpdateRigidBody() override;
+	virtual void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
 
 public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }
@@ -73,7 +79,7 @@ public:
 	void CreateTerrainRigidBody(BtTerrainShape* shape);
 	void CreateStaticRigidBodies(std::string_view filename,	btCollisionShape* shape);
 
-	void UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	void UpdateAllRigidBody(btDiscreteDynamicsWorld* physicsWorld);
 
 private:
 	std::deque<RigidBody> mStaticRigidBodies;

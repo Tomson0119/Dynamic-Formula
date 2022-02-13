@@ -28,25 +28,61 @@ void RigidBody::CreateRigidBody(
 	mRigidBody = new btRigidBody(cInfo);
 }
 
-void RigidBody::UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+void RigidBody::Update(btDiscreteDynamicsWorld* physicsWorld)
 {
-	switch (GetUpdateFlag())
+	auto flag = GetUpdateFlag();
+	switch (flag)
 	{
 	case RigidBody::UPDATE_FLAG::CREATION:
-		physicsWorld->addRigidBody(GetRigidBody());
-		SetUpdateFlag(UPDATE_FLAG::NONE);
+		AppendRigidBody(physicsWorld);
 		break;
 
 	case RigidBody::UPDATE_FLAG::UPDATE:
-		//
-		SetUpdateFlag(UPDATE_FLAG::NONE);
+		UpdateRigidBody();
 		break;
 
 	case RigidBody::UPDATE_FLAG::DELETION:
-		physicsWorld->removeRigidBody(GetRigidBody());
-		SetUpdateFlag(UPDATE_FLAG::NONE);
+		RemoveRigidBody(physicsWorld);
 		break;
-	}	
+
+	case UPDATE_FLAG::NONE:
+		return;
+	}
+	SetUpdateFlag(UPDATE_FLAG::NONE);
+}
+
+void RigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	if(mRigidBody)
+		physicsWorld->addRigidBody(mRigidBody);
+}
+
+void RigidBody::UpdateRigidBody()
+{
+}
+
+void RigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	if (mRigidBody)
+	{
+		auto motionState = mRigidBody->getMotionState();
+		if (motionState) delete motionState;
+
+		physicsWorld->removeRigidBody(mRigidBody);
+		delete mRigidBody;
+	}
+}
+
+bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
+{
+	if (mFlag.compare_exchange_strong(expected, desired) == false)
+	{
+		// DELETION flag must be a priority.
+		if (desired == UPDATE_FLAG::DELETION)
+			mFlag = UPDATE_FLAG::DELETION;
+		return false;
+	}
+	return true;
 }
 
 
@@ -110,32 +146,19 @@ void VehicleRigidBody::AddWheel(const btVector3& bodyExtents, const BtCarShape::
 	}
 }
 
-void VehicleRigidBody::UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+void VehicleRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
-	switch (GetUpdateFlag())
-	{
-	case RigidBody::UPDATE_FLAG::CREATION:
-		std::cout << "Adding vehicle.\n";
-		physicsWorld->addRigidBody(GetRigidBody());
-		physicsWorld->addVehicle(GetVehicle());
-		SetUpdateFlag(UPDATE_FLAG::NONE);
-		break;
-
-	case RigidBody::UPDATE_FLAG::UPDATE:
-		UpdateVehicleComponent(physicsWorld);
-		SetUpdateFlag(UPDATE_FLAG::NONE);
-		break;
-
-	case RigidBody::UPDATE_FLAG::DELETION:
-		physicsWorld->removeRigidBody(GetRigidBody());
-		physicsWorld->removeVehicle(GetVehicle());
-		SetUpdateFlag(UPDATE_FLAG::NONE);
-		break;
-	}
-	
+	RigidBody::AppendRigidBody(physicsWorld);
+	if(mVehicle) physicsWorld->addVehicle(mVehicle.get());
 }
 
-void VehicleRigidBody::UpdateVehicleComponent(btDiscreteDynamicsWorld* physicsWorld)
+void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	RigidBody::RemoveRigidBody(physicsWorld);
+	if(mVehicle) physicsWorld->removeVehicle(mVehicle.get());
+}
+
+void VehicleRigidBody::UpdateRigidBody()
 {
 	// TODO: Update vehicle/wheel components and apply it.
 }
@@ -163,10 +186,10 @@ void MapRigidBody::CreateStaticRigidBodies(std::string_view filename, btCollisio
 	//		 and create all rigidboies
 }
 
-void MapRigidBody::UpdateRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+void MapRigidBody::UpdateAllRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
 	for (RigidBody& rigid : mStaticRigidBodies)
 	{
-		rigid.UpdateRigidBody(physicsWorld);
+		rigid.Update(physicsWorld);
 	}
 }
