@@ -19,13 +19,13 @@ InGameServer::InGameServer()
 void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 {
 	mLoginPtr = loginPtr;
+	mTimer.Start(this);
 
 	const float offset_x = 20.0f;
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
 		msWorlds[i] = std::make_unique<GameWorld>();
 		msWorlds[i]->InitPhysics(-10.0f);
-		msWorlds[i]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);
 		msWorlds[i]->InitPlayerList(mStartPosition, offset_x, roomList[i].get());		
 	}
 }
@@ -45,8 +45,11 @@ void InGameServer::PrepareToStartGame(int roomID)
 
 		msWorlds[roomID]->CreatePlayerRigidBody(idx++, 1000.0f, mBtCarShape.get());
 	}
-	mTimer.Start(this);
+	msWorlds[roomID]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);
+
+	// TODO: This needs to be separated.
 	AddPhysicsTimerEvent(roomID);
+	msWorlds[roomID]->SetActive(true);
 	msWorlds[roomID]->SendGameStartSuccess();
 }
 
@@ -112,7 +115,7 @@ void InGameServer::RemovePlayer(int roomID, int hostID)
 void InGameServer::AddPhysicsTimerEvent(int roomID)
 {
 	Timer::TimerEvent ev(
-		std::chrono::milliseconds(mDuration), 
+		std::chrono::milliseconds(mDuration),
 		EVENT_TYPE::PHYSICS, roomID, mDuration / 1000.0f);
 
 	mTimer.AddTimerEvent(ev);
@@ -121,10 +124,14 @@ void InGameServer::AddPhysicsTimerEvent(int roomID)
 void InGameServer::RunPhysicsSimulation(int roomID, float timeStep)
 {
 #ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "[Room id: " << roomID << "] Running physics simulation.\n";
+		std::cout << "[Room id: " << roomID << "] Running physics simulation.\n";
 #endif
 	msWorlds[roomID]->UpdatePhysicsWorld(timeStep);
-	AddPhysicsTimerEvent(roomID);
+
+	if (msWorlds[roomID]->IsActive())
+		AddPhysicsTimerEvent(roomID);
+	else
+		msWorlds[roomID]->FlushPhysicsWorld();
 }
 
 void InGameServer::PostPhysicsOperation(int roomID, float timeStep)
