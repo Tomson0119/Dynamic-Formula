@@ -11,6 +11,7 @@ enum class OP : char
 	SEND,
 	ACCEPT,
 	DISCONNECT,
+	SHUTDOWN,
 	PHYSICS,
 };
 
