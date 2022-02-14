@@ -539,6 +539,7 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 			xStart = x * (blockWidth - 1);
 			zStart = z * (blockDepth - 1);
 			auto gridMesh = std::make_shared<HeightMapPatchListMesh>(device, cmdList, xStart, zStart, blockWidth, blockDepth, mTerrainScale, mHeightMapImage.get(), physics);
+			gridMesh->SetIndex(x, z);
 			SetMesh(gridMesh);
 
 			auto [gridMin, gridMax] = gridMesh->GetMinMax();

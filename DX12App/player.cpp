@@ -367,15 +367,14 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
 
-	int wheelIndex = 2;
+	int wheelIndex = 0;
 	mVehicle->applyEngineForce(mEngineForce, wheelIndex);
 	mVehicle->setBrake(mBreakingForce, wheelIndex);
-	wheelIndex = 3;
+	wheelIndex = 1;
 	mVehicle->applyEngineForce(mEngineForce, wheelIndex);
 	mVehicle->setBrake(mBreakingForce, wheelIndex);
 
 	wheelIndex = 0;
-
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	wheelIndex = 1;
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);

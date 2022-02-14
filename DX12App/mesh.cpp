@@ -512,12 +512,14 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	
 	auto TerrainShape = new btHeightfieldTerrainShape(mWidth * mScale.x, mDepth * mScale.z, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
 	TerrainShape->setLocalScaling(btVector3(1, mScale.y, 1));
+	TerrainShape->getTriangleInfoMap();
 
 	btTransform btTerrainTransform;
 	btTerrainTransform.setIdentity();
 	btTerrainTransform.setOrigin(btVector3(mOOBB.Center.x, (mMaxHeight + mMinHeight) * mScale.y / 2, mOOBB.Center.z));
 
 	mBtRigidBody = physics->CreateRigidBody(0.0f, btTerrainTransform, TerrainShape);
+	InActiveRigidBody();
 
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(TerrainVertex), 0,
 		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, vertices.data(), (UINT)vertices.size(), nullptr, 0);
@@ -582,6 +584,16 @@ void HeightMapPatchListMesh::BuildHeightmapData(const int& xStart, const int& zS
 			mHeightmapData[i + (int)(j * mDepth * mScale.z)] = posOnBazier.y;
 		}
 	}
+}
+
+void HeightMapPatchListMesh::SetIndex(int x, int z)
+{
+	mXIndex = x;
+	mZIndex = z;
+}
+
+void HeightMapPatchListMesh::InActiveRigidBody()
+{
 }
 
 
