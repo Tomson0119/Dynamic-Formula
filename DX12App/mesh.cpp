@@ -473,6 +473,8 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 {
 	const UINT verticesCount = 25;
 
+	const int TessFactor = 10;
+
 	std::vector<TerrainVertex> vertices(verticesCount);
 	int increasement = 22;
 
@@ -508,10 +510,10 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	mOOBB.Center = { (min_x->Position.x + max_x->Position.x) / 2, (min_y->Position.y + max_y->Position.y) / 2, (min_z->Position.z + max_z->Position.z) / 2 };
 	mOOBB.Extents = { (max_x->Position.x - min_x->Position.x) / 2, (max_y->Position.y - min_y->Position.y) / 2, (max_z->Position.z - min_z->Position.z) / 2 };
 
-	BuildHeightmapData(xStart, zStart, vertices, context);
+	BuildHeightmapData(TessFactor, vertices, context);
 	
-	auto TerrainShape = new btHeightfieldTerrainShape(mWidth * mScale.x, mDepth * mScale.z, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
-	TerrainShape->setLocalScaling(btVector3(1, mScale.y, 1));
+	auto TerrainShape = new btHeightfieldTerrainShape(TessFactor, TessFactor, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
+	TerrainShape->setLocalScaling(btVector3(mWidth * mScale.x / TessFactor, mScale.y, mDepth * mScale.z / TessFactor));
 	TerrainShape->getTriangleInfoMap();
 
 	btTransform btTerrainTransform;
@@ -535,9 +537,9 @@ float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) c
 	return height;
 }
 
-void HeightMapPatchListMesh::BuildHeightmapData(const int& xStart, const int& zStart, const std::vector<TerrainVertex>& TerrainVertices, HeightMapImage* context)
+void HeightMapPatchListMesh::BuildHeightmapData(const int& TessFactor, const std::vector<TerrainVertex>& TerrainVertices, HeightMapImage* context)
 {
-	mHeightmapData = new float[mWidth * mScale.x * mDepth * mScale.z];
+	mHeightmapData = new float[TessFactor * mScale.x * TessFactor * mScale.z];
 
 	auto CubicBezierSum = [](const std::vector<TerrainVertex>& patch, XMFLOAT2 t) {
 
@@ -573,14 +575,14 @@ void HeightMapPatchListMesh::BuildHeightmapData(const int& xStart, const int& zS
 		return sum;
 	};
 
-	for (int i = 0; i < mWidth * mScale.x; ++i)
+	for (int i = 0; i < TessFactor * mScale.x; ++i)
 	{
-		for (int j = 0; j < mDepth * mScale.z; ++j)
+		for (int j = 0; j < TessFactor * mScale.z; ++j)
 		{
-			XMFLOAT2 uv{ i / (mWidth * mScale.x), 1.0f - (j / (mDepth * mScale.z)) };
+			XMFLOAT2 uv{ i / (TessFactor * mScale.x), 1.0f - (j / (TessFactor * mScale.z)) };
 			XMFLOAT3 posOnBazier{ CubicBezierSum(TerrainVertices, uv) };
 
-			mHeightmapData[i + (int)(j * mDepth * mScale.z)] = posOnBazier.y;
+			mHeightmapData[i + (int)(j * TessFactor * mScale.z)] = posOnBazier.y;
 		}
 	}
 }
