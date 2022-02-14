@@ -115,7 +115,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 		break;
 	}
 	//Speed
-	/*float CurrentSpeed = mPlayer->GetCurrentVelocity();
+	float CurrentSpeed = mPlayer->GetCurrentVelocity();
 	if (mPlayer->GetCurrentVelocity() >= 1000.0f)
 	{
 		for (int i = 0; i < 6; ++i)
@@ -135,7 +135,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	{
 		for (int i = 0; i < 3; ++i)
 			mvTextBlocks[3].strText.push_back(std::to_wstring(0.0f)[i]);
-	}*/
+	}
 	for (auto wc : std::wstring(L"km/h"))
 		mvTextBlocks[3].strText.push_back(wc);
 

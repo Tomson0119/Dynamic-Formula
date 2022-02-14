@@ -11,7 +11,7 @@ class UI
 public:
     explicit UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
     ~UI();
-    virtual void Update(float GTime, Player* mPlayer) {}
+    virtual void Update(float GTime, Player* mPlayer) = 0;
     virtual void Update(float GTime);
     virtual void Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
      XMFLOAT4 RetLTRM[], XMFLOAT4 FillLTRB[]*/);

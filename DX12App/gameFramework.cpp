@@ -42,8 +42,8 @@ void GameFramework::OnResize()
 		mpUI.get()->Reset();*/
 	D3DFramework::OnResize();
 	//mpUI.get()->Initialize(mD3dDevice.Get(), mCommandQueue.Get());
-	if(!mpUI.empty())
-		mpUI.top()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+	/*if(!mpUI.empty())
+		mpUI.top()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);*/
 	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
 }
 
@@ -97,26 +97,26 @@ void GameFramework::InitScene(SCENE_STAT state)
 	{
 	case SCENE_STAT::LOGIN:
 		mScenes.push(std::make_unique<LoginScene>(mNetwork.get()));
-		mpUI.push( std::make_unique<LoginUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
-		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		//mpUI.push( std::make_unique<LoginUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		//mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::LOBBY:
 		mScenes.push(std::make_unique<LobbyScene>(mNetwork.get()));
-		mpUI.push(std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
-		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		//mpUI.push(std::make_unique<LobbyUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		//mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::ROOM:
 		mScenes.push(std::make_unique<RoomScene>(mNetwork.get()));
-		mpUI.push(std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
-		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		//mpUI.push(std::make_unique<RoomUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		//mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::IN_GAME:
 		mScenes.push(std::make_unique<InGameScene>(mNetwork.get()));
-		mpUI.push(std::make_unique<RoomUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
-		mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
+		//mpUI.push(std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
+		//mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	default:
@@ -124,7 +124,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 		break;
 	}
 
-	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
+	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight, GetAspect(), mBtDynamicsWorld);
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
@@ -142,7 +142,7 @@ void GameFramework::UIUpdate()
 	/*if(mScenes.top()->GetPlayer())
 		mpUI.top()->Update(mTimer.TotalTime(), (Player*)(mScenes.top()->GetPlayer()));
 	else*/
-		mpUI.top()->Update(mTimer.TotalTime());
+		//mpUI.top()->Update(mTimer.TotalTime());
 }
 
 void GameFramework::CheckAndChangeScene()
@@ -185,7 +185,7 @@ void GameFramework::Update()
 	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
 	
 	//UI Update
-	UIUpdate();
+	//UIUpdate();
 }
 
 void GameFramework::Draw()
@@ -219,7 +219,7 @@ void GameFramework::Draw()
 
 	// 렌더링할 버퍼를 구체적으로 설정한다.
 
-	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer());
+	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer(), mCurrBackBufferIndex);
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
@@ -231,11 +231,11 @@ void GameFramework::Draw()
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	
-
+	mScenes.top().get()->GetUI()->Flush();
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 
-	mpUI.top()->Draw(mCurrBackBufferIndex);
+	//mpUI.top()->Draw(mCurrBackBufferIndex);
 
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	

@@ -102,7 +102,7 @@ void UI::EndDraw(UINT nFrame)
 {
     mpd2dDeviceContext.Get()->EndDraw();
     mpd3d11On12Device->ReleaseWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 0);
-    Flush();
+    //Flush();
 }
 void UI::Flush()
 {

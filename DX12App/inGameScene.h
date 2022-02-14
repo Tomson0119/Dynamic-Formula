@@ -1,10 +1,8 @@
 #pragma once
-
-#include "scene.h"
-
 #include "gameTimer.h"
 #include "camera.h"
 #include "constantBuffer.h"
+
 
 #include "mesh.h"
 #include "pipeline.h"
@@ -12,9 +10,12 @@
 #include "shader.h"
 #include "texture.h"
 
+#include "scene.h"
+
 class DynamicCubeRenderer;
 class ShadowMapRenderer;
 class NetModule;
+//class Scene;
 
 class InGameScene : public Scene
 {
@@ -23,24 +24,29 @@ public:
 	virtual ~InGameScene();
 
 public:
-	virtual void OnResize(float aspect) override;
+	virtual void OnResize(float aspect) ;
 
 	virtual void BuildObjects(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
+		ID3D12CommandQueue* cmdQueue,
+		UINT nFrame,
+		ID3D12Resource** backBuffer,
+		float Width,
+		float Height,
 		float aspect,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) override;
+		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld);
 	
 	virtual void Update(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) override;
+		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) ;
 	
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) override;
-	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame);
+	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) ;
 
-	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) ;
 
 public:
 	void UpdateLight(float elapsed);
@@ -56,12 +62,12 @@ public:
 	void OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed);
 	
 public:
-	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y) override;
-	virtual void OnProcessMouseUp(WPARAM buttonState, int x, int y) override;
-	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
-	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-	virtual ID3D12RootSignature* GetRootSignature() const override { return mRootSignature.Get(); }
-	virtual int GetPlayer() { return (int)mPlayer; }
+	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y) ;
+	virtual void OnProcessMouseUp(WPARAM buttonState, int x, int y) ;
+	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) ;
+	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) ;
+	virtual ID3D12RootSignature* GetRootSignature() const { return mRootSignature.Get(); }
+	//virtual int GetPlayer() { return (int)mPlayer; }
 private:
 	void BuildRootSignature(ID3D12Device* device);
 	void BuildComputeRootSignature(ID3D12Device* device);

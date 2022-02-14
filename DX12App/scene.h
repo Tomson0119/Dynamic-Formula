@@ -1,10 +1,10 @@
 #pragma once
-
+//#include "UI.h"
 #include "gameTimer.h"
-
 #define STANDALONE
 //#define START_GAME_INSTANT
-
+class NetModule;
+class UI;
 enum class SCENE_STAT : char
 {
 	NONE = 0,
@@ -22,7 +22,6 @@ enum class SCENE_CHANGE_FLAG : char
 	LOGOUT
 };
 
-class NetModule;
 
 class Scene
 {
@@ -34,8 +33,13 @@ public:
 
 public:
 	virtual void BuildObjects(
-		ID3D12Device* device, 
-		ID3D12GraphicsCommandList* cmdList, 
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		ID3D12CommandQueue* cmdQueue,
+		UINT nFrame,
+		ID3D12Resource** backBuffer,
+		float Width,
+		float Height,
 		float aspect,
 		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) = 0;
 
@@ -45,7 +49,7 @@ public:
 		const GameTimer& timer,
 		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) = 0;
 
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) = 0;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame) = 0;
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) = 0;
 
 	virtual void OnResize(float aspect) { }
@@ -55,10 +59,10 @@ public:
 	virtual void OnProcessMouseUp(WPARAM btnState, int x, int y);
 	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y);
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
-	virtual int GetPlayer() { return 1; }
+	//virtual int GetPlayer() { return 1; }
 
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
-
+	UI* GetUI() { return mpUI.get(); }
 public:
 	SCENE_CHANGE_FLAG GetSceneChangeFlag() const { return mSceneChangeFlag; }
 	void SetSceneChangeFlag(SCENE_CHANGE_FLAG flag) { mSceneChangeFlag = flag; }
@@ -68,6 +72,9 @@ public:
 protected:
 	SCENE_STAT mSceneState;
 	XMFLOAT4 mFrameColor;
+
+	//UI 
+	std::unique_ptr<UI> mpUI;
 
 	NetModule* mNetPtr;
 

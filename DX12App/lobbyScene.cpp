@@ -1,7 +1,10 @@
+#
 #include "stdafx.h"
-#include "lobbyScene.h"
-#include "NetLib/NetModule.h"
 
+#include "LobbyUI.h"
+#include "NetLib/NetModule.h"
+#pragma once
+#include "lobbyScene.h"
 LobbyScene::LobbyScene(NetModule* netPtr)
 	: Scene{ SCENE_STAT::LOBBY, (XMFLOAT4)Colors::Bisque, netPtr }
 {
@@ -15,8 +18,12 @@ LobbyScene::LobbyScene(NetModule* netPtr)
 #endif
 }
 
-void LobbyScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld)
+void LobbyScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
+	std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
 {
+	mpUI = std::make_unique<LobbyUI>(nFrame, device, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
 
 void LobbyScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld)
@@ -24,7 +31,7 @@ void LobbyScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
 
 }
 
-void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer)
+void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
 }
 

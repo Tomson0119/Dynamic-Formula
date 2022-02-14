@@ -14,6 +14,11 @@ public:
 	virtual void BuildObjects(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
+		ID3D12CommandQueue* cmdQueue,
+		UINT nFrame,
+		ID3D12Resource** backBuffer,
+		float Width,
+		float Height,
 		float aspect,
 		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) override;
 
@@ -23,7 +28,7 @@ public:
 		const GameTimer& timer,
 		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) override;
 
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) override;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame) override;
 	
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 

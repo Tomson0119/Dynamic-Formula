@@ -1,7 +1,10 @@
 #include "stdafx.h"
-#include "inGameScene.h"
 #include "shadowMapRenderer.h"
+
+#include "InGameUI.h"
+#pragma once
 #include "NetLib/NetModule.h"
+#include "inGameScene.h"
 
 using namespace std;
 
@@ -21,8 +24,11 @@ void InGameScene::OnResize(float aspect)
 		mMainCamera->SetLens(aspect);
 }
 
-void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height,  float aspect,
+shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) 
 {
+	
 	mMainCamera = make_unique<Camera>();
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
@@ -52,6 +58,8 @@ void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* 
 	BuildGameObjects(device, cmdList, dynamicsWorld);
 	BuildConstantBuffers(device);
 	BuildDescriptorHeap(device);
+	mpUI = std::make_unique<InGameUI>(nFrame, device, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
 
 void InGameScene::BuildRootSignature(ID3D12Device* device)
@@ -380,6 +388,8 @@ void InGameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdLis
 	UpdateMissileObject(device, dynamicsWorld);
 	
 	UpdateConstants(timer);
+
+	mpUI.get()->Update(timer.TotalTime(), mPlayer);
 }
 
 void InGameScene::UpdateLight(float elapsed)
@@ -428,7 +438,7 @@ void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 	cmdList->SetGraphicsRootConstantBufferView(2, mGameInfoCB->GetGPUVirtualAddress(0));
 }
 
-void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer)
+void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
 	const XMFLOAT4& velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
 	cmdList->ClearRenderTargetView(mVelocityMapRtvHandle, (FLOAT*)&velocity, 0, nullptr);
@@ -446,6 +456,8 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	mPostProcessingPipelines[Layer::MotionBlur]->Dispatch(cmdList);
 
 	mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
+
+	mpUI.get()->Draw(nFrame);
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)

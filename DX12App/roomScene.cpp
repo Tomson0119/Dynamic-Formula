@@ -1,6 +1,8 @@
 #include "stdafx.h"
-#include "roomScene.h"
+#include "RoomUI.h"
 #include "NetLib/NetModule.h"
+#pragma once
+#include "roomScene.h"
 
 RoomScene::RoomScene(NetModule* netPtr)
 	: Scene{ SCENE_STAT::ROOM, (XMFLOAT4)Colors::Chocolate, netPtr }
@@ -9,15 +11,19 @@ RoomScene::RoomScene(NetModule* netPtr)
 	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 }
 
-void RoomScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld)
+void RoomScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
+	std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
 {
+	mpUI = std::make_unique<RoomUI>(nFrame, device, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
 
 void RoomScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld)
 {
 }
 
-void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer)
+void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
 }
 

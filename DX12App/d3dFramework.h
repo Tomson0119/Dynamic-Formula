@@ -104,8 +104,7 @@ protected:
 	DXGI_FORMAT mSwapChainBufferFormat    = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DXGI_FORMAT mDepthStencilBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-	//UI 
-	std::stack<std::unique_ptr<UI>> mpUI;
+	
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
 
