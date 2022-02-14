@@ -8,6 +8,22 @@ BPHandler::BPHandler(float gravity)
 
 BPHandler::~BPHandler()
 {
+	Flush();
+}
+
+void BPHandler::Init(float gravity)
+{
+	mBtCollisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
+	mBtDispatcher = std::make_unique<btCollisionDispatcher>(mBtCollisionConfiguration.get());
+	mBtOverlappingPairCache = std::make_unique<btDbvtBroadphase>();
+	mBtSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
+
+	mBtDynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(mBtDispatcher.get(), mBtOverlappingPairCache.get(), mBtSolver.get(), mBtCollisionConfiguration.get());
+	mBtDynamicsWorld->setGravity(btVector3(0, gravity, 0));
+}
+
+void BPHandler::Flush()
+{
 	if (mBtDynamicsWorld)
 	{
 		int i;
@@ -24,24 +40,7 @@ BPHandler::~BPHandler()
 				delete body->getMotionState();
 			}
 			mBtDynamicsWorld->removeCollisionObject(obj);
-			if(obj) delete obj;
+			if (obj) delete obj;
 		}
 	}
-}
-
-void BPHandler::Init(float gravity)
-{
-	mBtCollisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
-	mBtDispatcher = std::make_unique<btCollisionDispatcher>(mBtCollisionConfiguration.get());
-	mBtOverlappingPairCache = std::make_unique<btDbvtBroadphase>();
-	mBtSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
-
-	mBtDynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(mBtDispatcher.get(), mBtOverlappingPairCache.get(), mBtSolver.get(), mBtCollisionConfiguration.get());
-	mBtDynamicsWorld->setGravity(btVector3(0, gravity, 0));
-}
-
-void BPHandler::LoadCollisionMeshes()
-{
-	// TODO: Load meshes from file..(binary)
-	//		 Create rigid body
 }

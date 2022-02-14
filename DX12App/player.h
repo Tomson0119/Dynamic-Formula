@@ -107,6 +107,9 @@ public:
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
 	void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
 
+	void SetRemoveFlag(bool flag) { mRemoveFlag = flag; }
+	bool GetRemoveFlag() const { return mRemoveFlag; }
+
 private:
 	WheelObject* mWheel[4];
 	btRaycastVehicle::btVehicleTuning mTuning;
@@ -132,8 +135,7 @@ private:
 	float mFovCoefficient = 1.0f;
 
 public:
-	virtual void BuildDsvRtvView(
-		ID3D12Device* device) override;
+	virtual void BuildDsvRtvView(ID3D12Device* device) override;
 
 	void BuildCameras();
 
@@ -167,4 +169,5 @@ private:
 	UINT mCurrentRenderTarget = 0;
 
 	UINT mNetID = -1;
+	std::atomic_bool mRemoveFlag;
 };

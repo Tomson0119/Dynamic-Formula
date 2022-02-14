@@ -1,17 +1,11 @@
 #pragma once
 
-#include "BPHandler.h"
+#include "BtShape.h"
+#include "Timer.h"
 
 class LoginServer;
 class WaitRoom;
-class Player;
-
-struct GameWorld
-{
-	BPHandler Physics;
-	uint8_t MapIdx;
-	std::array<Player*, MAX_ROOM_CAPACITY> PlayerList;
-};
+class GameWorld;
 
 class InGameServer
 {
@@ -27,17 +21,24 @@ public:
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 	void HandleKeyInput(int id, uint8_t key, bool pressed);
 
-public:
-	void SendGameStartSuccess(int roomID);
+	void RemovePlayer(int roomID, int hostID);
 
-private:
-	void SendToAllPlayer(std::byte* pck, int size, int roomID, int ignore=-1, bool instSend=true);
+	void AddPhysicsTimerEvent(int roomID);
+	void RunPhysicsSimulation(int roomID, float timeStep);
+	void PostPhysicsOperation(int roomID, float timeStep);
 
 private:
 	LoginServer* mLoginPtr;
 	static WorldList msWorlds;
 
-	std::atomic_int mPlayerCount;
+	Timer mTimer;
+	
+	std::unique_ptr<BtCarShape> mBtCarShape;
+	std::unique_ptr<BtBoxShape> mMissileShape;
+
+	std::array<std::unique_ptr<BtTerrainShape>, 2> mTerrainShapes;
+	std::vector<std::unique_ptr<BtBoxShape>> mObjRigidBodies;
 
 	const btVector3 mStartPosition = { 500.0f, 10.0f, 500.0f };
+	const int mDuration = 1000;
 };

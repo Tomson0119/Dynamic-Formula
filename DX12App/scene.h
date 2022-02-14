@@ -75,6 +75,4 @@ protected:
 
 	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;
 	ComPtr<ID3D12Device> mDevice;
-
-	std::map<MeshType, std::vector<std::shared_ptr<Mesh>>> mMeshList;
 };

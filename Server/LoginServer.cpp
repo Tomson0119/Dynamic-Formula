@@ -1,12 +1,16 @@
 #include "common.h"
 #include "LoginServer.h"
+#include "InGameServer.h"
 #include "Client.h"
 
 std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
+IOCP LoginServer::msIOCP;
 
 LoginServer::LoginServer(const EndPoint& ep)
-	: mLoop(true)
+	: mLoop{ true }
 {
+	std::signal(SIGINT, SignalHandler);
+
 #ifdef USE_DATABASE
 	for (int i = 0; i < MAX_THREADS; i++)
 	{
@@ -25,10 +29,22 @@ LoginServer::LoginServer(const EndPoint& ep)
 	mListenSck.Bind(ep);
 }
 
+LoginServer::~LoginServer()
+{
+	for (int i = 0; i < gClients.size(); i++)
+	{
+		if (gClients[i]->ID >= 0)
+		{
+			Logout(i);
+			gClients[i]->Disconnect();
+		}
+	}
+}
+
 void LoginServer::Run()
 {
 	mListenSck.Listen();
-	mIOCP.RegisterDevice(mListenSck.GetSocket(), 0);
+	msIOCP.RegisterDevice(mListenSck.GetSocket(), 0);
 	std::cout << "Listening to clients...\n";
 
 	WSAOVERLAPPEDEX acceptEx;
@@ -49,7 +65,7 @@ void LoginServer::NetworkThreadFunc(LoginServer& server)
 	while (server.mLoop)
 	{
 		try {
-			server.mIOCP.GetCompletionInfo(info);
+			server.msIOCP.GetCompletionInfo(info);
 
 			int client_id = static_cast<int>(info.key);
 			WSAOVERLAPPEDEX* over_ex = reinterpret_cast<WSAOVERLAPPEDEX*>(info.overEx);
@@ -107,6 +123,17 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 		mListenSck.AsyncAccept(over);
 		break;
 	}
+	case OP::PHYSICS:
+	{
+		float timeStep = *reinterpret_cast<float*>(over->NetBuffer.BufStartPtr());
+		mLobby.GetInGameServer().RunPhysicsSimulation(id, timeStep);
+		break;
+	}
+	case OP::SHUTDOWN:
+	{
+		mLoop = false;
+		delete over;
+	}
 	}
 }
 
@@ -149,7 +176,7 @@ void LoginServer::AcceptNewClient(int id, SOCKET sck)
 	std::cout << "[" << id << "] Accepted client.\n";
 #endif
 	gClients[id]->AssignAcceptedID(id, sck);
-	mIOCP.RegisterDevice(sck, id);
+	msIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
 }
 
@@ -183,9 +210,6 @@ void LoginServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
 
 bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 {
-	// TEST
-	//mLobby.PrintRoomList();
-
 	switch (type)
 	{
 	case CS::LOGIN:
@@ -250,4 +274,14 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		return mLobby.ProcessPacket(packet, type, id, bytes);
 	}
 	return true;
+}
+
+void LoginServer::SignalHandler(int signal)
+{
+	if (signal == SIGINT)
+	{
+		std::cout << "Terminating Server..\n";
+		for(int i=0;i<MAX_THREADS;i++)
+			msIOCP.PostToCompletionQueue(new WSAOVERLAPPEDEX(OP::SHUTDOWN), -1);
+	}
 }

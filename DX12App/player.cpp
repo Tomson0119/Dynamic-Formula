@@ -263,7 +263,7 @@ void TerrainPlayer::OnCameraUpdate(float elapsedTime)
 		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
 }
 
-PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
+PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID), mRemoveFlag{ false }
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };

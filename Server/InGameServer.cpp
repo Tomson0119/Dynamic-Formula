@@ -4,40 +4,35 @@
 #include "WaitRoom.h"
 #include "Client.h"
 #include "Player.h"
+#include "GameWorld.h"
+#include "RigidBody.h"
 
 InGameServer::WorldList InGameServer::msWorlds;
 
 InGameServer::InGameServer()
 	: mLoginPtr{ nullptr }
-{	
+{
+	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin");
+	mTerrainShapes[0] = std::make_unique<BtTerrainShape>("Resource\\PlaneMap_Data.bin");
 }
 
 void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 {
 	mLoginPtr = loginPtr;
+	mTimer.Start(this);
 
 	const float offset_x = 20.0f;
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
 		msWorlds[i] = std::make_unique<GameWorld>();
-		msWorlds[i]->Physics.Init(-10.0f);
-		msWorlds[i]->MapIdx = roomList[i]->GetMapIndex();
-
-		for (int j = 0; auto& player : msWorlds[i]->PlayerList)
-		{
-			player = roomList[i]->GetPlayerPtr(j);
-			player->SetPosition(
-				mStartPosition.x() + offset_x * j,
-				mStartPosition.y(),
-				mStartPosition.z());
-			j++;
-		}
+		msWorlds[i]->InitPhysics(-10.0f);
+		msWorlds[i]->InitPlayerList(mStartPosition, offset_x, roomList[i].get());		
 	}
 }
 
 void InGameServer::PrepareToStartGame(int roomID)
 {
-	for (const auto& player : msWorlds[roomID]->PlayerList)
+	for (int idx = 0; const auto& player : msWorlds[roomID]->GetPlayerList())
 	{
 		const int hostID = player->ID;
 		if (hostID < 0) continue;
@@ -47,8 +42,15 @@ void InGameServer::PrepareToStartGame(int roomID)
 			mLoginPtr->Disconnect(hostID);
 			continue;
 		}
+
+		msWorlds[roomID]->CreatePlayerRigidBody(idx++, 1000.0f, mBtCarShape.get());
 	}
-	SendGameStartSuccess(roomID);
+	msWorlds[roomID]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);
+
+	// TODO: This needs to be separated.
+	AddPhysicsTimerEvent(roomID);
+	msWorlds[roomID]->SetActive(true);
+	msWorlds[roomID]->SendGameStartSuccess();
 }
 
 bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
@@ -104,34 +106,37 @@ void InGameServer::HandleKeyInput(int id, uint8_t key, bool pressed)
 	}
 }
 
-void InGameServer::SendGameStartSuccess(int roomID)
+void InGameServer::RemovePlayer(int roomID, int hostID)
 {
-#ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "[room id: " << roomID << "] Send game start packet.\n";
-#endif
-	SC::packet_game_start_success info_pck{};
-	info_pck.size = sizeof(SC::packet_game_start_success);
-	info_pck.type = SC::GAME_START_SUCCESS;
-	info_pck.room_id = roomID;
-	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
-	{
-		const btVector3 pos = msWorlds[roomID]->PlayerList[i]->GetPosition();
-		info_pck.x[i] = pos.x();
-		info_pck.y[i] = pos.y();
-		info_pck.z[i] = pos.z();
-	}
-	SendToAllPlayer(reinterpret_cast<std::byte*>(&info_pck), info_pck.size, roomID);
+	const int idx = gClients[hostID]->PlayerIndex;
+	msWorlds[roomID]->RemovePlayerRigidBody(idx);
 }
 
-void InGameServer::SendToAllPlayer(std::byte* pck, int size, int roomID, int ignore, bool instSend)
+void InGameServer::AddPhysicsTimerEvent(int roomID)
 {
-	for (const auto& player : msWorlds[roomID]->PlayerList)
-	{
-		if (player->Empty == false && player->ID != ignore)
-		{
-			gClients[player->ID]->PushPacket(pck, size);
-			if (instSend) gClients[player->ID]->SendMsg();
-		}
-	}
+	Timer::TimerEvent ev(
+		std::chrono::milliseconds(mDuration),
+		EVENT_TYPE::PHYSICS, roomID, mDuration / 1000.0f);
+
+	mTimer.AddTimerEvent(ev);
+}
+
+void InGameServer::RunPhysicsSimulation(int roomID, float timeStep)
+{
+#ifdef DEBUG_PACKET_TRANSFER
+		std::cout << "[Room id: " << roomID << "] Running physics simulation.\n";
+#endif
+	msWorlds[roomID]->UpdatePhysicsWorld(timeStep);
+
+	if (msWorlds[roomID]->IsActive())
+		AddPhysicsTimerEvent(roomID);
+	else
+		msWorlds[roomID]->FlushPhysicsWorld();
+}
+
+void InGameServer::PostPhysicsOperation(int roomID, float timeStep)
+{
+	IOCP& iocp = mLoginPtr->GetIOCP();
+	iocp.PostToCompletionQueue(msWorlds[roomID]->GetOverlapped(timeStep), roomID);
 }
 

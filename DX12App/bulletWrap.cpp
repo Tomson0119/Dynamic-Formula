@@ -23,7 +23,7 @@ BulletWrapper::~BulletWrapper()
 
 	for (int i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
-		btCollisionObject* obj = mBtDynamicsWorld	->getCollisionObjectArray()[i];
+		btCollisionObject* obj = mBtDynamicsWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
 		if (body && body->getMotionState())
 		{
