@@ -6,11 +6,11 @@ const short SERVER_PORT = 4000;
 const int MAX_NAME_SIZE = 20;
 const int MAX_PWD_SIZE  = 20;
 
-const int MAX_PLAYER_SIZE = 10000;
+const int MAX_PLAYER_SIZE = 1000;
 const int MAX_ROOM_CAPACITY = 8;
 const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
-const int MaxBufferSize = 300;
+const int MaxBufferSize = 1024;
 
 enum class LOGIN_STAT : char
 {	
@@ -27,12 +27,11 @@ enum class REGI_STAT : char
 
 enum class ROOM_STAT : char
 {
-	GAME_STARTED = 0,
-	INVALID_ROOM_ID,
-	ROOM_IS_FULL,
+	AVAILABLE = 0, 
 	ROOM_IS_CLOSED,
+	ROOM_IS_FULL,
+	GAME_STARTED,
 	MAX_ROOM_REACHED,
-	AVAILABLE
 };
 
 #pragma pack (push, 1)
@@ -51,6 +50,7 @@ namespace CS
 	const char REVERT_SCENE = 5;
 	const char SWITCH_MAP   = 6;
 	const char PRESS_READY  = 7;
+	const char KEY_INPUT	= 8;
 
 	struct packet_login : packet_header
 	{
@@ -69,7 +69,7 @@ namespace CS
 	struct packet_enter_room : packet_header
 	{
 		int room_id;
-		uint64_t send_time;
+		//uint64_t send_time;
 	};
 
 	struct packet_revert_scene : packet_header { };
@@ -83,7 +83,14 @@ namespace CS
 	struct packet_press_ready : packet_header
 	{
 		int room_id;
-		uint64_t send_time;
+		//uint64_t send_time;
+	};
+
+	struct packet_key_input : packet_header
+	{
+		int room_id;
+		uint8_t key;
+		bool pressed;
 	};
 }
 
@@ -107,7 +114,8 @@ namespace SC
 	const char UPDATE_PLAYER_INFO = 7;
 	const char UPDATE_MAP_INFO    = 8;
 	const char REMOVE_PLAYER	  = 9;
-	const char GAME_START_RESULT  = 10;
+	const char GAME_START_FAIL	  = 10;
+	const char GAME_START_SUCCESS = 11;
 
 	struct packet_force_logout : packet_header { };
 
@@ -124,13 +132,14 @@ namespace SC
 	struct packet_access_room_accept : packet_header
 	{
 		int room_id;
-		uint64_t send_time;
+		bool game_started;
+		//uint64_t send_time;
 	};
 
 	struct packet_access_room_deny : packet_header
 	{
 		char reason;
-		uint64_t send_time;
+		//uint64_t send_time;
 	};
 
 	struct packet_room_inside_info : packet_header
@@ -157,13 +166,13 @@ namespace SC
 		uint8_t admin_idx : 4;
 		uint8_t player_idx : 4;
 		PlayerInfo player_info;
-		uint64_t send_time;
+		//uint64_t send_time;
 	};
 
 	struct packet_update_map_info : packet_header
 	{
 		int room_id;
-		char map_id;
+		uint8_t map_id;
 	};
 
 	struct packet_remove_player : packet_header
@@ -173,11 +182,18 @@ namespace SC
 		uint8_t player_idx : 4;
 	};
 
-	struct packet_game_start_result : packet_header
+	struct packet_game_start_fail : packet_header
 	{
 		int room_id;
-		bool succeeded;
-		uint64_t send_time;
+		//uint64_t send_time;
+	};
+
+	struct packet_game_start_success : packet_header
+	{
+		int room_id;
+		float x[MAX_ROOM_CAPACITY];
+		float y[MAX_ROOM_CAPACITY];
+		float z[MAX_ROOM_CAPACITY];
 	};
 }
 #pragma pack(pop)

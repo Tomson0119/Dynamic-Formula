@@ -93,15 +93,11 @@ void NetClient::RequestEnterRoom(int roomID)
 	pck.size = sizeof(CS::packet_enter_room);
 	pck.type = CS::ENTER_ROOM;
 	pck.room_id = roomID;
-	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-		std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
 void NetClient::RevertScene()
 {
-	// TODO: Actually pop scene from scene stack.
-
 #ifdef _DEBUG
 	OutputDebugStringW(L"Sending revert scene.\n");
 #endif
@@ -113,7 +109,6 @@ void NetClient::RevertScene()
 
 void NetClient::SwitchMap(int roomID)
 {
-	// TODO: Actually switch map index
 #ifdef _DEBUG
 	OutputDebugStringW(L"Sending switch map.\n");
 #endif
@@ -126,15 +121,23 @@ void NetClient::SwitchMap(int roomID)
 
 void NetClient::ToggleReady(int roomID)
 {
-	// TODO: Actually set or unset ready.
-#ifdef _DEBUG
-	OutputDebugStringW(L"Sending toggle ready.\n");
-#endif
 	CS::packet_press_ready pck{};
 	pck.size = sizeof(CS::packet_press_ready);
 	pck.type = CS::PRESS_READY;
 	pck.room_id = roomID;
-	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-		std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void NetClient::SendKeyInput(int roomID, int key, bool pressed)
+{
+#ifdef _DEBUG
+	OutputDebugStringW(L"Sending key input.\n");
+#endif
+	CS::packet_key_input pck{};
+	pck.size = sizeof(CS::packet_key_input);
+	pck.type = CS::KEY_INPUT;
+	pck.key = (uint8_t)key;
+	pck.pressed = pressed;
+	pck.room_id = roomID;
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }

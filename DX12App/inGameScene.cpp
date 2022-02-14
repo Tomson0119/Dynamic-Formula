@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "inGameScene.h"
+#include "Mesh.h"
 #include "shadowMapRenderer.h"
 #include "NetLib/NetModule.h"
 
@@ -9,6 +10,14 @@ InGameScene::InGameScene(NetModule* netPtr)
 	: Scene(SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr)
 {
 	OutputDebugStringW(L"In Game Scene Entered.\n");
+	
+	mKeyMap[VK_LEFT] = false;
+	mKeyMap[VK_RIGHT] = false;
+	mKeyMap[VK_UP] = false;
+	mKeyMap[VK_DOWN] = false;
+	mKeyMap[VK_LSHIFT] = false;
+	mKeyMap['Z'] = false;
+	mKeyMap['X'] = false;
 }
 
 InGameScene::~InGameScene()
@@ -21,10 +30,12 @@ void InGameScene::OnResize(float aspect)
 		mMainCamera->SetLens(aspect);
 }
 
-void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, float aspect, shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<BulletWrapper> physics)
 {
+	mDevice = device;
+
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -46,15 +57,15 @@ void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* 
 		XMFLOAT3(-1.0f, 0.75f, 1.0f),
 		3000.0f, DIRECTIONAL_LIGHT);
 
-	BuildRootSignature(device);
-	BuildComputeRootSignature(device);
-	BuildShadersAndPSOs(device, cmdList);
-	BuildGameObjects(device, cmdList, dynamicsWorld);
-	BuildConstantBuffers(device);
-	BuildDescriptorHeap(device);
+	BuildRootSignature();
+	BuildComputeRootSignature();
+	BuildShadersAndPSOs(cmdList);
+	BuildGameObjects(cmdList, physics);
+	BuildConstantBuffers();
+	BuildDescriptorHeap();
 }
 
-void InGameScene::BuildRootSignature(ID3D12Device* device)
+void InGameScene::BuildRootSignature()
 {
 	D3D12_DESCRIPTOR_RANGE descRanges[4];
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 4);
@@ -96,13 +107,13 @@ void InGameScene::BuildRootSignature(ID3D12Device* device)
 		&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
 		rootSigBlob.GetAddressOf(), errorBlob.GetAddressOf()));
 
-	ThrowIfFailed(device->CreateRootSignature(
+	ThrowIfFailed(mDevice->CreateRootSignature(
 		0, rootSigBlob->GetBufferPointer(),
 		rootSigBlob->GetBufferSize(),
 		IID_PPV_ARGS(&mRootSignature)));
 }
 
-void InGameScene::BuildComputeRootSignature(ID3D12Device* device)
+void InGameScene::BuildComputeRootSignature()
 {
 	D3D12_DESCRIPTOR_RANGE descRanges[2];
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
@@ -113,7 +124,7 @@ void InGameScene::BuildComputeRootSignature(ID3D12Device* device)
 	parameters[1] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);    // Output																   
 
 	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = Extension::RootSignatureDesc(_countof(parameters), parameters,
-		0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+		0, nullptr , D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	ComPtr<ID3DBlob> rootSigBlob = nullptr;
 	ComPtr<ID3DBlob> errorBlob = nullptr;
@@ -122,82 +133,82 @@ void InGameScene::BuildComputeRootSignature(ID3D12Device* device)
 		&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
 		rootSigBlob.GetAddressOf(), errorBlob.GetAddressOf()));
 
-	ThrowIfFailed(device->CreateRootSignature(
+	ThrowIfFailed(mDevice->CreateRootSignature(
 		0, rootSigBlob->GetBufferPointer(),
 		rootSigBlob->GetBufferSize(),
 		IID_PPV_ARGS(&mComputeRootSignature)));
 }
 
-void InGameScene::BuildShadersAndPSOs(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 {
 	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
 	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
 
-	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(device, cmdList);
-	mPipelines[Layer::SkyBox]->BuildPipeline(device, mRootSignature.Get());
+	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
+	mPipelines[Layer::SkyBox]->BuildPipeline(mDevice.Get(), mRootSignature.Get());
 
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
-	mPipelines[Layer::Default]->BuildPipeline(device, mRootSignature.Get(), defaultShader.get());
+	mPipelines[Layer::Default]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), defaultShader.get());
 
 	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 	mPipelines[Layer::Terrain]->SetWiredFrame(true);
 	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
-	mPipelines[Layer::Terrain]->BuildPipeline(device, mRootSignature.Get(), terrainShader.get());
+	mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
 
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
-	mPipelines[Layer::Color]->BuildPipeline(device, mRootSignature.Get(), colorShader.get());
+	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());
 
-	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(device);
-	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(device, mComputeRootSignature.Get(), motionBlurShader.get());
+	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(mDevice.Get());
+	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get());
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(device, 2048, 2048, 3, mMainCamera.get());
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 2048, 2048, 3, mMainCamera.get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
-	mShadowMapRenderer->BuildPipeline(device, mRootSignature.Get());
+	mShadowMapRenderer->BuildPipeline(mDevice.Get(), mRootSignature.Get());
 }
 
-void InGameScene::BuildConstantBuffers(ID3D12Device* device)
+void InGameScene::BuildConstantBuffers()
 {
-	mLightCB = std::make_unique<ConstantBuffer<LightConstants>>(device, 2);
-	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(device, 10); // 메인 카메라 1개, 그림자 매핑 카메라 3개, 다이나믹 큐브매핑 카메라 6개
-	mGameInfoCB = std::make_unique<ConstantBuffer<GameInfoConstants>>(device, 1);
+	mLightCB = std::make_unique<ConstantBuffer<LightConstants>>(mDevice.Get(), 2);
+	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(mDevice.Get(), 10); // 메인 카메라 1개, 그림자 매핑 카메라 3개, 다이나믹 큐브매핑 카메라 6개
+	mGameInfoCB = std::make_unique<ConstantBuffer<GameInfoConstants>>(mDevice.Get(), 1);
 
 	for (const auto& [_, pso] : mPipelines)
 	{
 		if(pso)
-			pso->BuildConstantBuffer(device);
+			pso->BuildConstantBuffer(mDevice.Get());
 	}
 }
 
-void InGameScene::BuildDescriptorHeap(ID3D12Device* device)
+void InGameScene::BuildDescriptorHeap()
 {
-	CreateVelocityMapDescriptorHeaps(device);
-	CreateVelocityMapViews(device);
-	mShadowMapRenderer->BuildDescriptorHeap(device, 3, 4, 5);
+	CreateVelocityMapDescriptorHeaps();
+	CreateVelocityMapViews();
+	mShadowMapRenderer->BuildDescriptorHeap(mDevice.Get(), 3, 4, 5);
 	for (const auto& [_, pso] : mPipelines)
-		pso->BuildDescriptorHeap(device, 3, 4, 5);
+		pso->BuildDescriptorHeap(mDevice.Get(), 3, 4, 5);
 }
 
-void InGameScene::CreateVelocityMapViews(ID3D12Device* device)
+void InGameScene::CreateVelocityMapViews()
 {
-	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,0.0f} };
+	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R32G32B32A32_FLOAT, {0.0f,0.0f,0.0f,0.0f} };
 
 	mVelocityMap = CreateTexture2DResource(
-		device, gFrameWidth, gFrameHeight, 1, 1,
-		DXGI_FORMAT_R8G8B8A8_UNORM,
+		mDevice.Get(), gFrameWidth, gFrameHeight, 1, 1,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mVelocityMapRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	device->CreateRenderTargetView(mVelocityMap.Get(), nullptr, rtvHandle);
+	mDevice->CreateRenderTargetView(mVelocityMap.Get(), nullptr, rtvHandle);
 	mVelocityMapRtvHandle = rtvHandle;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
@@ -205,20 +216,20 @@ void InGameScene::CreateVelocityMapViews(ID3D12Device* device)
 	srvDesc.Texture2D.PlaneSlice = 0;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = mVelocityMapSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	device->CreateShaderResourceView(mVelocityMap.Get(), &srvDesc, srvHandle);
+	mDevice->CreateShaderResourceView(mVelocityMap.Get(), &srvDesc, srvHandle);
 	mVelocityMapSrvHandle = srvHandle;
 }
 
-void InGameScene::CreateVelocityMapDescriptorHeaps(ID3D12Device* device)
+void InGameScene::CreateVelocityMapDescriptorHeaps()
 {
-	ThrowIfFailed(device->CreateDescriptorHeap(
+	ThrowIfFailed(mDevice->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
 			1,
 			D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
 		IID_PPV_ARGS(&mVelocityMapRtvDescriptorHeap)));
 
-	ThrowIfFailed(device->CreateDescriptorHeap(
+	ThrowIfFailed(mDevice->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
 			1,
 			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
@@ -226,58 +237,95 @@ void InGameScene::CreateVelocityMapDescriptorHeaps(ID3D12Device* device)
 		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
 }
 
-void InGameScene::BuildGameObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics)
 {
-	auto box = make_shared<GameObject>();
-	box->LoadModel(device, cmdList, L"Models\\road_sign2.obj");
-	box->Move(0.0f, 10.0f, 0.0f);
-	mPipelines[Layer::Default]->AppendObject(box);
+	mDynamicsWorld = physics->GetDynamicsWorld();
 
-	auto gridMesh = make_shared<GridMesh>(device, cmdList, 50.0f, 50.0f, 10.0f, 10.0f);
+	mMeshList[MeshType::Missile].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5, 5, 5));
+	mMeshList[MeshType::Grid].push_back(make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f));
+
 	auto grid = make_shared<GameObject>();
-	grid->SetMesh(gridMesh);
-	grid->LoadTexture(device, cmdList, L"Resources\\tile.dds");
+	grid->SetMeshes(mMeshList[MeshType::Grid]);
+	grid->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
 	grid->Rotate(90.0f, 0.0f, 0.0f);
 	mPipelines[Layer::Default]->AppendObject(grid);
 
-	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
+	// 지형 스케일에는 정수를 넣는 것을 권장
+	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(1.0f, 1.0f, 1.0f));
 	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(device, cmdList, dynamicsWorld, 89, 89);
-	terrain->LoadTexture(device, cmdList, L"Resources\\terrainTexture.dds");
-	terrain->LoadTexture(device, cmdList, L"Resources\\rocky.dds");
-	terrain->LoadTexture(device, cmdList, L"Resources\\road.dds");
-	terrain->LoadTexture(device, cmdList, L"Resources\\heightmap.dds");
-	terrain->LoadTexture(device, cmdList, L"Resources\\normalmap.dds");
-
+	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 89, 89);
+	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
+	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\rocky.dds");
+	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\road.dds");
+	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
+	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
+#ifdef STANDALONE
+	BuildCarObjects({ 500.0f, 300.0f, 500.0f }, 4, true, cmdList, physics, 0);
+#else
+	const auto& players = mNetPtr->GetPlayersInfo();
+	for (int i = 0; const PlayerInfo& info : players)
+	{
+		if (info.Empty == false)
+		{
+			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
+			BuildCarObjects(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
+		}
+		i++;
+	}
+#endif
+	float aspect = mMainCamera->GetAspect();
+	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
+}
 
-	auto carObj = make_shared<PhysicsPlayer>();
-	carObj->SetPosition(XMFLOAT3(500.0f, 10.0f, 500.0f));
-	carObj->LoadModel(device, cmdList, L"Models\\Car_Body.obj");
+void InGameScene::BuildCarObjects(
+	const XMFLOAT3& position,
+	char color,
+	bool isPlayer,
+	ID3D12GraphicsCommandList* cmdList, 
+	std::shared_ptr<BulletWrapper>& physics,
+	UINT netID)
+{
+	auto carObj = make_shared<PhysicsPlayer>(netID);
+	carObj->SetPosition(position);
+
+	if (mMeshList[MeshType::Car].empty())
+		mMeshList[MeshType::Car] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
+	else
+		carObj->SetMeshes(mMeshList[MeshType::Car]);
+
+	carObj->SetDiffuse("Car_Texture", mColorMap[(int)color]);
 	for (int i = 0; i < 4; ++i)
 	{
 		auto wheelObj = make_shared<WheelObject>();
 
 		if (i % 2 == 0)
-			wheelObj->LoadModel(device, cmdList, L"Models\\Car_Wheel_L.obj");
+		{
+			if (mMeshList[MeshType::Wheel_L].empty())
+				mMeshList[MeshType::Wheel_L] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
+			else
+				wheelObj->SetMeshes(mMeshList[MeshType::Wheel_L]);
+		}
 		else
-			wheelObj->LoadModel(device, cmdList, L"Models\\Car_Wheel_R.obj");
+		{
+			if (mMeshList[MeshType::Wheel_R].empty())
+				mMeshList[MeshType::Wheel_R] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
+			else
+				wheelObj->SetMeshes(mMeshList[MeshType::Wheel_R]);
+		}
 
 		carObj->SetWheel(wheelObj.get(), i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
-	carObj->BuildRigidBody(dynamicsWorld);
-	carObj->BuildDsvRtvView(device);
+	carObj->BuildRigidBody(physics);
+	carObj->BuildDsvRtvView(mDevice.Get());
+	if (isPlayer) mPlayer = carObj.get();
 	mPipelines[Layer::Color]->AppendObject(carObj);
-
-	float aspect = mMainCamera->GetAspect();
-	mPlayer = carObj.get();
-	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
+	mPlayerObjects.push_back(carObj);
 }
-
 
 void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 {
@@ -286,7 +334,7 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 
 	if (mCubemapInterval < 0.0f)
 	{
-		mCubemapInterval = 0.1f;
+		mCubemapInterval = 0.03f;
 		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
 		if (mCubemapDrawIndex < 5)
@@ -306,7 +354,21 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 
 bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 {
-	return false;
+	switch (type)
+	{
+	case SC::REMOVE_PLAYER:
+	{
+		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
+		mNetPtr->RemovePlayer(pck);
+
+		auto p = *std::find_if(mPlayerObjects.begin(), mPlayerObjects.end(),
+			[pck](const auto& p) { return (p->GetNetID() == pck->player_idx); });
+
+		p->SetRemoveFlag(true);
+		break;
+	}
+	}
+	return true;
 }
 
 void InGameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
@@ -344,14 +406,15 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 }
 
-void InGameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, float elapsed)
+void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed)
 {
+#ifdef STANDALONE
 	if (mMissileInterval < 0.0f)
 	{
 		if (GetAsyncKeyState('X') & 0x8000)
 		{
 			mMissileInterval = 1.0f;
-			AppendMissileObject(device, cmdList, dynamicsWorld);
+			AppendMissileObject(cmdList, physics);
 		}
 	}
 	else
@@ -360,13 +423,33 @@ void InGameScene::OnPreciseKeyInput(ID3D12Device* device, ID3D12GraphicsCommandL
 	}
 	
 	if(mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
+#else
+	for (auto& [key, val] : mKeyMap)
+	{
+		auto input = GetAsyncKeyState(key);
+		if (input && val == false)
+		{
+			// Key pressed
+			val = true;
+			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
+		}
+		else if (input == 0 && val == true)
+		{
+			// Key released
+			val = false;
+			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
+		}
+	}
+#endif
 }
 
-void InGameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
 	float elapsed = timer.ElapsedTime();
+	
+	UpdatePlayerObjects();
 
-	OnPreciseKeyInput(device, cmdList, dynamicsWorld, elapsed);
+	OnPreciseKeyInput(cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
 	mMainCamera->Update(elapsed);
@@ -377,9 +460,10 @@ void InGameScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdLis
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mMainCamera.get());
 
-	UpdateMissileObject(device, dynamicsWorld);
+	UpdateMissileObject();
 	
 	UpdateConstants(timer);
+	UpdateDynamicsWorld();
 }
 
 void InGameScene::UpdateLight(float elapsed)
@@ -419,6 +503,45 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 	
 	for (const auto& [_, pso] : mPipelines)
 		pso->UpdateConstants();
+}
+
+void InGameScene::UpdateDynamicsWorld()
+{
+	auto terrain = static_pointer_cast<TerrainObject>(mPipelines[Layer::Terrain]->GetRenderObjects()[0]);
+	auto [blockWidth, blockDepth] = terrain->GetBlockSize();
+
+	auto rigidBodies = terrain->GetTerrainRigidBodies();
+
+	for (auto o : rigidBodies)
+	{
+		mDynamicsWorld->removeRigidBody(o);
+	}
+
+	for (int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	{
+		btCollisionObject* obj = mDynamicsWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+
+		if (!body->isStaticObject())
+		{
+			auto pos = body->getCenterOfMassPosition();
+
+			int xIndex = pos.x() / blockWidth;
+			int zIndex = pos.z() / blockDepth;
+
+			for (int j = 0; j < 3; ++j)
+			{
+				for (int k = 0; k < 3; ++k)
+				{
+					int idx = (xIndex - 1 + j) + (zIndex - 1 + k) * (int)(terrain->GetWidth() / blockWidth);
+					if (!rigidBodies[idx]->isInWorld() && idx >= 0 && idx < rigidBodies.size())
+					{
+						mDynamicsWorld->addRigidBody(rigidBodies[idx]);
+					}
+				}
+			}
+		}
+	}
 }
 
 void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
@@ -483,19 +606,18 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* ca
 	}
 }
 
-void InGameScene::AppendMissileObject(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void InGameScene::AppendMissileObject(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics)
 {
-	mMissileMesh = std::make_shared<BoxMesh>(device, cmdList, 5, 5, 5);
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
-	missile->SetMesh(mMissileMesh, mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), dynamicsWorld);
-	missile->LoadTexture(device, cmdList, L"Resources\\tile.dds");
+	missile->SetMesh(mMeshList[MeshType::Missile][0], mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), physics);
+	missile->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
 
 	mMissileObjects.push_back(missile);
 	mPipelines[Layer::Default]->AppendObject(missile);
-	mPipelines[Layer::Default]->ResetPipeline(device);
+	mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
 }
 
-void InGameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void InGameScene::UpdateMissileObject()
 {
 	bool flag = false;
 	for (auto i = mMissileObjects.begin(); i < mMissileObjects.end();)
@@ -503,7 +625,12 @@ void InGameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDi
 		if (i->get()->GetDuration() < 0.0f)
 		{
 			flag = true;
-			dynamicsWorld->removeRigidBody(i->get()->GetRigidBody());
+
+			btRigidBody* rigidBody = i->get()->GetRigidBody();
+			delete rigidBody->getMotionState();
+			mDynamicsWorld->removeRigidBody(rigidBody);
+			delete rigidBody;
+
 			auto& defaultObjects = mPipelines[Layer::Default]->GetRenderObjects();
 			for (int j = 0; j < defaultObjects.size(); ++j)
 			{
@@ -518,7 +645,36 @@ void InGameScene::UpdateMissileObject(ID3D12Device* device, std::shared_ptr<btDi
 		else
 			++i;
 	}
-	if (flag) mPipelines[Layer::Default]->ResetPipeline(device);
+	if (flag) mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
+}
+
+void InGameScene::UpdatePlayerObjects()
+{
+	bool flag = false;
+	for (auto i = mPlayerObjects.begin(); i < mPlayerObjects.end();)
+	{
+		if (i->get()->GetRemoveFlag())
+		{
+			flag = true;
+			btRigidBody* rigidBody = i->get()->GetRigidBody();
+			delete rigidBody->getMotionState();
+			mDynamicsWorld->removeRigidBody(rigidBody);
+			delete rigidBody;
+			auto& colorObjects = mPipelines[Layer::Color]->GetRenderObjects();
+			for (int j = 0; j < colorObjects.size(); ++j)
+			{
+				if (*i == colorObjects[j])
+				{
+					mPipelines[Layer::Color]->DeleteObject(j);
+				}
+			}
+
+			i = mPlayerObjects.erase(i);
+		}
+		else
+			++i;
+	}
+	if (flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
 }
 
 

@@ -1,9 +1,11 @@
 #pragma once
 
 #include "gameTimer.h"
+#include "mesh.h"
+#include "gameObject.h"
 
 #define STANDALONE
-//#define START_GAME_INSTANT
+#define START_GAME_INSTANT
 
 enum class SCENE_STAT : char
 {
@@ -34,16 +36,15 @@ public:
 
 public:
 	virtual void BuildObjects(
-		ID3D12Device* device, 
+		ComPtr<ID3D12Device> device,
 		ID3D12GraphicsCommandList* cmdList, 
 		float aspect,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) = 0;
+		std::shared_ptr<BulletWrapper> physics) = 0;
 
 	virtual void Update(
-		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) = 0;
+		std::shared_ptr<BulletWrapper> physics) = 0;
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) = 0;
 	
@@ -73,4 +74,5 @@ protected:
 	NetModule* mNetPtr;
 
 	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;
+	ComPtr<ID3D12Device> mDevice;
 };

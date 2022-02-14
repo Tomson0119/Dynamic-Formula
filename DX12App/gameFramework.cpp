@@ -108,7 +108,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 		break;
 	}
 
-	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), GetAspect(), mBtDynamicsWorld);
+	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
@@ -130,6 +130,7 @@ void GameFramework::CheckAndChangeScene()
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
 		InitScene(static_cast<SCENE_STAT>(nextScene));
+		// TODO: If scene is in_game scene then let server know loading has done.
 		break;
 	}
 	case SCENE_CHANGE_FLAG::POP:
@@ -151,8 +152,7 @@ void GameFramework::CheckAndChangeScene()
 
 void GameFramework::Update()
 {
-	if(mBtDynamicsWorld) 
-		mBtDynamicsWorld->stepSimulation(mTimer.ElapsedTime());
+	mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
 
 	D3DFramework::UpdateFrameStates();
 	
@@ -162,7 +162,7 @@ void GameFramework::Update()
 	//UpdateUI();
 
 	//mCamera->Update(mTimer.ElapsedTime());
-	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
+	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
 void GameFramework::Draw()

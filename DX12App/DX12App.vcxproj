@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bulletWrap.cpp" />
     <ClCompile Include="camera.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
@@ -146,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basewin.h" />
+    <ClInclude Include="bulletWrap.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="constantBuffer.h" />
     <ClInclude Include="d3dExtension.h" />
@@ -315,13 +317,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(ProjectDir)\..\BulletWrap;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(ProjectDir)\..\BulletWrap;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

@@ -1,19 +1,24 @@
 #include "common.h"
 #include "LoginServer.h"
+#include "InGameServer.h"
 #include "Client.h"
-#include "InGameRoom.h"
 
 std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
+IOCP LoginServer::msIOCP;
 
 LoginServer::LoginServer(const EndPoint& ep)
-	: mLoop(true)
+	: mLoop{ true }
 {
+	std::signal(SIGINT, SignalHandler);
+
+#ifdef USE_DATABASE
 	for (int i = 0; i < MAX_THREADS; i++)
 	{
 		if (mDBHandlers[i].ConnectToDB(L"sql_server"))
 			mDBHandlers[i].ResetAllHost();
 		else std::cout << "failed to connect to DB\n";
 	}
+#endif
 
 	mLobby.Init(this);
 	
@@ -24,10 +29,22 @@ LoginServer::LoginServer(const EndPoint& ep)
 	mListenSck.Bind(ep);
 }
 
+LoginServer::~LoginServer()
+{
+	for (int i = 0; i < gClients.size(); i++)
+	{
+		if (gClients[i]->ID >= 0)
+		{
+			Logout(i);
+			gClients[i]->Disconnect();
+		}
+	}
+}
+
 void LoginServer::Run()
 {
 	mListenSck.Listen();
-	mIOCP.RegisterDevice(mListenSck.GetSocket(), 0);
+	msIOCP.RegisterDevice(mListenSck.GetSocket(), 0);
 	std::cout << "Listening to clients...\n";
 
 	WSAOVERLAPPEDEX acceptEx;
@@ -48,7 +65,7 @@ void LoginServer::NetworkThreadFunc(LoginServer& server)
 	while (server.mLoop)
 	{
 		try {
-			server.mIOCP.GetCompletionInfo(info);
+			server.msIOCP.GetCompletionInfo(info);
 
 			int client_id = static_cast<int>(info.key);
 			WSAOVERLAPPEDEX* over_ex = reinterpret_cast<WSAOVERLAPPEDEX*>(info.overEx);
@@ -106,6 +123,17 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 		mListenSck.AsyncAccept(over);
 		break;
 	}
+	case OP::PHYSICS:
+	{
+		float timeStep = *reinterpret_cast<float*>(over->NetBuffer.BufStartPtr());
+		mLobby.GetInGameServer().RunPhysicsSimulation(id, timeStep);
+		break;
+	}
+	case OP::SHUTDOWN:
+	{
+		mLoop = false;
+		delete over;
+	}
 	}
 }
 
@@ -119,18 +147,18 @@ void LoginServer::AcceptLogin(const char* name, int id)
 	gClients[id]->Name = name;
 	gClients[id]->SendLoginResult(LOGIN_STAT::ACCEPTED, false);
 	
-	mLobby.IncreasePlayerCount();
-	mLobby.SendExistingRoomList(id);
+	mLobby.TakeOverNewPlayer(id);
 }
 
 void LoginServer::Logout(int id)
 {
-	mLobby.TryRemovePlayer(gClients[id]->RoomID, id);
-	mLobby.DecreasePlayerCount();
+	mLobby.RevertScene(id, true);
+	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 
+#ifdef USE_DATABASE
 	int thread_id = mThreadIDs[std::this_thread::get_id()];
 	mDBHandlers[thread_id].SaveUserInfo(id);
-	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
+#endif
 }
 
 void LoginServer::Disconnect(int id)
@@ -148,7 +176,7 @@ void LoginServer::AcceptNewClient(int id, SOCKET sck)
 	std::cout << "[" << id << "] Accepted client.\n";
 #endif
 	gClients[id]->AssignAcceptedID(id, sck);
-	mIOCP.RegisterDevice(sck, id);
+	msIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
 }
 
@@ -182,20 +210,22 @@ void LoginServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
 
 bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 {
-	// TEST
-	//mLobby.PrintRoomList();
-
 	switch (type)
 	{
 	case CS::LOGIN:
 	{
-#ifdef DEBUG_PACKET_TRANSFER
+	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received login packet\n";
-#endif
+	#endif
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
 		
+	#ifdef USE_DATABASE
 		int thread_id = mThreadIDs[std::this_thread::get_id()];
 		int	conn_id = mDBHandlers[thread_id].SearchIdAndPwd(pck->name, pck->pwd, id);
+	#else
+		int conn_id = (int)LOGIN_STAT::INVALID_IDPWD;
+	#endif
+
 		if(conn_id >= (int)LOGIN_STAT::ACCEPTED)
 		{
 			if (conn_id >= 0)
@@ -220,9 +250,9 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	}
 	case CS::REGISTER:
 	{
-#ifdef DEBUG_PACKET_TRANSFER
+	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received register packet.\n";
-#endif
+	#endif
 		CS::packet_register* pck = reinterpret_cast<CS::packet_register*>(packet);
 
 		if (std::string(pck->name).find("GM") != std::string::npos)
@@ -231,30 +261,27 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 			break;
 		}
 
+	#ifdef USE_DATABASE
 		int thread_id = mThreadIDs[std::this_thread::get_id()];
 		if (mDBHandlers[thread_id].RegisterIdAndPwd(pck->name, pck->pwd))
 			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
 		else
 			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
-		break;
-	}
-	case CS::REVERT_SCENE:
-	{
-#ifdef DEBUG_PACKET_TRANSFER
-		std::cout << "[" << id << "] Received revert scene.\n";
-#endif
-		auto currentState = gClients[id]->GetCurrentState();
-		if (currentState == CLIENT_STAT::LOBBY)
-			Logout(id);
-		else if (currentState == CLIENT_STAT::IN_ROOM)
-		{
-			mLobby.TryRemovePlayer(gClients[id]->RoomID, id);
-			mLobby.SendExistingRoomList(id);
-		}
+	#endif
 		break;
 	}
 	default:
 		return mLobby.ProcessPacket(packet, type, id, bytes);
 	}
 	return true;
+}
+
+void LoginServer::SignalHandler(int signal)
+{
+	if (signal == SIGINT)
+	{
+		std::cout << "Terminating Server..\n";
+		for(int i=0;i<MAX_THREADS;i++)
+			msIOCP.PostToCompletionQueue(new WSAOVERLAPPEDEX(OP::SHUTDOWN), -1);
+	}
 }

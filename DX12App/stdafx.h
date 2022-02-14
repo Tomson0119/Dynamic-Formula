@@ -74,6 +74,8 @@
 #include "d3dExtension.h"
 #include "dxException.h"
 
+#include "bulletWrap.h"
+
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
@@ -259,7 +261,7 @@ namespace Vector3
 		return VectorToFloat3(XMVectorReplicate(value));
 	}
 
-	inline XMFLOAT3 Multiply(float scalar, XMFLOAT3& v)
+	inline XMFLOAT3 Multiply(float scalar, const XMFLOAT3& v)
 	{
 		XMFLOAT3 ret;
 		XMStoreFloat3(&ret, scalar * XMLoadFloat3(&v));
@@ -454,34 +456,5 @@ namespace Matrix4x4
 		xmf4x4Result._44 = btMat[15];
 
 		return xmf4x4Result;
-	}
-}
-
-namespace BulletHelper
-{
-	const float PI = 3.1415926535f;
-	inline btRigidBody* CreateRigidBody(btScalar mass, const btTransform& startTransform, btCollisionShape* shape, std::shared_ptr<btDiscreteDynamicsWorld> pbtDynamicsWorld)
-	{
-		btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
-
-		bool isDynamic = (mass != 0.f);
-
-		btVector3 localInertia(0, 0, 0);
-		if (isDynamic)
-			shape->calculateLocalInertia(mass, localInertia);
-
-		btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
-
-		btRigidBody::btRigidBodyConstructionInfo cInfo(mass, myMotionState, shape, localInertia);
-
-		btRigidBody* body = new btRigidBody(cInfo);
-
-		pbtDynamicsWorld->addRigidBody(body);
-		return body;
-	}
-
-	inline float RadianToEuler(float fRadian)
-	{
-		return fRadian / 360 * (float)(2 * PI);
 	}
 }

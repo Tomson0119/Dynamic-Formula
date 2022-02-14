@@ -26,6 +26,8 @@ public:
 	void SwitchMap(int roomID);
 	void ToggleReady(int roomID);
 
+	void SendKeyInput(int roomID, int key, bool pressed);
+
 public:
 	SOCKET GetSocket() const { return mSocket.GetSocket(); }
 

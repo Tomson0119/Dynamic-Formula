@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ #include "stdafx.h"
 #include "d3dFramework.h"
 #include "UI.h"
 #include "NetLib/NetModule.h"
@@ -11,27 +11,6 @@ D3DFramework::D3DFramework()
 
 D3DFramework::~D3DFramework()
 {
-	if (mBtDynamicsWorld)
-	{
-		int i;
-		for (i = mBtDynamicsWorld->getNumConstraints() - 1; i >= 0; i--)
-		{
-			mBtDynamicsWorld->removeConstraint(mBtDynamicsWorld->getConstraint(i));
-		}
-		for (i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
-		{
-			btCollisionObject* obj = mBtDynamicsWorld->getCollisionObjectArray()[i];
-			btRigidBody* body = btRigidBody::upcast(obj);
-			if (body && body->getMotionState())
-			{
-				delete body->getMotionState();
-			}
-			mBtDynamicsWorld->removeCollisionObject(obj);
-			if(obj) delete obj;
-		}
-	}
-
-
 	//if(mD3dDevice) WaitUntilGPUComplete();
 	if (mFenceEvent) CloseHandle(mFenceEvent);
 }
@@ -99,16 +78,7 @@ bool D3DFramework::InitDirect3D()
 
 bool D3DFramework::InitBulletPhysics()
 {
-	mBtCollisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
-
-	mBtDispatcher = std::make_unique<btCollisionDispatcher>(mBtCollisionConfiguration.get());
-
-	mBtOverlappingPairCache = std::make_unique<btDbvtBroadphase>();
-
-	mBtSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
-
-	mBtDynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(mBtDispatcher.get(), mBtOverlappingPairCache.get(), mBtSolver.get(), mBtCollisionConfiguration.get());
-	mBtDynamicsWorld->setGravity(btVector3(0, -10, 0));
+	mBulletPhysics = std::make_shared<BulletWrapper>(-10);
 
 	return true;
 }
@@ -395,47 +365,27 @@ LRESULT D3DFramework::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch(uMsg)
 	{
 	case WM_ACTIVATE:  // 윈도우 창을 활성화 했을 때
-		if (LOWORD(wParam) == WA_INACTIVE)
-		{
-			mPaused = true;
-			mTimer.Stop();
-		}
-		else
-		{
-			mPaused = false;
-			mTimer.Start();
-		}
 		break;
 		
 	case WM_SIZE:  // 윈도우 창의 크기를 변경했을 때
 		gFrameWidth = LOWORD(lParam);
 		gFrameHeight = HIWORD(lParam);
-		if (wParam == SIZE_MINIMIZED)
+		if (wParam == SIZE_MAXIMIZED)
 		{
-			mPaused = true;
-		}
-		else if (wParam == SIZE_MAXIMIZED)
-		{
-			mPaused = false;
 			OnResize();
 		}
 		else if (wParam == SIZE_RESTORED)
 		{
 			if (mD3dDevice) {
-				mPaused = false;
 				OnResize();
 			}
 		}		
 		break;
 
 	case WM_ENTERSIZEMOVE:  // 윈도우 창의 크기 조절 바를 클릭했을 때
-		mPaused = true;
-		mTimer.Stop();
 		break;
 
 	case WM_EXITSIZEMOVE:  // 윈도우 창 크기 조절을 끝마쳤을 때
-		mPaused = false;
-		mTimer.Start();
 		OnResize();
 		break;
 
@@ -469,6 +419,7 @@ LRESULT D3DFramework::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return MAKELRESULT(0, MNC_CLOSE);
 
 	case WM_DESTROY:
+		if (mNetwork) mNetwork->PostDisconnect();
 		PostQuitMessage(0);
 		return 0;
 
