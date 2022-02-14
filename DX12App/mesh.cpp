@@ -519,7 +519,6 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	btTerrainTransform.setOrigin(btVector3(mOOBB.Center.x, (mMaxHeight + mMinHeight) * mScale.y / 2, mOOBB.Center.z));
 
 	mBtRigidBody = physics->CreateRigidBody(0.0f, btTerrainTransform, TerrainShape);
-	InActiveRigidBody();
 
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(TerrainVertex), 0,
 		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, vertices.data(), (UINT)vertices.size(), nullptr, 0);
@@ -591,11 +590,6 @@ void HeightMapPatchListMesh::SetIndex(int x, int z)
 	mXIndex = x;
 	mZIndex = z;
 }
-
-void HeightMapPatchListMesh::InActiveRigidBody()
-{
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //

@@ -46,7 +46,8 @@ public:
 	void UpdateLight(float elapsed);
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
-	void UpdateConstants(const GameTimer& timer);	
+	void UpdateConstants(const GameTimer& timer);
+	void UpdateDynamicsWorld();
 
 	void SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
 

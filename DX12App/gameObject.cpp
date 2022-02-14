@@ -517,6 +517,7 @@ TerrainObject::TerrainObject(int width, int depth, const XMFLOAT3& scale)
 
 TerrainObject::~TerrainObject()
 {
+	mTerrainRigidBodies.clear();
 }
 
 void TerrainObject::BuildHeightMap(const std::wstring& path)
@@ -526,6 +527,9 @@ void TerrainObject::BuildHeightMap(const std::wstring& path)
 
 void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
 {	
+	mBlockWidth = blockWidth;
+	mBlockDepth = blockDepth;
+
 	int xBlocks = (mWidth - 1) / (blockWidth - 1);
 	int zBlocks = (mDepth - 1) / (blockDepth - 1);
 
@@ -540,6 +544,9 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 			zStart = z * (blockDepth - 1);
 			auto gridMesh = std::make_shared<HeightMapPatchListMesh>(device, cmdList, xStart, zStart, blockWidth, blockDepth, mTerrainScale, mHeightMapImage.get(), physics);
 			gridMesh->SetIndex(x, z);
+
+			mTerrainRigidBodies.push_back(gridMesh->GetRigidBody());
+
 			SetMesh(gridMesh);
 
 			auto [gridMin, gridMax] = gridMesh->GetMinMax();

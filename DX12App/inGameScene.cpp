@@ -250,6 +250,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	grid->Rotate(90.0f, 0.0f, 0.0f);
 	mPipelines[Layer::Default]->AppendObject(grid);
 
+	// 지형 스케일에는 정수를 넣는 것을 권장
 	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(1.0f, 1.0f, 1.0f));
 	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
@@ -462,6 +463,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	UpdateMissileObject();
 	
 	UpdateConstants(timer);
+	UpdateDynamicsWorld();
 }
 
 void InGameScene::UpdateLight(float elapsed)
@@ -501,6 +503,45 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 	
 	for (const auto& [_, pso] : mPipelines)
 		pso->UpdateConstants();
+}
+
+void InGameScene::UpdateDynamicsWorld()
+{
+	auto terrain = static_pointer_cast<TerrainObject>(mPipelines[Layer::Terrain]->GetRenderObjects()[0]);
+	auto [blockWidth, blockDepth] = terrain->GetBlockSize();
+
+	auto rigidBodies = terrain->GetTerrainRigidBodies();
+
+	for (auto o : rigidBodies)
+	{
+		mDynamicsWorld->removeRigidBody(o);
+	}
+
+	for (int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	{
+		btCollisionObject* obj = mDynamicsWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+
+		if (!body->isStaticObject())
+		{
+			auto pos = body->getCenterOfMassPosition();
+
+			int xIndex = pos.x() / blockWidth;
+			int zIndex = pos.z() / blockDepth;
+
+			for (int j = 0; j < 3; ++j)
+			{
+				for (int k = 0; k < 3; ++k)
+				{
+					int idx = (xIndex - 1 + j) + (zIndex - 1 + k) * (int)(terrain->GetWidth() / blockWidth);
+					if (!rigidBodies[idx]->isInWorld() && idx >= 0 && idx < rigidBodies.size())
+					{
+						mDynamicsWorld->addRigidBody(rigidBodies[idx]);
+					}
+				}
+			}
+		}
+	}
 }
 
 void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
@@ -584,7 +625,12 @@ void InGameScene::UpdateMissileObject()
 		if (i->get()->GetDuration() < 0.0f)
 		{
 			flag = true;
-			mDynamicsWorld->removeRigidBody(i->get()->GetRigidBody());
+
+			btRigidBody* rigidBody = i->get()->GetRigidBody();
+			delete rigidBody->getMotionState();
+			mDynamicsWorld->removeRigidBody(rigidBody);
+			delete rigidBody;
+
 			auto& defaultObjects = mPipelines[Layer::Default]->GetRenderObjects();
 			for (int j = 0; j < defaultObjects.size(); ++j)
 			{

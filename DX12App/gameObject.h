@@ -173,6 +173,9 @@ public:
 	float GetWidth() const { return mWidth * mTerrainScale.x; }
 	float GetDepth() const { return mDepth * mTerrainScale.z; }
 
+	std::pair<int, int> GetBlockSize() { return std::make_pair(mBlockWidth * mTerrainScale.x, mBlockDepth * mTerrainScale.z); }
+
+	std::vector<btRigidBody*> GetTerrainRigidBodies() { return mTerrainRigidBodies; }
 
 private:
 	std::unique_ptr<HeightMapImage> mHeightMapImage;
@@ -180,9 +183,12 @@ private:
 	int mWidth = 0;
 	int mDepth = 0;
 
+	int mBlockWidth = 0;
+	int mBlockDepth = 0;
+
 	XMFLOAT3 mTerrainScale = { 1.0f,1.0f,1.0f };
 
-	std::shared_ptr<btHeightfieldTerrainShape> mTerrainShape;
+	std::vector<btRigidBody*> mTerrainRigidBodies;
 };
 
 
@@ -218,7 +224,7 @@ class MissileObject : public GameObject
 {
 public:
 	MissileObject();
-	~MissileObject();
+	virtual ~MissileObject();
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
 	void SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }

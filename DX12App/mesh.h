@@ -187,9 +187,9 @@ public:
 	float GetHeight(int x, int z, HeightMapImage* context) const;
 	void BuildHeightmapData(const int& xStart, const int& zStart, const std::vector<TerrainVertex>& vertices, HeightMapImage* context);
 	void SetIndex(int x, int z);
-	void InActiveRigidBody();
 	std::pair<int, int> GetIndex() { return std::pair<int, int>(mXIndex, mZIndex); }
 	std::pair<float, float> GetMinMax() { return std::pair<float, float>(mMinHeight, mMaxHeight); }; // min, max
+	btRigidBody* GetRigidBody() { return mBtRigidBody; }
 
 private:
 	XMFLOAT3 mScale = {};
