@@ -473,7 +473,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 {
 	const UINT verticesCount = 25;
 
-	const int TessFactor = 10;
+	const int TessFactor = 20;
 
 	std::vector<TerrainVertex> vertices(verticesCount);
 	int increasement = 22;
@@ -512,15 +512,23 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 
 	BuildHeightmapData(TessFactor, vertices, context);
 	
-	auto TerrainShape = new btHeightfieldTerrainShape(TessFactor, TessFactor, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
-	TerrainShape->setLocalScaling(btVector3(mWidth * mScale.x / TessFactor, mScale.y, mDepth * mScale.z / TessFactor));
-	TerrainShape->getTriangleInfoMap();
+	auto TerrainShape = new btHeightfieldTerrainShape(TessFactor + 1, TessFactor + 1, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
+
+	double xScale = (mWidth - 1)  * mScale.x / TessFactor;
+
+	double yScale = (mDepth - 1) * mScale.z / TessFactor;
+
+	TerrainShape->setLocalScaling(btVector3(xScale, mScale.y, yScale));
 
 	btTransform btTerrainTransform;
 	btTerrainTransform.setIdentity();
 	btTerrainTransform.setOrigin(btVector3(mOOBB.Center.x, (mMaxHeight + mMinHeight) * mScale.y / 2, mOOBB.Center.z));
 
 	mBtRigidBody = physics->CreateRigidBody(0.0f, btTerrainTransform, TerrainShape);
+
+	btVector3 aabbMin;
+	btVector3 aabbMax;
+	mBtRigidBody->getAabb(aabbMin, aabbMax);
 
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(TerrainVertex), 0,
 		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, vertices.data(), (UINT)vertices.size(), nullptr, 0);
@@ -539,7 +547,7 @@ float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) c
 
 void HeightMapPatchListMesh::BuildHeightmapData(const int& TessFactor, const std::vector<TerrainVertex>& TerrainVertices, HeightMapImage* context)
 {
-	mHeightmapData = new float[TessFactor * mScale.x * TessFactor * mScale.z];
+	mHeightmapData = new float[(TessFactor) * (TessFactor)];
 
 	auto CubicBezierSum = [](const std::vector<TerrainVertex>& patch, XMFLOAT2 t) {
 
@@ -575,14 +583,16 @@ void HeightMapPatchListMesh::BuildHeightmapData(const int& TessFactor, const std
 		return sum;
 	};
 
-	for (int i = 0; i < TessFactor * mScale.x; ++i)
+	float debugTess[20][20];
+
+	for (int i = 0; i < TessFactor; ++i)
 	{
-		for (int j = 0; j < TessFactor * mScale.z; ++j)
+		for (int j = 0; j < TessFactor; ++j)
 		{
-			XMFLOAT2 uv{ i / (TessFactor * mScale.x), 1.0f - (j / (TessFactor * mScale.z)) };
+			XMFLOAT2 uv{ (float)i / (TessFactor - 1), 1.0f - ((float)j / (TessFactor - 1)) };
 			XMFLOAT3 posOnBazier{ CubicBezierSum(TerrainVertices, uv) };
 
-			mHeightmapData[i + (int)(j * TessFactor * mScale.z)] = posOnBazier.y;
+			mHeightmapData[i + (int)(j * (TessFactor))] = posOnBazier.y;
 		}
 	}
 }

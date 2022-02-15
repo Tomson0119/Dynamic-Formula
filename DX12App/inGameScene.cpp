@@ -251,7 +251,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	mPipelines[Layer::Default]->AppendObject(grid);
 
 	// 지형 스케일에는 정수를 넣는 것을 권장
-	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(1.0f, 1.0f, 1.0f));
+	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
 	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
 	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 89, 89);
@@ -263,7 +263,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 #ifdef STANDALONE
-	BuildCarObjects({ 500.0f, 300.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObjects({ 500.0f, 20.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -534,9 +534,12 @@ void InGameScene::UpdateDynamicsWorld()
 				for (int k = 0; k < 3; ++k)
 				{
 					int idx = (xIndex - 1 + j) + (zIndex - 1 + k) * (int)(terrain->GetWidth() / blockWidth);
-					if (!rigidBodies[idx]->isInWorld() && idx >= 0 && idx < rigidBodies.size())
+					if (idx >= 0 && idx < rigidBodies.size())
 					{
-						mDynamicsWorld->addRigidBody(rigidBodies[idx]);
+						if (!rigidBodies[idx]->isInWorld())
+						{
+							mDynamicsWorld->addRigidBody(rigidBodies[idx]);
+						}
 					}
 				}
 			}
