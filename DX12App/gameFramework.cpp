@@ -32,18 +32,11 @@ bool GameFramework::InitFramework()
 	InitScene(SCENE_STAT::IN_GAME); 
 	
 	return true;
-
-	//InGameUI Build
 }
 
 void GameFramework::OnResize()
 {
-	/*if (mpUI.get())
-		mpUI.get()->Reset();*/
 	D3DFramework::OnResize();
-	//mpUI.get()->Initialize(mD3dDevice.Get(), mCommandQueue.Get());
-	/*if(!mpUI.empty())
-		mpUI.top()->OnResize(mSwapChainBuffers->GetAddressOf(),  mD3dDevice.Get(), mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);*/
 	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
 }
 
@@ -97,26 +90,18 @@ void GameFramework::InitScene(SCENE_STAT state)
 	{
 	case SCENE_STAT::LOGIN:
 		mScenes.push(std::make_unique<LoginScene>(mNetwork.get()));
-		//mpUI.push( std::make_unique<LoginUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
-		//mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::LOBBY:
 		mScenes.push(std::make_unique<LobbyScene>(mNetwork.get()));
-		//mpUI.push(std::make_unique<LobbyUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
-		//mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::ROOM:
 		mScenes.push(std::make_unique<RoomScene>(mNetwork.get()));
-		//mpUI.push(std::make_unique<RoomUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
-		//mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	case SCENE_STAT::IN_GAME:
 		mScenes.push(std::make_unique<InGameScene>(mNetwork.get()));
-		//mpUI.push(std::make_unique<InGameUI>(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get()));
-		//mpUI.top()->PreDraw(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		break;
 
 	default:
@@ -124,6 +109,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 		break;
 	}
 
+	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
 	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight, GetAspect(), mBtDynamicsWorld);
 
 	ThrowIfFailed(mCommandList->Close());
@@ -137,14 +123,6 @@ void GameFramework::OnPreciseKeyInput()
 {
 }
 
-void GameFramework::UIUpdate()
-{
-	/*if(mScenes.top()->GetPlayer())
-		mpUI.top()->Update(mTimer.TotalTime(), (Player*)(mScenes.top()->GetPlayer()));
-	else*/
-		//mpUI.top()->Update(mTimer.TotalTime());
-}
-
 void GameFramework::CheckAndChangeScene()
 {
 	switch (mScenes.top()->GetSceneChangeFlag())
@@ -154,6 +132,7 @@ void GameFramework::CheckAndChangeScene()
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
 		InitScene(static_cast<SCENE_STAT>(nextScene));
+		// TODO: If scene is in_game scene then let server know loading has done.
 		break;
 	}
 	case SCENE_CHANGE_FLAG::POP:
@@ -175,8 +154,7 @@ void GameFramework::CheckAndChangeScene()
 
 void GameFramework::Update()
 {
-	if(mBtDynamicsWorld) 
-		mBtDynamicsWorld->stepSimulation(mTimer.ElapsedTime());
+	mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
 
 	D3DFramework::UpdateFrameStates();
 	
@@ -185,7 +163,10 @@ void GameFramework::Update()
 	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
 	
 	//UI Update
-	//UIUpdate();
+	//UpdateUI();
+
+	//mCamera->Update(mTimer.ElapsedTime());
+	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
 void GameFramework::Draw()
@@ -234,8 +215,6 @@ void GameFramework::Draw()
 	mScenes.top().get()->GetUI()->Flush();
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
-
-	//mpUI.top()->Draw(mCurrBackBufferIndex);
 
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	

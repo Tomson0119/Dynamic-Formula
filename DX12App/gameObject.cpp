@@ -21,7 +21,7 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 	}
 }
 
-void GameObject::LoadModel(
+std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
 	const std::wstring& path)
@@ -33,6 +33,7 @@ void GameObject::LoadModel(
 	std::vector<XMFLOAT3> normals;
 	std::vector<XMFLOAT2> texcoords;
 	std::unordered_map<std::string, MatInfo> mats;
+	std::shared_ptr<Mesh> new_mesh;
 
 	std::string info;
 	while (std::getline(in_file, info))
@@ -82,7 +83,7 @@ void GameObject::LoadModel(
 			std::string mtl_name;
 			ss >> mtl_name;
 
-			auto new_mesh = std::make_shared<Mesh>();
+			new_mesh = std::make_shared<Mesh>(mtl_name);
 			new_mesh->LoadMesh(
 				device, cmdList, in_file, 
 				positions, normals, texcoords, mats[mtl_name]);
@@ -99,6 +100,8 @@ void GameObject::LoadModel(
 
 	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
 	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
+
+	return mMeshes;
 }
 
 void GameObject::LoadMaterial(
@@ -363,6 +366,15 @@ void GameObject::SetPosition(const XMFLOAT3& pos)
 	SetPosition(pos.x, pos.y, pos.z);
 }
 
+void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
+{
+	auto p = std::find_if(mMeshes.begin(), mMeshes.end(),
+		[&name](const auto& mesh) { return (mesh->GetName() == name); });
+
+	if (p != mMeshes.end())
+		(*p)->SetMatDiffuse(color);
+}
+
 void GameObject::SetLook(XMFLOAT3& look)
 {
 	mLook = look;
@@ -505,7 +517,7 @@ TerrainObject::TerrainObject(int width, int depth, const XMFLOAT3& scale)
 
 TerrainObject::~TerrainObject()
 {
-	if (mHeightmapData) delete[] mHeightmapData;
+	mTerrainRigidBodies.clear();
 }
 
 void TerrainObject::BuildHeightMap(const std::wstring& path)
@@ -513,8 +525,11 @@ void TerrainObject::BuildHeightMap(const std::wstring& path)
 	mHeightMapImage = std::make_unique<HeightMapImage>(path, mWidth, mDepth, mTerrainScale);
 }
 
-void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, int blockWidth, int blockDepth)
+void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
 {	
+	mBlockWidth = blockWidth;
+	mBlockDepth = blockDepth;
+
 	int xBlocks = (mWidth - 1) / (blockWidth - 1);
 	int zBlocks = (mDepth - 1) / (blockDepth - 1);
 
@@ -527,7 +542,11 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 		{
 			xStart = x * (blockWidth - 1);
 			zStart = z * (blockDepth - 1);
-			auto gridMesh = std::make_shared<HeightMapPatchListMesh>(device, cmdList, xStart, zStart, blockWidth, blockDepth, mTerrainScale, mHeightMapImage.get());
+			auto gridMesh = std::make_shared<HeightMapPatchListMesh>(device, cmdList, xStart, zStart, blockWidth, blockDepth, mTerrainScale, mHeightMapImage.get(), physics);
+			gridMesh->SetIndex(x, z);
+
+			mTerrainRigidBodies.push_back(gridMesh->GetRigidBody());
+
 			SetMesh(gridMesh);
 
 			auto [gridMin, gridMax] = gridMesh->GetMinMax();
@@ -537,39 +556,6 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 				maxHeight = gridMax;
 		}
 	}
-
-	mHeightmapData = new float[mDepth * mWidth];
-	auto pHeightMapPixels = mHeightMapImage->GetPixels();
-
-	for (int z = 0, zStart = 0; z < mDepth; z++)
-	{
-		for (int x = 0, xStart = 0; x < mWidth; x++)
-		{
-			mHeightmapData[z * mDepth + x] = pHeightMapPixels[z * mDepth + x];
-		}
-	}
-
-	mTerrainShape = std::make_shared<btHeightfieldTerrainShape>(mWidth, mDepth, mHeightmapData, minHeight, maxHeight, 1, false);
-	mTerrainShape->setLocalScaling(btVector3(mTerrainScale.x, mTerrainScale.y, mTerrainScale.z));
-
-	btTransform btTerrainTransform;
-	btTerrainTransform.setIdentity();
-	btTerrainTransform.setOrigin(btVector3(mWidth * mTerrainScale.x / 2, (maxHeight + minHeight) * mTerrainScale.y / 2, mDepth * mTerrainScale.z / 2));
-
-	btScalar mass(0.0f);
-
-	//rigidbody is dynamic if and only if mass is non zero, otherwise static
-	bool isDynamic = (mass != 0.f);
-
-	btVector3 localInertia(0, 0, 0);
-	if (isDynamic)
-		mTerrainShape->calculateLocalInertia(mass, localInertia);
-
-	//using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
-	btDefaultMotionState* myMotionState = new btDefaultMotionState(btTerrainTransform);
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, mTerrainShape.get(), localInertia);
-	mBtRigidBody = new btRigidBody(rbInfo);
-	dynamicsWorld->addRigidBody(mBtRigidBody);
 }
 
 float TerrainObject::GetHeight(float x, float z) const
@@ -583,7 +569,6 @@ XMFLOAT3 TerrainObject::GetNormal(float x, float z) const
 	assert(mHeightMapImage && "HeightMapImage doesn't exist");
 	return mHeightMapImage->GetNormal((int)(x / mTerrainScale.x), (int)(z / mTerrainScale.z));
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -635,9 +620,12 @@ MissileObject::~MissileObject()
 {
 }
 
-void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics)
 {
 	GameObject::SetMesh(mesh);
+
+	auto dynamicsWorld = physics->GetDynamicsWorld();
+
 	auto missileExtents = btVector3(mMeshes[0]->mOOBB.Extents.x, mMeshes[0]->mOOBB.Extents.y, mMeshes[0]->mOOBB.Extents.z);
 	btCollisionShape* missileShape = new btBoxShape(missileExtents);
 
@@ -647,7 +635,7 @@ void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLO
 	btMissileTransform.setIdentity();
 	btMissileTransform.setOrigin(btVector3(position.x + bulletPosition.x(), position.y + bulletPosition.y(), position.z + bulletPosition.z()));
 
-	mBtRigidBody = BulletHelper::CreateRigidBody(1.0f, btMissileTransform, missileShape, dynamicsWorld);
+	mBtRigidBody = physics->CreateRigidBody(1.0f, btMissileTransform, missileShape);
 
 	mBtRigidBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
 	mBtRigidBody->setLinearVelocity(forward * 1000.0f);

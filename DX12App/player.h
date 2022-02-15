@@ -84,13 +84,13 @@ public:
 	WheelObject();
 	virtual ~WheelObject();
 
-	void UpdateRigidBody(float Elapsed, btTransform wheelTransform);
+	void UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform);
 };
 
 class PhysicsPlayer : public Player
 {
 public:
-	PhysicsPlayer();
+	PhysicsPlayer(UINT netID);
 	virtual ~PhysicsPlayer();
 
 	virtual void OnCameraUpdate(float elapsedTime);
@@ -101,12 +101,19 @@ public:
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
+	virtual UINT GetNetID() { return mNetID; }
 
-	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
+	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
 	void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 	
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
+
+	void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
+
+	void SetRemoveFlag(bool flag) { mRemoveFlag = flag; }
+	bool GetRemoveFlag() const { return mRemoveFlag; }
 
 private:
 	WheelObject* mWheel[4];
@@ -133,8 +140,7 @@ private:
 	float mFovCoefficient = 1.0f;
 
 public:
-	virtual void BuildDsvRtvView(
-		ID3D12Device* device) override;
+	virtual void BuildDsvRtvView(ID3D12Device* device) override;
 
 	void BuildCameras();
 
@@ -166,4 +172,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap;
 
 	UINT mCurrentRenderTarget = 0;
+
+	UINT mNetID = -1;
+	std::atomic_bool mRemoveFlag;
 };

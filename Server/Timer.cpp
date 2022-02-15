@@ -1,36 +1,70 @@
 #include "common.h"
 #include "Timer.h"
+#include "InGameServer.h"
 
+Timer::TimerEvent::TimerEvent()
+	: Type{}, WorldID{ -1 }, TimeStep{ 0.0f } 
+{
+}
+
+Timer::TimerEvent::TimerEvent(
+	std::chrono::milliseconds duration, 
+	EVENT_TYPE type, int worldID, float timeStep)
+	: Type{ type }, WorldID{ worldID }, TimeStep{ timeStep }
+{
+	StartTime = Clock::now() + duration;
+}
+
+constexpr bool Timer::TimerEvent::operator<(const TimerEvent& other) const
+{
+	return (StartTime > other.StartTime);
+}
+
+
+//
+//  Timer 
+//
 Timer::Timer()
-	: m_start{}, m_prev{}, m_curr{}, m_elapsed{}
+	: m_start{}, m_prev{}, m_curr{}, 
+	  m_elapsed{}, mLoop{ true }, mGameServerPtr{ nullptr }
 {
 }
 
 Timer::~Timer()
 {
+	mLoop = false;
+	if (m_thread.joinable()) m_thread.join();
 }
 
-void Timer::Start()
+void Timer::Start(InGameServer* ptr)
 {
-	m_start = clock::now();
-	m_curr = m_start;
-	m_prev = m_start;
+	mGameServerPtr = ptr;
+	m_thread = std::thread{ TimerThreadFunc, std::ref(*this) };
 }
 
-void Timer::Tick()
+void Timer::AddTimerEvent(const TimerEvent& evnt)
 {
-	auto curr_time = clock::now();
-	m_curr = curr_time;
-	m_elapsed = std::chrono::duration<float>(m_curr - m_prev).count();
-	m_prev = curr_time;
+	mTimerQueue.push(evnt);
 }
 
-float Timer::GetElapsedTime() const
+void Timer::TimerThreadFunc(Timer& timer)
 {
-	return m_elapsed;
-}
+	while (timer.mLoop)
+	{
+		while (timer.mTimerQueue.empty() == false)
+		{
+			TimerEvent ev;
+			timer.mTimerQueue.try_pop(ev);
 
-float Timer::GetTotalTime() const
-{
-	return std::chrono::duration<float>(m_curr - m_start).count();
+			auto now = Clock::now();
+			if (now < ev.StartTime)
+				std::this_thread::sleep_for(ev.StartTime - Clock::now());
+			
+			if (ev.Type == EVENT_TYPE::PHYSICS)
+			{
+				timer.mGameServerPtr->PostPhysicsOperation(ev.WorldID, ev.TimeStep);
+			}		
+		}
+		std::this_thread::sleep_for(10ms);
+	}
 }

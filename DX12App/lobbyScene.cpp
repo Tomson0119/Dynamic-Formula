@@ -21,12 +21,14 @@ LobbyScene::LobbyScene(NetModule* netPtr)
 void LobbyScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
 	std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<BulletWrapper> physics)
 {
+	mDevice = device;
 	mpUI = std::make_unique<LobbyUI>(nFrame, device, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
 
-void LobbyScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld)
+void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
 
 }
@@ -94,6 +96,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::FORCE_LOGOUT:
 	{
 		OutputDebugString(L"Received force logout packet.\n");
+		SetSceneChangeFlag(SCENE_CHANGE_FLAG::LOGOUT);
 		break;
 	}
 	default:

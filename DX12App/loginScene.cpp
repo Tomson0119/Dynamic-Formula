@@ -24,12 +24,14 @@ LoginScene::LoginScene(NetModule* netPtr)
 void LoginScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
 	std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
+void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<BulletWrapper> physics)
 {
+	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, device, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
 
-void LoginScene::Update(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld)
+void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
 	
 }

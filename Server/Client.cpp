@@ -86,13 +86,12 @@ void Client::SendRegisterResult(REGI_STAT result, bool instSend)
 void Client::SendAccessRoomAccept(int roomID, bool instSend)
 {
 #ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "[" << ID << "] Send access room accept packet\n";
+	std::cout << "[" << ID << "] Send access room accept packet. (room id: " << roomID << ")\n";
 #endif
 	SC::packet_access_room_accept pck{};
 	pck.size = sizeof(SC::packet_access_room_accept);
 	pck.type = SC::ACCESS_ROOM_ACCEPT;
 	pck.room_id = roomID;
-	pck.send_time = AccessRoomSendTime;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if (instSend) SendMsg();
 }
@@ -106,7 +105,6 @@ void Client::SendAccessRoomDeny(ROOM_STAT reason, bool instSend)
 	pck.size = sizeof(SC::packet_access_room_deny);
 	pck.type = SC::ACCESS_ROOM_DENY;
 	pck.reason = (char)reason;
-	pck.send_time = AccessRoomSendTime;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if(instSend) SendMsg();
 }

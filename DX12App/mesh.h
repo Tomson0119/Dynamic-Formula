@@ -25,10 +25,23 @@ struct MatInfo
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+
+enum class MeshType : int
+{
+	Car,
+	Wheel_L,
+	Wheel_R,
+	Grid,
+	Missile
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 class Mesh 
 {
 public:
 	Mesh();
+	Mesh(const std::string& name);
 	virtual ~Mesh() { }
 
 	void CreateResourceInfo(
@@ -52,12 +65,15 @@ public:
 		const std::vector<XMFLOAT2>& texcoords,
 		const MatInfo& mat);
 
+	void SetMatDiffuse(const XMFLOAT4& diffuse) { mMaterial.Mat.Diffuse = diffuse; }
 	void SetMaterial(Material mat) { mMaterial.Mat = mat; }
 	void SetSrvIndex(UINT idx) { mMaterial.SrvIndex = idx; }
 
 public:
 	MaterialConstants GetMaterialConstant() const;
 	UINT GetSrvIndex() const { return mMaterial.SrvIndex; }
+
+	const std::string& GetName() const { return mName; }
 
 protected:
 	ComPtr<ID3D12Resource> mVertexBufferGPU;
@@ -76,6 +92,8 @@ protected:
 	UINT mBaseVertex = 0;
 
 	MatInfo mMaterial = {};
+
+	std::string mName;
 
 public:
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView = {};
@@ -161,12 +179,17 @@ public:
 		int xStart, int zStart,
 		int width, int depth,
 		const XMFLOAT3& scale,
-		HeightMapImage* context);
+		HeightMapImage* context,
+		std::shared_ptr<BulletWrapper> physics);
 
-	virtual ~HeightMapPatchListMesh() { }
+	virtual ~HeightMapPatchListMesh();
 
 	float GetHeight(int x, int z, HeightMapImage* context) const;
+	void BuildHeightmapData(const int& TessFactor, const std::vector<TerrainVertex>& vertices, HeightMapImage* context);
+	void SetIndex(int x, int z);
+	std::pair<int, int> GetIndex() { return std::pair<int, int>(mXIndex, mZIndex); }
 	std::pair<float, float> GetMinMax() { return std::pair<float, float>(mMinHeight, mMaxHeight); }; // min, max
+	btRigidBody* GetRigidBody() { return mBtRigidBody; }
 
 private:
 	XMFLOAT3 mScale = {};
@@ -176,6 +199,12 @@ private:
 
 	float mMinHeight = FLT_MAX;
 	float mMaxHeight = -FLT_MAX;
+
+	int mXIndex = 0;
+	int mZIndex = 0;
+
+	float* mHeightmapData = NULL;
+	btRigidBody* mBtRigidBody;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

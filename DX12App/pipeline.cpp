@@ -62,7 +62,7 @@ void Pipeline::BuildPipeline(
 	psoDesc.PrimitiveTopologyType = mPrimitive;
 	psoDesc.NumRenderTargets = 2;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
-	psoDesc.RTVFormats[1] = mBackBufferFormat;
+	psoDesc.RTVFormats[1] = mVelocityMapFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	psoDesc.SampleDesc.Count = 1;
 	//psoDesc.SampleDesc.Quality = gMsaaStateDesc.Quality;
@@ -334,7 +334,7 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 	psoDesc.PrimitiveTopologyType = mPrimitive;
 	psoDesc.NumRenderTargets = 2;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
-	psoDesc.RTVFormats[1] = mBackBufferFormat;
+	psoDesc.RTVFormats[1] = mVelocityMapFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	psoDesc.SampleDesc.Count = 1;
 
@@ -472,7 +472,7 @@ void ComputePipeline::BuildPipeline(
 	};
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 	psoDesc.NodeMask = 0;
-	
+
 	mPSOs.push_back({});
 	ThrowIfFailed(device->CreateComputePipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSOs.back())));
@@ -534,15 +534,20 @@ void ComputePipeline::CopyCurrentToPreviousBuffer(ID3D12GraphicsCommandList* cmd
 
 void ComputePipeline::CreateTextures(ID3D12Device* device)
 {	
-	for (int i = 0; i < BlurMapInputCount; i++)
-	{
-		mBlurMapInput[i] = std::make_unique<Texture>();
-		mBlurMapInput[i]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
-		mBlurMapInput[i]->CreateTexture(device, gFrameWidth, gFrameHeight,
-			1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
-			D3D12_RESOURCE_FLAG_NONE,
-			D3D12_RESOURCE_STATE_COMMON, nullptr);
-	}
+	mBlurMapInput[0] = std::make_unique<Texture>();
+	mBlurMapInput[0]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mBlurMapInput[0]->CreateTexture(device, gFrameWidth, gFrameHeight,
+		1, 1, DXGI_FORMAT_R32G32B32A32_FLOAT,
+		D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
+
+	mBlurMapInput[1] = std::make_unique<Texture>();
+	mBlurMapInput[1]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mBlurMapInput[1]->CreateTexture(device, gFrameWidth, gFrameHeight,
+		1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
+		D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
+
 	mBlurMapOutput = std::make_unique<Texture>();
 	mBlurMapOutput->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
 	mBlurMapOutput->CreateTexture(device, gFrameWidth, gFrameHeight,
@@ -567,17 +572,19 @@ void ComputePipeline::BuildSRVAndUAV(ID3D12Device* device)
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
 
 	auto cpuHandle = mSrvUavDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	for (int i = 0; i < BlurMapInputCount; i++)
-	{
-		device->CreateShaderResourceView(mBlurMapInput[i]->GetResource(), &srvDesc, cpuHandle);
-		cpuHandle.ptr += gCbvSrvUavDescriptorSize;
-	}
+
+	device->CreateShaderResourceView(mBlurMapInput[0]->GetResource(), &srvDesc, cpuHandle);
+	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	device->CreateShaderResourceView(mBlurMapInput[1]->GetResource(), &srvDesc, cpuHandle);
+	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
 	uavDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -607,7 +614,7 @@ void ComputePipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetPipelineState(mPSOs[0].Get());
 
 	UINT numGroupX = (UINT)(ceilf(gFrameWidth / 32.0f));
-	UINT numGroupY = (UINT)(ceilf(gFrameHeight / 32.0f));
+	UINT numGroupY = (UINT)(ceilf(gFrameHeight / 30.0f));
 
 	cmdList->Dispatch(numGroupX, numGroupY, 1);
 
@@ -615,11 +622,4 @@ void ComputePipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 		mBlurMapOutput->GetResource(),
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 		D3D12_RESOURCE_STATE_COMMON));
-
-	auto curr_time = std::chrono::system_clock::now();
-	if (mSetTime + mDuration < curr_time)
-	{
-		CopyCurrentToPreviousBuffer(cmdList);
-		mSetTime = curr_time;
-	}
 }

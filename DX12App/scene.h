@@ -1,6 +1,9 @@
 #pragma once
 //#include "UI.h"
 #include "gameTimer.h"
+#include "mesh.h"
+#include "gameObject.h"
+
 #define STANDALONE
 //#define START_GAME_INSTANT
 class NetModule;
@@ -41,13 +44,12 @@ public:
 		float Width,
 		float Height,
 		float aspect,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) = 0;
+		std::shared_ptr<BulletWrapper> physics) = 0;
 
 	virtual void Update(
-		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
-		std::shared_ptr<btDiscreteDynamicsWorld>& dynamicWorld) = 0;
+		std::shared_ptr<BulletWrapper> physics) = 0;
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame) = 0;
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) = 0;
@@ -59,7 +61,6 @@ public:
 	virtual void OnProcessMouseUp(WPARAM btnState, int x, int y);
 	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y);
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
-	//virtual int GetPlayer() { return 1; }
 
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
 	UI* GetUI() { return mpUI.get(); }
@@ -79,4 +80,5 @@ protected:
 	NetModule* mNetPtr;
 
 	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;
+	ComPtr<ID3D12Device> mDevice;
 };

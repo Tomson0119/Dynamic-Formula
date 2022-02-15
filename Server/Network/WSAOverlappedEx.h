@@ -9,7 +9,10 @@ enum class OP : char
 {
 	RECV,
 	SEND,
-	ACCEPT
+	ACCEPT,
+	DISCONNECT,
+	SHUTDOWN,
+	PHYSICS,
 };
 
 struct WSAOVERLAPPEDEX
@@ -19,7 +22,7 @@ struct WSAOVERLAPPEDEX
 	OP Operation;
 	BufferQueue NetBuffer;
 
-	WSAOVERLAPPEDEX(OP op = OP::RECV)
+	WSAOVERLAPPEDEX(OP op=OP::RECV)
 		: Operation(op), WSABuffer{}
 	{
 		Reset(op);
@@ -36,15 +39,16 @@ struct WSAOVERLAPPEDEX
 		Operation = op;
 		ZeroMemory(&Overlapped, sizeof(Overlapped));
 
-		if (op == OP::RECV)	{
-			WSABuffer.buf = reinterpret_cast<char*>(NetBuffer.BufWritePtr());
-			WSABuffer.len = (ULONG)NetBuffer.GetLeftBufLen();
-		}
-		else {
+		if (bytes > 0 && data)
+		{
 			NetBuffer.Clear();
-			if(data) NetBuffer.Push(data, bytes);
+			NetBuffer.Push(data, bytes);
 			WSABuffer.buf = reinterpret_cast<char*>(NetBuffer.BufStartPtr());
 			WSABuffer.len = (ULONG)bytes;
+		}
+		else {
+			WSABuffer.buf = reinterpret_cast<char*>(NetBuffer.BufWritePtr());
+			WSABuffer.len = (ULONG)NetBuffer.GetLeftBufLen();
 		}
 	}
 

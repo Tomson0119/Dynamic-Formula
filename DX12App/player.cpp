@@ -263,7 +263,7 @@ void TerrainPlayer::OnCameraUpdate(float elapsedTime)
 		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
 }
 
-PhysicsPlayer::PhysicsPlayer() : Player()
+PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID), mRemoveFlag{ false }
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
@@ -367,15 +367,14 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
 
-	int wheelIndex = 2;
+	int wheelIndex = 0;
 	mVehicle->applyEngineForce(mEngineForce, wheelIndex);
 	mVehicle->setBrake(mBreakingForce, wheelIndex);
-	wheelIndex = 3;
+	wheelIndex = 1;
 	mVehicle->applyEngineForce(mEngineForce, wheelIndex);
 	mVehicle->setBrake(mBreakingForce, wheelIndex);
 
 	wheelIndex = 0;
-
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	wheelIndex = 1;
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
@@ -503,78 +502,26 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 			mFovCoefficient = 1.0f;
 	}
 
-	mCamera->SetFovCoefficient(mFovCoefficient);
-	mCamera->SetLens(mCamera->GetAspect());
+	if (mCamera)
+	{
+		mCamera->SetFovCoefficient(mFovCoefficient);
+		mCamera->SetLens(mCamera->GetAspect());
+	}
 
 	if (mChild) mChild->Update(elapsedTime, &mWorld);
 	if (mSibling) mSibling->Update(elapsedTime, parent);
 }
 
-void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<btDiscreteDynamicsWorld> btDynamicsWorld)
+void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
 {
 	GameObject::SetMesh(bodyMesh);
 
-	bodyMesh.get()->mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
+	BuildRigidBody(physics);
+}
 
-	XMFLOAT3 vehicleExtents = bodyMesh.get()->mOOBB.Extents;
-	XMFLOAT3 wheelExtents = wheelMesh.get()->mOOBB.Extents;
-
-	btCollisionShape* chassisShape = new btBoxShape(btVector3(vehicleExtents.x, vehicleExtents.y, vehicleExtents.z));
-
-	btTransform btCarTransform;
-	btCarTransform.setIdentity();
-	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
-
-	mBtRigidBody = BulletHelper::CreateRigidBody(1000.0f, btCarTransform, chassisShape, btDynamicsWorld);
-
-	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(btDynamicsWorld.get());
-	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
-
-	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
-	btDynamicsWorld->addVehicle(mVehicle.get());
-
-
-	mVehicle->setCoordinateSystem(0, 1, 2);
-
-	btVector3 wheelDirectionCS0(0, -1, 0);
-	btVector3 wheelAxleCS(-1, 0, 0);
-
-	float wheelWidth = wheelExtents.x;
-	float wheelRadius = wheelExtents.z;
-	float wheelFriction = 26.0f;
-	float suspensionStiffness = 20.f;
-	float suspensionDamping = 2.3f;
-	float suspensionCompression = 4.4f;
-	float rollInfluence = 0.01f;  //1.0f;
-
-	// ¾Õ¹ÙÄû
-	bool isFrontWheel = true;
-	float connectionHeight = -0.9f;
-
-	btVector3 connectionPointCS0(vehicleExtents.x - 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
-
-	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
-
-	// µÞ¹ÙÄû
-	isFrontWheel = false;
-
-	connectionPointCS0 = btVector3(vehicleExtents.x - 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
-
-	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
-
-	for (int i = 0; i < mVehicle->getNumWheels(); i++)
-	{
-		btWheelInfo& wheel = mVehicle->getWheelInfo(i);
-		wheel.m_suspensionStiffness = suspensionStiffness;
-		wheel.m_wheelsDampingRelaxation = suspensionDamping;
-		wheel.m_wheelsDampingCompression = suspensionCompression;
-		wheel.m_frictionSlip = wheelFriction;
-		wheel.m_rollInfluence = rollInfluence;
-	}
+void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& Mesh)
+{
+	GameObject::SetMesh(Mesh);
 }
 
 void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
@@ -587,8 +534,10 @@ void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIn
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuStart);
 }
 
-void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld)
+void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 {
+	auto dynamicsWorld = physics->GetDynamicsWorld();
+
 	mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
 
 	XMFLOAT3 vehicleExtents = mOOBB.Extents;
@@ -600,7 +549,7 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dyna
 	btCarTransform.setIdentity();
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
 
-	mBtRigidBody = BulletHelper::CreateRigidBody(1000.0f, btCarTransform, chassisShape, dynamicsWorld);
+	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, chassisShape);
 
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld.get());
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
@@ -796,7 +745,7 @@ WheelObject::~WheelObject()
 {
 }
 
-void WheelObject::UpdateRigidBody(float Elapsed, btTransform wheelTransform)
+void WheelObject::UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform)
 {
 	btScalar m[16];
 	wheelTransform.getOpenGLMatrix(m);

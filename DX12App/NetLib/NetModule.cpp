@@ -9,12 +9,14 @@
 #include "NetModule.h"
 
 NetModule::NetModule()
-	: mNetClient{ std::make_unique<NetClient>() },
-	  mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
-	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 }
+	: mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
+	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 },
+	  mIsConnected{ false }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
-		mPlayerList[i] = PlayerInfo{ true, -1, false, "" };
+		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
+
+	mNetClient = std::make_unique<NetClient>();
 }
 
 NetModule::~NetModule()
@@ -24,12 +26,22 @@ NetModule::~NetModule()
 
 bool NetModule::Connect(const char* ip, short port)
 {
-	if (mNetClient->Connect(ip, port))
+	if (mIsConnected = mNetClient->Connect(ip, port))
 	{
-		Init();
+		Init();		
 		return true;
 	}
 	return false;
+}
+
+void NetModule::PostDisconnect()
+{	
+	if (mIsConnected)
+	{
+		// Post disconnect operation to get out of the thread loop	
+		WSAOVERLAPPEDEX* over = new WSAOVERLAPPEDEX(OP::DISCONNECT);
+		mIOCP.PostToCompletionQueue(over, 0);
+	}
 }
 
 void NetModule::NetworkFunc(NetModule& net)
@@ -42,7 +54,7 @@ void NetModule::NetworkFunc(NetModule& net)
 
 			int client_id = static_cast<int>(info.key);
 			WSAOVERLAPPEDEX* over_ex = reinterpret_cast<WSAOVERLAPPEDEX*>(info.overEx);
-
+			
 			if (over_ex == nullptr || info.success == FALSE)
 			{
 				net.mNetClient->Disconnect();
@@ -108,6 +120,17 @@ void NetModule::UpdatePlayerInfo(SC::packet_update_player_info* pck)
 	}
 }
 
+void NetModule::InitPlayersPosition(SC::packet_game_start_success* pck)
+{
+	if (mRoomID == pck->room_id)
+	{
+		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
+		{
+			mPlayerList[i].StartPosition = { pck->x[i], pck->y[i], pck->z[i] };
+		}
+	}
+}
+
 void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes)
 {
 	switch (over->Operation)
@@ -128,6 +151,14 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes)
 	{
 		if (bytes != over->WSABuffer.len)
 			mNetClient->Disconnect();
+		delete over;
+		break;
+	}
+	case OP::DISCONNECT:
+	{
+		bool b = true;
+		mLoop.compare_exchange_strong(b, false);
+		mNetClient->Disconnect();
 		delete over;
 		break;
 	}

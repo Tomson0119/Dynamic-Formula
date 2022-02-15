@@ -16,6 +16,18 @@
     <Filter Include="Script">
       <UniqueIdentifier>{fceef36c-4be0-4d6a-b38a-438a679f7d50}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Server">
+      <UniqueIdentifier>{a6fdf0eb-ddae-43f2-a58c-cb242e09593f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Server">
+      <UniqueIdentifier>{f2eb9239-57e5-4b37-a5ad-179f20c38b4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Physics">
+      <UniqueIdentifier>{c9484e59-af3c-4886-8781-3735f4ef3ba0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Physics">
+      <UniqueIdentifier>{c7383141-2358-4f36-862e-c03cd51866e2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -30,23 +42,35 @@
     <ClCompile Include="common.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="InGameRoom.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Client.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="LoginServer.cpp">
+    <ClCompile Include="WaitRoom.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameServer.cpp">
+      <Filter>소스 파일\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="LoginServer.cpp">
+      <Filter>소스 파일\Server</Filter>
     </ClCompile>
     <ClCompile Include="LobbyServer.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="BtShape.cpp">
+      <Filter>소스 파일\Physics</Filter>
     </ClCompile>
     <ClCompile Include="BPHandler.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="MeshData.cpp">
-      <Filter>소스 파일</Filter>
+    <ClCompile Include="RigidBody.cpp">
+      <Filter>소스 파일\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="GameWorld.cpp">
+      <Filter>소스 파일\Physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -59,23 +83,35 @@
     <ClInclude Include="DBHandler.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="InGameRoom.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Client.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="LoginServer.h">
+    <ClInclude Include="WaitRoom.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="InGameServer.h">
+      <Filter>헤더 파일\Server</Filter>
     </ClInclude>
     <ClInclude Include="LobbyServer.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="LoginServer.h">
+      <Filter>헤더 파일\Server</Filter>
     </ClInclude>
     <ClInclude Include="BPHandler.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="MeshData.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="BtShape.h">
+      <Filter>헤더 파일\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="RigidBody.h">
+      <Filter>헤더 파일\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="GameWorld.h">
+      <Filter>헤더 파일\Physics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,10 +1,10 @@
 #include "common.h"
 #include "LoginServer.h"
-#include "InGameRoom.h"
+#include "WaitRoom.h"
 #include "Client.h"
 #include "LobbyServer.h"
 
-LobbyServer::RoomList LobbyServer::gRooms;
+LobbyServer::RoomList LobbyServer::msRooms;
 
 LobbyServer::LobbyServer()
 	: mLoginPtr{ nullptr }
@@ -14,8 +14,17 @@ LobbyServer::LobbyServer()
 void LobbyServer::Init(LoginServer* ptr)
 {
 	mLoginPtr = ptr;
+
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
-		gRooms[i] = std::make_unique<InGameRoom>(i, ptr);
+		msRooms[i] = std::make_unique<WaitRoom>(i);
+
+	mInGameServer.Init(ptr, msRooms);
+}
+
+void LobbyServer::TakeOverNewPlayer(int hostID)
+{
+	IncreasePlayerCount();
+	SendExistingRoomList(hostID);
 }
 
 bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
@@ -25,21 +34,14 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	{
 	case CS::OPEN_ROOM:
 	{
-#ifdef DEBUG_PACKET_TRANSFER
+	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received open room packet\n";
-#endif
-		CS::packet_open_room* pck = reinterpret_cast<CS::packet_open_room*>(packet);
-
-		if (mRoomCount < MAX_ROOM_SIZE)
+	#endif
+		if (TryOpenRoom(id))
 		{
-			if (gRooms[mRoomCount]->OpenRoom(id))
-			{
-				AcceptEnterRoom(mRoomCount, id);
-				mRoomCount.fetch_add(1);
-			}
-			//else std::cout << "Failed to open room\n";
+			AcceptEnterRoom(mRoomCount, id);
+			mRoomCount.fetch_add(1);
 		}
-		else client->SendAccessRoomDeny(ROOM_STAT::MAX_ROOM_REACHED);
 		break;
 	}
 	case CS::ENTER_ROOM:
@@ -48,85 +50,190 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		std::cout << "[" << id << "] Received enter room packet\n";
 #endif
 		CS::packet_enter_room* pck = reinterpret_cast<CS::packet_enter_room*>(packet);
-		
-		// for stress test
-		gClients[id]->AccessRoomSendTime = pck->send_time;
+		if (pck->room_id < 0)
+		{
+			mLoginPtr->Disconnect(id);
+			break;
+		}
 
-		if (TryAddPlayer(pck->room_id, id))
+		if (TryEnterRoom(pck->room_id, id))
 			AcceptEnterRoom(pck->room_id, id);
+		else
+			gClients[id]->SendAccessRoomDeny(msRooms[pck->room_id]->GetRoomState());
+
 		break;
 	}
-	default:
+	case CS::SWITCH_MAP:
 	{
-		int roomID = client->RoomID;
-		if (roomID >= 0) 
-			return gRooms[roomID]->ProcessPacket(packet, type, id, bytes);
-		return false;
+	#ifdef DEBUG_PACKET_TRANSFER
+		std::cout << "[" << id << "] Received switch map packet.\n";
+	#endif
+		CS::packet_switch_map* pck = reinterpret_cast<CS::packet_switch_map*>(packet);
+
+		int roomID = gClients[id]->RoomID;
+		if (roomID < 0 || roomID != pck->room_id || gClients[id]->PlayerIndex < 0)
+		{
+			mLoginPtr->Disconnect(id);
+			break;
+		}
+		msRooms[roomID]->SwitchMap(id);
+		break;
 	}
+	case CS::PRESS_READY:
+	{
+	#ifdef DEBUG_PACKET_TRANSFER
+		std::cout << "[" << id << "] Received press ready.\n";
+	#endif
+		CS::packet_press_ready* pck = reinterpret_cast<CS::packet_press_ready*>(packet);
+		
+		int roomID = gClients[id]->RoomID;
+		if (roomID < 0 || roomID != pck->room_id || gClients[id]->PlayerIndex < 0)
+		{
+			mLoginPtr->Disconnect(id);
+			break;
+		}
+		PressStartOrReady(roomID, id);		
+		break;
+	}
+	case CS::REVERT_SCENE:
+	{
+	#ifdef DEBUG_PACKET_TRANSFER
+		std::cout << "[" << id << "] Received revert scene.\n";
+	#endif
+		RevertScene(id);
+		break;
+	}
+	default:		
+		return mInGameServer.ProcessPacket(packet, type, id, bytes);
 	}
 	return true;
+}
+
+bool LobbyServer::TryOpenRoom(int hostID)
+{
+	if (mRoomCount >= MAX_ROOM_SIZE)
+	{
+		gClients[hostID]->SendAccessRoomDeny(ROOM_STAT::MAX_ROOM_REACHED);
+		return false;
+	}
+
+	if (int roomCount = mRoomCount; msRooms[roomCount]->OpenRoom())
+	{
+		if (gClients[hostID]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
+		{
+			msRooms[roomCount]->CloseRoom();	// if it fails : logic error
+			mLoginPtr->Disconnect(hostID);
+			return false;
+		}
+		return msRooms[roomCount]->AddPlayer(hostID); // if it fails : logic error
+	}
+	return false; // logic error
 }
 
 void LobbyServer::AcceptEnterRoom(int roomID, int hostID)
 {
 	mLobbyPlayerCount.fetch_sub(1);
+
 	gClients[hostID]->SendAccessRoomAccept(roomID, false);
-	gRooms[roomID]->SendRoomInsideInfo(hostID);
-	gRooms[roomID]->SendUpdatePlayerInfoToAll(hostID, hostID);
+	msRooms[roomID]->SendRoomInsideInfo(hostID);
+	msRooms[roomID]->SendUpdatePlayerInfoToAll(hostID, hostID);
+	
 	SendRoomInfoToLobbyPlayers(roomID);
 }
 
-bool LobbyServer::TryAddPlayer(int roomID, int hostID)
+bool LobbyServer::TryEnterRoom(int roomID, int hostID)
 {
-	if (roomID < 0)
+	if (msRooms[roomID]->Available())
 	{
-		gClients[hostID]->SendAccessRoomDeny(ROOM_STAT::INVALID_ROOM_ID);
-		return false;
+		if (gClients[hostID]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
+		{
+			mLoginPtr->Disconnect(hostID);
+			return false;
+		}
+		return msRooms[roomID]->AddPlayer(hostID); // if it fails : logic error.
 	}
-	if (gRooms[roomID]->Full())
-	{
-		gClients[hostID]->SendAccessRoomDeny(ROOM_STAT::ROOM_IS_FULL);
-		return false;
-	}
-	if (gRooms[roomID]->Empty())
-	{
-		gClients[hostID]->SendAccessRoomDeny(ROOM_STAT::ROOM_IS_CLOSED);
-		return false;
-	}
-	if (gRooms[roomID]->GameRunning())
-	{
-		gClients[hostID]->SendAccessRoomDeny(ROOM_STAT::GAME_STARTED);
-		return false;
-	}
-	return gRooms[roomID]->AddPlayer(hostID);
+	return false;
 }
 
-void LobbyServer::TryRemovePlayer(int roomID, int hostID)
+void LobbyServer::RevertScene(int hostID, bool logout)
 {
-	if (roomID >= 0 && gRooms[roomID]->RemovePlayer(hostID))
+	auto currentState = gClients[hostID]->GetCurrentState();
+	switch (currentState)
 	{
-		if (gRooms[roomID]->Empty()) mRoomCount.fetch_sub(1);
+	case CLIENT_STAT::IN_GAME:
+	case CLIENT_STAT::IN_ROOM:
+	{
+		const int roomID = gClients[hostID]->RoomID;
 
-		SendRoomInfoToLobbyPlayers(roomID);
-		gClients[hostID]->ChangeState(CLIENT_STAT::IN_ROOM, CLIENT_STAT::LOBBY);
+		if (roomID < 0 || gClients[hostID]->PlayerIndex < 0 
+			|| gClients[hostID]->ChangeState(currentState, CLIENT_STAT::LOBBY) == false
+			|| msRooms[roomID]->RemovePlayer(hostID) == false)
+		{
+			mLoginPtr->Disconnect(hostID);
+			break;
+		}
+
+		if(currentState == CLIENT_STAT::IN_GAME)
+			mInGameServer.RemovePlayer(roomID, hostID);
 		
-		gRooms[roomID]->SendRemovePlayerInfoToAll(hostID);
-		
+		// Packet must be sended before initializing client.
+		msRooms[roomID]->SendRemovePlayerInfoToAll(hostID);
+		SendRoomInfoToLobbyPlayers(roomID, hostID);
+
+		// Clearing information after packet transfer
 		gClients[hostID]->RoomID = -1;
 		gClients[hostID]->PlayerIndex = -1;
-		mLobbyPlayerCount.fetch_add(1);
+
+		if (msRooms[roomID]->Closed()) mRoomCount.fetch_sub(1);
+		if (logout == false)
+		{
+			IncreasePlayerCount();
+			SendExistingRoomList(hostID);
+		}
+		break;
+	}
+	case CLIENT_STAT::LOBBY:
+	{
+		if (logout == false) 
+		{
+			DecreasePlayerCount();
+			mLoginPtr->Logout(hostID);
+		}
+		break;
+	}
 	}
 }
 
-void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, bool instSend)
+void LobbyServer::PressStartOrReady(int roomID, int hostID)
+{
+	if (msRooms[roomID]->Closed() || msRooms[roomID]->GameRunning())
+		return;
+
+	if (msRooms[roomID]->IsAdmin(hostID))
+	{
+		if (msRooms[roomID]->TryGameStart())
+		{
+			msRooms[roomID]->ChangeRoomState(ROOM_STAT::AVAILABLE, ROOM_STAT::GAME_STARTED);
+
+			// update game started flag of room
+			SendRoomInfoToLobbyPlayers(roomID);
+
+			// Hand over this room to in game server
+			mInGameServer.PrepareToStartGame(roomID);
+		}
+		else msRooms[roomID]->SendGameStartFail();
+	}
+	else msRooms[roomID]->ToggleReady(hostID);
+}
+
+void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, int ignore, bool instSend)
 {
 	int lobbyPlayers = mLobbyPlayerCount;
 	for (int i = 0; i < MAX_PLAYER_SIZE && lobbyPlayers > 0; i++)
 	{
-		Client* client = gClients[i].get();
-		if (client->GetCurrentState() == CLIENT_STAT::LOBBY)
+		if (gClients[i]->GetCurrentState() == CLIENT_STAT::LOBBY && i != ignore)
 		{
-			gRooms[roomID]->SendRoomOutsideInfo(i);
+			msRooms[roomID]->SendRoomOutsideInfo(i);
 			lobbyPlayers -= 1;
 		}
 	}
@@ -137,34 +244,11 @@ void LobbyServer::SendExistingRoomList(int id)
 	int rooms = mRoomCount;
 	for (int i = 0; i < MAX_ROOM_SIZE && rooms > 0; i++)
 	{
-		if (gRooms[i]->Empty() == false)
+		if (msRooms[i]->Closed() == false)
 		{
-			gRooms[i]->SendRoomOutsideInfo(id, false);
+			msRooms[i]->SendRoomOutsideInfo(id, false);
 			rooms -= 1;
 		}
 	}
 	gClients[id]->SendMsg();
-}
-
-void LobbyServer::PrintRoomList()
-{
-	system("cls");
-	std::cout << "Room count: " << mRoomCount << "\n";
-	std::cout << "Lobby player count: " << mLobbyPlayerCount << "\n";
-
-	int roomCount = mRoomCount;
-	for (int i = 0; i < MAX_ROOM_SIZE && roomCount > 0;i++)
-	{
-		if (gRooms[i]->Empty() == false)
-		{
-			std::cout << "---------- " << i + 1 << " ----------\n";
-			std::cout << "Room id: " << i << "\n";
-			std::cout << "Map index: " << (int)gRooms[i]->GetMapIndex() << "\n";
-			std::cout << "Game running: " << std::boolalpha << gRooms[i]->GameRunning() << "\n";
-			std::cout << "Player count: " << (int)gRooms[i]->GetPlayerCount() << "\n";
-			gRooms[i]->PrintWaitPlayers();
-			roomCount -= 1;
-		}
-	}
-	std::cout << "-----------------------\n";
 }
