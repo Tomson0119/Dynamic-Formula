@@ -36,7 +36,7 @@ public:
 
 public:
 	virtual void BuildObjects(
-		ID3D12Device* device,
+		ComPtr<ID3D12Device> device,
 		ID3D12GraphicsCommandList* cmdList,
 		ID3D12CommandQueue* cmdQueue,
 		UINT nFrame,

@@ -17,10 +17,9 @@ RoomScene::RoomScene(NetModule* netPtr)
 #endif
 }
 
-void RoomScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
-	std::shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
-void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<BulletWrapper> physics)
+	std::shared_ptr<BulletWrapper> physics)
 {
 	mpUI = std::make_unique<RoomUI>(nFrame, device, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);

@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "inGameScene.h"
 #include "Mesh.h"
 #include "shadowMapRenderer.h"
 
@@ -32,11 +31,13 @@ void InGameScene::OnResize(float aspect)
 {
 	if(mMainCamera)
 		mMainCamera->SetLens(aspect);
+	mpUI.get()->Reset();
+	//mpUI.get()->OnResize();
 }
 
-void InGameScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
 UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height,  float aspect,
-shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld) 
+shared_ptr<BulletWrapper> physics)
 {
 	mDevice = device;
 
@@ -69,12 +70,6 @@ shared_ptr<btDiscreteDynamicsWorld>& dynamicsWorld)
 	BuildGameObjects(cmdList, physics);
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
-	BuildRootSignature(device);
-	BuildComputeRootSignature(device);
-	BuildShadersAndPSOs(device, cmdList);
-	BuildGameObjects(device, cmdList, dynamicsWorld);
-	BuildConstantBuffers(device);
-	BuildDescriptorHeap(device);
 	mpUI = std::make_unique<InGameUI>(nFrame, device, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }

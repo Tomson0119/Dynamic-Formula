@@ -29,7 +29,7 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-	InitScene(SCENE_STAT::IN_GAME); 
+	InitScene(SCENE_STAT::LOGIN); 
 	
 	return true;
 }
@@ -37,7 +37,11 @@ bool GameFramework::InitFramework()
 void GameFramework::OnResize()
 {
 	D3DFramework::OnResize();
-	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
+	if (!mScenes.empty()) 
+	{ 
+		mScenes.top()->OnResize(GetAspect()); 
+		mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+	}
 }
 
 void GameFramework::OnProcessMouseDown(WPARAM buttonState, int x, int y)
@@ -109,8 +113,8 @@ void GameFramework::InitScene(SCENE_STAT state)
 		break;
 	}
 
-	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
-	mScenes.top()->BuildObjects(mD3dDevice.Get(), mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight, GetAspect(), mBtDynamicsWorld);
+	//mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
+	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight, GetAspect(), mBulletPhysics);
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
@@ -160,13 +164,13 @@ void GameFramework::Update()
 	
 	OnPreciseKeyInput();
 
-	mScenes.top()->Update(mD3dDevice.Get(), mCommandList.Get(), mTimer, mBtDynamicsWorld);
+	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 	
 	//UI Update
 	//UpdateUI();
 
 	//mCamera->Update(mTimer.ElapsedTime());
-	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
+	//mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
 void GameFramework::Draw()

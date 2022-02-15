@@ -1,14 +1,14 @@
 #include "stdafx.h"
 #include "UI.h"
-UI::UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
+UI::UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
-    UI::Initialize(pd3dDevice, pd3dCommandQueue);
+    UI::Initialize(device, pd3dCommandQueue);
 }
 UI::~UI() 
 {
 
 }
-void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
+void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
     UINT d3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
     D2D1_FACTORY_OPTIONS d2dFactoryOptions = { };
@@ -19,13 +19,13 @@ void UI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQue
 #endif
 
     ComPtr<ID3D12CommandQueue> ppd3dCommandQueues[] = { pd3dCommandQueue };
-    ThrowIfFailed(::D3D11On12CreateDevice(pd3dDevice, d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown**>(ppd3dCommandQueues),
+    ThrowIfFailed(::D3D11On12CreateDevice(device.Get(), d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown**>(ppd3dCommandQueues),
         _countof(ppd3dCommandQueues), 0, &pd3d11Device, &mpd3d11DeviceContext, nullptr));
     ThrowIfFailed(pd3d11Device.As(&mpd3d11On12Device));
     
 #if defined(_DEBUG) || defined(DBG)
     ID3D12InfoQueue* pd3dInfoQueue;
-    if (SUCCEEDED(pd3dDevice->QueryInterface(IID_PPV_ARGS(&pd3dInfoQueue))))
+    if (SUCCEEDED(device.Get()->QueryInterface(IID_PPV_ARGS(&pd3dInfoQueue))))
     {
         D3D12_MESSAGE_SEVERITY pd3dSeverities[] =
         {
@@ -211,10 +211,10 @@ void UI::Reset()
     mvWrappedRenderTargets.clear();
     mvd2dRenderTargets.clear();
 }
-void UI::OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
+void UI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     SetVectorSize(nFrame);
-    Initialize(pd3dDevice, pd3dCommandQueue);
+    Initialize(device, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }

@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "InGameUI.h"
 
-InGameUI::InGameUI(UINT nFrame, ID3D12Device* pd3dDevice,ID3D12CommandQueue* 
-    pd3dCommandQueue) : UI(nFrame, pd3dDevice, pd3dCommandQueue), TextCnt(5), UICnt(3)
+InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(5), UICnt(3)
     // Text: GameTime, LapCnt, Rank, StartCount, Velocity
     //UI: DraftGage, Item1, Item2
 {
     SetVectorSize(nFrame, TextCnt);
-    Initialize(pd3dDevice, pd3dCommandQueue);
+    Initialize(device, pd3dCommandQueue);
 }
 
 InGameUI::~InGameUI()
@@ -22,7 +22,7 @@ void InGameUI::SetVectorSize(UINT nFrame, UINT TextCnt)
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
 
-void InGameUI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
+void InGameUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
 
 }
@@ -239,11 +239,11 @@ void InGameUI::Reset()
     mvTextBlocks.clear();
 }
 
-void InGameUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
+void InGameUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     //Reset();
     SetVectorSize(nFrame, TextCnt);
-    Initialize(pd3dDevice, pd3dCommandQueue);
+    Initialize(device, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }

@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "LobbyUI.h"
 
-LobbyUI::LobbyUI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, pd3dDevice, pd3dCommandQueue), TextCnt(9), UICnt(9)
+LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(9), UICnt(9)
 {
 
 }
@@ -10,7 +10,7 @@ LobbyUI::~LobbyUI()
 {
 
 }
-void LobbyUI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
+void LobbyUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
 
 }
@@ -71,11 +71,11 @@ void LobbyUI::Reset()
     mvTextBlocks.clear();
 }
 
-void LobbyUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
+void LobbyUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     //Reset();
     SetVectorSize(nFrame, TextCnt);
-    Initialize(pd3dDevice, pd3dCommandQueue);
+    Initialize(device, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }

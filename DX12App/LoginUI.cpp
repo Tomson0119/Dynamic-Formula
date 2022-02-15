@@ -1,13 +1,13 @@
 
 #include "stdafx.h"
 #include "LoginUI.h"
-LoginUI::LoginUI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, pd3dDevice, pd3dCommandQueue) , TextCnt(6), UICnt(1)
+LoginUI::LoginUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue) , TextCnt(6), UICnt(1)
     //Text: GameName, Login, ID, IDText, Password, PassWordText
     //UI: LoginBox
 {
     SetVectorSize(nFrame, TextCnt);
-    Initialize(pd3dDevice, pd3dCommandQueue);
+    Initialize(device, pd3dCommandQueue);
 }
 
 LoginUI::~LoginUI()
@@ -15,7 +15,7 @@ LoginUI::~LoginUI()
 
 }
 
-void LoginUI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
+void LoginUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
 
 }
@@ -114,11 +114,11 @@ void LoginUI::Reset()
     mvTextBlocks.clear();
 }
 
-void LoginUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
+void LoginUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     //Reset();
     SetVectorSize(nFrame, TextCnt);
-    Initialize(pd3dDevice, pd3dCommandQueue);
+    Initialize(device, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }

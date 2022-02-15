@@ -1,19 +1,19 @@
 #include "stdafx.h"
 #include "RoomUI.h"
-RoomUI::RoomUI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, pd3dDevice, pd3dCommandQueue), TextCnt(11), UICnt(13)
+RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(11), UICnt(13)
     //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
     //UI: NicknameBox[8], StartBox, CarSelectBox[2], MapSelectBox[2]
 {
     SetVectorSize(nFrame, TextCnt);
-    Initialize(pd3dDevice, pd3dCommandQueue);
+    Initialize(device, pd3dCommandQueue);
 }
 RoomUI::~RoomUI()
 {
 
 }
 
-void RoomUI::Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue)
+void RoomUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
 
 }
@@ -293,11 +293,11 @@ void RoomUI::Reset()
     mvTextBlocks.clear();
 }
 
-void RoomUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
+void RoomUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     //Reset();
     SetVectorSize(nFrame, TextCnt);
-    Initialize(pd3dDevice, pd3dCommandQueue);
+    Initialize(device, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }

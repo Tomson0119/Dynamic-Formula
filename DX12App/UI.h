@@ -9,7 +9,7 @@ struct TextBlock
 class UI 
 {
 public:
-    explicit UI(UINT nFrame, ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
+    explicit UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     ~UI();
     virtual void Update(float GTime, Player* mPlayer) = 0;
     virtual void Update(float GTime);
@@ -21,7 +21,7 @@ public:
     virtual void BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList);
     virtual void BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList);
     virtual void Reset();
-    virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ID3D12Device* pd3dDevice,
+    virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
         ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
     virtual void SetVectorSize(UINT nFrame);
     virtual void CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts, UINT TextCnt,
@@ -41,7 +41,7 @@ public:
    ID3D11Resource* GetRenderTarget() const { return mvWrappedRenderTargets[0].Get(); }
    UINT GetRenderTargetsCount() const { return mvWrappedRenderTargets.size(); }
 private:
-    virtual void Initialize(ID3D12Device* pd3dDevice, ID3D12CommandQueue* pd3dCommandQueue);
+    virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
     float mfHeight = 0.0f;
     float mfWidth = 0.0f;
