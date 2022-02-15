@@ -164,6 +164,8 @@ public:
 	float GetHeight(float x, float z) const;
 	XMFLOAT3 GetNormal(float x, float z) const;
 
+	void BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks);
+
 	int GetHeightMapWidth() const { return mHeightMapImage->GetWidth(); }
 	int GetHeightMapDepth() const { return mHeightMapImage->GetDepth(); }
 	
@@ -175,7 +177,7 @@ public:
 
 	std::pair<int, int> GetBlockSize() { return std::make_pair(mBlockWidth * mTerrainScale.x, mBlockDepth * mTerrainScale.z); }
 
-	std::vector<btRigidBody*> GetTerrainRigidBodies() { return mTerrainRigidBodies; }
+	//std::vector<btRigidBody*> GetTerrainRigidBodies() { return mTerrainRigidBodies; }
 
 private:
 	std::unique_ptr<HeightMapImage> mHeightMapImage;
@@ -187,8 +189,9 @@ private:
 	int mBlockDepth = 0;
 
 	XMFLOAT3 mTerrainScale = { 1.0f,1.0f,1.0f };
+	float* mHeightmapData = NULL;
 
-	std::vector<btRigidBody*> mTerrainRigidBodies;
+	//std::vector<btRigidBody*> mTerrainRigidBodies;
 };
 
 

@@ -473,9 +473,10 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 {
 	const UINT verticesCount = 25;
 
+	mVertices.resize(25);
+
 	const int TessFactor = 20;
 
-	std::vector<TerrainVertex> vertices(verticesCount);
 	int increasement = 22;
 
 	int heightmapWidth = context->GetWidth();
@@ -486,33 +487,33 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	{
 		for (int x = xStart; x < (xStart + width); x+=increasement)
 		{
-			vertices[k].Position = XMFLOAT3((x * mScale.x), GetHeight(x, z, context), (z * mScale.z));
+			mVertices[k].Position = XMFLOAT3((x * mScale.x), GetHeight(x, z, context), (z * mScale.z));
 
-			if (vertices[k].Position.y > mMaxHeight)
-				mMaxHeight = vertices[k].Position.y;
+			if (mVertices[k].Position.y > mMaxHeight)
+				mMaxHeight = mVertices[k].Position.y;
 
-			if (vertices[k].Position.y < mMinHeight)
-				mMinHeight = vertices[k].Position.y;
+			if (mVertices[k].Position.y < mMinHeight)
+				mMinHeight = mVertices[k].Position.y;
 
-			vertices[k].Normal = context->GetNormal(x, z);
-			vertices[k].TexCoord0 = XMFLOAT2((float)x / float(heightmapWidth - 1), float(heightmapDepth - 1 - z) / float(heightmapDepth - 1));
-			vertices[k++].TexCoord1 = XMFLOAT2((float)x / float(mScale.x * 0.5f), (float)z / float(mScale.z * 0.5f));
+			mVertices[k].Normal = context->GetNormal(x, z);
+			mVertices[k].TexCoord0 = XMFLOAT2((float)x / float(heightmapWidth - 1), float(heightmapDepth - 1 - z) / float(heightmapDepth - 1));
+			mVertices[k++].TexCoord1 = XMFLOAT2((float)x / float(mScale.x * 0.5f), (float)z / float(mScale.z * 0.5f));
 		}
 	}
 
-	const auto& [min_x, max_x] = std::minmax_element(vertices.begin(), vertices.end(),
+	const auto& [min_x, max_x] = std::minmax_element(mVertices.begin(), mVertices.end(),
 		[](const TerrainVertex& a, const TerrainVertex& b) { return (a.Position.x < b.Position.x); });
-	const auto& [min_y, max_y] = std::minmax_element(vertices.begin(), vertices.end(),
+	const auto& [min_y, max_y] = std::minmax_element(mVertices.begin(), mVertices.end(),
 		[](const TerrainVertex& a, const TerrainVertex& b) {return (a.Position.y < b.Position.y); });
-	const auto& [min_z, max_z] = std::minmax_element(vertices.begin(), vertices.end(),
+	const auto& [min_z, max_z] = std::minmax_element(mVertices.begin(), mVertices.end(),
 		[](const TerrainVertex& a, const TerrainVertex& b) {return (a.Position.z < b.Position.z); });
 
 	mOOBB.Center = { (min_x->Position.x + max_x->Position.x) / 2, (min_y->Position.y + max_y->Position.y) / 2, (min_z->Position.z + max_z->Position.z) / 2 };
 	mOOBB.Extents = { (max_x->Position.x - min_x->Position.x) / 2, (max_y->Position.y - min_y->Position.y) / 2, (max_z->Position.z - min_z->Position.z) / 2 };
 
-	BuildHeightmapData(TessFactor, vertices, context);
+	//BuildHeightmapData(TessFactor, vertices, context);
 	
-	auto TerrainShape = new btHeightfieldTerrainShape(TessFactor + 1, TessFactor + 1, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
+	/*auto TerrainShape = new btHeightfieldTerrainShape(TessFactor + 1, TessFactor + 1, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
 
 	double xScale = (mWidth - 1)  * mScale.x / TessFactor;
 
@@ -528,15 +529,15 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 
 	btVector3 aabbMin;
 	btVector3 aabbMax;
-	mBtRigidBody->getAabb(aabbMin, aabbMax);
+	mBtRigidBody->getAabb(aabbMin, aabbMax);*/
 
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(TerrainVertex), 0,
-		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, vertices.data(), (UINT)vertices.size(), nullptr, 0);
+		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, mVertices.data(), (UINT)mVertices.size(), nullptr, 0);
 }
 
 HeightMapPatchListMesh::~HeightMapPatchListMesh()
 {
-	delete mHeightmapData;
+	//delete mHeightmapData;
 }
 
 float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) const
@@ -545,63 +546,57 @@ float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) c
 	return height;
 }
 
-void HeightMapPatchListMesh::BuildHeightmapData(const int& TessFactor, const std::vector<TerrainVertex>& TerrainVertices, HeightMapImage* context)
-{
-	mHeightmapData = new float[(TessFactor) * (TessFactor)];
-
-	auto CubicBezierSum = [](const std::vector<TerrainVertex>& patch, XMFLOAT2 t) {
-
-		// 4차 베지어 곡선 계수
-		std::array<float, 5> uB, vB;
-		float txInv{ 1.0f - t.x };
-		uB[0] = txInv * txInv * txInv * txInv;
-		uB[1] = 4.0f * t.x * txInv * txInv * txInv;
-		uB[2] = 6.0f * t.x * t.x * txInv * txInv;
-		uB[3] = 4.0f * t.x * t.x * t.x * txInv;
-		uB[4] = t.x * t.x * t.x * t.x;
-
-		float tyInv{ 1.0f - t.y };
-		vB[0] = tyInv * tyInv * tyInv * tyInv;
-		vB[1] = 4.0f * t.y * tyInv * tyInv * tyInv;
-		vB[2] = 6.0f * t.y * t.y * tyInv * tyInv;
-		vB[3] = 4.0f * t.y * t.y * t.y * tyInv;
-		vB[4] = t.y * t.y * t.y * t.y;
-
-		// 4차 베지에 곡면 계산
-		XMFLOAT3 sum{ 0.0f, 0.0f, 0.0f };
-		for (int i = 0; i < 5; ++i)
-		{
-			XMFLOAT3 subSum{ 0.0f, 0.0f, 0.0f };
-			for (int j = 0; j < 5; ++j)
-			{
-				XMFLOAT3 temp{ Vector3::Multiply(uB[j], patch[(i * 5) + j].Position) };
-				subSum = Vector3::Add(subSum, temp);
-			}
-			subSum = Vector3::Multiply(vB[i], subSum);
-			sum = Vector3::Add(sum, subSum);
-		}
-		return sum;
-	};
-
-	float debugTess[20][20];
-
-	for (int i = 0; i < TessFactor; ++i)
-	{
-		for (int j = 0; j < TessFactor; ++j)
-		{
-			XMFLOAT2 uv{ (float)i / (TessFactor - 1), 1.0f - ((float)j / (TessFactor - 1)) };
-			XMFLOAT3 posOnBazier{ CubicBezierSum(TerrainVertices, uv) };
-
-			mHeightmapData[i + (int)(j * (TessFactor))] = posOnBazier.y;
-		}
-	}
-}
-
-void HeightMapPatchListMesh::SetIndex(int x, int z)
-{
-	mXIndex = x;
-	mZIndex = z;
-}
+//void HeightMapPatchListMesh::BuildHeightmapData(const int& TessFactor, const std::vector<TerrainVertex>& TerrainVertices, HeightMapImage* context)
+//{
+//	mHeightmapData = new float[(TessFactor) * (TessFactor)];
+//
+//	auto CubicBezierSum = [](const std::vector<TerrainVertex>& patch, XMFLOAT2 t) {
+//
+//		// 4차 베지어 곡선 계수
+//		std::array<float, 5> uB, vB;
+//		float txInv{ 1.0f - t.x };
+//		uB[0] = txInv * txInv * txInv * txInv;
+//		uB[1] = 4.0f * t.x * txInv * txInv * txInv;
+//		uB[2] = 6.0f * t.x * t.x * txInv * txInv;
+//		uB[3] = 4.0f * t.x * t.x * t.x * txInv;
+//		uB[4] = t.x * t.x * t.x * t.x;
+//
+//		float tyInv{ 1.0f - t.y };
+//		vB[0] = tyInv * tyInv * tyInv * tyInv;
+//		vB[1] = 4.0f * t.y * tyInv * tyInv * tyInv;
+//		vB[2] = 6.0f * t.y * t.y * tyInv * tyInv;
+//		vB[3] = 4.0f * t.y * t.y * t.y * tyInv;
+//		vB[4] = t.y * t.y * t.y * t.y;
+//
+//		// 4차 베지에 곡면 계산
+//		XMFLOAT3 sum{ 0.0f, 0.0f, 0.0f };
+//		for (int i = 0; i < 5; ++i)
+//		{
+//			XMFLOAT3 subSum{ 0.0f, 0.0f, 0.0f };
+//			for (int j = 0; j < 5; ++j)
+//			{
+//				XMFLOAT3 temp{ Vector3::Multiply(uB[j], patch[(i * 5) + j].Position) };
+//				subSum = Vector3::Add(subSum, temp);
+//			}
+//			subSum = Vector3::Multiply(vB[i], subSum);
+//			sum = Vector3::Add(sum, subSum);
+//		}
+//		return sum;
+//	};
+//
+//	float debugTess[20][20];
+//
+//	for (int i = 0; i < TessFactor; ++i)
+//	{
+//		for (int j = 0; j < TessFactor; ++j)
+//		{
+//			XMFLOAT2 uv{ (float)i / (TessFactor - 1), 1.0f - ((float)j / (TessFactor - 1)) };
+//			XMFLOAT3 posOnBazier{ CubicBezierSum(TerrainVertices, uv) };
+//
+//			mHeightmapData[i + (int)(j * (TessFactor))] = posOnBazier.y;
+//		}
+//	}
+//}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //
