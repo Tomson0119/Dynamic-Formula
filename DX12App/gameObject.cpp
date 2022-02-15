@@ -526,9 +526,7 @@ void TerrainObject::BuildHeightMap(const std::wstring& path)
 }
 
 void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
-{	
-	//1024 * 8 = 8192
-	// 
+{
 	mBlockWidth = blockWidth;
 	mBlockDepth = blockDepth;
 
