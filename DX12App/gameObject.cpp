@@ -527,6 +527,8 @@ void TerrainObject::BuildHeightMap(const std::wstring& path)
 
 void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
 {	
+	//1024 * 8 = 8192
+	// 
 	mBlockWidth = blockWidth;
 	mBlockDepth = blockDepth;
 
@@ -559,10 +561,10 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 	BuildHeightmapData(TessFactor, xBlocks, zBlocks);
 
 	auto TerrainShape = new btHeightfieldTerrainShape(TessFactor * xBlocks, TessFactor * zBlocks, mHeightmapData, minHeight, maxHeight, 1, false);
-	TerrainShape->setLocalScaling(btVector3(mWidth / TessFactor * xBlocks, mTerrainScale.y, mDepth / TessFactor * zBlocks));
+	TerrainShape->setLocalScaling(btVector3((float)mWidth / (TessFactor * xBlocks) * mTerrainScale.x, mTerrainScale.y, (float)mDepth / (TessFactor * zBlocks) * mTerrainScale.z));
 
 	btVector3 vertex;
-	TerrainShape->getVertex(TessFactor * xBlocks - 2, TessFactor * xBlocks - 2, vertex);
+	TerrainShape->getVertex(TessFactor * xBlocks - 1, TessFactor * xBlocks - 1, vertex);
 
 	btTransform btTerrainTransform;
 	btTerrainTransform.setIdentity();
