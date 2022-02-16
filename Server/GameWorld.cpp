@@ -6,13 +6,14 @@
 #include "LoginServer.h"
 #include "RigidBody.h"
 
-GameWorld::GameWorld()
+GameWorld::GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
 	  mPlayerCount{ 0 },
 	  mPhysicsOverlapped{ OP::PHYSICS }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
 		mPlayerList[i] = nullptr;
+	mConstantPtr = constantPtr;
 }
 
 void GameWorld::InitPhysics(float gravity)
@@ -33,6 +34,7 @@ void GameWorld::InitPlayerList(const btVector3 startPosition, btScalar offsetX, 
 	for (int i = 0; auto& player : mPlayerList)
 	{
 		player = room->GetPlayerPtr(i);
+		player->SetVehicleConstant(mConstantPtr);
 		player->SetPosition(
 			startPosition.x() + offsetX * i,
 			startPosition.y(),
@@ -50,15 +52,27 @@ void GameWorld::CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape)
 void GameWorld::UpdatePhysicsWorld(float timeStep)
 {
 	for (Player* player : GetPlayerList())
-		player->UpdatePlayerRigidBody(mPhysics.GetDynamicsWorld());
-
-	mMapRigidBody.UpdateAllRigidBody(mPhysics.GetDynamicsWorld());
+	{
+		if(player->Empty == false)
+			player->UpdatePlayerRigidBody(timeStep, mPhysics.GetDynamicsWorld());
+	}
+	mMapRigidBody.UpdateAllRigidBody(timeStep, mPhysics.GetDynamicsWorld());
 
 	mPhysics.StepSimulation(timeStep);
+	
+	for (Player* player : GetPlayerList())
+	{
+		if (player->Empty == false)
+			player->UpdateTransformVectors();
+	}
 }
 
 void GameWorld::FlushPhysicsWorld()
 {
+	for (Player* player : GetPlayerList())
+	{
+		player->RemoveRigidBody(mPhysics.GetDynamicsWorld());
+	}
 	mPhysics.Flush();
 }
 
@@ -69,6 +83,30 @@ void GameWorld::RemovePlayerRigidBody(int idx)
 
 	if (mPlayerCount == 0)
 		SetActive(false);
+}
+
+void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
+{
+	switch (static_cast<int>(key))
+	{
+	case VK_UP:
+	case VK_DOWN:
+	case VK_LEFT:
+	case VK_RIGHT:
+	case VK_LSHIFT:
+		mPlayerList[idx]->ToggleKeyValue(key, pressed);
+		break;
+
+	case 'Z': // boost
+		break;
+
+	case 'X': // missile.
+		break;
+
+	default:
+		std::cout << "Invalid key input.\n";
+		return;
+	}
 }
 
 void GameWorld::SendGameStartSuccess()
@@ -89,6 +127,54 @@ void GameWorld::SendGameStartSuccess()
 		info_pck.z[i] = pos.z();
 	}
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&info_pck), info_pck.size);
+}
+
+void GameWorld::BroadcastTransform(int idx, int ignore, bool instSend)
+{
+	if (idx < 0 || idx >= mPlayerList.size()) return;
+	if (mPlayerList[idx]->Empty == false)
+	{
+		SC::packet_player_transform pck{};
+		pck.size = sizeof(SC::packet_player_transform);
+		pck.type = SC::PLAYER_TRANSFORM;
+		pck.player_idx = idx;
+
+		const btVector3& pos = mPlayerList[idx]->GetPosition();
+		const btVector3& eul = mPlayerList[idx]->GetEulerAngle();
+
+		pck.position[0] = pos.x();
+		pck.position[1] = pos.y();
+		pck.position[2] = pos.z();
+
+		pck.euler[0] = eul.x();
+		pck.euler[1] = eul.y();
+		pck.euler[2] = eul.z();
+
+		SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, ignore, instSend);
+	} 
+}
+
+void GameWorld::BroadcastAllTransform()
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	//std::cout << "[room id: " << mID << "] Send all transform packet to all.\n";
+#endif
+
+	for (int i = 0; i < mPlayerList.size(); i++)
+	{
+		if (mPlayerList[i]->Empty == false)
+		{
+			BroadcastTransform(i, -1, false);
+		}
+	}
+	for (int i = 0; i < mPlayerList.size(); i++)
+	{
+		if (mPlayerList[i]->Empty == false)
+		{
+			int id = mPlayerList[i]->ID;
+			gClients[id]->SendMsg();
+		}
+	}
 }
 
 WSAOVERLAPPEDEX* GameWorld::GetOverlapped(float timeStep)

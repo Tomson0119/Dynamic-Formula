@@ -11,6 +11,19 @@ class InGameServer
 {
 	using RoomList = std::array<std::unique_ptr<WaitRoom>, MAX_ROOM_SIZE>;
 	using WorldList = std::array<std::unique_ptr<GameWorld>, MAX_ROOM_SIZE>;
+
+public:
+	struct VehicleConstant
+	{
+		const float MaxBoosterTime = 5.0f;
+		const float MaxEngineForce = 8000.f;
+		const float BoosterEngineForce = 300000.f;
+		const float SteeringIncrement = 0.01f;
+		const float SteeringClamp = 0.5f;
+		const float	FrontWheelDriftFriction = 5.0f;
+		const float BackWheelDriftFriction = 3.9f;
+	};
+
 public:
 	InGameServer();
 	~InGameServer() = default;
@@ -19,7 +32,6 @@ public:
 	void PrepareToStartGame(int roomID);
 
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
-	void HandleKeyInput(int id, uint8_t key, bool pressed);
 
 	void RemovePlayer(int roomID, int hostID);
 
@@ -39,6 +51,8 @@ private:
 	std::array<std::unique_ptr<BtTerrainShape>, 2> mTerrainShapes;
 	std::vector<std::unique_ptr<BtBoxShape>> mObjRigidBodies;
 
+	std::shared_ptr<VehicleConstant> mVehicleConstants;
+
 	const btVector3 mStartPosition = { 500.0f, 10.0f, 500.0f };
-	const int mDuration = 1000;
+	const int mDurationMs = 16;
 };

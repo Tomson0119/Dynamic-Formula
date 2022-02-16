@@ -12,6 +12,8 @@ InGameServer::WorldList InGameServer::msWorlds;
 InGameServer::InGameServer()
 	: mLoginPtr{ nullptr }
 {
+	mVehicleConstants = std::make_shared<VehicleConstant>();
+
 	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin");
 	mTerrainShapes[0] = std::make_unique<BtTerrainShape>("Resource\\PlaneMap_Data.bin");
 }
@@ -24,7 +26,7 @@ void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 	const float offset_x = 20.0f;
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
-		msWorlds[i] = std::make_unique<GameWorld>();
+		msWorlds[i] = std::make_unique<GameWorld>(mVehicleConstants);
 		msWorlds[i]->InitPhysics(-10.0f);
 		msWorlds[i]->InitPlayerList(mStartPosition, offset_x, roomList[i].get());		
 	}
@@ -60,12 +62,15 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 	case CS::KEY_INPUT:
 	{
 		CS::packet_key_input* pck = reinterpret_cast<CS::packet_key_input*>(packet);
-		if (pck->room_id < 0)
+		
+		const int idx = (int)gClients[id]->PlayerIndex;
+		const int roomID = gClients[id]->RoomID;
+		if (roomID < 0 || idx < 0)
 		{
 			mLoginPtr->Disconnect(id);
 			break;
-		}
-		HandleKeyInput(id, pck->key, pck->pressed);
+		}		
+		msWorlds[roomID]->HandleKeyInput(idx, pck->key, pck->pressed);
 		break;
 	}
 	default:
@@ -73,37 +78,6 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 		return false;
 	}
 	return true;
-}
-
-void InGameServer::HandleKeyInput(int id, uint8_t key, bool pressed)
-{
-	switch (static_cast<int>(key))
-	{
-	case VK_LEFT:
-		break;
-
-	case VK_RIGHT:
-		break;
-
-	case VK_UP:
-		break;
-
-	case VK_DOWN:
-		break;
-
-	case VK_LSHIFT:
-		break;
-
-	case 'Z':
-		break;
-
-	case 'X':
-		break;
-
-	default:
-		std::cout << "Invalid key input.\n";
-		break;
-	}
 }
 
 void InGameServer::RemovePlayer(int roomID, int hostID)
@@ -115,8 +89,8 @@ void InGameServer::RemovePlayer(int roomID, int hostID)
 void InGameServer::AddPhysicsTimerEvent(int roomID)
 {
 	Timer::TimerEvent ev(
-		std::chrono::milliseconds(mDuration),
-		EVENT_TYPE::PHYSICS, roomID, mDuration / 1000.0f);
+		std::chrono::milliseconds(mDurationMs),
+		EVENT_TYPE::PHYSICS, roomID, mDurationMs / 1000.0f);
 
 	mTimer.AddTimerEvent(ev);
 }
@@ -124,9 +98,10 @@ void InGameServer::AddPhysicsTimerEvent(int roomID)
 void InGameServer::RunPhysicsSimulation(int roomID, float timeStep)
 {
 #ifdef DEBUG_PACKET_TRANSFER
-		std::cout << "[Room id: " << roomID << "] Running physics simulation.\n";
+		//std::cout << "[Room id: " << roomID << "] Running physics simulation.\n";
 #endif
 	msWorlds[roomID]->UpdatePhysicsWorld(timeStep);
+	msWorlds[roomID]->BroadcastAllTransform();	// broadcast instantly.
 
 	if (msWorlds[roomID]->IsActive())
 		AddPhysicsTimerEvent(roomID);
@@ -139,4 +114,3 @@ void InGameServer::PostPhysicsOperation(int roomID, float timeStep)
 	IOCP& iocp = mLoginPtr->GetIOCP();
 	iocp.PostToCompletionQueue(msWorlds[roomID]->GetOverlapped(timeStep), roomID);
 }
-

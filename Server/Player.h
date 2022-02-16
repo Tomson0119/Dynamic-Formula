@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RigidBody.h"
+#include "InGameServer.h"
 
 class BtCarShape;
 
@@ -10,18 +11,26 @@ public:
 	Player();
 	~Player() = default;
 
-	void SetPosition(float x, float y, float z);
-	const btVector3& GetPosition() const { return mPosition; }
+	void SetVehicleConstant(std::shared_ptr<InGameServer::VehicleConstant> constantPtr);
 
 	void CreateVehicleRigidBody(
 		btScalar mass,
 		btDiscreteDynamicsWorld* physicsWorld, 
 		BtCarShape* shape);
 
-	void UpdatePlayerRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	void UpdatePlayerRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
 	void SetDeletionFlag() { mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION); }
 
 	void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	void UpdateTransformVectors();
+
+	void UpdateVehicleComponent(float elapsed);
+	void ToggleKeyValue(uint8_t key, bool pressed);
+
+public:
+	void SetPosition(float x, float y, float z);
+	const btVector3& GetPosition() const { return mPosition; }
+	const btVector3& GetEulerAngle() const { return mEuler; }
 
 public:
 	std::atomic_bool Empty;
@@ -31,6 +40,11 @@ public:
 	char Name[MAX_NAME_SIZE];
 
 private:
+	std::map<int, std::atomic_bool> mKeyMap;
+
+	btVector3 mEuler;
 	btVector3 mPosition;
+
 	VehicleRigidBody mVehicleRigidBody;
+	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
 };

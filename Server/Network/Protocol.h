@@ -116,6 +116,7 @@ namespace SC
 	const char REMOVE_PLAYER	  = 9;
 	const char GAME_START_FAIL	  = 10;
 	const char GAME_START_SUCCESS = 11;
+	const char PLAYER_TRANSFORM	  = 12;
 
 	struct packet_force_logout : packet_header { };
 
@@ -194,6 +195,14 @@ namespace SC
 		float x[MAX_ROOM_CAPACITY];
 		float y[MAX_ROOM_CAPACITY];
 		float z[MAX_ROOM_CAPACITY];
+	};
+
+	struct packet_player_transform : packet_header
+	{
+		int world_id;
+		int player_idx;
+		float position[3];
+		float euler[3];
 	};
 }
 #pragma pack(pop)

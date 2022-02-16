@@ -39,16 +39,16 @@ void RigidBody::Update(btDiscreteDynamicsWorld* physicsWorld)
 
 	case RigidBody::UPDATE_FLAG::UPDATE:
 		UpdateRigidBody();
-		break;
+		return;
 
 	case RigidBody::UPDATE_FLAG::DELETION:
 		RemoveRigidBody(physicsWorld);
 		break;
 
-	case UPDATE_FLAG::NONE:
+	case RigidBody::UPDATE_FLAG::NONE:
 		return;
 	}
-	SetUpdateFlag(UPDATE_FLAG::NONE);
+	SetUpdateFlag(UPDATE_FLAG::UPDATE);
 }
 
 void RigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
@@ -144,6 +144,8 @@ void VehicleRigidBody::AddWheel(const btVector3& bodyExtents, const BtCarShape::
 		wheel.m_frictionSlip = wheelInfo.Friction;
 		wheel.m_rollInfluence = wheelInfo.RollInfluence;
 	}
+	mComponent.FrontFrictionSlip = wheelInfo.Friction;
+	mComponent.BackFrictionSlip = wheelInfo.Friction;
 }
 
 void VehicleRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
@@ -155,12 +157,35 @@ void VehicleRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
 	RigidBody::RemoveRigidBody(physicsWorld);
-	if(mVehicle) physicsWorld->removeVehicle(mVehicle.get());
+	if (mVehicle) {
+		physicsWorld->removeVehicle(mVehicle.get());
+		mVehicle.release();
+		mVehicleRayCaster.release();
+	}
+}
+
+void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
+{
+	auto motionState = mVehicle->getRigidBody()->getMotionState();
+	if (motionState) motionState->getWorldTransform(transform);
 }
 
 void VehicleRigidBody::UpdateRigidBody()
 {
-	// TODO: Update vehicle/wheel components and apply it.
+	mComponent.CurrentSpeed = mVehicle->getCurrentSpeedKmHour();
+
+	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrontFrictionSlip;
+	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrontFrictionSlip;
+	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.BackFrictionSlip;
+	mVehicle->getWheelInfo(3).m_frictionSlip = mComponent.BackFrictionSlip;
+
+	mVehicle->setSteeringValue(mComponent.VehicleSteering, 0);
+	mVehicle->setSteeringValue(mComponent.VehicleSteering, 1);
+
+	mVehicle->applyEngineForce(mComponent.EngineForce, 2);
+	mVehicle->setBrake(mComponent.BreakingForce, 2);
+	mVehicle->applyEngineForce(mComponent.EngineForce, 3);
+	mVehicle->setBrake(mComponent.BreakingForce, 3);
 }
 
 
@@ -186,7 +211,7 @@ void MapRigidBody::CreateStaticRigidBodies(std::string_view filename, btCollisio
 	//		 and create all rigidboies
 }
 
-void MapRigidBody::UpdateAllRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+void MapRigidBody::UpdateAllRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
 {
 	for (RigidBody& rigid : mStaticRigidBodies)
 	{

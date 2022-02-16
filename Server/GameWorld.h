@@ -2,6 +2,7 @@
 
 #include "BPHandler.h"
 #include "RigidBody.h"
+#include "InGameServer.h"
 
 class Player;
 class WaitRoom;
@@ -9,9 +10,8 @@ class WaitRoom;
 class GameWorld
 {
 	using PlayerList = std::array<Player*, MAX_ROOM_CAPACITY>;
-
 public:
-	GameWorld();
+	GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantsPtr);
 	~GameWorld() = default;
 	
 	void InitPhysics(float gravity);
@@ -24,7 +24,11 @@ public:
 
 	void RemovePlayerRigidBody(int idx);
 
+	void HandleKeyInput(int idx, uint8_t key, bool pressed);
+
 	void SendGameStartSuccess();
+	void BroadcastTransform(int idx, int ignore=-1, bool instSend=false);
+	void BroadcastAllTransform();
 
 public:
 	void SetActive(bool active) { mActive = active; }
@@ -46,4 +50,6 @@ private:
 	BPHandler mPhysics;
 	MapRigidBody mMapRigidBody;
 	PlayerList mPlayerList;
+
+	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
 };

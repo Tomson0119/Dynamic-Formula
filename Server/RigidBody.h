@@ -44,6 +44,20 @@ protected:
 class VehicleRigidBody : public RigidBody
 {
 	using Tuning = btRaycastVehicle::btVehicleTuning;
+	
+public:
+	struct VehicleComponent
+	{
+		float BoosterLeft{};
+		float EngineForce{};
+		float BreakingForce{};
+		float VehicleSteering{};
+		float CurrentSpeed{};
+		float FrontFrictionSlip{};
+		float BackFrictionSlip{};
+		float MaxSpeed{ 1000.0f };
+	};
+
 public:
 	VehicleRigidBody() = default;
 	virtual ~VehicleRigidBody() = default;
@@ -54,6 +68,7 @@ public:
 		const BtCarShape::WheelInfo& wheelInfo);
 	
 	void AddWheel(const btVector3& bodyExtents, const BtCarShape::WheelInfo& wheelInfo);
+	void StoreWorldTransform(btTransform& transform);
 
 public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
@@ -64,8 +79,11 @@ public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }
 	const Tuning& GetTuning() const { return mTuning; }
 
+	VehicleComponent& GetComponent() { return mComponent; }
+
 private:
 	Tuning mTuning;
+	VehicleComponent mComponent;
 	std::unique_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::unique_ptr<btRaycastVehicle> mVehicle;
 };
@@ -79,7 +97,7 @@ public:
 	void CreateTerrainRigidBody(BtTerrainShape* shape);
 	void CreateStaticRigidBodies(std::string_view filename,	btCollisionShape* shape);
 
-	void UpdateAllRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	void UpdateAllRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
 
 private:
 	std::deque<RigidBody> mStaticRigidBodies;
