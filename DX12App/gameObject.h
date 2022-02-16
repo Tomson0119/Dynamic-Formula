@@ -52,7 +52,7 @@ public:
 		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
 
 public:
-	virtual void SetChild(GameObject* child);
+	//virtual void SetChild(GameObject* child);
 	virtual void SetPosition(float x, float y, float z);
 	virtual void SetPosition(const XMFLOAT3& pos);
 
@@ -90,6 +90,8 @@ public:
 	void Rotate(float pitch, float yaw, float roll);
 	void Rotate(const XMFLOAT3& axis, float angle);
 
+	void RotateQuaternion(float x, float y, float z, float w);
+
 	void Scale(float xScale, float yScale, float zScale);
 	void Scale(const XMFLOAT3& scale);
 	void Scale(float scale);
@@ -122,6 +124,7 @@ protected:
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mQuaternion = Matrix4x4::Identity4x4();
 
 	btRigidBody* mBtRigidBody;
 	std::vector<std::shared_ptr<Mesh>> mMeshes;
@@ -132,9 +135,9 @@ protected:
 
 	BoundingOrientedBox mOOBB = { };
 
-	GameObject* mParent = nullptr;
+	/*GameObject* mParent = nullptr;
 	GameObject* mChild = nullptr;
-	GameObject* mSibling = nullptr;
+	GameObject* mSibling = nullptr;*/
 
 	XMFLOAT3 mMoveDirection = {};
 	XMFLOAT3 mRotationAxis = {};

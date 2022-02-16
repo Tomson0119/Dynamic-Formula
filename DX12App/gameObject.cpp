@@ -234,9 +234,6 @@ void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 
 	UpdateTransform(parent);
 	UpdateBoundingBox();
-
-	if (mChild) mChild->Update(elapsedTime, &mWorld);
-	if (mSibling) mSibling->Update(elapsedTime, parent);
 }
 
 void GameObject::Draw(
@@ -299,7 +296,7 @@ void GameObject::Draw(
 
 void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 {
-	mWorld(0, 0) = mScaling.x * mRight.x;
+	/*mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;	
 	mWorld(0, 2) = mRight.z;
 
@@ -309,23 +306,23 @@ void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 
 	mWorld(2, 0) = mLook.x;		
 	mWorld(2, 1) = mLook.y;		
-	mWorld(2, 2) = mScaling.z * mLook.z;
+	mWorld(2, 2) = mScaling.z * mLook.z;*/
+
+
+	mWorld = Matrix4x4::Identity4x4();
 
 	mWorld(3, 0) = mPosition.x;
 	mWorld(3, 1) = mPosition.y;
 	mWorld(3, 2) = mPosition.z;
 
-	mWorld = (parent) ? Matrix4x4::Multiply(mWorld, *parent) : mWorld;
+	mWorld = Matrix4x4::Multiply(mQuaternion, mWorld);
 }
 
 void GameObject::UpdateBoundingBox()
 {
-	for (const auto& mesh : mMeshes)
-	{
-		mOOBB.Center = { 0.0f, 0.0f, 0.0f };
-		mOOBB.Transform(mOOBB, XMLoadFloat4x4(&mWorld));
-		XMStoreFloat4(&mOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&mOOBB.Orientation)));
-	}
+	mOOBB.Center = { 0.0f, 0.0f, 0.0f };
+	mOOBB.Transform(mOOBB, XMLoadFloat4x4(&mWorld));
+	XMStoreFloat4(&mOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&mOOBB.Orientation)));
 }
 
 void GameObject::Animate(float elapsedTime)
@@ -341,19 +338,6 @@ void GameObject::UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, 
 {
 	for (int i = 0; i < mMeshes.size(); i++)
 		matCnst->CopyData(offset + i, mMeshes[i]->GetMaterialConstant());
-}
-
-void GameObject::SetChild(GameObject* child)
-{
-	if (child)
-		child->mParent = this;
-	if (mChild)
-	{
-		if (child) child->mSibling = mChild->mSibling;
-		mChild->mSibling = child;
-	}
-	else
-		mChild = child;
 }
 
 void GameObject::SetPosition(float x, float y, float z)
@@ -391,12 +375,6 @@ void GameObject::SetMovement(XMFLOAT3& dir, float speed)
 {
 	mMoveDirection = dir;
 	mMoveSpeed = speed;
-}
-
-void GameObject::SetReflected(XMFLOAT4& plane)
-{
-	mReflected = true;
-	mReflectMatrix = Matrix4x4::Reflect(plane);
 }
 
 void GameObject::Move(float dx, float dy, float dz)
@@ -459,6 +437,12 @@ void GameObject::Rotate(const XMFLOAT3& axis, float angle)
 	mRight = Vector3::TransformNormal(mRight, R);
 	mUp = Vector3::TransformNormal(mUp, R);
 	mLook = Vector3::TransformNormal(mLook, R);
+}
+
+void GameObject::RotateQuaternion(float x, float y, float z, float w)
+{
+	XMMATRIX R = XMMatrixRotationQuaternion(XMVECTOR{ x,y,z,w });
+	XMStoreFloat4x4(&mQuaternion, R);
 }
 
 void GameObject::RotateY(float angle)

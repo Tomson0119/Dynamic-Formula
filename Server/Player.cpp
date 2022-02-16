@@ -60,11 +60,9 @@ void Player::UpdateTransformVectors()
 	btTransform transform{};
 	mVehicleRigidBody.StoreWorldTransform(transform);
 
-	btScalar x, y, z;
-	transform.getRotation().getEulerZYX(z, y, x);
-
-	mEuler.setValue(x, y, z);
 	mPosition = transform.getOrigin();
+	auto quat = transform.getRotation();
+	mQuaternion.setValue(quat.x(), quat.y(), quat.z(), quat.w());
 }
 
 void Player::UpdateVehicleComponent(float elapsed)

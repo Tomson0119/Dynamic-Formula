@@ -202,7 +202,7 @@ namespace SC
 		int world_id;
 		int player_idx;
 		float position[3];
-		float euler[3];
+		float quaternion[4];
 	};
 }
 #pragma pack(pop)

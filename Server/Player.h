@@ -30,7 +30,7 @@ public:
 public:
 	void SetPosition(float x, float y, float z);
 	const btVector3& GetPosition() const { return mPosition; }
-	const btVector3& GetEulerAngle() const { return mEuler; }
+	const btVector4& GetQuaternion() const { return mQuaternion; }
 
 public:
 	std::atomic_bool Empty;
@@ -42,7 +42,7 @@ public:
 private:
 	std::map<int, std::atomic_bool> mKeyMap;
 
-	btVector3 mEuler;
+	btVector4 mQuaternion;
 	btVector3 mPosition;
 
 	VehicleRigidBody mVehicleRigidBody;
