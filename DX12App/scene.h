@@ -29,7 +29,7 @@ class NetModule;
 class Scene
 {
 public:
-	explicit Scene(SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr);
+	explicit Scene(HWND hwnd, SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr);
 	Scene(const Scene& rhs) = delete;
 	Scene& operator=(const Scene& rhs) = delete;
 	virtual ~Scene() = default;
@@ -53,7 +53,7 @@ public:
 	virtual void OnResize(float aspect) { }
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) { }
 
-	virtual void OnProcessMouseDown(HWND hwnd, WPARAM btnState, int x, int y);
+	virtual void OnProcessMouseDown(WPARAM btnState, int x, int y);
 	virtual void OnProcessMouseUp(WPARAM btnState, int x, int y);
 	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y);
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
@@ -76,5 +76,5 @@ protected:
 	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;
 	ComPtr<ID3D12Device> mDevice;
 
-	std::map<MeshType, std::vector<std::shared_ptr<Mesh>>> mMeshList;
+	HWND mHwnd;
 };

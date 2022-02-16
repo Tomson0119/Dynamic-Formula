@@ -7,7 +7,7 @@ class NetModule;
 class RoomScene : public Scene
 {
 public:
-	RoomScene(NetModule* netPtr);
+	RoomScene(HWND hwnd, NetModule* netPtr);
 	virtual ~RoomScene() = default;
 
 public:

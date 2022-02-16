@@ -20,7 +20,7 @@ class PhysicsPlayer;
 class InGameScene : public Scene
 {
 public:
-	InGameScene(NetModule* netPtr);
+	InGameScene(HWND hwnd, NetModule* netPtr);
 	virtual ~InGameScene();
 
 public:
@@ -56,7 +56,7 @@ public:
 	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed);
 
 public:
-	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y) override;
+	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessMouseUp(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
@@ -107,7 +107,8 @@ private:
 
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
-	
+
+	std::map<MeshType, std::vector<std::shared_ptr<Mesh>>> mMeshList;
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
@@ -116,7 +117,7 @@ private:
 
 	Player* mPlayer = nullptr;
 	std::vector<std::shared_ptr<MissileObject>> mMissileObjects;
-	std::vector<std::shared_ptr<PhysicsPlayer>> mPlayerObjects;
+	std::array<std::shared_ptr<PhysicsPlayer>, MAX_ROOM_CAPACITY> mPlayerObjects;
 
 	std::shared_ptr<Billboard> mFlameBillboard;
 	std::shared_ptr<Billboard> mDustBillboard;

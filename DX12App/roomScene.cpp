@@ -2,8 +2,8 @@
 #include "roomScene.h"
 #include "NetLib/NetModule.h"
 
-RoomScene::RoomScene(NetModule* netPtr)
-	: Scene{ SCENE_STAT::ROOM, (XMFLOAT4)Colors::Chocolate, netPtr }
+RoomScene::RoomScene(HWND hwnd, NetModule* netPtr)
+	: Scene{ hwnd, SCENE_STAT::ROOM, (XMFLOAT4)Colors::Chocolate, netPtr }
 {
 	OutputDebugStringW(L"Room Scene Entered.\n");
 #ifdef STANDALONE

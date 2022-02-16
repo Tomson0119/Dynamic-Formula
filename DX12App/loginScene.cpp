@@ -3,8 +3,8 @@
 #include "NetLib/NetModule.h"
 
 
-LoginScene::LoginScene(NetModule* netPtr)
-	: Scene{ SCENE_STAT::LOGIN, (XMFLOAT4)Colors::Aqua, netPtr }
+LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
+	: Scene{ hwnd, SCENE_STAT::LOGIN, (XMFLOAT4)Colors::Aqua, netPtr }
 {
 	OutputDebugStringW(L"Login Scene Entered.\n");
 #ifndef STANDALONE

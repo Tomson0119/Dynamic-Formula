@@ -7,7 +7,7 @@ class NetModule;
 class LoginScene : public Scene
 {
 public:
-	LoginScene(NetModule* netPtr);
+	LoginScene(HWND hwnd, NetModule* netPtr);
 	virtual ~LoginScene() = default;
 
 public:

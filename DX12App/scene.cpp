@@ -2,16 +2,17 @@
 #include "scene.h"
 #include "NetLib/NetModule.h"
 
-Scene::Scene(SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr)
+Scene::Scene(HWND hwnd, SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr)
 	: mSceneState{ stat },
 	  mFrameColor{ color },
 	  mSceneChangeFlag{ SCENE_CHANGE_FLAG::NONE },
-	  mNetPtr{ netPtr }
+	  mNetPtr{ netPtr },
+	  mHwnd{ hwnd }
 {
 	mNetPtr->SetInterface(this);
 }
 
-void Scene::OnProcessMouseDown(HWND hwnd, WPARAM btnState, int x, int y)
+void Scene::OnProcessMouseDown(WPARAM btnState, int x, int y)
 {
 }
 

@@ -2,8 +2,8 @@
 #include "lobbyScene.h"
 #include "NetLib/NetModule.h"
 
-LobbyScene::LobbyScene(NetModule* netPtr)
-	: Scene{ SCENE_STAT::LOBBY, (XMFLOAT4)Colors::Bisque, netPtr }
+LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
+	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::Bisque, netPtr }
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
 #ifdef STANDALONE

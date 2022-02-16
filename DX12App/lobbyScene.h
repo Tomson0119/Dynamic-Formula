@@ -16,7 +16,7 @@ class NetModule;
 class LobbyScene : public Scene
 {
 public:
-	LobbyScene(NetModule* netPtr);
+	LobbyScene(HWND hwnd, NetModule* netPtr);
 	virtual ~LobbyScene() = default;
 
 public:

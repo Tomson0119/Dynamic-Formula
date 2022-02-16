@@ -41,7 +41,7 @@ void GameFramework::OnResize()
 
 void GameFramework::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
-	mScenes.top()->OnProcessMouseDown(m_hwnd, buttonState, x, y);
+	mScenes.top()->OnProcessMouseDown(buttonState, x, y);
 }
 
 void GameFramework::OnProcessMouseUp(WPARAM buttonState, int x, int y)
@@ -88,19 +88,19 @@ void GameFramework::InitScene(SCENE_STAT state)
 	switch (state)
 	{
 	case SCENE_STAT::LOGIN:
-		mScenes.push(std::make_unique<LoginScene>(mNetwork.get()));
+		mScenes.push(std::make_unique<LoginScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::LOBBY:
-		mScenes.push(std::make_unique<LobbyScene>(mNetwork.get()));
+		mScenes.push(std::make_unique<LobbyScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::ROOM:
-		mScenes.push(std::make_unique<RoomScene>(mNetwork.get()));
+		mScenes.push(std::make_unique<RoomScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::IN_GAME:
-		mScenes.push(std::make_unique<InGameScene>(mNetwork.get()));
+		mScenes.push(std::make_unique<InGameScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	default:
@@ -152,8 +152,6 @@ void GameFramework::CheckAndChangeScene()
 
 void GameFramework::Update()
 {
-	//mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
-
 	D3DFramework::UpdateFrameStates();
 	
 	OnPreciseKeyInput();

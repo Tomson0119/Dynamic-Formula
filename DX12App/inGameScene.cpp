@@ -5,8 +5,8 @@
 
 using namespace std;
 
-InGameScene::InGameScene(NetModule* netPtr)
-	: Scene(SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr)
+InGameScene::InGameScene(HWND hwnd, NetModule* netPtr)
+	: Scene{ hwnd, SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"In Game Scene Entered.\n");
 	
@@ -321,7 +321,7 @@ void InGameScene::BuildCarObjects(
 	carObj->BuildDsvRtvView(mDevice.Get());
 	if (isPlayer) mPlayer = carObj.get();
 	mPipelines[Layer::Color]->AppendObject(carObj);
-	mPlayerObjects.push_back(carObj);
+	mPlayerObjects[netID] = std::move(carObj);
 }
 
 void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
@@ -358,21 +358,37 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 		mNetPtr->RemovePlayer(pck);
 
-		auto p = *std::find_if(mPlayerObjects.begin(), mPlayerObjects.end(),
-			[pck](const auto& p) { return (p->GetNetID() == pck->player_idx); });
-
-		p->SetRemoveFlag(true);
+		auto player = mPlayerObjects[pck->player_idx];
+		if (player)	player->SetFlag(UPDATE_FLAG::REMOVE);
+		break;
+	}
+	case SC::PLAYER_TRANSFORM:
+	{
+		SC::packet_player_transform* pck = reinterpret_cast<SC::packet_player_transform*>(packet);
+		
+		std::stringstream ss;
+		ss << "player index: " << pck->player_idx << "\n";
+		ss << "Euler: " << pck->euler[0] << " " << pck->euler[1] << " " << pck->euler[2] << "\n";
+		ss << "Pos: " << pck->position[0] << " " << pck->position[1] << " " << pck->position[2] << "\n";
+		
+		auto player = mPlayerObjects.at(pck->player_idx);
+		if (player)
+		{
+			mPlayerObjects[pck->player_idx]->SetPosition(pck->position[0], pck->position[1], pck->position[2]);
+			mPlayerObjects[pck->player_idx]->Rotate(pck->euler[0], pck->euler[1], pck->euler[2]);
+		}
+		//OutputDebugStringA(ss.str().c_str());
 		break;
 	}
 	}
 	return true;
 }
 
-void InGameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+void InGameScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
 	if ((buttonState) && !GetCapture())
 	{
-		SetCapture(hwnd);
+		SetCapture(mHwnd);
 		mLastMousePos.x = x;
 		mLastMousePos.y = y;
 	}
@@ -405,7 +421,10 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed)
 {
+	if (mHwnd != GetFocus()) return;
+
 #ifdef STANDALONE
+	if(GetFocus())
 	if (mMissileInterval < 0.0f)
 	{
 		if (GetAsyncKeyState('X') & 0x8000)
@@ -443,6 +462,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::sha
 void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
 	float elapsed = timer.ElapsedTime();
+	//physics->StepSimulation(elapsed);
 	
 	UpdatePlayerObjects();
 
@@ -582,7 +602,10 @@ void InGameScene::UpdateMissileObject()
 		if (i->get()->GetDuration() < 0.0f)
 		{
 			flag = true;
-			mDynamicsWorld->removeRigidBody(i->get()->GetRigidBody());
+			btRigidBody* rigidBody = i->get()->GetRigidBody();
+			delete rigidBody->getMotionState();
+			mDynamicsWorld->removeRigidBody(rigidBody);
+			delete rigidBody;
 			auto& defaultObjects = mPipelines[Layer::Default]->GetRenderObjects();
 			for (int j = 0; j < defaultObjects.size(); ++j)
 			{
@@ -602,31 +625,42 @@ void InGameScene::UpdateMissileObject()
 
 void InGameScene::UpdatePlayerObjects()
 {
-	bool flag = false;
-	for (auto i = mPlayerObjects.begin(); i < mPlayerObjects.end();)
+	bool removed_flag = false;
+	for (auto p = mPlayerObjects.begin(); p != mPlayerObjects.end();p++)
 	{
-		if (i->get()->GetRemoveFlag())
+		if (*p == nullptr) continue;
+
+		auto player = p->get();
+		switch(player->GetUpdateFlag())
 		{
-			flag = true;
-			btRigidBody* rigidBody = i->get()->GetRigidBody();
+		case UPDATE_FLAG::REMOVE:
+		{
+			btRigidBody* rigidBody = player->GetRigidBody();
 			delete rigidBody->getMotionState();
 			mDynamicsWorld->removeRigidBody(rigidBody);
 			delete rigidBody;
+
 			auto& colorObjects = mPipelines[Layer::Color]->GetRenderObjects();
 			for (int j = 0; j < colorObjects.size(); ++j)
 			{
-				if (*i == colorObjects[j])
+				if (*p == colorObjects[j])
 				{
 					mPipelines[Layer::Color]->DeleteObject(j);
 				}
 			}
 
-			i = mPlayerObjects.erase(i);
+			p->reset();
+			removed_flag = true;
+			player->SetFlag(UPDATE_FLAG::NONE);
+			break;
 		}
-		else
-			++i;
+		case UPDATE_FLAG::UPDATE:
+		{
+			break;
+		}
+		case UPDATE_FLAG::NONE:
+			continue;
+		}		
 	}
-	if (flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
+	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
 }
-
-
