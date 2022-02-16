@@ -29,14 +29,50 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 	mpUI = std::make_unique<LoginUI>(nFrame, device, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
+void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (msg)
+	{
+	case WM_CHAR:
+		//mpUI.get()->OnProcessKeyInput(msg, wParam, lParam);
+		switch (wParam)
+		{
+		case 0x08:  // backspace 
+		case 0x0A:  // linefeed 
+		case 0x1B:  // escape 
+		case 0x09:  // tab 
+		case 0x0D:  // carriage return
+			break;
+		default:    // displayable character 
+
+			TCHAR ch = (TCHAR)wParam;
+			Texts[0].push_back(ch);
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		switch (wParam)
+		{
+		case VK_ESCAPE:
+			
+			break;
+
+		case VK_F9:
+			
+			break;
+		}
+		break;
+	}
+}
 
 void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
-	
+	mpUI.get()->Update(timer.TotalTime(), Texts);
 }
 
 void LoginScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
+	mpUI.get()->Draw(nFrame);
 }
 
 bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)

@@ -24,7 +24,7 @@ private:
 	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	virtual void Update() override;
-	void UIUpdate();
+	//void UIUpdate();
 
 	virtual void Draw() override;
 

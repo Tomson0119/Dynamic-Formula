@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Mesh.h"
 #include "shadowMapRenderer.h"
-
+#include "LoginUI.h"
 #include "InGameUI.h"
 #pragma once
 #include "NetLib/NetModule.h"
@@ -21,6 +21,7 @@ InGameScene::InGameScene(NetModule* netPtr)
 	mKeyMap[VK_LSHIFT] = false;
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
+
 }
 
 InGameScene::~InGameScene()
@@ -70,7 +71,7 @@ shared_ptr<BulletWrapper> physics)
 	BuildGameObjects(cmdList, physics);
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
-	mpUI = std::make_unique<InGameUI>(nFrame, device, cmdQueue);
+	mpUI = std::make_unique<LoginUI>(nFrame, device, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
 
@@ -272,7 +273,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 #ifdef STANDALONE
-	BuildCarObjects({ 500.0f, 300.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObjects({ 500.0f, 100.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -409,10 +410,12 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 		mMainCamera->Pitch(0.25f * dy);
 		mMainCamera->RotateY(0.25f * dx);
 	}
+	mpUI.get()->OnProcessMouseMove(buttonState, x, y);
 }
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	
 }
 
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed)
@@ -430,8 +433,8 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::sha
 	{
 		mMissileInterval -= elapsed;
 	}
-	
-	if(mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
+	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
+
 #else
 	for (auto& [key, val] : mKeyMap)
 	{

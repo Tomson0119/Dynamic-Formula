@@ -150,6 +150,23 @@ void InGameUI::Update(float GTime, Player* mPlayer)
     //DraftGage Set
     SetDraftGage();
 }
+void InGameUI::Update(float GTime, std::vector<std::string> Texts)
+{
+	for (auto text : Texts[0])
+		mvTextBlocks[2].strText.push_back(text);
+}
+void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
+{
+	if (buttonState)
+	{
+		for (auto TextBlock : mvTextBlocks)
+			if (TextBlock.d2dLayoutRect.left<x &&
+				TextBlock.d2dLayoutRect.right>x &&
+				TextBlock.d2dLayoutRect.top > y &&
+				TextBlock.d2dLayoutRect.bottom < y)
+				TextBlock.strText.push_back('0');
+	}
+}
 
 void InGameUI::SetDraftGage()
 {
@@ -244,6 +261,6 @@ void InGameUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device
 {
     //Reset();
     SetVectorSize(nFrame, TextCnt);
-    Initialize(device, pd3dCommandQueue);
+    UI::Initialize(device, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }

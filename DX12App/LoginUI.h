@@ -8,15 +8,16 @@ public:
 		pd3dCommandQueue);
 	~LoginUI();
 	void SetVectorSize(UINT nFrame, UINT TextCnt);
-	virtual void Update(float GTime, Player* mPlayer) {}
-	virtual void Update(float GTime);
-	void Draw(UINT nFrame);
+	virtual void Update(float GTime, std::vector<std::wstring>& Texts);
+	virtual void Update(float GTime) {}
+	virtual void Draw(UINT nFrame);
 	void CreateFontFormat();
 	void SetTextRect();
-	void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight);
-	void Reset();
-	void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
+	virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight);
+	virtual void Reset();
+	virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
+	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 

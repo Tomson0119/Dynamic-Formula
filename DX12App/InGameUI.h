@@ -7,6 +7,7 @@ public:
     InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     ~InGameUI();
     virtual void Update(float GTime, Player* mPlayer);
+    virtual void Update(float GTime, std::vector<std::string> Texts);
     void Draw(UINT nFrame);
     virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
     virtual void Reset();
@@ -17,7 +18,8 @@ public:
     void SetTextRect();
     void StartPrint(const std::wstring& strUIText);
     void SetDraftGage();
-    
+    virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y);
+
 private:
     virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 

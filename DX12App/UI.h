@@ -11,7 +11,8 @@ class UI
 public:
     explicit UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     ~UI();
-    virtual void Update(float GTime, Player* mPlayer) = 0;
+    virtual void Update(float GTime, Player* mPlayer) {};
+    virtual void Update(float GTime, std::vector<std::wstring>& Texts) {}
     virtual void Update(float GTime);
     virtual void Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
      XMFLOAT4 RetLTRM[], XMFLOAT4 FillLTRB[]*/);
@@ -28,7 +29,9 @@ public:
         DWRITE_TEXT_ALIGNMENT Alignment = DWRITE_TEXT_ALIGNMENT_CENTER);
 
     //ID2D1DeviceContext2* GetDeviceContext() { return mpd2dDeviceContext.Get(); }
-
+    virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
+    virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) {}
+    virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) {}
     void BeginDraw(UINT nFrame);
     void TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks);
     void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt);
@@ -41,7 +44,6 @@ public:
    ID3D11Resource* GetRenderTarget() const { return mvWrappedRenderTargets[0].Get(); }
    UINT GetRenderTargetsCount() const { return mvWrappedRenderTargets.size(); }
 private:
-    virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
     float mfHeight = 0.0f;
     float mfWidth = 0.0f;

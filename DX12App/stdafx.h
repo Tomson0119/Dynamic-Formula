@@ -67,6 +67,7 @@
 #include <chrono>
 #include <algorithm>
 #include <tchar.h>
+#include <conio.h>
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"

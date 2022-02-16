@@ -29,7 +29,7 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-	InitScene(SCENE_STAT::LOGIN); 
+	InitScene(SCENE_STAT::IN_GAME); 
 	
 	return true;
 }
@@ -77,7 +77,11 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_F9:
+			mScenes.top().get()->GetUI()->Reset();
 			D3DFramework::ChangeFullScreenState();
+			//mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+
+
 			break;
 		}
 		break;

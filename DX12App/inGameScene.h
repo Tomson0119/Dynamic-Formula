@@ -141,6 +141,8 @@ private:
 
 	UINT mCubemapDrawIndex = 0;
 
+	std::vector<std::wstring> Texts;
+
 	// Key pressed flag
 	std::map<int, bool> mKeyMap;
 
@@ -151,4 +153,5 @@ private:
 		(XMFLOAT4)Colors::Black, (XMFLOAT4)Colors::White,
 		(XMFLOAT4)Colors::Orange, (XMFLOAT4)Colors::Yellow
 	};
+
 };

@@ -298,6 +298,6 @@ void RoomUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> 
 {
     //Reset();
     SetVectorSize(nFrame, TextCnt);
-    Initialize(device, pd3dCommandQueue);
+    UI::Initialize(device, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }

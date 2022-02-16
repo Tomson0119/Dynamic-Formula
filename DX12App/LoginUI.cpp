@@ -25,22 +25,16 @@ void LoginUI::SetVectorSize(UINT nFrame, UINT TextCnt)
     mvTextBlocks.resize(TextCnt);
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
-void LoginUI::Update(float GTime)
+void LoginUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    for (int i = 0; i < 6; ++i)
-        mvTextBlocks[i].strText.clear();
-    for (auto wc : std::wstring{ L"Dynamic Fomula" })
-        mvTextBlocks[0].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Login" })
-        mvTextBlocks[1].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"ID" })
-        mvTextBlocks[2].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"IDTest" })
-        mvTextBlocks[3].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Password" })
-        mvTextBlocks[4].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"PasswordTest" })
-        mvTextBlocks[5].strText.push_back(wc);
+
+}
+void LoginUI::Update(float GTime, std::vector <std::wstring> &Texts)
+{
+    mvTextBlocks[3].strText.clear();
+    mvTextBlocks[5].strText.clear();
+    mvTextBlocks[3].strText.assign(Texts[0].begin(), Texts[0].end());
+    mvTextBlocks[5].strText.assign(Texts[1].begin(), Texts[1].end());
 }
 
 void LoginUI::Draw(UINT nFrame)
@@ -106,6 +100,14 @@ void LoginUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
     UI::BuildSolidBrush(UICnt+1, TextCnt, colorList);
 
     SetTextRect();
+    for (auto wc : std::wstring{ L"Dynamic Fomula" })
+        mvTextBlocks[0].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Login" })
+        mvTextBlocks[1].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"ID" })
+        mvTextBlocks[2].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Password" })
+        mvTextBlocks[4].strText.push_back(wc);
 }
 
 void LoginUI::Reset()
@@ -119,6 +121,6 @@ void LoginUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device>
 {
     //Reset();
     SetVectorSize(nFrame, TextCnt);
-    Initialize(device, pd3dCommandQueue);
+    UI::Initialize(device, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }
