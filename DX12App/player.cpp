@@ -165,105 +165,105 @@ void Player::Update(float elapsedTime, XMFLOAT4X4* parent)
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
-TerrainPlayer::TerrainPlayer(void* context)
-	: Player()
-{
-	TerrainObject* terrain = (TerrainObject*)context;
-	float xPos = terrain->GetWidth() * 0.5f;
-	float zPos = terrain->GetDepth() * 0.5f;
-	float yPos = terrain->GetHeight(xPos, zPos) + 30.0f;
-	SetPosition(xPos, yPos, zPos);
+//TerrainPlayer::TerrainPlayer(void* context)
+//	: Player()
+//{
+//	TerrainObject* terrain = (TerrainObject*)context;
+//	float xPos = terrain->GetWidth() * 0.5f;
+//	float zPos = terrain->GetDepth() * 0.5f;
+//	float yPos = terrain->GetHeight(xPos, zPos) + 30.0f;
+//	SetPosition(xPos, yPos, zPos);
+//
+//	SetPlayerContext(terrain);
+//	SetCameraContext(terrain);
+//}
+//
+//TerrainPlayer::~TerrainPlayer()
+//{
+//}
+//
+//Camera* TerrainPlayer::ChangeCameraMode(int cameraMode)
+//{
+//	if (mCamera && cameraMode == (int)mCamera->GetMode())
+//		return nullptr;
+//
+//	mCamera = Player::ChangeCameraMode(cameraMode);
+//
+//	switch (mCamera->GetMode())
+//	{
+//	case CameraMode::FIRST_PERSON_CAMERA:
+//		mFriction = 50.0f;
+//		mGravity = { 0.0f, -9.8f, 0.0f };
+//		mMaxVelocityXZ = 25.5f;
+//		mMaxVelocityY = 40.0f;
+//
+//		mCamera->SetOffset(0.0f, 2.0f, 0.0f);
+//		mCamera->SetTimeLag(0.0f);
+//		break;
+//
+//	case CameraMode::THIRD_PERSON_CAMERA:
+//		mFriction = 50.0f;
+//		mGravity = { 0.0f, -9.8f, 0.0f };
+//		mMaxVelocityXZ = 25.5f;
+//		mMaxVelocityY = 40.0f;
+//
+//		mCamera->SetOffset(0.0f, 5.0f, -10.0f);
+//		mCamera->SetTimeLag(0.25f);
+//		break;
+//
+//	case CameraMode::TOP_DOWN_CAMERA:
+//		mFriction = 50.0f;
+//		mGravity = { 0.0f, -9.8f, 0.0f };
+//		mMaxVelocityXZ = 25.5f;
+//		mMaxVelocityY = 40.0f;
+//
+//		mCamera->SetOffset(-50.0f, 50.0f, -50.0f);
+//		mCamera->SetTimeLag(0.25f);
+//		break;
+//	}
+//
+//	mCamera->SetPosition(Vector3::Add(mPosition, mCamera->GetOffset()));
+//	mCamera->Update(1.0f);
+//
+//	return mCamera;
+//}
+//
+//void TerrainPlayer::OnPlayerUpdate(float elapsedTime)
+//{
+//	XMFLOAT3 playerPos = GetPosition();
+//	TerrainObject* terrain = (TerrainObject*)mPlayerUpdateContext;
+//
+//	float playerHalfHeight = mOOBB.Extents.y * 0.5f;
+//	
+//	float height = terrain->GetHeight(playerPos.x, playerPos.z) + playerHalfHeight - 0.5f;
+//
+//	if (playerPos.y < height)
+//	{
+//		XMFLOAT3 playerVelocity = GetVelocity();
+//		playerVelocity.y = 0.0f;
+//		SetVelocity(playerVelocity);
+//		playerPos.y = height;
+//		SetPosition(playerPos);
+//	}
+//}
+//
+//void TerrainPlayer::OnCameraUpdate(float elapsedTime)
+//{
+//	XMFLOAT3 cameraPos = mCamera->GetPosition();
+//	TerrainObject* terrain = (TerrainObject*)mCameraUpdateContext;
+//
+//	float height = terrain->GetHeight(cameraPos.x, cameraPos.z) + 5.0f;
+//	
+//	if (cameraPos.y <= height)
+//	{
+//		cameraPos.y = height;
+//		mCamera->SetPosition(cameraPos);
+//	}
+//	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
+//		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
+//}
 
-	SetPlayerContext(terrain);
-	SetCameraContext(terrain);
-}
-
-TerrainPlayer::~TerrainPlayer()
-{
-}
-
-Camera* TerrainPlayer::ChangeCameraMode(int cameraMode)
-{
-	if (mCamera && cameraMode == (int)mCamera->GetMode())
-		return nullptr;
-
-	mCamera = Player::ChangeCameraMode(cameraMode);
-
-	switch (mCamera->GetMode())
-	{
-	case CameraMode::FIRST_PERSON_CAMERA:
-		mFriction = 50.0f;
-		mGravity = { 0.0f, -9.8f, 0.0f };
-		mMaxVelocityXZ = 25.5f;
-		mMaxVelocityY = 40.0f;
-
-		mCamera->SetOffset(0.0f, 2.0f, 0.0f);
-		mCamera->SetTimeLag(0.0f);
-		break;
-
-	case CameraMode::THIRD_PERSON_CAMERA:
-		mFriction = 50.0f;
-		mGravity = { 0.0f, -9.8f, 0.0f };
-		mMaxVelocityXZ = 25.5f;
-		mMaxVelocityY = 40.0f;
-
-		mCamera->SetOffset(0.0f, 5.0f, -10.0f);
-		mCamera->SetTimeLag(0.25f);
-		break;
-
-	case CameraMode::TOP_DOWN_CAMERA:
-		mFriction = 50.0f;
-		mGravity = { 0.0f, -9.8f, 0.0f };
-		mMaxVelocityXZ = 25.5f;
-		mMaxVelocityY = 40.0f;
-
-		mCamera->SetOffset(-50.0f, 50.0f, -50.0f);
-		mCamera->SetTimeLag(0.25f);
-		break;
-	}
-
-	mCamera->SetPosition(Vector3::Add(mPosition, mCamera->GetOffset()));
-	mCamera->Update(1.0f);
-
-	return mCamera;
-}
-
-void TerrainPlayer::OnPlayerUpdate(float elapsedTime)
-{
-	XMFLOAT3 playerPos = GetPosition();
-	TerrainObject* terrain = (TerrainObject*)mPlayerUpdateContext;
-
-	float playerHalfHeight = mOOBB.Extents.y * 0.5f;
-	
-	float height = terrain->GetHeight(playerPos.x, playerPos.z) + playerHalfHeight - 0.5f;
-
-	if (playerPos.y < height)
-	{
-		XMFLOAT3 playerVelocity = GetVelocity();
-		playerVelocity.y = 0.0f;
-		SetVelocity(playerVelocity);
-		playerPos.y = height;
-		SetPosition(playerPos);
-	}
-}
-
-void TerrainPlayer::OnCameraUpdate(float elapsedTime)
-{
-	XMFLOAT3 cameraPos = mCamera->GetPosition();
-	TerrainObject* terrain = (TerrainObject*)mCameraUpdateContext;
-
-	float height = terrain->GetHeight(cameraPos.x, cameraPos.z) + 5.0f;
-	
-	if (cameraPos.y <= height)
-	{
-		cameraPos.y = height;
-		mCamera->SetPosition(cameraPos);
-	}
-	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
-		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
-}
-
-PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID), mRemoveFlag{ false }
+PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID), mUpdateFlag{ UPDATE_FLAG::NONE }
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
@@ -379,7 +379,6 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	wheelIndex = 1;
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
-
 }
 
 
@@ -432,12 +431,8 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 
 void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 {
-	XMFLOAT3 cameraPos = mCamera->GetPosition();
-	
-	mCamera->SetPosition(cameraPos);
-
 	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
-		mCamera->LookAt(mCamera->GetPosition(), XMFLOAT3(GetPosition().x, GetPosition().y, GetPosition().z), XMFLOAT3(0.0f, 1.0f, 0.0f));
+		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
 }
 
 
@@ -462,13 +457,14 @@ void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
 
 void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 {
-	btScalar m[16];
+	/*btScalar m[16];
 	btTransform btMat;
 	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
-	btMat.getOpenGLMatrix(m);
+	btMat.getOpenGLMatrix(m);*/
 
 	mOldWorld = mWorld;
-	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+	UpdateTransform(parent);
+	//mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 	UpdateBoundingBox();
 
 	OnPlayerUpdate(elapsedTime);
@@ -509,8 +505,8 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 		mCamera->SetLens(mCamera->GetAspect());
 	}
 
-	if (mChild) mChild->Update(elapsedTime, &mWorld);
-	if (mSibling) mSibling->Update(elapsedTime, parent);
+	/*if (mChild) mChild->Update(elapsedTime, &mWorld);
+	if (mSibling) mSibling->Update(elapsedTime, parent);*/
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
@@ -599,6 +595,11 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 		wheel.m_frictionSlip = wheelFriction;
 		wheel.m_rollInfluence = rollInfluence;
 	}
+}
+
+void PhysicsPlayer::ChangeFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
+{
+	mUpdateFlag.compare_exchange_strong(expected, desired);
 }
 
 void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)

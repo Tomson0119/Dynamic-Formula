@@ -59,19 +59,19 @@ protected:
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
-class TerrainPlayer : public Player
-{
-public:
-	TerrainPlayer(void* context);
-	TerrainPlayer(const TerrainPlayer& rhs) = delete;
-	TerrainPlayer& operator=(const TerrainPlayer& rhs) = delete;
-	virtual ~TerrainPlayer();
-
-	virtual Camera* ChangeCameraMode(int cameraMode) override;
-
-	virtual void OnPlayerUpdate(float elapsedTime) override;
-	virtual void OnCameraUpdate(float elapsedTime) override;
-};
+//class TerrainPlayer : public Player
+//{
+//public:
+//	TerrainPlayer(void* context);
+//	TerrainPlayer(const TerrainPlayer& rhs) = delete;
+//	TerrainPlayer& operator=(const TerrainPlayer& rhs) = delete;
+//	virtual ~TerrainPlayer();
+//
+//	virtual Camera* ChangeCameraMode(int cameraMode) override;
+//
+//	virtual void OnPlayerUpdate(float elapsedTime) override;
+//	virtual void OnCameraUpdate(float elapsedTime) override;
+//};
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +86,13 @@ public:
 	void UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform);
 };
 
+enum class UPDATE_FLAG : char
+{
+	NONE = 0,
+	UPDATE,
+	REMOVE
+};
+
 class PhysicsPlayer : public Player
 {
 public:
@@ -96,7 +103,6 @@ public:
 	virtual void OnPlayerUpdate(float elapsedTime);
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
 	virtual void OnPreciseKeyInput(float Elapsed);
-	virtual void UpdateTransform(XMFLOAT4X4* parent) { }
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
@@ -107,8 +113,9 @@ public:
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
 	void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
 
-	void SetRemoveFlag(bool flag) { mRemoveFlag = flag; }
-	bool GetRemoveFlag() const { return mRemoveFlag; }
+	void ChangeFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
+	void SetFlag(UPDATE_FLAG flag) { mUpdateFlag = flag; }
+	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
 
 private:
 	WheelObject* mWheel[4];
@@ -169,5 +176,5 @@ private:
 	UINT mCurrentRenderTarget = 0;
 
 	UINT mNetID = -1;
-	std::atomic_bool mRemoveFlag;
+	std::atomic<UPDATE_FLAG> mUpdateFlag;
 };
