@@ -130,9 +130,6 @@ void NetClient::ToggleReady(int roomID)
 
 void NetClient::SendKeyInput(int roomID, int key, bool pressed)
 {
-#ifdef _DEBUG
-	OutputDebugStringW(L"Sending key input.\n");
-#endif
 	CS::packet_key_input pck{};
 	pck.size = sizeof(CS::packet_key_input);
 	pck.type = CS::KEY_INPUT;
