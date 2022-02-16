@@ -39,6 +39,13 @@ void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsComman
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
 
+	mDirectorCamera = std::make_unique<Camera>();
+	mDirectorCamera = make_unique<Camera>();
+	mDirectorCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mDirectorCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
+	mDirectorCamera->SetPosition(0.0f, 0.0f, 0.0f);
+	mDirectorCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
+
 	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	mMainLight.Lights[0].SetInfo(
 		XMFLOAT3(0.6f, 0.6f, 0.6f),
@@ -368,16 +375,15 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		
 		std::stringstream ss;
 		ss << "player index: " << pck->player_idx << "\n";
-		ss << "Euler: " << pck->euler[0] << " " << pck->euler[1] << " " << pck->euler[2] << "\n";
+		ss << "Quat: " << pck->quaternion[0] << " " << pck->quaternion[1] << " " << pck->quaternion[2] << " " << pck->quaternion[3] << "\n";
 		ss << "Pos: " << pck->position[0] << " " << pck->position[1] << " " << pck->position[2] << "\n";
 		
 		auto player = mPlayerObjects.at(pck->player_idx);
 		if (player)
 		{
 			mPlayerObjects[pck->player_idx]->SetPosition(pck->position[0], pck->position[1], pck->position[2]);
-			mPlayerObjects[pck->player_idx]->Rotate(pck->euler[0], pck->euler[1], pck->euler[2]);
+			mPlayerObjects[pck->player_idx]->RotateQuaternion(pck->quaternion[0], pck->quaternion[1], pck->quaternion[2], pck->quaternion[3]);
 		}
-		//OutputDebugStringA(ss.str().c_str());
 		break;
 	}
 	}

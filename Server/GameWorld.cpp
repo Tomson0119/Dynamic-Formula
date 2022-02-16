@@ -140,15 +140,16 @@ void GameWorld::BroadcastTransform(int idx, int ignore, bool instSend)
 		pck.player_idx = idx;
 
 		const btVector3& pos = mPlayerList[idx]->GetPosition();
-		const btVector3& eul = mPlayerList[idx]->GetEulerAngle();
+		const btVector4& quat = mPlayerList[idx]->GetQuaternion();
 
 		pck.position[0] = pos.x();
 		pck.position[1] = pos.y();
 		pck.position[2] = pos.z();
 
-		pck.euler[0] = eul.x();
-		pck.euler[1] = eul.y();
-		pck.euler[2] = eul.z();
+		pck.quaternion[0] = quat.x();
+		pck.quaternion[1] = quat.y();
+		pck.quaternion[2] = quat.z();
+		pck.quaternion[3] = quat.w();
 
 		SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, ignore, instSend);
 	} 
