@@ -618,6 +618,36 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 		return sum;
 	};
 
+	for (int k = 0; k < mWidth * mTerrainScale.x; ++k)
+	{
+		for (int l = 0; l < mDepth * mTerrainScale.z; ++l)
+		{
+			int left = k / mBlockWidth;
+			int bottom = l / mBlockDepth;
+
+			XMFLOAT3 LB = { left * mBlockWidth, 0, bottom * mBlockDepth };
+
+			// 베지에 평면 제어점 25개
+			std::array<XMFLOAT3, 25> vertices;
+			for (int i = 0, z = 4; z >= 0; --z)
+			{
+				for (int x = 0; x < 5; ++x)
+				{
+					vertices[i].x = LB.x + (x * mBlockWidth / 4 * mTerrainScale.x);
+					vertices[i].z = LB.z + (z * mBlockDepth / 4 * mTerrainScale.z);
+					vertices[i].y = GetHeight(vertices[i].x, vertices[i].z);
+					++i;
+				}
+			}
+
+			XMFLOAT2 uv{ (k - LB.x) / (mBlockWidth * mTerrainScale.x), 1.0f - ((l - LB.z) / (mBlockDepth * mTerrainScale.z)) };
+			XMFLOAT3 posOnBazier{ CubicBezierSum(vertices, uv) };
+
+			float h = GetHeight(k, l);
+			mHeightmapData[k + (int)(l * mDepth * mTerrainScale.z)] = posOnBazier.y;
+		}
+	}
+
 	for (int i = 0; i < mMeshes.size(); ++i)
 	{
 		auto vertices = static_pointer_cast<HeightMapPatchListMesh>(mMeshes[i])->GetVertices();
