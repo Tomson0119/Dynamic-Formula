@@ -71,7 +71,7 @@ shared_ptr<BulletWrapper> physics)
 	BuildGameObjects(cmdList, physics);
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
-	mpUI = std::make_unique<LoginUI>(nFrame, device, cmdQueue);
+	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
 

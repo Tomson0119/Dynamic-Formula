@@ -9,7 +9,7 @@ RoomScene::RoomScene(NetModule* netPtr)
 {
 	OutputDebugStringW(L"Room Scene Entered.\n");
 #ifdef STANDALONE
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #elif defined(START_GAME_INSTANT)
 	mStartTime = std::chrono::high_resolution_clock::now();
 	mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
@@ -21,13 +21,15 @@ void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandL
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
 	std::shared_ptr<BulletWrapper> physics)
 {
-	mpUI = std::make_unique<RoomUI>(nFrame, device, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, Width, Height);
 	mDevice = device;
+	mpUI = std::make_unique<RoomUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);
+	
 }
 
 void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
+	mpUI.get()->Update(timer.TotalTime());
 	// TEST
 #ifdef START_GAME_INSTANT
 	// send start packet again until game actually start
@@ -41,6 +43,7 @@ void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& time
 
 void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
+	mpUI.get()->Draw(nFrame);
 }
 
 bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)

@@ -284,7 +284,29 @@ void RoomUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHei
     //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
     UI::BuildSolidBrush(UICnt, TextCnt+1, colorList);
 
-    SetTextRect();
+    SetTextRect(); 
+    for (auto wc : std::wstring{ L"StartOrReady" })
+        mvTextBlocks[0].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"CarSelect" })
+        mvTextBlocks[1].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"MapSelect" })
+        mvTextBlocks[2].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Nickname1" })
+        mvTextBlocks[3].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Nickname2" })
+        mvTextBlocks[4].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Nickname3" })
+        mvTextBlocks[5].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Nickname4" })
+        mvTextBlocks[6].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Nickname5" })
+        mvTextBlocks[7].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Nickname6" })
+        mvTextBlocks[8].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Nickname7" })
+        mvTextBlocks[9].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Nickname8" })
+        mvTextBlocks[10].strText.push_back(wc);
 }
 
 void RoomUI::Reset()

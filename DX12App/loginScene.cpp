@@ -9,6 +9,7 @@ LoginScene::LoginScene(NetModule* netPtr)
 	: Scene{ SCENE_STAT::LOGIN, (XMFLOAT4)Colors::Aqua, netPtr }
 {
 	OutputDebugStringW(L"Login Scene Entered.\n");
+	Texts.resize(2);
 #ifndef STANDALONE
 	if (mNetPtr->Connect(SERVER_IP, SERVER_PORT))
 	{
@@ -17,7 +18,7 @@ LoginScene::LoginScene(NetModule* netPtr)
 	}
 	else OutputDebugStringW(L"Failed to connect to server.\n");
 #else
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #endif
 }
 
@@ -26,7 +27,7 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 	std::shared_ptr<BulletWrapper> physics)
 {
 	mDevice = device;
-	mpUI = std::make_unique<LoginUI>(nFrame, device, cmdQueue);
+	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
 void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)

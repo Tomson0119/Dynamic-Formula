@@ -34,4 +34,5 @@ public:
 
 private:
 	std::vector<std::wstring> Texts;
+	std::thread mInputThread;
 };

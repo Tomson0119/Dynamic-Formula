@@ -31,8 +31,8 @@ void LoginUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 }
 void LoginUI::Update(float GTime, std::vector <std::wstring> &Texts)
 {
-    mvTextBlocks[3].strText.clear();
-    mvTextBlocks[5].strText.clear();
+    //mvTextBlocks[3].strText.clear();
+    //mvTextBlocks[5].strText.clear();
     mvTextBlocks[3].strText.assign(Texts[0].begin(), Texts[0].end());
     mvTextBlocks[5].strText.assign(Texts[1].begin(), Texts[1].end());
 }

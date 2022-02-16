@@ -17,6 +17,7 @@
 GameFramework::GameFramework()
 	: D3DFramework()
 {
+
 }
 
 GameFramework::~GameFramework()
@@ -29,7 +30,7 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-	InitScene(SCENE_STAT::IN_GAME); 
+	InitScene(SCENE_STAT::LOBBY); 
 	
 	return true;
 }
@@ -79,7 +80,7 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case VK_F9:
 			mScenes.top().get()->GetUI()->Reset();
 			D3DFramework::ChangeFullScreenState();
-			//mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+			mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 
 
 			break;
@@ -169,12 +170,6 @@ void GameFramework::Update()
 	OnPreciseKeyInput();
 
 	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
-	
-	//UI Update
-	//UpdateUI();
-
-	//mCamera->Update(mTimer.ElapsedTime());
-	//mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
 void GameFramework::Draw()
@@ -187,7 +182,7 @@ void GameFramework::Draw()
 	// Command List¸¦ Pipeline State·Î ¹­´Â´Ù. 
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
-	mCommandList->SetGraphicsRootSignature(mScenes.top()->GetRootSignature());
+	//mCommandList->SetGraphicsRootSignature(mScenes.top()->GetRootSignature());
 
 	Update();
 
