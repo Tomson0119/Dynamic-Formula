@@ -561,19 +561,11 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 	auto TerrainShape = new btHeightfieldTerrainShape(TessFactor * xBlocks, TessFactor * zBlocks, mHeightmapData, minHeight, maxHeight, 1, false);
 	TerrainShape->setLocalScaling(btVector3((float)mWidth / (TessFactor * xBlocks) * mTerrainScale.x, mTerrainScale.y, (float)mDepth / (TessFactor * zBlocks) * mTerrainScale.z));
 
-	btVector3 vertex;
-	TerrainShape->getVertex(TessFactor * xBlocks - 1, TessFactor * xBlocks - 1, vertex);
-
 	btTransform btTerrainTransform;
 	btTerrainTransform.setIdentity();
 	btTerrainTransform.setOrigin(btVector3(mWidth * mTerrainScale.x / 2, (maxHeight + minHeight) * mTerrainScale.y / 2, mDepth * mTerrainScale.z / 2));
 
 	mBtRigidBody = physics->CreateRigidBody(0.0f, btTerrainTransform, TerrainShape);
-
-	btVector3 aabbMin;
-	btVector3 aabbMax;
-
-	mBtRigidBody->getAabb(aabbMin, aabbMax);
 }
 
 float TerrainObject::GetHeight(float x, float z) const
@@ -626,7 +618,6 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 		return sum;
 	};
 
-	int cnt = 0;
 	for (int i = 0; i < mMeshes.size(); ++i)
 	{
 		auto vertices = static_pointer_cast<HeightMapPatchListMesh>(mMeshes[i])->GetVertices();
@@ -642,7 +633,6 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 
 				int idx = x + y + k + (int)(l * (TessFactor));
 
-				cnt++;
 				mHeightmapData[idx] = posOnBazier.y;
 			}
 		}

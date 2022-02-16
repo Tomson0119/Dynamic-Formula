@@ -473,9 +473,12 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 {
 	const UINT verticesCount = 25;
 
-	mVertices.resize(25);
+	std::vector<TerrainVertex> vertices(verticesCount);
 
-	const int TessFactor = 20;
+	mVertices.resize(verticesCount);
+
+
+	//const int TessFactor = 20;
 
 	int increasement = 22;
 
@@ -487,29 +490,31 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	{
 		for (int x = xStart; x < (xStart + width); x+=increasement)
 		{
-			mVertices[k].Position = XMFLOAT3((x * mScale.x), GetHeight(x, z, context), (z * mScale.z));
+			vertices[k].Position = XMFLOAT3((x * mScale.x), GetHeight(x, z, context), (z * mScale.z));
 
-			if (mVertices[k].Position.y > mMaxHeight)
-				mMaxHeight = mVertices[k].Position.y;
+			if (vertices[k].Position.y > mMaxHeight)
+				mMaxHeight = vertices[k].Position.y;
 
-			if (mVertices[k].Position.y < mMinHeight)
-				mMinHeight = mVertices[k].Position.y;
+			if (vertices[k].Position.y < mMinHeight)
+				mMinHeight = vertices[k].Position.y;
 
-			mVertices[k].Normal = context->GetNormal(x, z);
-			mVertices[k].TexCoord0 = XMFLOAT2((float)x / float(heightmapWidth - 1), float(heightmapDepth - 1 - z) / float(heightmapDepth - 1));
-			mVertices[k++].TexCoord1 = XMFLOAT2((float)x / float(mScale.x * 0.5f), (float)z / float(mScale.z * 0.5f));
+			vertices[k].Normal = context->GetNormal(x, z);
+			vertices[k].TexCoord0 = XMFLOAT2((float)x / float(heightmapWidth - 1), float(heightmapDepth - 1 - z) / float(heightmapDepth - 1));
+			vertices[k++].TexCoord1 = XMFLOAT2((float)x / float(mScale.x * 0.5f), (float)z / float(mScale.z * 0.5f));
 		}
 	}
 
-	const auto& [min_x, max_x] = std::minmax_element(mVertices.begin(), mVertices.end(),
+	const auto& [min_x, max_x] = std::minmax_element(vertices.begin(), vertices.end(),
 		[](const TerrainVertex& a, const TerrainVertex& b) { return (a.Position.x < b.Position.x); });
-	const auto& [min_y, max_y] = std::minmax_element(mVertices.begin(), mVertices.end(),
+	const auto& [min_y, max_y] = std::minmax_element(vertices.begin(), vertices.end(),
 		[](const TerrainVertex& a, const TerrainVertex& b) {return (a.Position.y < b.Position.y); });
-	const auto& [min_z, max_z] = std::minmax_element(mVertices.begin(), mVertices.end(),
+	const auto& [min_z, max_z] = std::minmax_element(vertices.begin(), vertices.end(),
 		[](const TerrainVertex& a, const TerrainVertex& b) {return (a.Position.z < b.Position.z); });
 
 	mOOBB.Center = { (min_x->Position.x + max_x->Position.x) / 2, (min_y->Position.y + max_y->Position.y) / 2, (min_z->Position.z + max_z->Position.z) / 2 };
 	mOOBB.Extents = { (max_x->Position.x - min_x->Position.x) / 2, (max_y->Position.y - min_y->Position.y) / 2, (max_z->Position.z - min_z->Position.z) / 2 };
+
+	std::copy(vertices.begin(), vertices.end(), mVertices.begin());
 
 	//BuildHeightmapData(TessFactor, vertices, context);
 	
@@ -532,7 +537,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	mBtRigidBody->getAabb(aabbMin, aabbMax);*/
 
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(TerrainVertex), 0,
-		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, mVertices.data(), (UINT)mVertices.size(), nullptr, 0);
+		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, vertices.data(), (UINT)vertices.size(), nullptr, 0);
 }
 
 HeightMapPatchListMesh::~HeightMapPatchListMesh()
