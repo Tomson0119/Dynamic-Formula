@@ -558,14 +558,26 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 	int TessFactor = 20;
 	BuildHeightmapData(TessFactor, xBlocks, zBlocks);
 
-	auto TerrainShape = new btHeightfieldTerrainShape(TessFactor * xBlocks, TessFactor * zBlocks, mHeightmapData, minHeight, maxHeight, 1, false);
+	auto TerrainShape = new btHeightfieldTerrainShape(TessFactor * xBlocks + 1, TessFactor * zBlocks + 1, mHeightmapData, minHeight, maxHeight, 1, false);
 	TerrainShape->setLocalScaling(btVector3((float)mWidth / (TessFactor * xBlocks) * mTerrainScale.x, mTerrainScale.y, (float)mDepth / (TessFactor * zBlocks) * mTerrainScale.z));
 
 	btTransform btTerrainTransform;
 	btTerrainTransform.setIdentity();
 	btTerrainTransform.setOrigin(btVector3(mWidth * mTerrainScale.x / 2, (maxHeight + minHeight) * mTerrainScale.y / 2, mDepth * mTerrainScale.z / 2));
 
+
 	mBtRigidBody = physics->CreateRigidBody(0.0f, btTerrainTransform, TerrainShape);
+
+	btVector3 aabbMin;
+	btVector3 aabbMax;
+
+	mBtRigidBody->getAabb(aabbMin, aabbMax);
+
+	btVector3 vertex1;
+	TerrainShape->getVertex(0, 0, vertex1);
+
+	btVector3 vertex2;
+	TerrainShape->getVertex(109, 109, vertex2);
 }
 
 float TerrainObject::GetHeight(float x, float z) const
@@ -618,36 +630,6 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 		return sum;
 	};
 
-	for (int k = 0; k < mWidth * mTerrainScale.x; ++k)
-	{
-		for (int l = 0; l < mDepth * mTerrainScale.z; ++l)
-		{
-			int left = k / mBlockWidth;
-			int bottom = l / mBlockDepth;
-
-			XMFLOAT3 LB = { left * mBlockWidth, 0, bottom * mBlockDepth };
-
-			// 베지에 평면 제어점 25개
-			std::array<XMFLOAT3, 25> vertices;
-			for (int i = 0, z = 4; z >= 0; --z)
-			{
-				for (int x = 0; x < 5; ++x)
-				{
-					vertices[i].x = LB.x + (x * mBlockWidth / 4 * mTerrainScale.x);
-					vertices[i].z = LB.z + (z * mBlockDepth / 4 * mTerrainScale.z);
-					vertices[i].y = GetHeight(vertices[i].x, vertices[i].z);
-					++i;
-				}
-			}
-
-			XMFLOAT2 uv{ (k - LB.x) / (mBlockWidth * mTerrainScale.x), 1.0f - ((l - LB.z) / (mBlockDepth * mTerrainScale.z)) };
-			XMFLOAT3 posOnBazier{ CubicBezierSum(vertices, uv) };
-
-			float h = GetHeight(k, l);
-			mHeightmapData[k + (int)(l * mDepth * mTerrainScale.z)] = posOnBazier.y;
-		}
-	}
-
 	for (int i = 0; i < mMeshes.size(); ++i)
 	{
 		auto vertices = static_pointer_cast<HeightMapPatchListMesh>(mMeshes[i])->GetVertices();
@@ -659,7 +641,7 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 				XMFLOAT3 posOnBazier{ CubicBezierSum(vertices, uv) };
 
 				int x = i % xBlocks * TessFactor * TessFactor;
-				int y = (i / zBlocks) * TessFactor * TessFactor * zBlocks;
+				int y = (i / zBlocks) * TessFactor * TessFactor * xBlocks;
 
 				int idx = x + y + k + (int)(l * (TessFactor));
 
