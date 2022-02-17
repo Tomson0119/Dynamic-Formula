@@ -555,17 +555,19 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 				maxHeight = gridMax;
 		}
 	}
-	int TessFactor = 20;
+	int TessFactor = 40;
 	BuildHeightmapData(TessFactor, xBlocks, zBlocks);
 
-	auto TerrainShape = new btHeightfieldTerrainShape(TessFactor * xBlocks + 1, TessFactor * zBlocks + 1, mHeightmapData, minHeight, maxHeight, 1, false);
+	//auto TerrainShape = new btHeightfieldTerrainShape(TessFactor * xBlocks + 1, TessFactor * zBlocks + 1, mHeightmapData, minHeight, maxHeight, 1, false);
+	//TerrainShape->setLocalScaling(btVector3((float)mWidth / (TessFactor * xBlocks) * mTerrainScale.x, mTerrainScale.y, (float)mDepth / (TessFactor * zBlocks) * mTerrainScale.z));
+
+	auto TerrainShape =new btHeightfieldTerrainShape(TessFactor * xBlocks + 1, TessFactor * zBlocks + 1, mHeightmapData, minHeight, maxHeight, 1, false);
 	TerrainShape->setLocalScaling(btVector3((float)mWidth / (TessFactor * xBlocks) * mTerrainScale.x, mTerrainScale.y, (float)mDepth / (TessFactor * zBlocks) * mTerrainScale.z));
 
 	btTransform btTerrainTransform;
 	btTerrainTransform.setIdentity();
 	btTerrainTransform.setOrigin(btVector3(mWidth * mTerrainScale.x / 2, (maxHeight + minHeight) * mTerrainScale.y / 2, mDepth * mTerrainScale.z / 2));
-
-
+	
 	mBtRigidBody = physics->CreateRigidBody(0.0f, btTerrainTransform, TerrainShape);
 
 	btVector3 aabbMin;
@@ -594,11 +596,66 @@ XMFLOAT3 TerrainObject::GetNormal(float x, float z) const
 
 void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 {
+	//mHeightmapData = new float[TessFactor * xBlocks * TessFactor * zBlocks];
+
+	//auto CubicBezierSum = [](const std::vector<TerrainVertex>& patch, XMFLOAT2 t) {
+	//
+	//	// 4차 베지어 곡선 계수
+	//	std::array<float, 5> uB, vB;
+	//	float txInv{ 1.0f - t.x };
+	//	uB[0] = txInv * txInv * txInv * txInv;
+	//	uB[1] = 4.0f * t.x * txInv * txInv * txInv;
+	//	uB[2] = 6.0f * t.x * t.x * txInv * txInv;
+	//	uB[3] = 4.0f * t.x * t.x * t.x * txInv;
+	//	uB[4] = t.x * t.x * t.x * t.x;
+	//
+	//	float tyInv{ 1.0f - t.y };
+	//	vB[0] = tyInv * tyInv * tyInv * tyInv;
+	//	vB[1] = 4.0f * t.y * tyInv * tyInv * tyInv;
+	//	vB[2] = 6.0f * t.y * t.y * tyInv * tyInv;
+	//	vB[3] = 4.0f * t.y * t.y * t.y * tyInv;
+	//	vB[4] = t.y * t.y * t.y * t.y;
+	//
+	//	// 4차 베지에 곡면 계산
+	//	XMFLOAT3 sum{ 0.0f, 0.0f, 0.0f };
+	//	for (int i = 0; i < 5; ++i)
+	//	{
+	//		XMFLOAT3 subSum{ 0.0f, 0.0f, 0.0f };
+	//		for (int j = 0; j < 5; ++j)
+	//		{
+	//			XMFLOAT3 temp{ Vector3::Multiply(uB[j], patch[(i * 5) + j].Position) };
+	//			subSum = Vector3::Add(subSum, temp);
+	//		}
+	//		subSum = Vector3::Multiply(vB[i], subSum);
+	//		sum = Vector3::Add(sum, subSum);
+	//	}
+	//	return sum;
+	//};
+
+	//for (int i = 0; i < mMeshes.size(); ++i)
+	//{
+	//	auto vertices = static_pointer_cast<HeightMapPatchListMesh>(mMeshes[i])->GetVertices();
+	//	for (int k = 0; k < TessFactor; ++k)
+	//	{
+	//		for (int l = 0; l < TessFactor; ++l)
+	//		{
+	//			XMFLOAT2 uv{ (float)k / (TessFactor - 1), 1.0f - ((float)l / (TessFactor - 1)) };
+	//			XMFLOAT3 posOnBazier{ CubicBezierSum(vertices, uv) };
+
+	//			int x = i % xBlocks * TessFactor * TessFactor;
+	//			int y = (i / zBlocks) * TessFactor * TessFactor * xBlocks;
+
+	//			int idx = x + y + k + (int)(l * (TessFactor));
+
+	//			mHeightmapData[idx] = posOnBazier.y;
+	//		}
+	//	}
+	//}
+
 	mHeightmapData = new float[TessFactor * xBlocks * TessFactor * zBlocks];
 
-	auto CubicBezierSum = [](const std::vector<TerrainVertex>& patch, XMFLOAT2 t) {
-	
-		// 4차 베지어 곡선 계수
+	auto CubicBezierSum = [](const std::array<XMFLOAT3, 25>& patch, XMFLOAT2 t) {
+
 		std::array<float, 5> uB, vB;
 		float txInv{ 1.0f - t.x };
 		uB[0] = txInv * txInv * txInv * txInv;
@@ -606,22 +663,21 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 		uB[2] = 6.0f * t.x * t.x * txInv * txInv;
 		uB[3] = 4.0f * t.x * t.x * t.x * txInv;
 		uB[4] = t.x * t.x * t.x * t.x;
-	
+
 		float tyInv{ 1.0f - t.y };
 		vB[0] = tyInv * tyInv * tyInv * tyInv;
 		vB[1] = 4.0f * t.y * tyInv * tyInv * tyInv;
 		vB[2] = 6.0f * t.y * t.y * tyInv * tyInv;
 		vB[3] = 4.0f * t.y * t.y * t.y * tyInv;
 		vB[4] = t.y * t.y * t.y * t.y;
-	
-		// 4차 베지에 곡면 계산
+
 		XMFLOAT3 sum{ 0.0f, 0.0f, 0.0f };
 		for (int i = 0; i < 5; ++i)
 		{
 			XMFLOAT3 subSum{ 0.0f, 0.0f, 0.0f };
 			for (int j = 0; j < 5; ++j)
 			{
-				XMFLOAT3 temp{ Vector3::Multiply(uB[j], patch[(i * 5) + j].Position) };
+				XMFLOAT3 temp{ Vector3::Multiply(uB[j], patch[(i * 5) + j]) };
 				subSum = Vector3::Add(subSum, temp);
 			}
 			subSum = Vector3::Multiply(vB[i], subSum);
@@ -630,25 +686,38 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 		return sum;
 	};
 
-	for (int i = 0; i < mMeshes.size(); ++i)
+
+	for (int k = 0; k < TessFactor * xBlocks; ++k)
 	{
-		auto vertices = static_pointer_cast<HeightMapPatchListMesh>(mMeshes[i])->GetVertices();
-		for (int k = 0; k < TessFactor; ++k)
+		for (int l = 0; l < TessFactor * zBlocks; ++l)
 		{
-			for (int l = 0; l < TessFactor; ++l)
+			int left = ((float)k / (TessFactor * xBlocks) * mWidth * mTerrainScale.x) / mBlockWidth;
+			int bottom = ((float)l / (TessFactor * zBlocks) * mDepth * mTerrainScale.z) / mBlockDepth;
+
+			float x = (float)k / (TessFactor * xBlocks) * mWidth * mTerrainScale.x;
+			float z = (float)l / (TessFactor * zBlocks) * mDepth * mTerrainScale.z;
+
+			XMFLOAT3 LB = { (float)left * (float)mBlockWidth, 0, (float)bottom * (float)mBlockDepth };
+
+			std::array<XMFLOAT3, 25> vertices;
+			for (int i = 0, z = 4; z >= 0; --z)
 			{
-				XMFLOAT2 uv{ (float)k / (TessFactor - 1), 1.0f - ((float)l / (TessFactor - 1)) };
-				XMFLOAT3 posOnBazier{ CubicBezierSum(vertices, uv) };
-
-				int x = i % xBlocks * TessFactor * TessFactor;
-				int y = (i / zBlocks) * TessFactor * TessFactor * xBlocks;
-
-				int idx = x + y + k + (int)(l * (TessFactor));
-
-				mHeightmapData[idx] = posOnBazier.y;
+				for (int x = 0; x < 5; ++x)
+				{
+					vertices[i].x = LB.x + (x * (float)mBlockWidth / 4 * mTerrainScale.x);
+					vertices[i].z = LB.z + (z * (float)mBlockDepth / 4 * mTerrainScale.z);
+					vertices[i].y = GetHeight(vertices[i].x, vertices[i].z);
+					++i;
+				}
 			}
+
+			XMFLOAT2 uv{ (x - LB.x) / ((mBlockWidth) * mTerrainScale.x), 1.0f - ((z - LB.z) / ((mBlockDepth) * mTerrainScale.z)) };
+			XMFLOAT3 posOnBazier{ CubicBezierSum(vertices, uv) };
+
+			mHeightmapData[k + (int)(l * TessFactor * zBlocks)] = posOnBazier.y;
 		}
 	}
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
