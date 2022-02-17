@@ -159,8 +159,8 @@ void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 	RigidBody::RemoveRigidBody(physicsWorld);
 	if (mVehicle) {
 		physicsWorld->removeVehicle(mVehicle.get());
-		mVehicle.release();
-		mVehicleRayCaster.release();
+		mVehicle.reset();
+		mVehicleRayCaster.reset();
 	}
 }
 
