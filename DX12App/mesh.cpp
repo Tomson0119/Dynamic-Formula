@@ -480,7 +480,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 
 	//const int TessFactor = 20;
 
-	int increasement = 22;
+	int increasement = 32;
 
 	int heightmapWidth = context->GetWidth();
 	int heightmapDepth = context->GetDepth();

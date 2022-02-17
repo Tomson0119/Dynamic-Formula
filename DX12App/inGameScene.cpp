@@ -254,7 +254,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(1.0f, 1.0f, 1.0f));
 	terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	//terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 89, 89);
+	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 129, 129);
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\rocky.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\road.dds");
