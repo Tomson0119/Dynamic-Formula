@@ -191,8 +191,40 @@ private:
 	XMFLOAT3 mTerrainScale = { 1.0f,1.0f,1.0f };
 	float* mHeightmapData = NULL;
 
+	std::shared_ptr<btTriangleIndexVertexArray> mVertexArray;
+
 	//std::vector<btRigidBody*> mTerrainRigidBodies;
 };
+
+class btTriangleCollector : public btTriangleCallback
+{
+public:
+	btAlignedObjectArray<XMFLOAT3>* m_pVerticesOut;
+	btAlignedObjectArray<int>* m_pIndicesOut;
+
+	btTriangleCollector()
+	{
+		m_pVerticesOut = NULL;
+		m_pIndicesOut = NULL;
+	}
+
+	virtual void processTriangle(btVector3* tris, int partId, int triangleIndex)
+	{
+		for (int k = 0; k < 3; k++)
+		{
+			btVector3 v;
+			for (int l = 0; l < 3; l++)
+			{
+				v[l] = tris[k][l];
+			}
+			m_pIndicesOut->push_back(m_pVerticesOut->size());
+
+			XMFLOAT3 vertex(v[0], v[1], v[2]);
+			m_pVerticesOut->push_back(vertex);
+		}
+	}
+};
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

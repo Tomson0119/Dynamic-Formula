@@ -557,10 +557,10 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 	}
 	int TessFactor = 40;
 	BuildHeightmapData(TessFactor, xBlocks, zBlocks);
+	
 
 	//auto TerrainShape = new btHeightfieldTerrainShape(TessFactor * xBlocks + 1, TessFactor * zBlocks + 1, mHeightmapData, minHeight, maxHeight, 1, false);
 	//TerrainShape->setLocalScaling(btVector3((float)mWidth / (TessFactor * xBlocks) * mTerrainScale.x, mTerrainScale.y, (float)mDepth / (TessFactor * zBlocks) * mTerrainScale.z));
-
 
 	// 버전 1, 2
 	/*auto TerrainShape =new btHeightfieldTerrainShape(TessFactor * xBlocks + 1, TessFactor * zBlocks + 1, mHeightmapData, minHeight, maxHeight, 1, false);
@@ -570,22 +570,27 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 	auto TerrainShape = new btHeightfieldTerrainShape(mWidth * mTerrainScale.x, mDepth * mTerrainScale.z, mHeightmapData, minHeight, maxHeight, 1, false);
 	TerrainShape->setLocalScaling(btVector3(1, mTerrainScale.y, 1));
 
+	btVector3 aabbMin, aabbMax;
+	for (int k = 0; k < 3; k++)
+	{
+		aabbMin[k] = -BT_LARGE_FLOAT;
+		aabbMax[k] = BT_LARGE_FLOAT;
+	}
+
+	btAlignedObjectArray<XMFLOAT3> vertices;
+	btAlignedObjectArray<int> indices;
+
+	btTriangleCollector collector;
+	collector.m_pVerticesOut = &vertices;
+	collector.m_pIndicesOut = &indices;
+
+	TerrainShape->processAllTriangles(&collector, aabbMin, aabbMax);
+
 	btTransform btTerrainTransform;
 	btTerrainTransform.setIdentity();
 	btTerrainTransform.setOrigin(btVector3(mWidth * mTerrainScale.x / 2, (maxHeight + minHeight) * mTerrainScale.y / 2, mDepth * mTerrainScale.z / 2));
-	
+
 	mBtRigidBody = physics->CreateRigidBody(0.0f, btTerrainTransform, TerrainShape);
-
-	btVector3 aabbMin;
-	btVector3 aabbMax;
-
-	mBtRigidBody->getAabb(aabbMin, aabbMax);
-
-	btVector3 vertex1;
-	TerrainShape->getVertex(0, 0, vertex1);
-
-	btVector3 vertex2;
-	TerrainShape->getVertex(109, 109, vertex2);
 }
 
 float TerrainObject::GetHeight(float x, float z) const
@@ -727,7 +732,7 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 	}*/
 
 	// 버전3, 터레인 버텍스 전부를 시뮬레이션함, 제대로 작동하나 프레임 떨어짐
-	mHeightmapData = new float[mWidth * mTerrainScale.x * mDepth * mTerrainScale.z / 4];
+	mHeightmapData = new float[mWidth * mTerrainScale.x * mDepth * mTerrainScale.z];
 
 	auto CubicBezierSum = [](const std::array<XMFLOAT3, 25>& patch, XMFLOAT2 t) {
 
@@ -761,7 +766,6 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 		return sum;
 	};
 
-
 	for (int k = 0; k < mWidth * mTerrainScale.x; ++k)
 	{
 		for (int l = 0; l < mDepth * mTerrainScale.z; ++l)
@@ -790,8 +794,6 @@ void TerrainObject::BuildHeightmapData(int TessFactor, int xBlocks, int zBlocks)
 			mHeightmapData[k + (int)(l * mDepth * mTerrainScale.z)] = posOnBazier.y;
 		}
 	}
-
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////
