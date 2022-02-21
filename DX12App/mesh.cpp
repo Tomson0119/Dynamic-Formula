@@ -474,7 +474,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	const UINT verticesCount = 25;
 
 	std::vector<TerrainVertex> vertices(verticesCount);
-	int increasement = 22;
+	int increasement = 32;
 
 	int heightmapWidth = context->GetWidth();
 	int heightmapDepth = context->GetDepth();
@@ -510,9 +510,8 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 
 	BuildHeightmapData(xStart, zStart, vertices, context);
 	
-	auto TerrainShape = new btHeightfieldTerrainShape(mWidth * mScale.x, mDepth * mScale.z, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
-	TerrainShape->setLocalScaling(btVector3(1, mScale.y, 1));
-	TerrainShape->getTriangleInfoMap();
+	auto TerrainShape = new btHeightfieldTerrainShape(mWidth, mDepth, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
+	TerrainShape->setLocalScaling(btVector3(mScale.x, mScale.y, mScale.z));
 
 	btTransform btTerrainTransform;
 	btTerrainTransform.setIdentity();
@@ -537,7 +536,7 @@ float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) c
 
 void HeightMapPatchListMesh::BuildHeightmapData(const int& xStart, const int& zStart, const std::vector<TerrainVertex>& TerrainVertices, HeightMapImage* context)
 {
-	mHeightmapData = new float[mWidth * mScale.x * mDepth * mScale.z];
+	mHeightmapData = new float[mWidth * mDepth];
 
 	auto CubicBezierSum = [](const std::vector<TerrainVertex>& patch, XMFLOAT2 t) {
 
@@ -573,14 +572,14 @@ void HeightMapPatchListMesh::BuildHeightmapData(const int& xStart, const int& zS
 		return sum;
 	};
 
-	for (int i = 0; i < mWidth * mScale.x; ++i)
+	for (int i = 0; i < mWidth; ++i)
 	{
-		for (int j = 0; j < mDepth * mScale.z; ++j)
+		for (int j = 0; j < mDepth; ++j)
 		{
-			XMFLOAT2 uv{ i / (mWidth * mScale.x), 1.0f - (j / (mDepth * mScale.z)) };
+			XMFLOAT2 uv{ i / (float)mWidth, 1.0f - (j / (float)mDepth) };
 			XMFLOAT3 posOnBazier{ CubicBezierSum(TerrainVertices, uv) };
 
-			mHeightmapData[i + (int)(j * mDepth * mScale.z)] = posOnBazier.y;
+			mHeightmapData[i + (int)(j * mDepth)] = posOnBazier.y;
 		}
 	}
 }
