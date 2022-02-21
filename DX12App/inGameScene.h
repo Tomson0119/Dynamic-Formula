@@ -46,7 +46,8 @@ public:
 	void UpdateLight(float elapsed);
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
-	void UpdateConstants(const GameTimer& timer);	
+	void UpdateConstants(const GameTimer& timer);
+	void UpdateDynamicsWorld();
 
 	void SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
 
@@ -112,6 +113,8 @@ private:
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
+
+	std::map<MeshType, std::vector<std::shared_ptr<Mesh>>> mMeshList;
 
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
 

@@ -152,6 +152,8 @@ void GameFramework::CheckAndChangeScene()
 
 void GameFramework::Update()
 {
+	mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
+
 	D3DFramework::UpdateFrameStates();
 	
 	OnPreciseKeyInput();

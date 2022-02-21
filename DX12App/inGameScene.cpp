@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "inGameScene.h"
+#include "Mesh.h"
 #include "shadowMapRenderer.h"
 #include "NetLib/NetModule.h"
 
@@ -38,13 +39,6 @@ void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsComman
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
-
-	mDirectorCamera = std::make_unique<Camera>();
-	mDirectorCamera = make_unique<Camera>();
-	mDirectorCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
-	mDirectorCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
-	mDirectorCamera->SetPosition(0.0f, 0.0f, 0.0f);
-	mDirectorCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
 
 	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	mMainLight.Lights[0].SetInfo(
@@ -256,9 +250,11 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	grid->Rotate(90.0f, 0.0f, 0.0f);
 	mPipelines[Layer::Default]->AppendObject(grid);
 
+	// 지형 스케일에는 정수를 넣는 것을 권장
 	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
+	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, mDynamicsWorld, 89, 89);
+	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 129, 129);
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\rocky.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\road.dds");
@@ -267,7 +263,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 #ifdef STANDALONE
-	BuildCarObjects({ 500.0f, 10.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObjects({ 500.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -282,7 +278,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
 }
 
 void InGameScene::BuildCarObjects(
@@ -468,7 +464,6 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::sha
 void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
 	float elapsed = timer.ElapsedTime();
-	//physics->StepSimulation(elapsed);
 	
 	UpdatePlayerObjects();
 
@@ -486,6 +481,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	UpdateMissileObject();
 	
 	UpdateConstants(timer);
+	UpdateDynamicsWorld();
 }
 
 void InGameScene::UpdateLight(float elapsed)
@@ -525,6 +521,49 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 	
 	for (const auto& [_, pso] : mPipelines)
 		pso->UpdateConstants();
+}
+
+void InGameScene::UpdateDynamicsWorld()
+{
+	auto terrain = static_pointer_cast<TerrainObject>(mPipelines[Layer::Terrain]->GetRenderObjects()[0]);
+	auto [blockWidth, blockDepth] = terrain->GetBlockSize();
+
+	auto rigidBodies = terrain->GetTerrainRigidBodies();
+
+	for (auto o : rigidBodies)
+	{
+		mDynamicsWorld->removeRigidBody(o);
+	}
+
+	for (int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	{
+		btCollisionObject* obj = mDynamicsWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+
+		if (!body->isStaticObject())
+		{
+			auto pos = body->getCenterOfMassPosition();
+
+			int xIndex = pos.x() / blockWidth;
+			int zIndex = pos.z() / blockDepth;
+
+			for (int j = 0; j < 3; ++j)
+			{
+				for (int k = 0; k < 3; ++k)
+				{
+					int idx = (xIndex - 1 + j) + (zIndex - 1 + k) * (int)(terrain->GetWidth() / blockWidth);
+
+					if (idx >= 0 && idx < rigidBodies.size())
+					{
+						if (!rigidBodies[idx]->isInWorld())
+						{
+							mDynamicsWorld->addRigidBody(rigidBodies[idx]);
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)

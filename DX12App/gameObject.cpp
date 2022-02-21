@@ -501,7 +501,7 @@ TerrainObject::TerrainObject(int width, int depth, const XMFLOAT3& scale)
 
 TerrainObject::~TerrainObject()
 {
-	if (mHeightmapData) delete[] mHeightmapData;
+	mTerrainRigidBodies.clear();
 }
 
 void TerrainObject::BuildHeightMap(const std::wstring& path)
@@ -509,8 +509,11 @@ void TerrainObject::BuildHeightMap(const std::wstring& path)
 	mHeightMapImage = std::make_unique<HeightMapImage>(path, mWidth, mDepth, mTerrainScale);
 }
 
-void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld, int blockWidth, int blockDepth)
+void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
 {	
+	mBlockWidth = blockWidth;
+	mBlockDepth = blockDepth;
+
 	int xBlocks = (mWidth - 1) / (blockWidth - 1);
 	int zBlocks = (mDepth - 1) / (blockDepth - 1);
 
@@ -523,7 +526,11 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 		{
 			xStart = x * (blockWidth - 1);
 			zStart = z * (blockDepth - 1);
-			auto gridMesh = std::make_shared<HeightMapPatchListMesh>(device, cmdList, xStart, zStart, blockWidth, blockDepth, mTerrainScale, mHeightMapImage.get());
+			auto gridMesh = std::make_shared<HeightMapPatchListMesh>(device, cmdList, xStart, zStart, blockWidth, blockDepth, mTerrainScale, mHeightMapImage.get(), physics);
+			gridMesh->SetIndex(x, z);
+
+			mTerrainRigidBodies.push_back(gridMesh->GetRigidBody());
+
 			SetMesh(gridMesh);
 
 			auto [gridMin, gridMax] = gridMesh->GetMinMax();
@@ -533,39 +540,6 @@ void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommand
 				maxHeight = gridMax;
 		}
 	}
-
-	mHeightmapData = new float[mDepth * mWidth];
-	auto pHeightMapPixels = mHeightMapImage->GetPixels();
-
-	for (int z = 0, zStart = 0; z < mDepth; z++)
-	{
-		for (int x = 0, xStart = 0; x < mWidth; x++)
-		{
-			mHeightmapData[z * mDepth + x] = pHeightMapPixels[z * mDepth + x];
-		}
-	}
-
-	mTerrainShape = std::make_shared<btHeightfieldTerrainShape>(mWidth, mDepth, mHeightmapData, minHeight, maxHeight, 1, false);
-	mTerrainShape->setLocalScaling(btVector3(mTerrainScale.x, mTerrainScale.y, mTerrainScale.z));
-
-	btTransform btTerrainTransform;
-	btTerrainTransform.setIdentity();
-	btTerrainTransform.setOrigin(btVector3(mWidth * mTerrainScale.x / 2, (maxHeight + minHeight) * mTerrainScale.y / 2, mDepth * mTerrainScale.z / 2));
-
-	btScalar mass(0.0f);
-
-	//rigidbody is dynamic if and only if mass is non zero, otherwise static
-	bool isDynamic = (mass != 0.f);
-
-	btVector3 localInertia(0, 0, 0);
-	if (isDynamic)
-		mTerrainShape->calculateLocalInertia(mass, localInertia);
-
-	//using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
-	btDefaultMotionState* myMotionState = new btDefaultMotionState(btTerrainTransform);
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, mTerrainShape.get(), localInertia);
-	mBtRigidBody = new btRigidBody(rbInfo);
-	dynamicsWorld->addRigidBody(mBtRigidBody);
 }
 
 float TerrainObject::GetHeight(float x, float z) const
@@ -579,7 +553,6 @@ XMFLOAT3 TerrainObject::GetNormal(float x, float z) const
 	assert(mHeightMapImage && "HeightMapImage doesn't exist");
 	return mHeightMapImage->GetNormal((int)(x / mTerrainScale.x), (int)(z / mTerrainScale.z));
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //

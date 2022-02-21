@@ -115,7 +115,7 @@ private:
 	float mBoosterEngineForce = 300000.f;
 
 	float mVehicleSteering = 0.f;
-	float mSteeringIncrement = 0.2f;
+	float mSteeringIncrement = 8.0f;
 	float mSteeringClamp = 0.5f;
 
 	float mCurrentSpeed = 0.0f;

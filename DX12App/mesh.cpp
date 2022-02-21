@@ -467,13 +467,14 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	int xStart, int zStart, 
 	int width, int depth, 
 	const XMFLOAT3& scale, 
-	HeightMapImage* context)
+	HeightMapImage* context,
+	std::shared_ptr<BulletWrapper> physics)
 	: Mesh(), mWidth(width), mDepth(depth), mScale(scale)
 {
 	const UINT verticesCount = 25;
 
 	std::vector<TerrainVertex> vertices(verticesCount);
-	int increasement = 22;
+	int increasement = 32;
 
 	int heightmapWidth = context->GetWidth();
 	int heightmapDepth = context->GetDepth();
@@ -507,8 +508,24 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	mOOBB.Center = { (min_x->Position.x + max_x->Position.x) / 2, (min_y->Position.y + max_y->Position.y) / 2, (min_z->Position.z + max_z->Position.z) / 2 };
 	mOOBB.Extents = { (max_x->Position.x - min_x->Position.x) / 2, (max_y->Position.y - min_y->Position.y) / 2, (max_z->Position.z - min_z->Position.z) / 2 };
 
+	BuildHeightmapData(xStart, zStart, vertices, context);
+	
+	auto TerrainShape = new btHeightfieldTerrainShape(mWidth, mDepth, mHeightmapData, mMinHeight, mMaxHeight, 1, false);
+	TerrainShape->setLocalScaling(btVector3(mScale.x, mScale.y, mScale.z));
+
+	btTransform btTerrainTransform;
+	btTerrainTransform.setIdentity();
+	btTerrainTransform.setOrigin(btVector3(mOOBB.Center.x, (mMaxHeight + mMinHeight) * mScale.y / 2, mOOBB.Center.z));
+
+	mBtRigidBody = physics->CreateRigidBody(0.0f, btTerrainTransform, TerrainShape);
+
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(TerrainVertex), 0,
 		D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST, vertices.data(), (UINT)vertices.size(), nullptr, 0);
+}
+
+HeightMapPatchListMesh::~HeightMapPatchListMesh()
+{
+	delete mHeightmapData;
 }
 
 float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) const
@@ -517,6 +534,61 @@ float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) c
 	return height;
 }
 
+void HeightMapPatchListMesh::BuildHeightmapData(const int& xStart, const int& zStart, const std::vector<TerrainVertex>& TerrainVertices, HeightMapImage* context)
+{
+	mHeightmapData = new float[mWidth * mDepth];
+
+	auto CubicBezierSum = [](const std::vector<TerrainVertex>& patch, XMFLOAT2 t) {
+
+		// 4차 베지어 곡선 계수
+		std::array<float, 5> uB, vB;
+		float txInv{ 1.0f - t.x };
+		uB[0] = txInv * txInv * txInv * txInv;
+		uB[1] = 4.0f * t.x * txInv * txInv * txInv;
+		uB[2] = 6.0f * t.x * t.x * txInv * txInv;
+		uB[3] = 4.0f * t.x * t.x * t.x * txInv;
+		uB[4] = t.x * t.x * t.x * t.x;
+
+		float tyInv{ 1.0f - t.y };
+		vB[0] = tyInv * tyInv * tyInv * tyInv;
+		vB[1] = 4.0f * t.y * tyInv * tyInv * tyInv;
+		vB[2] = 6.0f * t.y * t.y * tyInv * tyInv;
+		vB[3] = 4.0f * t.y * t.y * t.y * tyInv;
+		vB[4] = t.y * t.y * t.y * t.y;
+
+		// 4차 베지에 곡면 계산
+		XMFLOAT3 sum{ 0.0f, 0.0f, 0.0f };
+		for (int i = 0; i < 5; ++i)
+		{
+			XMFLOAT3 subSum{ 0.0f, 0.0f, 0.0f };
+			for (int j = 0; j < 5; ++j)
+			{
+				XMFLOAT3 temp{ Vector3::Multiply(uB[j], patch[(i * 5) + j].Position) };
+				subSum = Vector3::Add(subSum, temp);
+			}
+			subSum = Vector3::Multiply(vB[i], subSum);
+			sum = Vector3::Add(sum, subSum);
+		}
+		return sum;
+	};
+
+	for (int i = 0; i < mWidth; ++i)
+	{
+		for (int j = 0; j < mDepth; ++j)
+		{
+			XMFLOAT2 uv{ i / (float)mWidth, 1.0f - (j / (float)mDepth) };
+			XMFLOAT3 posOnBazier{ CubicBezierSum(TerrainVertices, uv) };
+
+			mHeightmapData[i + (int)(j * mDepth)] = posOnBazier.y;
+		}
+	}
+}
+
+void HeightMapPatchListMesh::SetIndex(int x, int z)
+{
+	mXIndex = x;
+	mZIndex = z;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //
