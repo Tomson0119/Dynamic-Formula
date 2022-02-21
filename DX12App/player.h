@@ -56,24 +56,6 @@ protected:
 	Camera* mCamera = nullptr;
 };
 
-
-/////////////////////////////////////////////////////////////////////////////////////
-//
-//class TerrainPlayer : public Player
-//{
-//public:
-//	TerrainPlayer(void* context);
-//	TerrainPlayer(const TerrainPlayer& rhs) = delete;
-//	TerrainPlayer& operator=(const TerrainPlayer& rhs) = delete;
-//	virtual ~TerrainPlayer();
-//
-//	virtual Camera* ChangeCameraMode(int cameraMode) override;
-//
-//	virtual void OnPlayerUpdate(float elapsedTime) override;
-//	virtual void OnCameraUpdate(float elapsedTime) override;
-//};
-
-
 /////////////////////////////////////////////////////////////////////////////////////
 //
 
@@ -133,7 +115,7 @@ private:
 	float mBoosterEngineForce = 300000.f;
 
 	float mVehicleSteering = 0.f;
-	float mSteeringIncrement = 0.01f;
+	float mSteeringIncrement = 0.2f;
 	float mSteeringClamp = 0.5f;
 
 	float mCurrentSpeed = 0.0f;
