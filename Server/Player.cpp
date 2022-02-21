@@ -72,24 +72,30 @@ void Player::UpdateVehicleComponent(float elapsed)
 	if (component.VehicleSteering > 0)
 	{
 		component.VehicleSteering = std::max(
-			component.VehicleSteering - mConstantPtr->SteeringIncrement, 0.0f);
+			component.VehicleSteering 
+				- mConstantPtr->SteeringIncrement * elapsed, 
+			0.0f);
 	}
 	else if (component.VehicleSteering < 0)
 	{
 		component.VehicleSteering = std::min(
-			component.VehicleSteering + mConstantPtr->SteeringIncrement, 0.0f);
+			component.VehicleSteering 
+				+ mConstantPtr->SteeringIncrement * elapsed,
+			0.0f);
 	}
 
 	if (mKeyMap[VK_LEFT])
 	{
 		component.VehicleSteering = std::max(
-			component.VehicleSteering - mConstantPtr->SteeringIncrement * 2,
+			component.VehicleSteering 
+				- mConstantPtr->SteeringIncrement * 2 * elapsed,
 			-mConstantPtr->SteeringClamp);
 	}
 	if (mKeyMap[VK_RIGHT])
 	{
 		component.VehicleSteering = std::min(
-			component.VehicleSteering + mConstantPtr->SteeringIncrement * 2,
+			component.VehicleSteering 
+				+ mConstantPtr->SteeringIncrement * 2 * elapsed,
 			mConstantPtr->SteeringClamp);
 	}
 	if (mKeyMap[VK_UP])
