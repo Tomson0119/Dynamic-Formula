@@ -70,6 +70,8 @@ public:
 	void AddWheel(const btVector3& bodyExtents, const BtCarShape::WheelInfo& wheelInfo);
 	void StoreWorldTransform(btTransform& transform);
 
+	void ClearVehicleComponent();
+
 public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
 	virtual void UpdateRigidBody() override;

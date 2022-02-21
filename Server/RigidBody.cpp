@@ -157,10 +157,13 @@ void VehicleRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
 	RigidBody::RemoveRigidBody(physicsWorld);
-	if (mVehicle) {
+	if (mVehicle) 
+	{
 		physicsWorld->removeVehicle(mVehicle.get());
 		mVehicle.reset();
 		mVehicleRayCaster.reset();
+
+		ClearVehicleComponent();
 	}
 }
 
@@ -168,6 +171,18 @@ void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
 {
 	auto motionState = mVehicle->getRigidBody()->getMotionState();
 	if (motionState) motionState->getWorldTransform(transform);
+}
+
+void VehicleRigidBody::ClearVehicleComponent()
+{
+	mComponent.BoosterLeft = 0.0f;
+	mComponent.EngineForce = 0.0f;
+	mComponent.BreakingForce = 0.0f;
+	mComponent.VehicleSteering = 0.0f;
+	mComponent.CurrentSpeed = 0.0f;
+	mComponent.FrontFrictionSlip = 0.0f;
+	mComponent.BackFrictionSlip = 0.0f;
+	mComponent.MaxSpeed = 1000.0f;
 }
 
 void VehicleRigidBody::UpdateRigidBody()
