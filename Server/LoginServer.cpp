@@ -134,6 +134,11 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 		mLobby.GetInGameServer().RunPhysicsSimulation(id, timeStep);
 		break;
 	}
+	case OP::BROADCAST:
+	{
+		mLobby.GetInGameServer().BroadcastTransforms(id);
+		break;
+	}
 	}
 }
 
