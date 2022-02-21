@@ -185,16 +185,14 @@ public:
 	virtual ~HeightMapPatchListMesh();
 
 	float GetHeight(int x, int z, HeightMapImage* context) const;
-	//void BuildHeightmapData(const int& TessFactor, const std::vector<TerrainVertex>& vertices, HeightMapImage* context);
+	void BuildHeightmapData(const int& xStart, const int& zStart, const std::vector<TerrainVertex>& vertices, HeightMapImage* context);
+	void SetIndex(int x, int z);
 	std::pair<int, int> GetIndex() { return std::pair<int, int>(mXIndex, mZIndex); }
 	std::pair<float, float> GetMinMax() { return std::pair<float, float>(mMinHeight, mMaxHeight); }; // min, max
-	const std::vector<TerrainVertex>& GetVertices() { return mVertices; }
-
-	//btRigidBody* GetRigidBody() { return mBtRigidBody; }
+	btRigidBody* GetRigidBody() { return mBtRigidBody; }
 
 private:
 	XMFLOAT3 mScale = {};
-	std::vector<TerrainVertex> mVertices;
 
 	int mWidth = 0;
 	int mDepth = 0;
@@ -205,8 +203,8 @@ private:
 	int mXIndex = 0;
 	int mZIndex = 0;
 
-	//float* mHeightmapData = NULL;
-	//btRigidBody* mBtRigidBody;
+	float* mHeightmapData = NULL;
+	btRigidBody* mBtRigidBody;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

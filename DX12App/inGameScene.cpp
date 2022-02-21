@@ -252,9 +252,9 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 
 	// 지형 스케일에는 정수를 넣는 것을 권장
 	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(1.0f, 1.0f, 1.0f));
-	terrain->BuildHeightMap(L"Resources\\heightmap.raw");
-	//terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 129, 129);
+	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
+	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
+	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 89, 89);
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\rocky.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\road.dds");
@@ -463,7 +463,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	UpdateMissileObject();
 	
 	UpdateConstants(timer);
-	//UpdateDynamicsWorld();
+	UpdateDynamicsWorld();
 }
 
 void InGameScene::UpdateLight(float elapsed)
@@ -505,47 +505,44 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 		pso->UpdateConstants();
 }
 
-//void InGameScene::UpdateDynamicsWorld()
-//{
-//	auto terrain = static_pointer_cast<TerrainObject>(mPipelines[Layer::Terrain]->GetRenderObjects()[0]);
-//	auto [blockWidth, blockDepth] = terrain->GetBlockSize();
-//
-//	auto rigidBodies = terrain->GetTerrainRigidBodies();
-//
-//	for (auto o : rigidBodies)
-//	{
-//		mDynamicsWorld->removeRigidBody(o);
-//	}
-//
-//	for (int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
-//	{
-//		btCollisionObject* obj = mDynamicsWorld->getCollisionObjectArray()[i];
-//		btRigidBody* body = btRigidBody::upcast(obj);
-//
-//		if (!body->isStaticObject())
-//		{
-//			auto pos = body->getCenterOfMassPosition();
-//
-//			int xIndex = pos.x() / blockWidth;
-//			int zIndex = pos.z() / blockDepth;
-//
-//			for (int j = 0; j < 3; ++j)
-//			{
-//				for (int k = 0; k < 3; ++k)
-//				{
-//					int idx = (xIndex - 1 + j) + (zIndex - 1 + k) * (int)(terrain->GetWidth() / blockWidth);
-//					if (idx >= 0 && idx < rigidBodies.size())
-//					{
-//						if (!rigidBodies[idx]->isInWorld())
-//						{
-//							mDynamicsWorld->addRigidBody(rigidBodies[idx]);
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
+void InGameScene::UpdateDynamicsWorld()
+{
+	auto terrain = static_pointer_cast<TerrainObject>(mPipelines[Layer::Terrain]->GetRenderObjects()[0]);
+	auto [blockWidth, blockDepth] = terrain->GetBlockSize();
+
+	auto rigidBodies = terrain->GetTerrainRigidBodies();
+
+	for (auto o : rigidBodies)
+	{
+		mDynamicsWorld->removeRigidBody(o);
+	}
+
+	for (int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	{
+		btCollisionObject* obj = mDynamicsWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+
+		if (!body->isStaticObject())
+		{
+			auto pos = body->getCenterOfMassPosition();
+
+			int xIndex = pos.x() / blockWidth;
+			int zIndex = pos.z() / blockDepth;
+
+			for (int j = 0; j < 3; ++j)
+			{
+				for (int k = 0; k < 3; ++k)
+				{
+					int idx = (xIndex - 1 + j) + (zIndex - 1 + k) * (int)(terrain->GetWidth() / blockWidth);
+					if (!rigidBodies[idx]->isInWorld() && idx >= 0 && idx < rigidBodies.size())
+					{
+						mDynamicsWorld->addRigidBody(rigidBodies[idx]);
+					}
+				}
+			}
+		}
+	}
+}
 
 void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 {
