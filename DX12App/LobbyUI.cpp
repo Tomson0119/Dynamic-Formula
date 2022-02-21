@@ -4,7 +4,8 @@
 LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(9), UICnt(9)
 {
-
+    SetVectorSize(nFrame, TextCnt);
+    Initialize(device, pd3dCommandQueue);
 }
 LobbyUI::~LobbyUI()
 {

@@ -10,7 +10,7 @@ LobbyScene::LobbyScene(NetModule* netPtr)
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
 #ifdef STANDALONE
-	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #else
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
