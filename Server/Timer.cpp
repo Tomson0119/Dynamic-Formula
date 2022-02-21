@@ -49,21 +49,33 @@ void Timer::AddTimerEvent(const TimerEvent& evnt)
 
 void Timer::TimerThreadFunc(Timer& timer)
 {
+	TimerEvent ev{};
+	TimerEvent nextEv{};
 	while (timer.mLoop)
 	{
 		while (timer.mTimerQueue.empty() == false)
 		{
-			TimerEvent ev;
-			timer.mTimerQueue.try_pop(ev);
+			if (timer.mTimerQueue.try_pop(ev) == false)
+				continue;
 
-			auto now = Clock::now();
-			if (now < ev.StartTime)
-				std::this_thread::sleep_for(ev.StartTime - Clock::now());
-			
 			if (ev.Type == EVENT_TYPE::PHYSICS)
 			{
-				timer.mGameServerPtr->PostPhysicsOperation(ev.WorldID, ev.TimeStep);
-			}		
+				auto now = Clock::now();			
+				std::this_thread::sleep_for(ev.StartTime - now);
+				std::cout << "physics event!\n";
+				timer.mGameServerPtr->PostIOCPOperation(ev.WorldID, OP::PHYSICS, ev.TimeStep);
+			}
+			else if (ev.Type == EVENT_TYPE::BROADCAST)
+			{
+				auto now = Clock::now();
+				if (now < ev.StartTime)
+				{
+					timer.mTimerQueue.push(ev);
+					continue;
+				}
+				std::cout << "broadcast event!\n";
+				timer.mGameServerPtr->PostIOCPOperation(ev.WorldID, OP::BROADCAST);
+			}
 		}
 		std::this_thread::sleep_for(10ms);
 	}
