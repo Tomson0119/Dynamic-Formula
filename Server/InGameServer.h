@@ -18,7 +18,7 @@ public:
 		const float MaxBoosterTime = 5.0f;
 		const float MaxEngineForce = 8000.f;
 		const float BoosterEngineForce = 300000.f;
-		const float SteeringIncrement = 0.01f;
+		const float SteeringIncrement = 0.2f;
 		const float SteeringClamp = 0.5f;
 		const float	FrontWheelDriftFriction = 5.0f;
 		const float BackWheelDriftFriction = 3.9f;
@@ -35,9 +35,12 @@ public:
 
 	void RemovePlayer(int roomID, int hostID);
 
-	void AddPhysicsTimerEvent(int roomID);
+	void AddTimerEvent(int roomID, EVENT_TYPE type, int duration);
+	
+	void BroadcastTransforms(int roomID);	
 	void RunPhysicsSimulation(int roomID, float timeStep);
-	void PostPhysicsOperation(int roomID, float timeStep);
+
+	void PostIOCPOperation(int roomID, OP operation, float timeStep=-1.f);
 
 private:
 	LoginServer* mLoginPtr;
@@ -54,5 +57,6 @@ private:
 	std::shared_ptr<VehicleConstant> mVehicleConstants;
 
 	const btVector3 mStartPosition = { 500.0f, 10.0f, 500.0f };
-	const int mDurationMs = 16;
+	const int mPhysicsDuration = 16;
+	const int mBroadcastDuration = 1000;
 };

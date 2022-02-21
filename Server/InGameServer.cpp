@@ -50,7 +50,8 @@ void InGameServer::PrepareToStartGame(int roomID)
 	msWorlds[roomID]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);
 
 	// TODO: This needs to be separated.
-	AddPhysicsTimerEvent(roomID);
+	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
+	AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
 	msWorlds[roomID]->SetActive(true);
 	msWorlds[roomID]->SendGameStartSuccess();
 }
@@ -86,13 +87,19 @@ void InGameServer::RemovePlayer(int roomID, int hostID)
 	msWorlds[roomID]->RemovePlayerRigidBody(idx);
 }
 
-void InGameServer::AddPhysicsTimerEvent(int roomID)
+void InGameServer::AddTimerEvent(int roomID, EVENT_TYPE type, int duration)
 {
-	Timer::TimerEvent ev(
-		std::chrono::milliseconds(mDurationMs),
-		EVENT_TYPE::PHYSICS, roomID, mDurationMs / 1000.0f);
-
+	Timer::TimerEvent ev{ std::chrono::milliseconds(duration),
+		type, roomID, duration / 1000.0f };
 	mTimer.AddTimerEvent(ev);
+}
+
+void InGameServer::BroadcastTransforms(int roomID)
+{
+	msWorlds[roomID]->BroadcastAllTransform();
+	
+	if (msWorlds[roomID]->IsActive())
+		AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
 }
 
 void InGameServer::RunPhysicsSimulation(int roomID, float timeStep)
@@ -100,17 +107,16 @@ void InGameServer::RunPhysicsSimulation(int roomID, float timeStep)
 #ifdef DEBUG_PACKET_TRANSFER
 		//std::cout << "[Room id: " << roomID << "] Running physics simulation.\n";
 #endif
-	msWorlds[roomID]->UpdatePhysicsWorld(timeStep);
-	msWorlds[roomID]->BroadcastAllTransform();	// broadcast instantly.
+	msWorlds[roomID]->UpdatePhysicsWorld(timeStep);	
 
 	if (msWorlds[roomID]->IsActive())
-		AddPhysicsTimerEvent(roomID);
+		AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
 	else
 		msWorlds[roomID]->FlushPhysicsWorld();
 }
 
-void InGameServer::PostPhysicsOperation(int roomID, float timeStep)
+void InGameServer::PostIOCPOperation(int roomID, OP operation, float timeStep)
 {
 	IOCP& iocp = mLoginPtr->GetIOCP();
-	iocp.PostToCompletionQueue(msWorlds[roomID]->GetOverlapped(timeStep), roomID);
+	iocp.PostToCompletionQueue(msWorlds[roomID]->GetOverlapped(operation, timeStep), roomID);
 }
