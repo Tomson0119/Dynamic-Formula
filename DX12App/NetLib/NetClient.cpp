@@ -5,6 +5,7 @@ NetClient::NetClient()
 	: mSendOverlapped{ nullptr }
 {
 	mSocket.Init();
+	mSocket.SetNagleOption(1);
 }
 
 bool NetClient::Connect(const char* ip, short port)

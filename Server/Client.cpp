@@ -11,6 +11,7 @@ Client::Client(int id)
 	  RoomID(-1), PlayerIndex(-1)
 {
 	mSocket.Init();
+	mSocket.SetNagleOption(1);
 }
 
 Client::~Client()
