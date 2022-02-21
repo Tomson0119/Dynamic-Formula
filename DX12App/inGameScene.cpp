@@ -278,7 +278,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 2000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
 }
 
 void InGameScene::BuildCarObjects(
