@@ -178,9 +178,13 @@ void GameWorld::BroadcastAllTransform()
 	}
 }
 
-WSAOVERLAPPEDEX* GameWorld::GetOverlapped(float timeStep)
+WSAOVERLAPPEDEX* GameWorld::GetOverlapped(OP operation, float timeStep)
 {
-	mPhysicsOverlapped.Reset(OP::PHYSICS, reinterpret_cast<std::byte*>(&timeStep), sizeof(timeStep));
+	if (timeStep > 0.0f)
+		mPhysicsOverlapped.Reset(operation, reinterpret_cast<std::byte*>(&timeStep), sizeof(timeStep));
+	else
+		mPhysicsOverlapped.Reset(operation);
+
 	return &mPhysicsOverlapped;
 }
 

@@ -35,7 +35,7 @@ public:
 	bool IsActive() const { return mActive; }
 
 	const PlayerList& GetPlayerList() const { return mPlayerList; }
-	WSAOVERLAPPEDEX* GetOverlapped(float timeStep);
+	WSAOVERLAPPEDEX* GetOverlapped(OP operation, float timeStep=-1.f);
 
 private:
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
