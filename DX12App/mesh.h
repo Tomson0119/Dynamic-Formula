@@ -42,7 +42,7 @@ class Mesh
 public:
 	Mesh();
 	Mesh(const std::string& name);
-	virtual ~Mesh() { }
+	virtual ~Mesh() { };
 
 	void CreateResourceInfo(
 		ID3D12Device* device,

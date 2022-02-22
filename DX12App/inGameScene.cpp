@@ -262,6 +262,8 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
+	physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
+
 #ifdef STANDALONE
 	BuildCarObjects({ 500.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
