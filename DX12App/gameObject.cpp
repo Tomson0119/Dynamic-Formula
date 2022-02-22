@@ -24,7 +24,8 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
-	const std::wstring& path)
+	const std::wstring& path,
+	const bool& makeRigidbody)
 {
 	std::ifstream in_file{ path, std::ios::binary };
 	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
@@ -86,7 +87,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 			new_mesh = std::make_shared<Mesh>(mtl_name);
 			new_mesh->LoadMesh(
 				device, cmdList, in_file, 
-				positions, normals, texcoords, mats[mtl_name]);
+				positions, normals, texcoords, mats[mtl_name], makeRigidbody);
 			mMeshes.push_back(new_mesh);
 		}
 	}

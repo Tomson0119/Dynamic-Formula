@@ -101,7 +101,8 @@ void Mesh::LoadMesh(
 	const std::vector<XMFLOAT3>& positions,
 	const std::vector<XMFLOAT3>& normals,
 	const std::vector<XMFLOAT2>& texcoords,
-	const MatInfo& mat)
+	const MatInfo& mat,
+	const bool& makeRigidbody)
 {
 	mMaterial = mat;
 
@@ -179,7 +180,8 @@ void Mesh::LoadMesh(
 	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
 	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
 
-	CreateRigidBody(vertices, indices);
+	if(makeRigidbody)
+		CreateRigidBody(vertices, indices);
 
 	std::reverse(indices.begin(), indices.end());
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(Vertex), sizeof(UINT),
@@ -189,7 +191,7 @@ void Mesh::LoadMesh(
 
 void Mesh::CreateRigidBody(const std::vector<Vertex>& targetVertices, const std::vector<UINT>& targetIndices)
 {
-	btTriangleIndexVertexArray* data = new btTriangleIndexVertexArray;
+	std::unique_ptr<btTriangleIndexVertexArray> data = std::make_unique<btTriangleIndexVertexArray>();
 
 	btIndexedMesh tempMesh;
 	data->addIndexedMesh(tempMesh, PHY_FLOAT);
@@ -246,7 +248,7 @@ void Mesh::CreateRigidBody(const std::vector<Vertex>& targetVertices, const std:
 	}
 
 	const bool USE_QUANTIZED_AABB_COMPRESSION = true;
-	mMeshShape = std::make_shared<btBvhTriangleMeshShape>(data, USE_QUANTIZED_AABB_COMPRESSION);
+	mMeshShape = new btBvhTriangleMeshShape(data.get(), USE_QUANTIZED_AABB_COMPRESSION);
 }
 
 MaterialConstants Mesh::GetMaterialConstant() const

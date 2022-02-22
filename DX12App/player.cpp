@@ -544,7 +544,6 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 	XMFLOAT3 wheelExtents = mWheel[0]->GetBoundingBox().Extents;
 
 	btCompoundShape* chassisShape = new btCompoundShape();
-	physics->AddShape(chassisShape);
 
 	for (int i = 0; i < mMeshes.size(); ++i)
 	{
@@ -552,9 +551,7 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 		LocalTransform.setIdentity();
 		LocalTransform.setOrigin(btVector3(0, 0, 0));
 
-		chassisShape->addChildShape(LocalTransform, mMeshes[i]->GetMeshShape().get());
-
-		physics->AddShape(mMeshes[i]->GetMeshShape().get());
+		chassisShape->addChildShape(LocalTransform, mMeshes[i]->GetMeshShape());
 	}
 
 	btTransform btCarTransform;

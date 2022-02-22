@@ -39,7 +39,8 @@ public:
 	virtual std::vector<std::shared_ptr<Mesh>> LoadModel(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
-		const std::wstring& path);
+		const std::wstring& path,
+		const bool& makeRigidbody);
 	void LoadMaterial(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList,
