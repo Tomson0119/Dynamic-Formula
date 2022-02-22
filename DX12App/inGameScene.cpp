@@ -415,7 +415,16 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	
+	switch (uMsg)
+	{
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case VK_END:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+			break;
+		}
+	}
 }
 
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed)

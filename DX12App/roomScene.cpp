@@ -26,7 +26,22 @@ void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandL
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
 	
 }
-
+void RoomScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (msg)
+	{
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case VK_HOME:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+			break;
+		case VK_END:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+			break;
+		}
+	}
+	}
 void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
 	mpUI.get()->Update(timer.TotalTime());

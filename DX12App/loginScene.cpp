@@ -57,7 +57,8 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			//Login Check
 			break;
 		case 0x08:  // backspace
-			Texts[IsPwd].pop_back();
+			if(!Texts[IsPwd].empty())
+				Texts[IsPwd].pop_back();
 			break;
 		case VK_HOME:
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);

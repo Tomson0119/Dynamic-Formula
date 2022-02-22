@@ -35,7 +35,7 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     float dy = static_cast<float>(y);
     if (dx<mvTextBlocks[1].d2dLayoutRect.right && dx>mvTextBlocks[1].d2dLayoutRect.left &&
         dy< mvTextBlocks[1].d2dLayoutRect.bottom && dy>mvTextBlocks[1].d2dLayoutRect.top)
-        mvColors[1].a = 0.75f;
+        mvColors[1].a = 0.5f;
     else mvColors[1].a = 1.0f;
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
 }

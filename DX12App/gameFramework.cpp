@@ -30,7 +30,7 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-	InitScene(SCENE_STAT::LOGIN); 
+	InitScene(SCENE_STAT::LOBBY); 
 	
 	return true;
 }

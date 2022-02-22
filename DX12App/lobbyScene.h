@@ -30,6 +30,7 @@ public:
 		float Height,
 		float aspect,
 		std::shared_ptr<BulletWrapper> physics) override;
+	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
 
 	virtual void Update(
 		ID3D12GraphicsCommandList* cmdList,
