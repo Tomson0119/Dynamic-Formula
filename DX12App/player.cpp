@@ -543,14 +543,25 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 	XMFLOAT3 vehicleExtents = mOOBB.Extents;
 	XMFLOAT3 wheelExtents = mWheel[0]->GetBoundingBox().Extents;
 
-	btCollisionShape* chassisShape = new btBoxShape(btVector3(vehicleExtents.x, vehicleExtents.y, vehicleExtents.z));
+	btCompoundShape* chassisShape = new btCompoundShape();
+	physics->AddShape(chassisShape);
+
+	for (int i = 0; i < mMeshes.size(); ++i)
+	{
+		btTransform LocalTransform;
+		LocalTransform.setIdentity();
+		LocalTransform.setOrigin(btVector3(0, 0, 0));
+
+		chassisShape->addChildShape(LocalTransform, mMeshes[i]->GetMeshShape().get());
+
+		physics->AddShape(mMeshes[i]->GetMeshShape().get());
+	}
 
 	btTransform btCarTransform;
 	btCarTransform.setIdentity();
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
 
-	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, chassisShape);
-
+	mBtRigidBody = physics->CreateRigidBody(200.0f, btCarTransform, chassisShape);
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld.get());
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 

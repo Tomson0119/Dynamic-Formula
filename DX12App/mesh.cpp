@@ -246,7 +246,7 @@ void Mesh::CreateRigidBody(const std::vector<Vertex>& targetVertices, const std:
 	}
 
 	const bool USE_QUANTIZED_AABB_COMPRESSION = true;
-	btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(data, USE_QUANTIZED_AABB_COMPRESSION);
+	mMeshShape = std::make_shared<btBvhTriangleMeshShape>(data, USE_QUANTIZED_AABB_COMPRESSION);
 }
 
 MaterialConstants Mesh::GetMaterialConstant() const
