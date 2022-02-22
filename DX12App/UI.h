@@ -13,6 +13,7 @@ public:
     ~UI();
     virtual void Update(float GTime, Player* mPlayer) {};
     virtual void Update(float GTime, std::vector<std::wstring>& Texts) {}
+    virtual void Update(std::vector<std::wstring>& Texts) {}
     virtual void Update(float GTime);
     virtual void Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
      XMFLOAT4 RetLTRM[], XMFLOAT4 FillLTRB[]*/);

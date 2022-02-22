@@ -28,11 +28,15 @@ public:
 		std::shared_ptr<BulletWrapper> physics) override;
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame) override;
-	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
+	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
-
+	void KeyInputFunc();
+	//std::string GetId() { return id; }
 private:
+	std::string id;
+	std::string pwd;
 	std::vector<std::wstring> Texts;
 	std::thread mInputThread;
+	bool IsPwd = false;
 };

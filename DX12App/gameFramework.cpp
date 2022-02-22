@@ -30,7 +30,7 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-	InitScene(SCENE_STAT::LOBBY); 
+	InitScene(SCENE_STAT::LOGIN); 
 	
 	return true;
 }
@@ -130,6 +130,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 
 void GameFramework::OnPreciseKeyInput()
 {
+
 }
 
 void GameFramework::CheckAndChangeScene()
@@ -182,7 +183,8 @@ void GameFramework::Draw()
 	// Command List¸¦ Pipeline State·Î ¹­´Â´Ù. 
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
-	//mCommandList->SetGraphicsRootSignature(mScenes.top()->GetRootSignature());
+	if(mScenes.top()->GetRootSignature())
+		mCommandList->SetGraphicsRootSignature(mScenes.top()->GetRootSignature());
 
 	Update();
 

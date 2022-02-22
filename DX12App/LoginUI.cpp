@@ -36,6 +36,11 @@ void LoginUI::Update(float GTime, std::vector <std::wstring> &Texts)
     mvTextBlocks[3].strText.assign(Texts[0].begin(), Texts[0].end());
     mvTextBlocks[5].strText.assign(Texts[1].begin(), Texts[1].end());
 }
+void LoginUI::Update(std::vector<std::wstring>& Texts) 
+{
+    mvTextBlocks[3].strText.assign(Texts[0].begin(), Texts[0].end());
+    mvTextBlocks[5].strText.assign(Texts[1].begin(), Texts[1].end());
+}
 
 void LoginUI::Draw(UINT nFrame)
 {
