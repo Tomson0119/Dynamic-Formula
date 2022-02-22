@@ -29,7 +29,17 @@ void LoginUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 
 }
-void LoginUI::Update(float GTime, std::vector <std::wstring> &Texts)
+void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
+{
+    float dx = static_cast<float>(x);
+    float dy = static_cast<float>(y);
+    if (dx<mvTextBlocks[1].d2dLayoutRect.right && dx>mvTextBlocks[1].d2dLayoutRect.left &&
+        dy< mvTextBlocks[1].d2dLayoutRect.bottom && dy>mvTextBlocks[1].d2dLayoutRect.top)
+        mvColors[1].a = 0.75f;
+    else mvColors[1].a = 1.0f;
+    UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+}
+void LoginUI::Update(float GTime, std::vector <std::wstring>& Texts)
 {
     //mvTextBlocks[3].strText.clear();
     //mvTextBlocks[5].strText.clear();
@@ -101,8 +111,11 @@ void LoginUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
     CreateFontFormat();
 
     D2D1::ColorF colorList[7] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Blue, 0.1f) };
+    for (auto color : colorList)
+        mvColors.push_back(color);
     //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
-    UI::BuildSolidBrush(UICnt+1, TextCnt, colorList);
+    
+    UI::BuildSolidBrush(UICnt+1, TextCnt, mvColors);
 
     SetTextRect();
     for (auto wc : std::wstring{ L"Dynamic Fomula" })

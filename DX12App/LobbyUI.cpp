@@ -30,7 +30,27 @@ void LobbyUI::Update(float GTime)
 
 void LobbyUI::Draw(UINT nFrame)
 {
+    XMFLOAT4 RectLTRB[] =
+    {
+        {
+        mvTextBlocks[2].d2dLayoutRect.left,
+        mvTextBlocks[0].d2dLayoutRect.top,
+        mvTextBlocks[5].d2dLayoutRect.right,
+        mvTextBlocks[5].d2dLayoutRect.bottom
+        }
+    };
+    XMFLOAT4 FillLTRB[] =
+    {
+        {
+        mvTextBlocks[2].d2dLayoutRect.left,
+        mvTextBlocks[0].d2dLayoutRect.top,
+        mvTextBlocks[5].d2dLayoutRect.right,
+        mvTextBlocks[5].d2dLayoutRect.bottom
+        }
+    };
     UI::BeginDraw(nFrame);
+    UI::RectDraw(RectLTRB, FillLTRB, TextCnt + 1, 0, 0);
+    UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     UI::EndDraw(nFrame);
 }
 
@@ -39,17 +59,24 @@ void LobbyUI::CreateFontFormat()
     float fFontSize = mfHeight / 15.0f;
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Tahoma");
-    /* Fonts.push_back(L"Vladimir Script ∫∏≈Î");
-     Fonts.push_back(L"πŸ≈¡√º");
-     Fonts.push_back(L"±º∏≤√º");
-     Fonts.push_back(L"±º∏≤√º");*/
+    Fonts.push_back(L"Vladimir Script ∫∏≈Î");
+    Fonts.push_back(L"πŸ≈¡√º");
+    Fonts.push_back(L"±º∏≤√º");
+    Fonts.push_back(L"±º∏≤√º");
+    Fonts.push_back(L"±º∏≤√º");
 
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt);
+
+    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, DWRITE_TEXT_ALIGNMENT_LEADING);
 }
 
 void LobbyUI::SetTextRect()
 {
-
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth / 2 - mfWidth * 2 / 32, mfHeight / 9, mfWidth / 2 + mfWidth * 3 / 32, mfHeight / 9 * 2);
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth / 2 - mfWidth * 2 / 32, mfHeight / 2 - mfHeight * 1 / 16, mfWidth / 2 + mfWidth * 3 / 32, mfHeight / 2);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth / 5, 4 * (mfHeight / 6), 2 * mfWidth / 5, 9 * (mfHeight / 12));
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(2 * mfWidth / 5, 4 * (mfHeight / 6), 4 * mfWidth / 5, 9 * (mfHeight / 12));
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth / 5, 5 * (mfHeight / 6), 2 * mfWidth / 5, 11 * (mfHeight / 12));
+    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(2 * mfWidth / 5, 5 * (mfHeight / 6), 4 * mfWidth / 5, 11 * (mfHeight / 12));
 }
 
 void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
@@ -59,11 +86,19 @@ void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
 
-    D2D1::ColorF colorList[8] = { D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::Black, D2D1::ColorF::OrangeRed, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
-    D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
-    UI::BuildBrush(UICnt, TextCnt, colorList, 4, gradientColors);
+    D2D1::ColorF colorList[7] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Blue, 0.1f) };
+    //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
+    UI::BuildSolidBrush(UICnt + 1, TextCnt, colorList);
 
     SetTextRect();
+    for (auto wc : std::wstring{ L"MakeRoom" })
+        mvTextBlocks[0].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Room No." })
+        mvTextBlocks[1].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"Room Title" })
+        mvTextBlocks[2].strText.push_back(wc);
+    for (auto wc : std::wstring{ L"0 / 0" })
+        mvTextBlocks[3].strText.push_back(wc);
 }
 
 void LobbyUI::Reset()

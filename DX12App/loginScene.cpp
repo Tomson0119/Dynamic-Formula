@@ -23,10 +23,6 @@ LoginScene::LoginScene(NetModule* netPtr)
 }
 void LoginScene::KeyInputFunc()
 {
-	switch (_getch())
-	{
-		id.push_back(_getch());
-	}
 }
 void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
@@ -36,6 +32,12 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
 	//std::thread t1(KeyInputFunc);
+}
+void LoginScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
+{
+	float dx = static_cast<float>(x);
+	float dy = static_cast<float>(y);
+	mpUI.get()->OnProcessMouseMove(btnState, x, y);
 }
 void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -57,8 +59,8 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		case 0x08:  // backspace
 			Texts[IsPwd].pop_back();
 			break;
-		/*case VK_HOME:
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);*/
+		case VK_HOME:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		}
 		if (
 			(wParam < 57 && wParam>47) ||

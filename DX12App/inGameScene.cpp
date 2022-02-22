@@ -410,7 +410,7 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 		mMainCamera->Pitch(0.25f * dy);
 		mMainCamera->RotateY(0.25f * dx);
 	}
-	mpUI.get()->OnProcessMouseMove(buttonState, x, y);
+	//mpUI.get()->OnProcessMouseMove(buttonState, x, y);
 }
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
