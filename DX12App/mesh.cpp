@@ -168,10 +168,85 @@ void Mesh::LoadMesh(
 			indices.push_back(k++);
 		}
 	}
+
+	const auto& [min_x, max_x] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) { return (a.x < b.x); });
+	const auto& [min_y, max_y] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) {return (a.y < b.y); });
+	const auto& [min_z, max_z] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) {return (a.z < b.z); });
+
+	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
+	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
+
+	CreateRigidBody(vertices, indices);
+
 	std::reverse(indices.begin(), indices.end());
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(Vertex), sizeof(UINT),
 		D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
 		vertices.data(), (UINT)vertices.size(), indices.data(), (UINT)indices.size());
+}
+
+void Mesh::CreateRigidBody(const std::vector<Vertex>& targetVertices, const std::vector<UINT>& targetIndices)
+{
+	btTriangleIndexVertexArray* data = new btTriangleIndexVertexArray;
+
+	btIndexedMesh tempMesh;
+	data->addIndexedMesh(tempMesh, PHY_FLOAT);
+
+	btIndexedMesh& mesh = data->getIndexedMeshArray()[0];
+
+	const int32_t VERTICES_PER_TRIANGLE = 3;
+	size_t numIndices = targetIndices.size();
+	mesh.m_numTriangles = numIndices / VERTICES_PER_TRIANGLE;
+
+	if (numIndices < std::numeric_limits<int16_t>::max())
+	{
+		mesh.m_triangleIndexBase = new unsigned char[sizeof(int16_t) * (size_t)numIndices];
+		mesh.m_indexType = PHY_SHORT;
+		mesh.m_triangleIndexStride = VERTICES_PER_TRIANGLE * sizeof(int16_t);
+	}
+	else
+	{
+		mesh.m_triangleIndexBase = new unsigned char[sizeof(int32_t) * (size_t)numIndices];
+		mesh.m_indexType = PHY_INTEGER;
+		mesh.m_triangleIndexStride = VERTICES_PER_TRIANGLE * sizeof(int32_t);
+	}
+
+	mesh.m_numVertices = targetVertices.size();
+	mesh.m_vertexBase = new unsigned char[VERTICES_PER_TRIANGLE * sizeof(btScalar) * (size_t)mesh.m_numVertices];
+	mesh.m_vertexStride = VERTICES_PER_TRIANGLE * sizeof(btScalar);
+
+	btScalar* vertexData = static_cast<btScalar*>((void*)(mesh.m_vertexBase));
+	for (int32_t i = 0; i < mesh.m_numVertices; ++i)
+	{
+		int32_t j = i * VERTICES_PER_TRIANGLE;
+		const XMFLOAT3& point = targetVertices[i].Position;
+		vertexData[j] = point.x;
+		vertexData[j + 1] = point.y;
+		vertexData[j + 2] = point.z;
+	}
+
+	if (numIndices < std::numeric_limits<int16_t>::max())
+	{
+		int16_t* indices = static_cast<int16_t*>((void*)(mesh.m_triangleIndexBase));
+
+		for (int32_t i = 0; i < numIndices; ++i) {
+			indices[i] = (int16_t)targetIndices[i];
+		}
+	}
+	else
+	{
+		int32_t* indices = static_cast<int32_t*>((void*)(mesh.m_triangleIndexBase));
+
+		for (int32_t i = 0; i < numIndices; ++i)
+		{
+			indices[i] = targetIndices[i];
+		}
+	}
+
+	const bool USE_QUANTIZED_AABB_COMPRESSION = true;
+	btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(data, USE_QUANTIZED_AABB_COMPRESSION);
 }
 
 MaterialConstants Mesh::GetMaterialConstant() const
@@ -525,7 +600,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 
 HeightMapPatchListMesh::~HeightMapPatchListMesh()
 {
-	delete mHeightmapData;
+	delete[] mHeightmapData;
 }
 
 float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) const

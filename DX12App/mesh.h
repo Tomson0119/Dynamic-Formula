@@ -69,6 +69,10 @@ public:
 	void SetMaterial(Material mat) { mMaterial.Mat = mat; }
 	void SetSrvIndex(UINT idx) { mMaterial.SrvIndex = idx; }
 
+	void CreateRigidBody(const std::vector<Vertex>& positions, const std::vector<UINT>& indices);
+	btRigidBody* GetRigidBody() { return mBtRigidBody; }
+	std::shared_ptr<btBvhTriangleMeshShape> GetMeshShape() { return mMeshShape; }
+
 public:
 	MaterialConstants GetMaterialConstant() const;
 	UINT GetSrvIndex() const { return mMaterial.SrvIndex; }
@@ -94,6 +98,8 @@ protected:
 	MatInfo mMaterial = {};
 
 	std::string mName;
+	btRigidBody* mBtRigidBody;
+	std::shared_ptr<btBvhTriangleMeshShape> mMeshShape;
 
 public:
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView = {};
@@ -189,7 +195,6 @@ public:
 	void SetIndex(int x, int z);
 	std::pair<int, int> GetIndex() { return std::pair<int, int>(mXIndex, mZIndex); }
 	std::pair<float, float> GetMinMax() { return std::pair<float, float>(mMinHeight, mMaxHeight); }; // min, max
-	btRigidBody* GetRigidBody() { return mBtRigidBody; }
 
 private:
 	XMFLOAT3 mScale = {};
@@ -204,7 +209,6 @@ private:
 	int mZIndex = 0;
 
 	float* mHeightmapData = NULL;
-	btRigidBody* mBtRigidBody;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
