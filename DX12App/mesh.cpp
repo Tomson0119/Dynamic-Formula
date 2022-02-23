@@ -19,6 +19,10 @@ Mesh::Mesh(const std::string& name)
 	mName = name;
 }
 
+Mesh::~Mesh()
+{
+}
+
 void Mesh::CreateResourceInfo(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList,
@@ -191,12 +195,12 @@ void Mesh::LoadMesh(
 
 void Mesh::CreateRigidBody(const std::vector<Vertex>& targetVertices, const std::vector<UINT>& targetIndices)
 {
-	std::unique_ptr<btTriangleIndexVertexArray> data = std::make_unique<btTriangleIndexVertexArray>();
+	mTriangleVertexArray = new btTriangleIndexVertexArray();
 
 	btIndexedMesh tempMesh;
-	data->addIndexedMesh(tempMesh, PHY_FLOAT);
+	mTriangleVertexArray->addIndexedMesh(tempMesh, PHY_FLOAT);
 
-	btIndexedMesh& mesh = data->getIndexedMeshArray()[0];
+	btIndexedMesh& mesh = mTriangleVertexArray->getIndexedMeshArray()[0];
 
 	const int32_t VERTICES_PER_TRIANGLE = 3;
 	size_t numIndices = targetIndices.size();
@@ -248,7 +252,7 @@ void Mesh::CreateRigidBody(const std::vector<Vertex>& targetVertices, const std:
 	}
 
 	const bool USE_QUANTIZED_AABB_COMPRESSION = true;
-	mMeshShape = new btBvhTriangleMeshShape(data.get(), USE_QUANTIZED_AABB_COMPRESSION);
+	mMeshShape = new btBvhTriangleMeshShape(mTriangleVertexArray, USE_QUANTIZED_AABB_COMPRESSION);
 }
 
 MaterialConstants Mesh::GetMaterialConstant() const

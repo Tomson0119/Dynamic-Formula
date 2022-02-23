@@ -42,7 +42,7 @@ class Mesh
 public:
 	Mesh();
 	Mesh(const std::string& name);
-	virtual ~Mesh() { };
+	virtual ~Mesh();
 
 	void CreateResourceInfo(
 		ID3D12Device* device,
@@ -101,6 +101,7 @@ protected:
 	std::string mName;
 	btRigidBody* mBtRigidBody = NULL;
 	btBvhTriangleMeshShape* mMeshShape = NULL;
+	btTriangleIndexVertexArray* mTriangleVertexArray;
 
 public:
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView = {};
