@@ -551,7 +551,7 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 		LocalTransform.setIdentity();
 		LocalTransform.setOrigin(btVector3(0, 0, 0));
 
-		chassisShape->addChildShape(LocalTransform, mMeshes[i]->GetMeshShape());
+		chassisShape->addChildShape(LocalTransform, mMeshes[i]->GetMeshShape().get());
 	}
 
 	btTransform btCarTransform;

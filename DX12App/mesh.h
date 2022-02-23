@@ -72,7 +72,7 @@ public:
 
 	void CreateRigidBody(const std::vector<Vertex>& positions, const std::vector<UINT>& indices);
 	btRigidBody* GetRigidBody() { return mBtRigidBody; }
-	btBvhTriangleMeshShape* GetMeshShape() { return mMeshShape; }
+	std::shared_ptr<btBvhTriangleMeshShape> GetMeshShape() { return mMeshShape; }
 
 public:
 	MaterialConstants GetMaterialConstant() const;
@@ -100,8 +100,8 @@ protected:
 
 	std::string mName;
 	btRigidBody* mBtRigidBody = NULL;
-	btBvhTriangleMeshShape* mMeshShape = NULL;
-	btTriangleIndexVertexArray* mTriangleVertexArray;
+	std::shared_ptr<btBvhTriangleMeshShape> mMeshShape = NULL;
+	btTriangleIndexVertexArray* mTriangleVertexArray = NULL;
 
 public:
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView = {};

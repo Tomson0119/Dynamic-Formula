@@ -21,6 +21,12 @@ Mesh::Mesh(const std::string& name)
 
 Mesh::~Mesh()
 {
+	if (mTriangleVertexArray)
+	{
+		delete[] mTriangleVertexArray->getIndexedMeshArray()[0].m_triangleIndexBase;
+		delete[] mTriangleVertexArray->getIndexedMeshArray()[0].m_vertexBase;
+		delete mTriangleVertexArray;
+	}
 }
 
 void Mesh::CreateResourceInfo(
@@ -252,7 +258,7 @@ void Mesh::CreateRigidBody(const std::vector<Vertex>& targetVertices, const std:
 	}
 
 	const bool USE_QUANTIZED_AABB_COMPRESSION = true;
-	mMeshShape = new btBvhTriangleMeshShape(mTriangleVertexArray, USE_QUANTIZED_AABB_COMPRESSION);
+	mMeshShape = std::make_shared<btBvhTriangleMeshShape>(mTriangleVertexArray, USE_QUANTIZED_AABB_COMPRESSION);
 }
 
 MaterialConstants Mesh::GetMaterialConstant() const
