@@ -252,7 +252,7 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<B
 
 			positions.push_back(pos);
 		}
-		else if (type == "usemtl")
+		else if (type == "s")
 		{
 			btConvexHullShape* convexHull = new btConvexHullShape();
 
