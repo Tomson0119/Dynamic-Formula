@@ -15,7 +15,7 @@ public:
 	std::shared_ptr<btDiscreteDynamicsWorld> GetDynamicsWorld() { return mBtDynamicsWorld; }
 
 	void AddShape(btCollisionShape* shape) { mCollisionShapes.push_back(shape); }
-	void StepSimulation(float elapsed) { mBtDynamicsWorld->stepSimulation(elapsed); }
+	void StepSimulation(float elapsed);
 
 private:
 	std::shared_ptr<btDefaultCollisionConfiguration> mBtCollisionConfiguration;
