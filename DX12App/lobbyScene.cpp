@@ -15,12 +15,12 @@ LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
 #endif
 }
 
-void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<BulletWrapper> physics)
+void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mDevice = device;
 }
 
-void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
+void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
 
 }

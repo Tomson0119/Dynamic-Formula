@@ -39,12 +39,12 @@ public:
 		ComPtr<ID3D12Device> device,
 		ID3D12GraphicsCommandList* cmdList, 
 		float aspect,
-		std::shared_ptr<BulletWrapper> physics) = 0;
+		const std::shared_ptr<BulletWrapper>& physics) = 0;
 
 	virtual void Update(
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
-		std::shared_ptr<BulletWrapper> physics) = 0;
+		const std::shared_ptr<BulletWrapper>& physics) = 0;
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) = 0;
 	

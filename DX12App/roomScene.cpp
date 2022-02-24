@@ -15,12 +15,12 @@ RoomScene::RoomScene(HWND hwnd, NetModule* netPtr)
 #endif
 }
 
-void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<BulletWrapper> physics)
+void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mDevice = device;
 }
 
-void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
+void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
 	// TEST
 #ifdef START_GAME_INSTANT

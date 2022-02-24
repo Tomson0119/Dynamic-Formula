@@ -296,7 +296,7 @@ void GameObject::Draw(
 
 void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 {
-	/*mWorld(0, 0) = mScaling.x * mRight.x;
+	mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;	
 	mWorld(0, 2) = mRight.z;
 
@@ -306,16 +306,7 @@ void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 
 	mWorld(2, 0) = mLook.x;		
 	mWorld(2, 1) = mLook.y;		
-	mWorld(2, 2) = mScaling.z * mLook.z;*/
-
-
-	mWorld = Matrix4x4::Identity4x4();
-
-	mWorld(3, 0) = mPosition.x;
-	mWorld(3, 1) = mPosition.y;
-	mWorld(3, 2) = mPosition.z;
-
-	mWorld = Matrix4x4::Multiply(mQuaternion, mWorld);
+	mWorld(2, 2) = mScaling.z * mLook.z;
 }
 
 void GameObject::UpdateBoundingBox()
@@ -509,7 +500,7 @@ void TerrainObject::BuildHeightMap(const std::wstring& path)
 	mHeightMapImage = std::make_unique<HeightMapImage>(path, mWidth, mDepth, mTerrainScale);
 }
 
-void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
+void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
 {	
 	mBlockWidth = blockWidth;
 	mBlockDepth = blockDepth;

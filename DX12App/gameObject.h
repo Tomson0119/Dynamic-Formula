@@ -161,7 +161,7 @@ public:
 	virtual ~TerrainObject();
 
 	void BuildHeightMap(const std::wstring& path);
-	void BuildTerrainMesh(ID3D12Device* device,	ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics,int blockWidth, int blockDepth);
+	void BuildTerrainMesh(ID3D12Device* device,	ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics,int blockWidth, int blockDepth);
 
 public:
 	float GetHeight(float x, float z) const;
