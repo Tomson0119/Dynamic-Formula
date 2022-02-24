@@ -18,10 +18,11 @@ public:
 		const float MaxBoosterTime = 5.0f;
 		const float MaxEngineForce = 8000.f;
 		const float BoosterEngineForce = 300000.f;
-		const float SteeringIncrement = 0.2f;
+		const float SteeringIncrement = 8.0f;
 		const float SteeringClamp = 0.5f;
-		const float	FrontWheelDriftFriction = 5.0f;
-		const float BackWheelDriftFriction = 3.9f;
+		const float	WheelDriftFriction = 4.0f;
+		const float WheelDefaultFriction = 25.0f;
+		const float DefaultMaxSpeed = 1000.0f;
 	};
 
 public:
@@ -33,20 +34,20 @@ public:
 
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
+	void StartMatch(int roomID);
 	void RemovePlayer(int roomID, int hostID);
 
-	void AddTimerEvent(int roomID, EVENT_TYPE type, int duration);
-	
+	void AddTimerEvent(int roomID, EVENT_TYPE type, int duration);	
 	void BroadcastTransforms(int roomID);	
-	void RunPhysicsSimulation(int roomID, float timeStep);
+	void RunPhysicsSimulation(int roomID);
 
-	void PostIOCPOperation(int roomID, OP operation, float timeStep=-1.f);
+	void PostPhysicsOperation(int roomID);
 
 private:
 	LoginServer* mLoginPtr;
 	static WorldList msWorlds;
 
-	Timer mTimer;
+	TimerQueue mTimerQueue;
 	
 	std::unique_ptr<BtCarShape> mBtCarShape;
 	std::unique_ptr<BtBoxShape> mMissileShape;

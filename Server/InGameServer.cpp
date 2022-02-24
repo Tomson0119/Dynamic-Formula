@@ -21,7 +21,7 @@ InGameServer::InGameServer()
 void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 {
 	mLoginPtr = loginPtr;
-	mTimer.Start(this);
+	mTimerQueue.Start(this);
 
 	const float offset_x = 20.0f;
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
@@ -48,11 +48,6 @@ void InGameServer::PrepareToStartGame(int roomID)
 		msWorlds[roomID]->CreatePlayerRigidBody(idx++, 1000.0f, mBtCarShape.get());
 	}
 	msWorlds[roomID]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);
-
-	// TODO: This needs to be separated.
-	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
-	AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
-	msWorlds[roomID]->SetActive(true);
 	msWorlds[roomID]->SendGameStartSuccess();
 }
 
@@ -60,6 +55,18 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 {
 	switch (type)
 	{
+	case CS::LOAD_DONE:
+	{
+		CS::packet_load_done* pck = reinterpret_cast<CS::packet_load_done*>(packet);
+		if (pck->room_id < 0 || pck->room_id != gClients[id]->RoomID)
+		{
+			mLoginPtr->Disconnect(id);
+			break;
+		}
+		bool res = msWorlds[pck->room_id]->CheckIfAllLoaded(gClients[id]->PlayerIndex);
+		if (res) StartMatch(pck->room_id);
+		break;
+	}
 	case CS::KEY_INPUT:
 	{
 		CS::packet_key_input* pck = reinterpret_cast<CS::packet_key_input*>(packet);
@@ -81,6 +88,14 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 	return true;
 }
 
+void InGameServer::StartMatch(int roomID)
+{
+	msWorlds[roomID]->SetActive(true);
+	msWorlds[roomID]->SendStartSignal();
+	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
+	AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
+}
+
 void InGameServer::RemovePlayer(int roomID, int hostID)
 {
 	const int idx = gClients[hostID]->PlayerIndex;
@@ -89,9 +104,9 @@ void InGameServer::RemovePlayer(int roomID, int hostID)
 
 void InGameServer::AddTimerEvent(int roomID, EVENT_TYPE type, int duration)
 {
-	Timer::TimerEvent ev{ std::chrono::milliseconds(duration),
-		type, roomID, duration / 1000.0f };
-	mTimer.AddTimerEvent(ev);
+	TimerQueue::TimerEvent ev{ 
+		std::chrono::milliseconds(duration), type, roomID };
+	mTimerQueue.AddTimerEvent(ev);
 }
 
 void InGameServer::BroadcastTransforms(int roomID)
@@ -102,12 +117,12 @@ void InGameServer::BroadcastTransforms(int roomID)
 		AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
 }
 
-void InGameServer::RunPhysicsSimulation(int roomID, float timeStep)
+void InGameServer::RunPhysicsSimulation(int roomID)
 {
 #ifdef DEBUG_PACKET_TRANSFER
 		//std::cout << "[Room id: " << roomID << "] Running physics simulation.\n";
 #endif
-	msWorlds[roomID]->UpdatePhysicsWorld(timeStep);	
+	msWorlds[roomID]->UpdatePhysicsWorld();
 
 	if (msWorlds[roomID]->IsActive())
 		AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
@@ -115,8 +130,8 @@ void InGameServer::RunPhysicsSimulation(int roomID, float timeStep)
 		msWorlds[roomID]->FlushPhysicsWorld();
 }
 
-void InGameServer::PostIOCPOperation(int roomID, OP operation, float timeStep)
+void InGameServer::PostPhysicsOperation(int roomID)
 {
 	IOCP& iocp = mLoginPtr->GetIOCP();
-	iocp.PostToCompletionQueue(msWorlds[roomID]->GetOverlapped(operation, timeStep), roomID);
+	iocp.PostToCompletionQueue(msWorlds[roomID]->GetPhysicsOverlapped(), roomID);
 }
