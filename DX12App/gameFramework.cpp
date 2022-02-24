@@ -23,12 +23,7 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-	////UI Build
-	//if (!mpUI)
-	//{
-	//	mpUI = new UI(mSwapChainBufferCount, mD3dDevice.Get(), mCommandQueue.Get());
-	//	mpUI->Resize(mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
-	//}
+	
 	InitScene(SCENE_STAT::LOGIN);
 	return true;
 }
@@ -130,7 +125,6 @@ void GameFramework::CheckAndChangeScene()
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
 		InitScene(static_cast<SCENE_STAT>(nextScene));
-		// TODO: If scene is in_game scene then let server know loading has done.
 		break;
 	}
 	case SCENE_CHANGE_FLAG::POP:
@@ -152,16 +146,10 @@ void GameFramework::CheckAndChangeScene()
 
 void GameFramework::Update()
 {
-	mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
-
 	D3DFramework::UpdateFrameStates();
 	
 	OnPreciseKeyInput();
 
-	//UI Update
-	//UpdateUI();
-
-	//mCamera->Update(mTimer.ElapsedTime());
 	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
@@ -206,8 +194,7 @@ void GameFramework::Draw()
 
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
-	//for (auto ui : mpUI)
-	//mpUI->Draw(mCurrBackBufferIndex);
+	
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 
