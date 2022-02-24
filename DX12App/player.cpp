@@ -179,6 +179,17 @@ PhysicsPlayer::~PhysicsPlayer()
 {
 }
 
+void PhysicsPlayer::UpdateTransform(XMFLOAT4X4* parent)
+{
+	mWorld = Matrix4x4::Identity4x4();
+
+	mWorld(3, 0) = mPosition.x;
+	mWorld(3, 1) = mPosition.y;
+	mWorld(3, 2) = mPosition.z;
+
+	mWorld = Matrix4x4::Multiply(mQuaternion, mWorld);
+}
+
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
 	mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
@@ -213,8 +224,6 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 			mVehicleSteering = 0;
 		}
 	}
-
-	mBreakingForce = 0.0f;
 
 	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 	{
@@ -265,7 +274,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 			mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
 		}
 	}
-
+	
 	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
 
@@ -334,7 +343,6 @@ void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
 }
 
-
 void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
 {
 	mPosition.x = mWorld(3, 0);
@@ -356,22 +364,15 @@ void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
 
 void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 {
-	/*btScalar m[16];
-	btTransform btMat;
-	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
-	btMat.getOpenGLMatrix(m);*/
+	btScalar m[16];
+	btTransform& btMat = mVehicle->getRigidBody()->getWorldTransform();
+	btMat.getOpenGLMatrix(m);
 
 	mOldWorld = mWorld;
-	UpdateTransform(parent);
-	//mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 	UpdateBoundingBox();
 
 	OnPlayerUpdate(elapsedTime);
-
-	if (mCamera) {
-		OnCameraUpdate(elapsedTime);
-		mCamera->UpdateViewMatrix();
-	}
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -494,6 +495,30 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 		wheel.m_frictionSlip = wheelFriction;
 		wheel.m_rollInfluence = rollInfluence;
 	}
+}
+
+void PhysicsPlayer::CorrectWorldTransform()
+{
+	auto state = mVehicle->getRigidBody();
+	state->setWorldTransform(mCorrection);
+}
+
+void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck)
+{
+	mCorrection.setIdentity();
+	mCorrection.setOrigin(
+		btVector3{ 
+			pck->position[0],
+			pck->position[1],
+			pck->position[2]
+		});
+	mCorrection.setRotation(
+		btQuaternion{ 
+			pck->quaternion[0], 
+			pck->quaternion[1], 
+			pck->quaternion[2],
+			pck->quaternion[3] 
+		});
 }
 
 void PhysicsPlayer::ChangeFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)

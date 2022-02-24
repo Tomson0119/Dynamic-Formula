@@ -81,6 +81,8 @@ public:
 	PhysicsPlayer(UINT netID);
 	virtual ~PhysicsPlayer();
 
+	virtual void UpdateTransform(XMFLOAT4X4* parent) override;
+
 	virtual void OnCameraUpdate(float elapsedTime);
 	virtual void OnPlayerUpdate(float elapsedTime);
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
@@ -95,6 +97,9 @@ public:
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
 	void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
 
+	void CorrectWorldTransform();
+	void SetCorrectionTransform(SC::packet_player_transform* pck);
+
 	void ChangeFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
 	void SetFlag(UPDATE_FLAG flag) { mUpdateFlag = flag; }
 	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
@@ -105,11 +110,12 @@ private:
 	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::shared_ptr<btRaycastVehicle> mVehicle;
 
+	btTransform mCorrection;
+
 	float mBoosterLeft = 0.0f;
 	float mBoosterTime = 5.0f;
 
 	float mEngineForce = 0.f;
-	float mBreakingForce = 0.f;
 
 	float mMaxEngineForce = 8000.f;
 	float mBoosterEngineForce = 300000.f;
