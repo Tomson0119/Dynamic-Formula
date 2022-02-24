@@ -144,8 +144,6 @@ void VehicleRigidBody::AddWheel(const btVector3& bodyExtents, const BtCarShape::
 		wheel.m_frictionSlip = wheelInfo.Friction;
 		wheel.m_rollInfluence = wheelInfo.RollInfluence;
 	}
-	mComponent.FrontFrictionSlip = wheelInfo.Friction;
-	mComponent.BackFrictionSlip = wheelInfo.Friction;
 }
 
 void VehicleRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
@@ -162,45 +160,28 @@ void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 		physicsWorld->removeVehicle(mVehicle.get());
 		mVehicle.reset();
 		mVehicleRayCaster.reset();
-
-		ClearVehicleComponent();
 	}
 }
 
 void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
 {
-	auto motionState = mVehicle->getRigidBody()->getMotionState();
-	if (motionState) motionState->getWorldTransform(transform);
-}
-
-void VehicleRigidBody::ClearVehicleComponent()
-{
-	mComponent.BoosterLeft = 0.0f;
-	mComponent.EngineForce = 0.0f;
-	mComponent.BreakingForce = 0.0f;
-	mComponent.VehicleSteering = 0.0f;
-	mComponent.CurrentSpeed = 0.0f;
-	mComponent.FrontFrictionSlip = 0.0f;
-	mComponent.BackFrictionSlip = 0.0f;
-	mComponent.MaxSpeed = 1000.0f;
+	auto rigid = mVehicle->getRigidBody();
+	if (rigid) transform = rigid->getWorldTransform();
 }
 
 void VehicleRigidBody::UpdateRigidBody()
 {
-	mComponent.CurrentSpeed = mVehicle->getCurrentSpeedKmHour();
+	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrictionSlip;
+	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrictionSlip;
+	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.FrictionSlip;
+	mVehicle->getWheelInfo(3).m_frictionSlip = mComponent.FrictionSlip;
 
-	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrontFrictionSlip;
-	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrontFrictionSlip;
-	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.BackFrictionSlip;
-	mVehicle->getWheelInfo(3).m_frictionSlip = mComponent.BackFrictionSlip;
-
+	mVehicle->applyEngineForce(mComponent.EngineForce, 0);
+	mVehicle->applyEngineForce(mComponent.EngineForce, 1);
 	mVehicle->setSteeringValue(mComponent.VehicleSteering, 0);
 	mVehicle->setSteeringValue(mComponent.VehicleSteering, 1);
 
-	mVehicle->applyEngineForce(mComponent.EngineForce, 2);
-	mVehicle->setBrake(mComponent.BreakingForce, 2);
-	mVehicle->applyEngineForce(mComponent.EngineForce, 3);
-	mVehicle->setBrake(mComponent.BreakingForce, 3);
+	mComponent.CurrentSpeed = mVehicle->getCurrentSpeedKmHour();
 }
 
 

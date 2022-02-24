@@ -50,12 +50,10 @@ public:
 	{
 		float BoosterLeft{};
 		float EngineForce{};
-		float BreakingForce{};
 		float VehicleSteering{};
 		float CurrentSpeed{};
-		float FrontFrictionSlip{};
-		float BackFrictionSlip{};
-		float MaxSpeed{ 1000.0f };
+		float FrictionSlip{};
+		float MaxSpeed{};
 	};
 
 public:
@@ -69,8 +67,6 @@ public:
 	
 	void AddWheel(const btVector3& bodyExtents, const BtCarShape::WheelInfo& wheelInfo);
 	void StoreWorldTransform(btTransform& transform);
-
-	void ClearVehicleComponent();
 
 public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
