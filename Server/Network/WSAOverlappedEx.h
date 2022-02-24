@@ -11,8 +11,7 @@ enum class OP : char
 	SEND,
 	ACCEPT,
 	DISCONNECT,
-	PHYSICS,
-	BROADCAST
+	PHYSICS
 };
 
 struct WSAOVERLAPPEDEX

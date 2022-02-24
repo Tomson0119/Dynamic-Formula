@@ -111,7 +111,9 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	case OP::SEND:
 	{
 		if (bytes != over->WSABuffer.len)
+		{
 			Disconnect(id);
+		}
 		delete over;
 		break;
 	}
@@ -130,13 +132,7 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	}
 	case OP::PHYSICS:
 	{
-		float timeStep = *reinterpret_cast<float*>(over->NetBuffer.BufStartPtr());
-		mLobby.GetInGameServer().RunPhysicsSimulation(id, timeStep);
-		break;
-	}
-	case OP::BROADCAST:
-	{
-		mLobby.GetInGameServer().BroadcastTransforms(id);
+		mLobby.GetInGameServer().RunPhysicsSimulation(id);
 		break;
 	}
 	}
