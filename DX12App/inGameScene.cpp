@@ -295,7 +295,7 @@ void InGameScene::BuildCarObjects(
 	carObj->SetPosition(position);
 
 	if (mMeshList[MeshType::Car].empty())
-		mMeshList[MeshType::Car] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj", true);
+		mMeshList[MeshType::Car] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
 	else
 		carObj->SetMeshes(mMeshList[MeshType::Car]);
 
@@ -307,14 +307,14 @@ void InGameScene::BuildCarObjects(
 		if (i % 2 == 0)
 		{
 			if (mMeshList[MeshType::Wheel_L].empty())
-				mMeshList[MeshType::Wheel_L] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj", false);
+				mMeshList[MeshType::Wheel_L] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
 			else
 				wheelObj->SetMeshes(mMeshList[MeshType::Wheel_L]);
 		}
 		else
 		{
 			if (mMeshList[MeshType::Wheel_R].empty())
-				mMeshList[MeshType::Wheel_R] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj", false);
+				mMeshList[MeshType::Wheel_R] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
 			else
 				wheelObj->SetMeshes(mMeshList[MeshType::Wheel_R]);
 		}

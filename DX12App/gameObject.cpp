@@ -24,8 +24,7 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
-	const std::wstring& path,
-	const bool& makeRigidbody)
+	const std::wstring& path)
 {
 	std::ifstream in_file{ path, std::ios::binary };
 	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
@@ -37,6 +36,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	std::shared_ptr<Mesh> new_mesh;
 
 	std::string info;
+
 	while (std::getline(in_file, info))
 	{
 		std::stringstream ss(info);
@@ -86,8 +86,9 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			new_mesh = std::make_shared<Mesh>(mtl_name);
 			new_mesh->LoadMesh(
-				device, cmdList, in_file, 
-				positions, normals, texcoords, mats[mtl_name], makeRigidbody);
+				device, cmdList, in_file,
+				positions, normals, texcoords, mats[mtl_name]);
+
 			mMeshes.push_back(new_mesh);
 		}
 	}
@@ -223,6 +224,51 @@ void GameObject::LoadTexture(
 	tex->LoadTextureFromDDS(device, cmdList, path);
 	tex->SetDimension(dimension);
 	mTextures.push_back(std::move(tex));
+}
+
+void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics)
+{
+	std::ifstream in_file{ path, std::ios::binary };
+	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+
+	std::vector<XMFLOAT3> positions;
+
+	mBtCollisionShape = new btCompoundShape();
+
+	std::string info;
+
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+		std::string type;
+
+		ss >> type;
+
+		if (type == "v")
+		{
+			XMFLOAT3 pos;
+			ss >> pos.x >> pos.y >> pos.z;
+			pos.z *= -1.0f;
+
+			positions.push_back(pos);
+		}
+		else if (type == "usemtl")
+		{
+			btConvexHullShape* convexHull = new btConvexHullShape();
+
+			for (int i = 0; i < positions.size(); ++i)
+				convexHull->addPoint(btVector3(positions[i].x, positions[i].y, positions[i].z));
+
+			positions.clear();
+
+			btTransform localTransform;
+			localTransform.setIdentity();
+			localTransform.setOrigin(btVector3(0, 0, 0));
+
+			physics->AddShape(convexHull);
+			mBtCollisionShape->addChildShape(localTransform, convexHull);
+		}
+	}
 }
 
 void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)

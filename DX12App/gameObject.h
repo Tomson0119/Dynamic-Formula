@@ -39,8 +39,7 @@ public:
 	virtual std::vector<std::shared_ptr<Mesh>> LoadModel(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
-		const std::wstring& path,
-		const bool& makeRigidbody);
+		const std::wstring& path);
 	void LoadMaterial(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList,
@@ -51,6 +50,7 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		const std::wstring& path,
 		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
+	virtual void LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics);
 
 public:
 	virtual void SetChild(GameObject* child);
@@ -124,7 +124,8 @@ protected:
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
 
-	btRigidBody* mBtRigidBody;
+	btRigidBody* mBtRigidBody = NULL;
+	btCompoundShape* mBtCollisionShape = NULL;
 	std::vector<std::shared_ptr<Mesh>> mMeshes;
 	std::vector<std::unique_ptr<Texture>> mTextures;
 

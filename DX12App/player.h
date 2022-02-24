@@ -120,7 +120,6 @@ private:
 	float mBoosterTime = 5.0f;
 
 	float mEngineForce = 0.f;
-	float mBreakingForce = 0.f;
 
 	float mMaxEngineForce = 8000.f;
 	float mBoosterEngineForce = 300000.f;

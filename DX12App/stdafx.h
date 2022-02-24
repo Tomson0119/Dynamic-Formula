@@ -70,6 +70,7 @@
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
+#include "BulletCollision/GImpact/btGImpactShape.h"
 
 #include "d3dExtension.h"
 #include "dxException.h"
