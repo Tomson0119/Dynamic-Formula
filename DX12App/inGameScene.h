@@ -30,12 +30,12 @@ public:
 		ComPtr<ID3D12Device> device,
 		ID3D12GraphicsCommandList* cmdList,
 		float aspect,
-		std::shared_ptr<BulletWrapper> physics) override;
+		const std::shared_ptr<BulletWrapper>& physics) override;
 	
 	virtual void Update(
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
-		std::shared_ptr<BulletWrapper> physics) override;
+		const std::shared_ptr<BulletWrapper>& physics) override;
 	
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) override;
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
@@ -54,7 +54,7 @@ public:
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0);
 
-	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed);
+	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed);
 
 public:
 	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) override;
@@ -67,7 +67,7 @@ public:
 private:
 	void BuildRootSignature();
 	void BuildComputeRootSignature();
-	void BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics);
+	void BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics);
 	void BuildConstantBuffers();
 	void BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap();
@@ -77,18 +77,21 @@ private:
 		char color,
 		bool isPlayer,
 		ID3D12GraphicsCommandList* cmdList, 
-		std::shared_ptr<BulletWrapper>& dynamicsWorld, UINT netID);
+		const std::shared_ptr<BulletWrapper>& dynamicsWorld, UINT netID);
 
 	void CreateVelocityMapViews();
 	void CreateVelocityMapDescriptorHeaps();
 
-	void AppendMissileObject(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics);
+	void AppendMissileObject(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics);
 	void UpdateMissileObject();
 
 	void UpdatePlayerObjects();
 
 private:
 	std::unique_ptr<Camera> mMainCamera;
+	std::unique_ptr<Camera> mDirectorCamera;
+	Camera* mCurrentCamera;
+
 	POINT mLastMousePos{};
 
 	float mCameraRadius = 30.0f;
@@ -114,8 +117,6 @@ private:
 	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 
-	std::map<MeshType, std::vector<std::shared_ptr<Mesh>>> mMeshList;
-
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
 
 	Player* mPlayer = nullptr;
@@ -140,6 +141,9 @@ private:
 
 	// Key pressed flag
 	std::map<int, bool> mKeyMap;
+
+	// set true when server start game.
+	std::atomic_bool mGameStarted;
 
 	// color map
 	const std::array<XMFLOAT4, MAX_ROOM_CAPACITY> mColorMap = {
