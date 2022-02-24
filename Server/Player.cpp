@@ -6,7 +6,7 @@
 Player::Player()
 	: mPosition{ 0.0f, 0.0f, 0.0f },
 	  Empty{ true }, Color{ -1 }, Ready{ false }, 
-	  ID{ -1 }, Name{ }
+	  ID{ -1 }, Name{ }, LoadDone{ false }
 {
 	mKeyMap[VK_UP]	   = false;
 	mKeyMap[VK_DOWN]   = false;
@@ -40,6 +40,8 @@ void Player::CreateVehicleRigidBody(
 			physicsWorld, shape->GetExtents(),
 			shape->GetWheelInfo());
 
+		ClearVehicleComponent();
+
 		mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 	}
 }
@@ -65,50 +67,73 @@ void Player::UpdateTransformVectors()
 	mQuaternion.setValue(quat.x(), quat.y(), quat.z(), quat.w());
 }
 
+void Player::ClearVehicleComponent()
+{
+	auto& comp = mVehicleRigidBody.GetComponent();
+	comp.BoosterLeft	 = 0.0f;
+	comp.CurrentSpeed	 = 0.0f;
+	comp.EngineForce	 = 0.0f;
+	comp.VehicleSteering = 0.0f;
+	comp.FrictionSlip	 = mConstantPtr->WheelDefaultFriction;
+	comp.MaxSpeed		 = mConstantPtr->DefaultMaxSpeed;
+}
+
 void Player::UpdateVehicleComponent(float elapsed)
 {
-	auto& component = mVehicleRigidBody.GetComponent();
+	UpdateSteering(elapsed);
+	UpdateEngineForce();
+}
 
+void Player::UpdateSteering(float elapsed)
+{
+	auto& component = mVehicleRigidBody.GetComponent();
 	if (component.VehicleSteering > 0)
 	{
 		component.VehicleSteering = std::max(
-			component.VehicleSteering 
-				- mConstantPtr->SteeringIncrement * elapsed, 
+			component.VehicleSteering - mConstantPtr->SteeringIncrement * elapsed,
 			0.0f);
 	}
 	else if (component.VehicleSteering < 0)
 	{
 		component.VehicleSteering = std::min(
-			component.VehicleSteering 
-				+ mConstantPtr->SteeringIncrement * elapsed,
+			component.VehicleSteering + mConstantPtr->SteeringIncrement * elapsed,
 			0.0f);
 	}
-
 	if (mKeyMap[VK_LEFT])
 	{
 		component.VehicleSteering = std::max(
-			component.VehicleSteering 
-				- mConstantPtr->SteeringIncrement * 2 * elapsed,
+			component.VehicleSteering - mConstantPtr->SteeringIncrement * 2 * elapsed,
 			-mConstantPtr->SteeringClamp);
 	}
 	if (mKeyMap[VK_RIGHT])
 	{
 		component.VehicleSteering = std::min(
-			component.VehicleSteering 
-				+ mConstantPtr->SteeringIncrement * 2 * elapsed,
+			component.VehicleSteering + mConstantPtr->SteeringIncrement * 2 * elapsed,
 			mConstantPtr->SteeringClamp);
 	}
+}
+
+void Player::UpdateEngineForce()
+{
+	auto& component = mVehicleRigidBody.GetComponent();
+	component.EngineForce = 0.0f;
 	if (mKeyMap[VK_UP])
 	{
-		component.EngineForce =
-			(component.CurrentSpeed < component.MaxSpeed) ?
-				mConstantPtr->MaxEngineForce : 0.0f;
+		if (component.CurrentSpeed < 0.0f)
+			component.EngineForce = mConstantPtr->MaxEngineForce * 1.5f;
+		else if (component.MaxSpeed > component.CurrentSpeed)
+			component.EngineForce = mConstantPtr->MaxEngineForce;
+		else
+			component.EngineForce = 0.0f;
 	}
 	if (mKeyMap[VK_DOWN])
 	{
-		component.EngineForce =
-			(component.CurrentSpeed > -component.MaxSpeed) ?
-				-mConstantPtr->MaxEngineForce : 0.0f;
+		if (component.CurrentSpeed > 0.0f)
+			component.EngineForce = -mConstantPtr->MaxEngineForce * 1.5f;
+		else if (component.CurrentSpeed > -component.MaxSpeed)
+			component.EngineForce = -mConstantPtr->MaxEngineForce;
+		else
+			component.EngineForce = 0.0f;
 	}
 }
 

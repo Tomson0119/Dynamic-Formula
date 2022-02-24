@@ -24,7 +24,12 @@ public:
 	void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld);
 	void UpdateTransformVectors();
 
+	void ClearVehicleComponent();
+
 	void UpdateVehicleComponent(float elapsed);
+	void UpdateSteering(float elapsed);
+	void UpdateEngineForce();
+
 	void ToggleKeyValue(uint8_t key, bool pressed);
 
 public:
@@ -39,11 +44,14 @@ public:
 	char Color;
 	char Name[MAX_NAME_SIZE];
 
+	std::atomic_bool LoadDone;
+
 private:
 	std::map<int, std::atomic_bool> mKeyMap;
 
 	btVector4 mQuaternion;
 	btVector3 mPosition;
+
 
 	VehicleRigidBody mVehicleRigidBody;
 	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
