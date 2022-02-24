@@ -468,7 +468,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	int width, int depth, 
 	const XMFLOAT3& scale, 
 	HeightMapImage* context,
-	std::shared_ptr<BulletWrapper> physics)
+	const std::shared_ptr<BulletWrapper>& physics)
 	: Mesh(), mWidth(width), mDepth(depth), mScale(scale)
 {
 	const UINT verticesCount = 25;
@@ -525,7 +525,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 
 HeightMapPatchListMesh::~HeightMapPatchListMesh()
 {
-	delete mHeightmapData;
+	delete[] mHeightmapData;
 }
 
 float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) const

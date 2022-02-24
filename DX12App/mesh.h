@@ -180,7 +180,7 @@ public:
 		int width, int depth,
 		const XMFLOAT3& scale,
 		HeightMapImage* context,
-		std::shared_ptr<BulletWrapper> physics);
+		const std::shared_ptr<BulletWrapper>& physics);
 
 	virtual ~HeightMapPatchListMesh();
 
