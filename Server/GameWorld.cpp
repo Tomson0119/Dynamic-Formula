@@ -5,6 +5,8 @@
 #include "Client.h"
 #include "LoginServer.h"
 #include "RigidBody.h"
+#include "Timer.h"
+
 
 GameWorld::GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
@@ -49,16 +51,19 @@ void GameWorld::CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape)
 	mPlayerCount += 1;
 }
 
-void GameWorld::UpdatePhysicsWorld(float timeStep)
+void GameWorld::UpdatePhysicsWorld()
 {
+	mTimer.Tick();
+	float elapsed = mTimer.GetElapsed();
+
 	for (Player* player : GetPlayerList())
 	{
 		if(player->Empty == false)
-			player->UpdatePlayerRigidBody(timeStep, mPhysics.GetDynamicsWorld());
+			player->UpdatePlayerRigidBody(elapsed, mPhysics.GetDynamicsWorld());
 	}
-	mMapRigidBody.UpdateAllRigidBody(timeStep, mPhysics.GetDynamicsWorld());
+	mMapRigidBody.UpdateAllRigidBody(elapsed, mPhysics.GetDynamicsWorld());
 
-	mPhysics.StepSimulation(timeStep);
+	mPhysics.StepSimulation(elapsed);
 	
 	for (Player* player : GetPlayerList())
 	{
@@ -129,30 +134,40 @@ void GameWorld::SendGameStartSuccess()
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&info_pck), info_pck.size);
 }
 
-void GameWorld::BroadcastTransform(int idx, int ignore, bool instSend)
+void GameWorld::SendStartSignal()
 {
-	if (idx < 0 || idx >= mPlayerList.size()) return;
-	if (mPlayerList[idx]->Empty == false)
-	{
-		SC::packet_player_transform pck{};
-		pck.size = sizeof(SC::packet_player_transform);
-		pck.type = SC::PLAYER_TRANSFORM;
-		pck.player_idx = idx;
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[room id: " << mID << "] Sending start signal packet.\n";
+#endif
 
-		const btVector3& pos = mPlayerList[idx]->GetPosition();
-		const btVector4& quat = mPlayerList[idx]->GetQuaternion();
+	SC::packet_start_signal pck{};
+	pck.size = sizeof(SC::packet_start_signal);
+	pck.type = SC::START_SIGNAL;
+	pck.world_id = mID;
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
 
-		pck.position[0] = pos.x();
-		pck.position[1] = pos.y();
-		pck.position[2] = pos.z();
+void GameWorld::PushTransformPacket(int target, int receiver)
+{
+	SC::packet_player_transform pck{};
+	pck.size = sizeof(SC::packet_player_transform);
+	pck.type = SC::PLAYER_TRANSFORM;
+	pck.player_idx = target;
 
-		pck.quaternion[0] = quat.x();
-		pck.quaternion[1] = quat.y();
-		pck.quaternion[2] = quat.z();
-		pck.quaternion[3] = quat.w();
+	const btVector3& pos = mPlayerList[target]->GetPosition();
+	const btVector4& quat = mPlayerList[target]->GetQuaternion();
 
-		SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, ignore, instSend);
-	} 
+	pck.position[0] = pos.x();
+	pck.position[1] = pos.y();
+	pck.position[2] = pos.z();
+
+	pck.quaternion[0] = quat.x();
+	pck.quaternion[1] = quat.y();
+	pck.quaternion[2] = quat.z();
+	pck.quaternion[3] = quat.w();
+
+	int hostID = mPlayerList[receiver]->ID;
+	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
 void GameWorld::BroadcastAllTransform()
@@ -163,28 +178,44 @@ void GameWorld::BroadcastAllTransform()
 
 	for (int i = 0; i < mPlayerList.size(); i++)
 	{
-		if (mPlayerList[i]->Empty == false)
+		if (mPlayerList[i]->Empty) continue;
+		for (int j = 0; j < mPlayerList.size(); j++)
 		{
-			BroadcastTransform(i, -1, false);
+			if(mPlayerList[j]->Empty == false)
+			{
+				PushTransformPacket(i, j);
+			}
 		}
-	}
-	for (int i = 0; i < mPlayerList.size(); i++)
-	{
-		if (mPlayerList[i]->Empty == false)
-		{
-			int id = mPlayerList[i]->ID;
-			gClients[id]->SendMsg();
-		}
+		int id = mPlayerList[i]->ID;
+		gClients[id]->SendMsg();
 	}
 }
 
-WSAOVERLAPPEDEX* GameWorld::GetOverlapped(OP operation, float timeStep)
+bool GameWorld::CheckIfAllLoaded(int idx)
 {
-	if (timeStep > 0.0f)
-		mPhysicsOverlapped.Reset(operation, reinterpret_cast<std::byte*>(&timeStep), sizeof(timeStep));
-	else
-		mPhysicsOverlapped.Reset(operation);
+	if (idx < 0) return false; // logic error
+	mPlayerList[idx]->LoadDone = true;
 
+	for (auto player : mPlayerList)
+	{
+		if (player->Empty == false && player->LoadDone == false)
+			return false;
+	}
+	return true;
+}
+
+void GameWorld::SetActive(bool active)
+{
+	mActive = active;
+	if (active)
+	{
+		mTimer.Start();
+	}
+}
+
+WSAOVERLAPPEDEX* GameWorld::GetPhysicsOverlapped()
+{
+	mPhysicsOverlapped.Reset(OP::PHYSICS);
 	return &mPhysicsOverlapped;
 }
 

@@ -19,7 +19,7 @@ public:
 	void InitPlayerList(const btVector3 startPosition, btScalar offsetX, WaitRoom* room);
 
 	void CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape);
-	void UpdatePhysicsWorld(float timeStep);
+	void UpdatePhysicsWorld();
 	void FlushPhysicsWorld();
 
 	void RemovePlayerRigidBody(int idx);
@@ -27,15 +27,19 @@ public:
 	void HandleKeyInput(int idx, uint8_t key, bool pressed);
 
 	void SendGameStartSuccess();
-	void BroadcastTransform(int idx, int ignore=-1, bool instSend=false);
+	void SendStartSignal();
+
+	void PushTransformPacket(int target, int receiver);
 	void BroadcastAllTransform();
 
+	bool CheckIfAllLoaded(int idx);
+
 public:
-	void SetActive(bool active) { mActive = active; }
+	void SetActive(bool active);
 	bool IsActive() const { return mActive; }
 
 	const PlayerList& GetPlayerList() const { return mPlayerList; }
-	WSAOVERLAPPEDEX* GetOverlapped(OP operation, float timeStep=-1.f);
+	WSAOVERLAPPEDEX* GetPhysicsOverlapped();
 
 private:
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
@@ -50,6 +54,8 @@ private:
 	BPHandler mPhysics;
 	MapRigidBody mMapRigidBody;
 	PlayerList mPlayerList;
+
+	class Timer mTimer;
 
 	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
 };
