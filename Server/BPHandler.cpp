@@ -29,6 +29,11 @@ void BPHandler::Init(float gravity)
 	mBtDynamicsWorld->setGravity(btVector3(0, gravity, 0));
 }
 
+void BPHandler::StepSimulation(float elapsed)
+{
+	mBtDynamicsWorld->stepSimulation(elapsed, 2);
+}
+
 void BPHandler::Flush()
 {
 	if (mBtDynamicsWorld)
