@@ -6,7 +6,7 @@ const short SERVER_PORT = 4000;
 const int MAX_NAME_SIZE = 20;
 const int MAX_PWD_SIZE  = 20;
 
-const int MAX_PLAYER_SIZE = 1000;
+const int MAX_PLAYER_SIZE = 100;
 const int MAX_ROOM_CAPACITY = 8;
 const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
@@ -50,7 +50,8 @@ namespace CS
 	const char REVERT_SCENE = 5;
 	const char SWITCH_MAP   = 6;
 	const char PRESS_READY  = 7;
-	const char KEY_INPUT	= 8;
+	const char LOAD_DONE	= 8;
+	const char KEY_INPUT	= 9;
 
 	struct packet_login : packet_header
 	{
@@ -86,6 +87,11 @@ namespace CS
 		//uint64_t send_time;
 	};
 
+	struct packet_load_done : packet_header
+	{
+		int room_id;
+	};
+
 	struct packet_key_input : packet_header
 	{
 		int room_id;
@@ -116,7 +122,8 @@ namespace SC
 	const char REMOVE_PLAYER	  = 9;
 	const char GAME_START_FAIL	  = 10;
 	const char GAME_START_SUCCESS = 11;
-	const char PLAYER_TRANSFORM	  = 12;
+	const char START_SIGNAL		  = 12;
+	const char PLAYER_TRANSFORM	  = 13;
 
 	struct packet_force_logout : packet_header { };
 
@@ -195,6 +202,11 @@ namespace SC
 		float x[MAX_ROOM_CAPACITY];
 		float y[MAX_ROOM_CAPACITY];
 		float z[MAX_ROOM_CAPACITY];
+	};
+
+	struct packet_start_signal : packet_header
+	{
+		int world_id;
 	};
 
 	struct packet_player_transform : packet_header
