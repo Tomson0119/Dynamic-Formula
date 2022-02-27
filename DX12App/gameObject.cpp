@@ -281,9 +281,6 @@ void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 
 	UpdateTransform(parent);
 	UpdateBoundingBox();
-
-	if (mChild) mChild->Update(elapsedTime, &mWorld);
-	if (mSibling) mSibling->Update(elapsedTime, parent);
 }
 
 void GameObject::Draw(
@@ -388,19 +385,6 @@ void GameObject::UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, 
 {
 	for (int i = 0; i < mMeshes.size(); i++)
 		matCnst->CopyData(offset + i, mMeshes[i]->GetMaterialConstant());
-}
-
-void GameObject::SetChild(GameObject* child)
-{
-	if (child)
-		child->mParent = this;
-	if (mChild)
-	{
-		if (child) child->mSibling = mChild->mSibling;
-		mChild->mSibling = child;
-	}
-	else
-		mChild = child;
 }
 
 void GameObject::SetPosition(float x, float y, float z)

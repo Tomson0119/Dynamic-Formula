@@ -508,9 +508,6 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 		mCamera->SetFovCoefficient(mFovCoefficient);
 		mCamera->SetLens(mCamera->GetAspect());
 	}
-
-	if (mChild) mChild->Update(elapsedTime, &mWorld);
-	if (mSibling) mSibling->Update(elapsedTime, parent);
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)

@@ -53,7 +53,6 @@ public:
 	virtual void LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics);
 
 public:
-	virtual void SetChild(GameObject* child);
 	virtual void SetPosition(float x, float y, float z);
 	virtual void SetPosition(const XMFLOAT3& pos);
 
@@ -133,10 +132,6 @@ protected:
 	D3D12_GPU_DESCRIPTOR_HANDLE mSrvGPUAddress{};
 
 	BoundingOrientedBox mOOBB = { };
-
-	GameObject* mParent = nullptr;
-	GameObject* mChild = nullptr;
-	GameObject* mSibling = nullptr;
 
 	XMFLOAT3 mMoveDirection = {};
 	XMFLOAT3 mRotationAxis = {};
