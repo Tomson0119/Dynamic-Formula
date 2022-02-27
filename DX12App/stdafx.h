@@ -202,7 +202,7 @@ struct ObjectConstants
 {
 	XMFLOAT4X4 World;
 	XMFLOAT4X4 oldWorld;
-	//Material Mat;
+	bool cubemapOn;
 };
 
 struct MaterialConstants

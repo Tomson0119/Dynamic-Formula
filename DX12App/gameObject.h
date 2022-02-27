@@ -146,6 +146,8 @@ protected:
 
 	bool mReflected = false;
 	XMFLOAT4X4 mReflectMatrix = Matrix4x4::Identity4x4();
+
+	bool mCubemapOn = false;
 };
 
 

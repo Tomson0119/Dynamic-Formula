@@ -87,21 +87,6 @@ PixelOut PS(VertexOut pin)
     float4 result = ambient + directLight;
     result.a = diffuse.a;
 
-    float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-    //if (idx == 2)
-    //{
-    //    debugColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
-    //}
-    //else if (idx == 1)
-    //{
-    //    debugColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
-    //}
-    //else if (idx == 0)
-    //{
-    //    debugColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
-    //}
-    result *= debugColor;
-
     pout.f4Color = result;
     pout.f4Direction = float4(pin.newPosWVP.xyz / pin.newPosWVP.z - pin.oldPosWVP.xyz / pin.oldPosWVP.z, 1.0f);
     pout.f4Direction.z = PosV.z;
