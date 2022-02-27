@@ -142,7 +142,6 @@ void InGameScene::BuildComputeRootSignature()
 void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 {
 	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
-	auto cubeMapShader = make_unique<DefaultShader>(L"Shaders\\cubemap_color.hlsl");
 	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
@@ -158,21 +157,16 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
 	mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
 
-	mPipelines[Layer::CubeMap] = make_unique<Pipeline>();
-	mPipelines[Layer::CubeMap]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), cubeMapShader.get());
-
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());
-
 
 	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(mDevice.Get());
 	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get());
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 2048, 2048, 3, mMainCamera.get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
-	mShadowMapRenderer->AppendTargetPipeline(Layer::CubeMap, mPipelines[Layer::CubeMap].get());
-	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
+	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->BuildPipeline(mDevice.Get(), mRootSignature.Get());
 }
 
@@ -331,7 +325,7 @@ void InGameScene::BuildCarObjects(
 	carObj->BuildRigidBody(physics);
 	carObj->BuildDsvRtvView(mDevice.Get());
 	if (isPlayer) mPlayer = carObj.get();
-	mPipelines[Layer::CubeMap]->AppendObject(carObj);
+	mPipelines[Layer::Color]->AppendObject(carObj);
 	mPlayerObjects.push_back(carObj);
 }
 
@@ -606,7 +600,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* ca
 
 	for (const auto& [layer, pso] : mPipelines)
 	{
-		if (layer == Layer::CubeMap)
+		if (layer == Layer::Color)
 			continue;
 
 		if (layer != Layer::Terrain && layer != Layer::SkyBox)
@@ -672,12 +666,12 @@ void InGameScene::UpdatePlayerObjects()
 			delete rigidBody->getMotionState();
 			mDynamicsWorld->removeRigidBody(rigidBody);
 			delete rigidBody;
-			auto& colorObjects = mPipelines[Layer::CubeMap]->GetRenderObjects();
+			auto& colorObjects = mPipelines[Layer::Color]->GetRenderObjects();
 			for (int j = 0; j < colorObjects.size(); ++j)
 			{
 				if (*i == colorObjects[j])
 				{
-					mPipelines[Layer::CubeMap]->DeleteObject(j);
+					mPipelines[Layer::Color]->DeleteObject(j);
 				}
 			}
 
@@ -686,7 +680,7 @@ void InGameScene::UpdatePlayerObjects()
 		else
 			++i;
 	}
-	if (flag) mPipelines[Layer::CubeMap]->ResetPipeline(mDevice.Get());
+	if (flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
 }
 
 

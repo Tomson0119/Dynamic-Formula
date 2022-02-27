@@ -9,7 +9,7 @@ enum class Layer : int
 	Terrain,
 	NormalMapped,
 	Default,
-	CubeMap,
+	Color,
 	Mirror,
 	Reflected,
 	Billboard,
@@ -17,8 +17,7 @@ enum class Layer : int
 	Transparent,
 	ShadowDebug,
 	DynamicCubeMap,
-	MotionBlur,
-	Color
+	MotionBlur
 };
 
 class Pipeline
