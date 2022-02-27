@@ -4,21 +4,21 @@ Texture2D gDiffuseMap : register(t0);
 
 struct VertexIn
 {
-    float3 PosL : POSITION;
-    float3 NormalL : NORMAL;
+    float3 PosL     : POSITION;
+    float3 NormalL  : NORMAL;
     float3 TangentL : TANGENT;
     float2 TexCoord : TEXCOORD;
 };
 
 struct VertexOut
 {
-    float4 PosH : SV_POSITION;
-    float3 PosW : POSITION0;
+    float4 PosH      : SV_POSITION;
+    float3 PosW      : POSITION0;
     float4 oldPosWVP : POSITION1;
     float4 newPosWVP : POSITION2;
-    float3 NormalW : NORMAL;
-    float3 TangentW : TANGENT;
-    float2 TexCoord : TEXCOORD;
+    float3 NormalW   : NORMAL;
+    float3 TangentW  : TANGENT;
+    float2 TexCoord  : TEXCOORD;
 };
 
 struct PixelOut
@@ -84,6 +84,14 @@ PixelOut PS(VertexOut pin)
 
     float4 result = ambient + directLight;
     result.a = gMat.Diffuse.a;
+    
+    float3 Normal = normalize(pin.NormalW);
+    float3 fromEye = normalize(pin.PosW - gCameraPos.xyz);
+    float3 reflected = normalize(reflect(fromEye, pin.NormalW));
+    
+    result = saturate((gCubeMap.Sample(gLinearWrap, reflected) * 0.1f) + (result * 0.9f));
+
+    result *= gCubeMap.Sample(gLinearWrap, reflected);
 
     float4 debugColor = { 1.0f, 1.0f, 1.0f, 1.0f };
     //if (idx == 2)

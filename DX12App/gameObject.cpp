@@ -676,7 +676,7 @@ void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLO
 	auto missileExtents = btVector3(mMeshes[0]->mOOBB.Extents.x, mMeshes[0]->mOOBB.Extents.y, mMeshes[0]->mOOBB.Extents.z);
 	btCollisionShape* missileShape = new btBoxShape(missileExtents);
 
-	btVector3 bulletPosition = 10 * forward;
+	btVector3 bulletPosition = 15 * forward;
 
 	btTransform btMissileTransform;
 	btMissileTransform.setIdentity();

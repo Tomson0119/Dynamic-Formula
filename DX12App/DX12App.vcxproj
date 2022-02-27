@@ -200,11 +200,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\cubemap.hlsl">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Shaders\common.hlsl">
       <FileType>Document</FileType>
     </None>
@@ -234,7 +229,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\color.hlsl">
+    <None Include="Shaders\cubemap_color.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
@@ -250,6 +245,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\motionBlur.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\color.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

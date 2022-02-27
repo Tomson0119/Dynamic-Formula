@@ -214,9 +214,6 @@
     <None Include="Shaders\billboard.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="Shaders\cubemap.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
     <None Include="Shaders\common.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
@@ -232,13 +229,16 @@
     <None Include="Shaders\blur.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="Shaders\color.hlsl">
+    <None Include="Shaders\cubemap_color.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="Shaders\shadowTerrain.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="Shaders\motionBlur.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\color.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>
