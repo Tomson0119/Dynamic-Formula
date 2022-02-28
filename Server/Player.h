@@ -52,7 +52,6 @@ private:
 	btVector4 mQuaternion;
 	btVector3 mPosition;
 
-
 	VehicleRigidBody mVehicleRigidBody;
 	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
 };
