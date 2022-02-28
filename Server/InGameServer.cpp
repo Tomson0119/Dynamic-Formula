@@ -77,8 +77,8 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 		{
 			mLoginPtr->Disconnect(id);
 			break;
-		}		
-		msWorlds[roomID]->HandleKeyInput(idx, pck->key, pck->pressed);
+		}
+		msWorlds[roomID]->HandleKeyInput(idx, pck->key, pck->pressed, pck->send_time);
 		break;
 	}
 	default:

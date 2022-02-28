@@ -8,7 +8,8 @@ Client::Client(int id)
 	  mRecvOverlapped{},
 	  mSendOverlapped{},
 	  mState{ CLIENT_STAT::EMPTY },
-	  RoomID(-1), PlayerIndex(-1)
+	  RoomID(-1), PlayerIndex(-1),
+	  mRecvTime{ 0 }
 {
 	mSocket.Init();
 	mSocket.SetNagleOption(1);
@@ -51,6 +52,12 @@ void Client::RecvMsg()
 {
 	mRecvOverlapped.Reset(OP::RECV);
 	mSocket.Recv(&mRecvOverlapped);
+}
+
+void Client::SetRecvTime(uint64_t sendTime)
+{
+	uint64_t now = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+	mRecvTime = now - sendTime;
 }
 
 bool Client::ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired)
@@ -120,4 +127,15 @@ void Client::SendForceLogout()
 	pck.type = SC::FORCE_LOGOUT;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	SendMsg();
+}
+
+void Client::SendTransferTime(bool instSend)
+{
+	SC::packet_transfer_time pck{};
+	pck.size = sizeof(SC::packet_transfer_time);
+	pck.type = SC::TRANSFER_TIME;
+	pck.recv_time = mRecvTime;
+	pck.send_time = Clock::now().time_since_epoch().count();
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if (instSend) SendMsg();
 }

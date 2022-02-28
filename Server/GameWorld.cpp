@@ -90,7 +90,7 @@ void GameWorld::RemovePlayerRigidBody(int idx)
 		SetActive(false);
 }
 
-void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
+void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed, uint64_t sendTime)
 {
 	switch (static_cast<int>(key))
 	{
@@ -179,14 +179,17 @@ void GameWorld::BroadcastAllTransform()
 	for (int i = 0; i < mPlayerList.size(); i++)
 	{
 		if (mPlayerList[i]->Empty) continue;
+	
+		int id = mPlayerList[i]->ID;
+		gClients[id]->SendTransferTime(false);
+
 		for (int j = 0; j < mPlayerList.size(); j++)
 		{
 			if(mPlayerList[j]->Empty == false)
 			{
 				PushTransformPacket(i, j);
 			}
-		}
-		int id = mPlayerList[i]->ID;
+		}		
 		gClients[id]->SendMsg();
 	}
 }

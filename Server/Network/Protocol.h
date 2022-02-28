@@ -97,6 +97,7 @@ namespace CS
 		int room_id;
 		uint8_t key;
 		bool pressed;
+		uint64_t send_time;
 	};
 }
 
@@ -123,7 +124,8 @@ namespace SC
 	const char GAME_START_FAIL	  = 10;
 	const char GAME_START_SUCCESS = 11;
 	const char START_SIGNAL		  = 12;
-	const char PLAYER_TRANSFORM	  = 13;
+	const char TRANSFER_TIME	  = 13;
+	const char PLAYER_TRANSFORM	  = 14;
 
 	struct packet_force_logout : packet_header { };
 
@@ -207,6 +209,12 @@ namespace SC
 	struct packet_start_signal : packet_header
 	{
 		int world_id;
+	};
+
+	struct packet_transfer_time : packet_header
+	{
+		uint64_t recv_time;
+		uint64_t send_time;
 	};
 
 	struct packet_player_transform : packet_header

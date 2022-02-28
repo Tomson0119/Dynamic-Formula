@@ -24,7 +24,7 @@ public:
 
 	void RemovePlayerRigidBody(int idx);
 
-	void HandleKeyInput(int idx, uint8_t key, bool pressed);
+	void HandleKeyInput(int idx, uint8_t key, bool pressed, uint64_t sendTime);
 
 	void SendGameStartSuccess();
 	void SendStartSignal();

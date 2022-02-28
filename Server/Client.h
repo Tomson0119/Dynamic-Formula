@@ -23,8 +23,10 @@ public:
 	void SendMsg();
 	void RecvMsg();
 
-	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
+public:
+	void SetRecvTime(uint64_t sendTime);
 
+	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
 	void SetState(const CLIENT_STAT& stat) { mState = stat; }
 	CLIENT_STAT GetCurrentState() const { return mState; }
 
@@ -33,8 +35,8 @@ public:
 	void SendRegisterResult(REGI_STAT result, bool instSend=true);
 	void SendAccessRoomAccept(int roomID, bool instSend=true);
 	void SendAccessRoomDeny(ROOM_STAT reason, bool instSend=true);
-
 	void SendForceLogout();
+	void SendTransferTime(bool instSend=true);
 	
 public:
 	int ID;
@@ -46,7 +48,9 @@ private:
 	WSAOVERLAPPEDEX mRecvOverlapped;
 	WSAOVERLAPPEDEX* mSendOverlapped;
 
-	std::atomic<CLIENT_STAT> mState;	
+	std::atomic<CLIENT_STAT> mState;
+
+	uint64_t mRecvTime;
 
 	Socket mSocket;
 };

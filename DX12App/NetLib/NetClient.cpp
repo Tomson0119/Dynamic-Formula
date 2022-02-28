@@ -150,5 +150,10 @@ void NetClient::SendKeyInput(int roomID, int key, bool pressed)
 	pck.key = (uint8_t)key;
 	pck.pressed = pressed;
 	pck.room_id = roomID;
+	pck.send_time = Clock::now().time_since_epoch().count();
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void NetClient::SetRecvTime()
+{
 }
