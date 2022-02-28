@@ -221,6 +221,22 @@ struct GameInfoConstants
 
 ////////////////////////////////////////////////////////////////////////////
 //
+
+namespace BulletVector
+{
+	inline bool Equals(const btVector3& a, const btVector3& b, double epsilon)
+	{
+		btScalar len = abs(a.distance2(b));
+		return (len < (epsilon* epsilon));
+	}
+
+	inline bool Equals(const btQuaternion& a, const btQuaternion& b, double epsilon)
+	{
+		btScalar len = abs(a.length2() - b.length2());
+		return (len < (epsilon * epsilon));
+	}
+}
+
 namespace Math
 {
 	const float PI = 3.1415926535f;

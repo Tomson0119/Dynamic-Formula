@@ -97,11 +97,11 @@ public:
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
 	void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
 
-	void CorrectWorldTransform();
+	void InterpolateTransform(float elapsed);
 	void SetCorrectionTransform(SC::packet_player_transform* pck);
 
-	void ChangeFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
-	void SetFlag(UPDATE_FLAG flag) { mUpdateFlag = flag; }
+	void ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
+	void SetUpdateFlag(UPDATE_FLAG flag) { mUpdateFlag = flag; }
 	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
 
 private:
@@ -110,7 +110,11 @@ private:
 	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::shared_ptr<btRaycastVehicle> mVehicle;
 
-	btTransform mCorrection;
+	btVector3 mCorrectionOrigin{};
+	btQuaternion mCorrectionQuat{};
+	btTransform mCorrection{};
+
+	const float mInterpSpeed = 10.0f;
 
 	float mBoosterLeft = 0.0f;
 	float mBoosterTime = 5.0f;

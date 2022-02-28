@@ -278,6 +278,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
 
+	OutputDebugStringA("Update engineforce\n");
 	for (int i = 0; i < 2; ++i)
 	{
 		mVehicle->applyEngineForce(mEngineForce, i);
@@ -497,15 +498,46 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 	}
 }
 
-void PhysicsPlayer::CorrectWorldTransform()
+void PhysicsPlayer::InterpolateTransform(float elapsed)
 {
-	auto state = mVehicle->getRigidBody();
-	state->setWorldTransform(mCorrection);
+	auto rigid = mVehicle->getRigidBody();
+	auto& transform = rigid->getWorldTransform();
+	
+	auto& currentOrigin = transform.getOrigin();
+	auto& currentQuat = transform.getRotation();
+	
+	double epsilon = 0.01;
+	if (BulletVector::Equals(currentOrigin, mCorrectionOrigin, epsilon))
+	{
+		OutputDebugStringW(L"End update.\n");
+		ChangeUpdateFlag(UPDATE_FLAG::UPDATE, UPDATE_FLAG::NONE);
+		return;
+	}
+
+	btVector3 nextOrigin = currentOrigin.lerp(mCorrectionOrigin, elapsed * mInterpSpeed);
+	btQuaternion nextQuat = currentQuat.slerp(mCorrectionQuat, elapsed * mInterpSpeed);
+
+	btTransform nextTransform = btTransform::getIdentity();
+	nextTransform.setOrigin(nextOrigin);
+	nextTransform.setRotation(nextQuat);
+
+	rigid->setWorldTransform(nextTransform);
 }
 
 void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck)
 {
-	mCorrection.setIdentity();
+	mCorrectionOrigin.setValue(
+		pck->position[0],
+		pck->position[1],
+		pck->position[2]);
+
+	mCorrectionQuat.setValue(
+		pck->quaternion[0],
+		pck->quaternion[1],
+		pck->quaternion[2],
+		pck->quaternion[3]);
+
+	/*mCorrection.setIdentity();
 	mCorrection.setOrigin(
 		btVector3{ 
 			pck->position[0],
@@ -518,10 +550,10 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck)
 			pck->quaternion[1], 
 			pck->quaternion[2],
 			pck->quaternion[3] 
-		});
+		});*/
 }
 
-void PhysicsPlayer::ChangeFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
+void PhysicsPlayer::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 {
 	mUpdateFlag.compare_exchange_strong(expected, desired);
 }

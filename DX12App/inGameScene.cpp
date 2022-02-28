@@ -80,7 +80,9 @@ void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsComman
 	BuildDescriptorHeap();
 
 	// Let server know that loading sequence is done.
+#ifndef STANDALONE
 	mNetPtr->Client()->SendLoadSequenceDone(mNetPtr->GetRoomID());
+#endif
 }
 
 void InGameScene::BuildRootSignature()
@@ -281,7 +283,10 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 #ifdef STANDALONE
-	BuildCarObjects({ 500.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	XMFLOAT3 pos = { 500.0f, 30.0f, 500.0f };
+	BuildCarObjects(pos, 4, true, cmdList, physics, 0);
+	pos.x += 40.0f;
+	BuildCarObjects(pos, 4, false, cmdList, physics, 1, true);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -289,7 +294,11 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-			BuildCarObjects(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
+			XMFLOAT3 pos = info.StartPosition; // test
+			pos.x += 40.0f;
+			BuildCarObjects(pos, info.Color, true, cmdList, physics, i + 1);
+			pos.x -= 40.0f;
+			BuildCarObjects(pos, info.Color, false, cmdList, physics, i, true);
 		}
 		i++;
 	}
@@ -297,15 +306,16 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mCurrentCamera = mMainCamera.get();
 }
 
 void InGameScene::BuildCarObjects(
-	const XMFLOAT3& position,
+	XMFLOAT3& position,
 	char color,
 	bool isPlayer,
 	ID3D12GraphicsCommandList* cmdList, 
 	const std::shared_ptr<BulletWrapper>& physics,
-	UINT netID)
+	UINT netID, bool latencyTest)
 {
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
@@ -341,6 +351,7 @@ void InGameScene::BuildCarObjects(
 	carObj->BuildRigidBody(physics);
 	carObj->BuildDsvRtvView(mDevice.Get());
 	if (isPlayer) mPlayer = carObj.get();
+	if (latencyTest) mFakePlayer = carObj.get();
 	mPipelines[Layer::Color]->AppendObject(carObj);
 	mPlayerObjects[netID] = std::move(carObj);
 }
@@ -387,7 +398,13 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mNetPtr->RemovePlayer(pck);
 
 		auto player = mPlayerObjects[pck->player_idx];
-		if (player)	player->SetFlag(UPDATE_FLAG::REMOVE);
+		if (player)	player->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+		break;
+	}
+	case SC::TRANSFER_TIME:
+	{
+		SC::packet_transfer_time* pck = reinterpret_cast<SC::packet_transfer_time*>(packet);
+		
 		break;
 	}
 	case SC::PLAYER_TRANSFORM:
@@ -397,7 +414,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (player)
 		{
 			player->SetCorrectionTransform(pck);
-			player->ChangeFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
+			player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
 		}
 		break;
 	}
@@ -484,9 +501,11 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 	else
 	{
 		mMissileInterval -= elapsed;
-	}
+	}	
+	//if (mFakePlayer) mFakePlayer->OnPreciseKeyInput(elapsed); // test
+	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 	
-	if(mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
+#ifndef STANDALONE
 	for (auto& [key, val] : mKeyMap)
 	{
 		auto input = GetAsyncKeyState(key);
@@ -503,6 +522,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
 		}
 	}
+#endif
 }
 
 void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
@@ -512,7 +532,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
 	
-	UpdatePlayerObjects();
+	UpdatePlayerObjects(elapsed);
 
 	OnPreciseKeyInput(cmdList, physics, elapsed);
 
@@ -715,7 +735,7 @@ void InGameScene::UpdateMissileObject()
 	if (flag) mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
 }
 
-void InGameScene::UpdatePlayerObjects()
+void InGameScene::UpdatePlayerObjects(float elapsed)
 {
 	bool removed_flag = false;
 	for (auto p = mPlayerObjects.begin(); p != mPlayerObjects.end();p++)
@@ -743,13 +763,13 @@ void InGameScene::UpdatePlayerObjects()
 
 			p->reset();
 			removed_flag = true;
-			player->SetFlag(UPDATE_FLAG::NONE);
+			player->SetUpdateFlag(UPDATE_FLAG::NONE);
 			break;
 		}
 		case UPDATE_FLAG::UPDATE:
 		{
-			player->CorrectWorldTransform();
-			player->SetFlag(UPDATE_FLAG::NONE);
+			player->InterpolateTransform(elapsed);
+			//player->CorrectWorldTransform();
 			break;
 		}
 		case UPDATE_FLAG::NONE:
