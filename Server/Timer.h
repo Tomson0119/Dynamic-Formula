@@ -3,7 +3,6 @@
 
 class Timer
 {
-	using Clock = std::chrono::high_resolution_clock;
 public:
 	Timer();
 	~Timer();
@@ -30,8 +29,6 @@ enum class EVENT_TYPE : char
 class TimerQueue
 {
 public:
-	using Clock = std::chrono::high_resolution_clock;
-
 	struct TimerEvent
 	{
 		Clock::time_point StartTime;
