@@ -68,5 +68,5 @@ btRigidBody* BulletWrapper::CreateRigidBody(btScalar mass, const btTransform& st
 
 void BulletWrapper::StepSimulation(float elapsed)
 {
-	mBtDynamicsWorld->stepSimulation(elapsed);
+	mBtDynamicsWorld->stepSimulation(elapsed, 2);
 }

@@ -278,7 +278,6 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
 
-	OutputDebugStringA("Update engineforce\n");
 	for (int i = 0; i < 2; ++i)
 	{
 		mVehicle->applyEngineForce(mEngineForce, i);
