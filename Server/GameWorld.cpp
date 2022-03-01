@@ -90,7 +90,7 @@ void GameWorld::RemovePlayerRigidBody(int idx)
 		SetActive(false);
 }
 
-void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed, uint64_t sendTime)
+void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 {
 	switch (static_cast<int>(key))
 	{
