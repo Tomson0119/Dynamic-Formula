@@ -51,7 +51,7 @@ public:
 		const std::wstring& path,
 		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
 	virtual void LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics);
-
+	virtual void BuildRigidBody(float mass, std::shared_ptr<BulletWrapper> physics);
 public:
 	virtual void SetPosition(float x, float y, float z);
 	virtual void SetPosition(const XMFLOAT3& pos);

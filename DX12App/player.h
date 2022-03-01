@@ -105,7 +105,7 @@ public:
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
 	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
-	void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
+	virtual void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
 
 	void SetRemoveFlag(bool flag) { mRemoveFlag = flag; }
 	bool GetRemoveFlag() const { return mRemoveFlag; }

@@ -226,6 +226,7 @@ void GameObject::LoadTexture(
 	mTextures.push_back(std::move(tex));
 }
 
+// Scale을 설정한 뒤 호출할 것!
 void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics)
 {
 	std::ifstream in_file{ path, std::ios::binary };
@@ -250,7 +251,7 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<B
 			ss >> pos.x >> pos.y >> pos.z;
 			pos.z *= -1.0f;
 
-			positions.push_back(pos);
+			positions.push_back(Vector3::Multiply(mScaling, pos));
 		}
 		else if (type == "s")
 		{
@@ -268,6 +269,18 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<B
 			physics->AddShape(convexHull);
 			mBtCollisionShape->addChildShape(localTransform, convexHull);
 		}
+	}
+}
+
+//오브젝트 생성 시 마지막으로 호출할 것
+void GameObject::BuildRigidBody(float mass, std::shared_ptr<BulletWrapper> physics)
+{
+	if (mBtCollisionShape)
+	{
+		btTransform btObjectTransform;
+		btObjectTransform.setIdentity();
+		btObjectTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
+		mBtRigidBody = physics->CreateRigidBody(mass, btObjectTransform, mBtCollisionShape);
 	}
 }
 
