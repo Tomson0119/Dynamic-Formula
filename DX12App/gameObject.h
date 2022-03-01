@@ -50,9 +50,9 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		const std::wstring& path,
 		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
+	virtual void LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics);
 
 public:
-	//virtual void SetChild(GameObject* child);
 	virtual void SetPosition(float x, float y, float z);
 	virtual void SetPosition(const XMFLOAT3& pos);
 
@@ -126,7 +126,8 @@ protected:
 	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mQuaternion = Matrix4x4::Identity4x4();
 
-	btRigidBody* mBtRigidBody;
+	btRigidBody* mBtRigidBody = NULL;
+	btCompoundShape* mBtCollisionShape = NULL;
 	std::vector<std::shared_ptr<Mesh>> mMeshes;
 	std::vector<std::unique_ptr<Texture>> mTextures;
 
@@ -134,10 +135,6 @@ protected:
 	D3D12_GPU_DESCRIPTOR_HANDLE mSrvGPUAddress{};
 
 	BoundingOrientedBox mOOBB = { };
-
-	/*GameObject* mParent = nullptr;
-	GameObject* mChild = nullptr;
-	GameObject* mSibling = nullptr;*/
 
 	XMFLOAT3 mMoveDirection = {};
 	XMFLOAT3 mRotationAxis = {};
@@ -147,6 +144,8 @@ protected:
 
 	bool mReflected = false;
 	XMFLOAT4X4 mReflectMatrix = Matrix4x4::Identity4x4();
+
+	bool mCubemapOn = false;
 };
 
 

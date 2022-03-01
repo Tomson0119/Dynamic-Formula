@@ -70,6 +70,7 @@
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
+#include "BulletCollision/GImpact/btGImpactShape.h"
 
 #include "d3dExtension.h"
 #include "dxException.h"
@@ -201,7 +202,7 @@ struct ObjectConstants
 {
 	XMFLOAT4X4 World;
 	XMFLOAT4X4 oldWorld;
-	//Material Mat;
+	bool cubemapOn;
 };
 
 struct MaterialConstants

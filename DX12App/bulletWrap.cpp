@@ -16,6 +16,13 @@ BulletWrapper::BulletWrapper(const float& gravity)
 
 BulletWrapper::~BulletWrapper()
 {
+	auto objArray = mBtDynamicsWorld->getCollisionObjectArray();
+	for (int i = 0; i < mTerrainRigidBodies.size(); ++i)
+	{
+		if(objArray.findLinearSearch2(mTerrainRigidBodies[i]) == -1)
+			mBtDynamicsWorld->addRigidBody(mTerrainRigidBodies[i]);
+	}
+
 	for (int i = mBtDynamicsWorld->getNumConstraints() - 1; i >= 0; i--)
 	{
 		mBtDynamicsWorld->removeConstraint(mBtDynamicsWorld->getConstraint(i));
@@ -25,6 +32,7 @@ BulletWrapper::~BulletWrapper()
 	{
 		btCollisionObject* obj = mBtDynamicsWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
+
 		if (body && body->getMotionState())
 		{
 			delete body->getMotionState();
@@ -69,4 +77,12 @@ btRigidBody* BulletWrapper::CreateRigidBody(btScalar mass, const btTransform& st
 void BulletWrapper::StepSimulation(float elapsed)
 {
 	mBtDynamicsWorld->stepSimulation(elapsed, 2);
+}
+
+void BulletWrapper::SetTerrainRigidBodies(const std::vector<btRigidBody*>& TerrainRigidBodies)
+{
+	for (int i = 0; i < TerrainRigidBodies.size(); ++i)
+	{
+		mTerrainRigidBodies.push_back(TerrainRigidBodies[i]);
+	}
 }

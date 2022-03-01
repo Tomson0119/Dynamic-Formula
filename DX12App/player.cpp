@@ -168,6 +168,8 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID), mUpdateFlag{
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
 
+	mCubemapOn = true;
+
 	for (std::unique_ptr<Camera>& camera : mCameras)
 	{
 		camera = std::make_unique<Camera>();
@@ -379,7 +381,8 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 		btTransform wheelTransform = mVehicle->getWheelTransformWS(i);
 		mWheel[i]->UpdateRigidBody(elapsedTime, wheelTransform);
 	}
-	
+
+
 	mLook = Vector3::Normalize(mLook);
 	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
 	mRight = Vector3::Cross(mUp, mLook);
@@ -404,9 +407,6 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 		mCamera->SetFovCoefficient(mFovCoefficient);
 		mCamera->SetLens(mCamera->GetAspect());
 	}
-
-	/*if (mChild) mChild->Update(elapsedTime, &mWorld);
-	if (mSibling) mSibling->Update(elapsedTime, parent);*/
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
@@ -440,14 +440,13 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 	XMFLOAT3 vehicleExtents = mOOBB.Extents;
 	XMFLOAT3 wheelExtents = mWheel[0]->GetBoundingBox().Extents;
 
-	btCollisionShape* chassisShape = new btBoxShape(btVector3(vehicleExtents.x, vehicleExtents.y, vehicleExtents.z));
-
 	btTransform btCarTransform;
 	btCarTransform.setIdentity();
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
 
-	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, chassisShape);
+	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", physics);
 
+	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, mBtCollisionShape);
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld.get());
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 
