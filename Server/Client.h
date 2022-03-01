@@ -24,7 +24,7 @@ public:
 	void RecvMsg();
 
 public:
-	void SetRecvTime(uint64_t sendTime);
+	void SetTransferTime(uint64_t sendTime);
 
 	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
 	void SetState(const CLIENT_STAT& stat) { mState = stat; }
@@ -50,7 +50,7 @@ private:
 
 	std::atomic<CLIENT_STAT> mState;
 
-	uint64_t mRecvTime;
+	uint64_t mTransferTime;
 
 	Socket mSocket;
 };
