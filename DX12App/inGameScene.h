@@ -73,12 +73,12 @@ private:
 	void BuildDescriptorHeap();
 
 	void BuildCarObjects(
-		XMFLOAT3& position,
+		const XMFLOAT3& position,
 		char color,
 		bool isPlayer,
 		ID3D12GraphicsCommandList* cmdList, 
 		const std::shared_ptr<BulletWrapper>& dynamicsWorld, 
-		UINT netID,	bool latencyTest=false);
+		UINT netID);
 
 	void CreateVelocityMapViews();
 	void CreateVelocityMapDescriptorHeaps();
@@ -119,8 +119,6 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
-
-	Player* mFakePlayer = nullptr; // for latency test
 
 	Player* mPlayer = nullptr;
 	std::vector<std::shared_ptr<MissileObject>> mMissileObjects;

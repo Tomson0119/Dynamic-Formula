@@ -283,10 +283,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
 
 #ifdef STANDALONE
-	XMFLOAT3 pos = { 500.0f, 30.0f, 500.0f };
-	BuildCarObjects(pos, 4, true, cmdList, physics, 0);
-	pos.x += 40.0f;
-	BuildCarObjects(pos, 4, false, cmdList, physics, 1, true);
+	BuildCarObjects({ 500.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -294,11 +291,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-			XMFLOAT3 pos = info.StartPosition; // test
-			pos.x += 40.0f;
-			BuildCarObjects(pos, info.Color, true, cmdList, physics, i + 1);
-			pos.x -= 40.0f;
-			BuildCarObjects(pos, info.Color, false, cmdList, physics, i, true);
+			BuildCarObjects(info.StartPosition, info.Color, true, cmdList, physics, i);
 		}
 		i++;
 	}
@@ -310,12 +303,12 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 }
 
 void InGameScene::BuildCarObjects(
-	XMFLOAT3& position,
+	const XMFLOAT3& position,
 	char color,
 	bool isPlayer,
 	ID3D12GraphicsCommandList* cmdList, 
 	const std::shared_ptr<BulletWrapper>& physics,
-	UINT netID, bool latencyTest)
+	UINT netID)
 {
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
@@ -351,7 +344,6 @@ void InGameScene::BuildCarObjects(
 	carObj->BuildRigidBody(physics);
 	carObj->BuildDsvRtvView(mDevice.Get());
 	if (isPlayer) mPlayer = carObj.get();
-	if (latencyTest) mFakePlayer = carObj.get();
 	mPipelines[Layer::Color]->AppendObject(carObj);
 	mPlayerObjects[netID] = std::move(carObj);
 }
@@ -501,8 +493,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 	else
 	{
 		mMissileInterval -= elapsed;
-	}	
-	//if (mFakePlayer) mFakePlayer->OnPreciseKeyInput(elapsed); // test
+	}
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 	
 #ifndef STANDALONE
