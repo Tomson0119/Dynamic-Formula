@@ -20,6 +20,7 @@ public:
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y);
+	virtual char OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y);
 
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);

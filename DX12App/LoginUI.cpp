@@ -29,6 +29,22 @@ void LoginUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 
 }
+char LoginUI::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+{
+    float dx = static_cast<float>(x);
+    float dy = static_cast<float>(y);
+    if (dx<mvTextBlocks[1].d2dLayoutRect.right && dx>mvTextBlocks[1].d2dLayoutRect.left &&
+        dy< mvTextBlocks[1].d2dLayoutRect.bottom && dy>mvTextBlocks[1].d2dLayoutRect.top)
+    {
+        mvColors[1].a = 0.5f;
+        if (buttonState)
+            return 1;
+    }
+    else mvColors[1].a = 1.0f;
+    
+    UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    return 0;
+}
 void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
@@ -89,8 +105,17 @@ void LoginUI::CreateFontFormat()
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
 
+    DWRITE_TEXT_ALIGNMENT TextAlignments[6];
+    //TextAlignments.resize(TextCnt);
+    TextAlignments[0]=DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_LEADING;
+    TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_LEADING;
+    TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_LEADING;
+    TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_LEADING;
 
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, DWRITE_TEXT_ALIGNMENT_LEADING);
+
+    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, TextAlignments);
 }
 
 void LoginUI::SetTextRect()

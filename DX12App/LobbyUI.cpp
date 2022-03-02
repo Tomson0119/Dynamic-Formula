@@ -66,9 +66,17 @@ void LobbyUI::CreateFontFormat()
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
 
+    DWRITE_TEXT_ALIGNMENT TextAlignments[7];
+    //TextAlignments.resize(TextCnt);
+    TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
-
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, DWRITE_TEXT_ALIGNMENT_LEADING);
+    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, TextAlignments);
 }
 
 void LobbyUI::SetTextRect()

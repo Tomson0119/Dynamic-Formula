@@ -31,7 +31,6 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
-	//std::thread t1(KeyInputFunc);
 }
 void LoginScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 {
@@ -39,8 +38,18 @@ void LoginScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 	float dy = static_cast<float>(y);
 	mpUI.get()->OnProcessMouseMove(btnState, x, y);
 }
+void LoginScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+{
+	if (buttonState) 
+	{
+		//LoginCheck
+		if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	}
+}
 void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
+
 	switch (msg)
 	{
 	case WM_KEYDOWN:
@@ -54,7 +63,9 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			else IsPwd = false;
 			break;
 		case 0x0D:  // carriage return
-			//Login Check
+			mID.assign(Texts[0].begin(), Texts[0].end());
+			mPWD.assign(Texts[1].begin(), Texts[1].end());
+			//Login Check -> mID와 mPWD로 Login Check
 			break;
 		case 0x08:  // backspace
 			if(!Texts[IsPwd].empty())
@@ -63,49 +74,37 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_HOME:
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		}
-		if (
-			(wParam < 57 && wParam>47) ||
-			(wParam > 64 && wParam < 91) ||
-			(wParam > 96 && wParam < 123)||
-			wParam ==32
-			)
+		
+		if (!( (wParam < 57 && wParam>47) || (wParam > 64 && wParam < 91) || (wParam > 96 && wParam < 123) || wParam == 32) || 
+			Texts[IsPwd].size() > 12 )   //숫자 or 문자가 아닌 경우는 제외, 스페이스는 검사함(32번)
+			break;
+		
+		if ((GetKeyState(VK_CAPITAL) & 0x0001) == 0)
 		{
-			if ((GetKeyState(VK_CAPITAL) & 0x0001) == 0)
-				Texts[IsPwd].push_back(tolower(wParam));
-			else 
+			if ((GetAsyncKeyState(VK_SHIFT) & 0x0001) == 1)
 				Texts[IsPwd].push_back(wParam);
-
+			else
+				Texts[IsPwd].push_back(tolower(wParam));
 		}
-		break;
+		else
+		{
+			if ((GetAsyncKeyState(VK_SHIFT) & 0x0001) == 1)
+				Texts[IsPwd].push_back(tolower(wParam));
+			else
+				Texts[IsPwd].push_back(wParam);
+		}
 	}
-	//mpUI.get()->Update(Texts);
-
-	//case WM_CHAR:
-	//	//mpUI.get()->OnProcessKeyInput(msg, wParam, lParam);
-	//	switch (wParam)
-	//	{
-	//	case 0x08:  // backspace 
-	//	case 0x0A:  // linefeed 
-	//	case 0x1B:  // escape 
-	//	case 0x09:  // tab 
-	//	case 0x0D:  // carriage return
-	//		break;
-	//	default:    // displayable character 
-
-	//		//TCHAR ch = (TCHAR)wParam;
-	//		//Texts[0].push_back(ch);
-	//		break;
-	//	}
-	//	break;
 }
 
 void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
-	//Texts[0].clear();
-	//Texts[0].push_back('c');
-	for (auto ch : id)
-		Texts[0].push_back(ch);
-	mpUI.get()->Update(timer.TotalTime(), Texts);
+	std::vector<std::wstring> WTexts;
+
+	WTexts.resize(Texts.size());
+	for(int i=0;i<Texts.size();++i)
+		WTexts[i].assign(Texts[i].begin(), Texts[i].end());
+
+	mpUI.get()->Update(timer.TotalTime(), WTexts);
 }
 
 void LoginScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)

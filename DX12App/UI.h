@@ -27,13 +27,14 @@ public:
     virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
         ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
     virtual void SetVectorSize(UINT nFrame);
-    virtual void CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts, UINT TextCnt,
-        DWRITE_TEXT_ALIGNMENT Alignment = DWRITE_TEXT_ALIGNMENT_CENTER);
+    virtual void CreateFontFormat(float FontSize, const std::vector<std::wstring>& Fonts, UINT TextCnt,
+        DWRITE_TEXT_ALIGNMENT* Alignment);
 
     //ID2D1DeviceContext2* GetDeviceContext() { return mpd2dDeviceContext.Get(); }
     virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) {}
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) {}
+    virtual char OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y) { return 0; }
     void BeginDraw(UINT nFrame);
     void TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks);
     void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt);
