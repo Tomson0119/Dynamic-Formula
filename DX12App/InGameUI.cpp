@@ -63,6 +63,26 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 		StartPrint(mvTextBlocks[4].strText);
 		return;
 	}
+	/*if (mIsBoost || mIsShootingMissile)
+	{
+		mItemOffStart = GTime;
+		mItemOffEnd = GTime + mItemOffTime;
+		mIsBoost = false;
+		mIsShootingMissile = false;
+		mItemOff = true;
+	}
+	if (mItemOff)
+	{
+		if (GTime == mItemOffEnd)
+		{
+			mItemOffStart = 0.0f;
+			mItemOffEnd = 0.0f;
+			mItemOff = false;
+		}
+	}*/
+	
+
+
 	for(int i=0;i<TextCnt;++i)
 		mvTextBlocks[i].strText.clear();
 
@@ -154,6 +174,42 @@ void InGameUI::Update(float GTime, std::vector<std::string> Texts)
 {
 	for (auto text : Texts[0])
 		mvTextBlocks[2].strText.push_back(text);
+}
+void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (msg)
+	{
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		/*case 'Z':
+			if (uItemCnt > 0 && !mItemOff)
+			{
+				uItemCnt -= 1;
+				mIsBoost = true;
+			}
+			break;
+		case 'X':
+			if (uItemCnt > 0 && !mItemOff)
+			{
+				uItemCnt -= 1;
+				mIsShootingMissile = true;
+			}*/
+		}
+	}
+	/*if (!mItemOff)
+	{
+		if ((GetAsyncKeyState('Z') & 0x8000) == 1 && uItemCnt > 0)
+		{
+			uItemCnt -= 1;
+			mIsBoost = true;
+		}
+		if ((GetAsyncKeyState('X') & 0x8000) == 1 && uItemCnt > 0)
+		{
+			uItemCnt -= 1;
+			mIsShootingMissile = true;
+		}
+	}*/
 }
 void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {

@@ -19,7 +19,7 @@ public:
     void StartPrint(const std::wstring& strUIText);
     void SetDraftGage();
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y);
-
+    virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
 private:
     virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
@@ -31,6 +31,15 @@ private:
 
     UINT TextCnt;
     UINT UICnt;
+
+    
+    float mItemOffTime = 3.5f;
+    float mItemOffStart = 0.0f;
+    float mItemOffEnd = 0.0f;
+
+    bool mItemOff = false;
+    bool mIsShootingMissile = false;
+    bool mIsBoost = false;
 
     //ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
 

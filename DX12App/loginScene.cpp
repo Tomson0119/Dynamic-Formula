@@ -68,17 +68,30 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			//Login Check -> mID와 mPWD로 Login Check
 			break;
 		case 0x08:  // backspace
-			if(!Texts[IsPwd].empty())
+			if(!Texts[IsPwd].empty() && (Texts[0].compare("ID") != 0||Texts[1].compare("Password") != 0))
 				Texts[IsPwd].pop_back();
 			break;
 		case VK_HOME:
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+			return;
+		case VK_END:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+			return;
 		}
 		
 		if (!( (wParam < 57 && wParam>47) || (wParam > 64 && wParam < 91) || (wParam > 96 && wParam < 123) || wParam == 32) || 
 			Texts[IsPwd].size() > 12 )   //숫자 or 문자가 아닌 경우는 제외, 스페이스는 검사함(32번)
 			break;
-		
+		if (!IsPwd && Texts[IsPwd] == "ID")
+		{
+			Texts[IsPwd].clear();
+			mpUI->ChangeTextAlignment(IsPwd, 0);
+		}
+		if (IsPwd && Texts[IsPwd] == "Password")
+		{
+			Texts[IsPwd].clear();
+			mpUI->ChangeTextAlignment(IsPwd, 0);
+		}
 		if ((GetKeyState(VK_CAPITAL) & 0x0001) == 0)
 		{
 			if ((GetAsyncKeyState(VK_SHIFT) & 0x0001) == 1)
@@ -98,6 +111,17 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 
 void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
+	if (Texts[0].empty())
+	{
+		Texts[0].assign("ID");
+		mpUI->ChangeTextAlignment(0, 1);
+	}
+	if (Texts[1].empty())
+	{
+		Texts[1].assign("Password");
+		mpUI->ChangeTextAlignment(1, 1);
+	}
+
 	std::vector<std::wstring> WTexts;
 
 	WTexts.resize(Texts.size());

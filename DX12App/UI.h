@@ -43,6 +43,9 @@ public:
     void EndDraw(UINT nFrame);
     void Flush();
 
+    virtual void ChangeTextAlignment(UINT uNum, UINT uState) {}
+
+
     //void SetTextcnt(UINT Cnt) { TextCnt = Cnt; }
     std::pair<float, float> GetFrame() const { return std::make_pair(mfWidth, mfHeight); }
    ID3D11Resource* GetRenderTarget() const { return mvWrappedRenderTargets[0].Get(); }
@@ -53,6 +56,8 @@ private:
     float mfWidth = 0.0f;
 
     //UINT TextCnt = 0;
+
+
 
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;

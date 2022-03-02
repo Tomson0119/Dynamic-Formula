@@ -423,8 +423,10 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case VK_END:
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 			break;
+		
 		}
 	}
+	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
 }
 
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed)
