@@ -230,7 +230,7 @@ PixelOut PS(DsOut din)
     result *= debugColor;
 
     pout.f4Color = result;
-    pout.f4Direction = float4(din.newPosWVP.xyz / din.newPosWVP.z - din.oldPosWVP.xyz / din.oldPosWVP.z, 1.0f);
+    pout.f4Direction = float4((din.newPosWVP.xyz / din.newPosWVP.z) - (din.oldPosWVP.xyz / din.oldPosWVP.z), 1.0f);
     pout.f4Direction.z = PosV.z;
     return pout;
 }
