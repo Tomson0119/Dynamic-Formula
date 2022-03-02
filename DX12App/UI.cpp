@@ -97,7 +97,23 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT b
             mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mvd2dSolidBrush[i+TextCnt].Get());
     
 }
+void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt)
+{
+    if (md2dLinearGradientBrush.Get())
+    {
+        for (int i = 0; i < GradientCnt; ++i)
+        {
+            mpd2dDeviceContext.Get()->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), md2dLinearGradientBrush.Get());
+            mpd2dDeviceContext.Get()->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[0].Get());
+        }
+    }
+    for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt; ++i)
+        mpd2dDeviceContext.Get()->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[0].Get());
 
+    for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt - bias; ++i)
+        mpd2dDeviceContext.Get()->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), md2dLinearGradientBrush.Get());
+
+}
 void UI::EndDraw(UINT nFrame)
 {
     mpd2dDeviceContext.Get()->EndDraw();

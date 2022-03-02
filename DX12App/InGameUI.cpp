@@ -208,7 +208,7 @@ void InGameUI::Draw(UINT nFrame)
         mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)
         }//Item2 UI
     };
-	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 2-uItemCnt, 1);
+	UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt, 2-uItemCnt, 1);
 	UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 	UI::EndDraw(nFrame);

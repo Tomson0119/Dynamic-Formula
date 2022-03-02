@@ -38,6 +38,7 @@ public:
     void BeginDraw(UINT nFrame);
     void TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks);
     void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt);
+    void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt);
     void RoundedRectDraw() {}
     void EndDraw(UINT nFrame);
     void Flush();

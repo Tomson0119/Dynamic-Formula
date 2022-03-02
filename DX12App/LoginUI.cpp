@@ -73,30 +73,30 @@ void LoginUI::Draw(UINT nFrame)
     XMFLOAT4 RectLTRB[] =
     {
         {
-        mvTextBlocks[2].d2dLayoutRect.left,
-        mvTextBlocks[0].d2dLayoutRect.top,
-        mvTextBlocks[5].d2dLayoutRect.right,
-        mvTextBlocks[5].d2dLayoutRect.bottom
+        mfWidth/5,
+        mfHeight /12 * 1,
+        mfWidth / 5 * 4,
+        11 * (mfHeight / 12)
         }
     };
     XMFLOAT4 FillLTRB[] =
     {
         {
-        mvTextBlocks[2].d2dLayoutRect.left,
-        mvTextBlocks[0].d2dLayoutRect.top,
-        mvTextBlocks[5].d2dLayoutRect.right,
-        mvTextBlocks[5].d2dLayoutRect.bottom
+        mfWidth / 5,
+        mfHeight / 12 * 1,
+        mfWidth / 5 * 4,
+        11 * (mfHeight / 12)
         }
     };
     UI::BeginDraw(nFrame);
-    UI::RectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0);
+    UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt+1, 1, 0);
     UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     UI::EndDraw(nFrame);
 }
 
 void LoginUI::CreateFontFormat()
 {
-    float fFontSize = mfHeight / 15.0f;
+    float fFontSize = mfHeight / 25.0f;
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Tahoma");
     Fonts.push_back(L"Vladimir Script ∫∏≈Î");
