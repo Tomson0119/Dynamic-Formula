@@ -29,8 +29,6 @@ public:
 	void SendLoadSequenceDone(int roomID);
 	void SendKeyInput(int roomID, int key, bool pressed);
 
-	void SetRecvTime();
-
 public:
 	SOCKET GetSocket() const { return mSocket.GetSocket(); }
 
@@ -38,6 +36,4 @@ private:
 	Socket mSocket;
 	WSAOVERLAPPEDEX* mSendOverlapped;
 	WSAOVERLAPPEDEX mRecvOverlapped;
-
-	uint64_t mRecvTime;
 };

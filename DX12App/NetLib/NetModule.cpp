@@ -11,7 +11,7 @@
 NetModule::NetModule()
 	: mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
 	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 },
-	  mIsConnected{ false }
+	  mIsConnected{ false }, mLatency{ 0 }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
 		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
@@ -126,7 +126,10 @@ void NetModule::InitPlayersPosition(SC::packet_game_start_success* pck)
 	{
 		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 		{
-			mPlayerList[i].StartPosition = { pck->x[i], pck->y[i], pck->z[i] };
+			auto& pos = mPlayerList[i].StartPosition;
+			pos.x = pck->x[i] / FIXED_FLOAT_LIMIT;
+			pos.y = pck->y[i] / FIXED_FLOAT_LIMIT;
+			pos.z = pck->z[i] / FIXED_FLOAT_LIMIT;
 		}
 	}
 }
@@ -181,6 +184,13 @@ void NetModule::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes)
 			break;
 		}
 	}
+}
+
+void NetModule::SetLatency(uint64_t sendTime)
+{
+	auto duration = Clock::now().time_since_epoch();
+	auto now = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+	mLatency = now - sendTime;
 }
 
 void NetModule::Init()

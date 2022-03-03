@@ -56,7 +56,8 @@ void Client::RecvMsg()
 
 void Client::SetTransferTime(uint64_t sendTime)
 {
-	uint64_t now = Clock::now().time_since_epoch().count();
+	auto duration = Clock::now().time_since_epoch();
+	auto now = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 	mTransferTime = now - sendTime;
 }
 
@@ -135,7 +136,10 @@ void Client::SendTransferTime(bool instSend)
 	pck.size = sizeof(SC::packet_transfer_time);
 	pck.type = SC::TRANSFER_TIME;
 	pck.recv_time = mTransferTime;
-	pck.send_time = Clock::now().time_since_epoch().count();
+	
+	auto duration = Clock::now().time_since_epoch();
+	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if (instSend) SendMsg();
 }

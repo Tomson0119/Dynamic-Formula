@@ -25,6 +25,7 @@ public:
 
 public:
 	void SetTransferTime(uint64_t sendTime);
+	uint64_t GetTransferTime() const { return mTransferTime; }
 
 	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
 	void SetState(const CLIENT_STAT& stat) { mState = stat; }
