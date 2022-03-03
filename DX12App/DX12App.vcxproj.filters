@@ -1,53 +1,49 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="소스 파일">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="헤더 파일">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="리소스 파일">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="헤더 파일\Helper">
-      <UniqueIdentifier>{f71e3892-8abe-4742-853a-7ff3a438acd0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\Helper">
-      <UniqueIdentifier>{bc5629bc-a220-47ff-ae24-559e3d905bc1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="헤더 파일\Network">
-      <UniqueIdentifier>{b912546f-4b37-469b-a8af-e0201b21b024}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\Network">
-      <UniqueIdentifier>{00349845-83d4-44d9-9829-ac2ecb3a63fe}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="헤더 파일\Scene">
-      <UniqueIdentifier>{7491f4d4-75a8-4ead-80a9-31b924d0970c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\Scene">
-      <UniqueIdentifier>{a4771e86-6296-4741-8e76-75ccb9fd7c6e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\UI">
-      <UniqueIdentifier>{973d1080-956f-4cf5-8169-0144d0586f19}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="헤더 파일\UI">
-      <UniqueIdentifier>{444220bb-eb80-43f1-8b7e-06c0ff1435f2}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
+    <ClCompile Include="bulletWrap.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="camera.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="d3dFramework.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader12.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="gameFramework.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="heightMapImage.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameUI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="inGameScene.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="gameTimer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="gameObject.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="heightMapImage.cpp">
+    <ClCompile Include="dxException.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="lobbyScene.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="LobbyUI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="loginScene.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="LoginUI.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
@@ -56,204 +52,146 @@
     <ClCompile Include="mesh.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="pipeline.cpp">
+    <ClCompile Include="NetLib\NetClient.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="NetLib\NetModule.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="player.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="pipeline.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="roomScene.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RoomUI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="scene.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="shader.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="shadowMapRenderer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="texture.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="d3dFramework.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="DDSTextureLoader12.cpp">
-      <Filter>소스 파일\Helper</Filter>
-    </ClCompile>
-    <ClCompile Include="dxException.cpp">
-      <Filter>소스 파일\Helper</Filter>
-    </ClCompile>
-    <ClCompile Include="gameTimer.cpp">
-      <Filter>소스 파일\Helper</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>소스 파일\Helper</Filter>
-    </ClCompile>
-    <ClCompile Include="shadowMapRenderer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="NetLib\NetClient.cpp">
-      <Filter>소스 파일\Network</Filter>
-    </ClCompile>
-    <ClCompile Include="inGameScene.cpp">
-      <Filter>소스 파일\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="lobbyScene.cpp">
-      <Filter>소스 파일\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="loginScene.cpp">
-      <Filter>소스 파일\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="roomScene.cpp">
-      <Filter>소스 파일\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="scene.cpp">
-      <Filter>소스 파일\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="NetLib\NetModule.cpp">
-      <Filter>소스 파일\Network</Filter>
-    </ClCompile>
     <ClCompile Include="UI.cpp">
-      <Filter>소스 파일\UI</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="RoomUI.cpp">
-      <Filter>소스 파일\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="LoginUI.cpp">
-      <Filter>소스 파일\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="LobbyUI.cpp">
-      <Filter>소스 파일\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="InGameUI.cpp">
-      <Filter>소스 파일\UI</Filter>
-    <ClCompile Include="bulletWrap.cpp">
-      <Filter>소스 파일\Helper</Filter>
-    </ClCompile>
-    <ItemGroup>
-    <ClInclude Include="camera.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="gameFramework.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="gameObject.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="heightMapImage.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="mesh.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="pipeline.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="player.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="shader.h">
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="vertex.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="texture.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="vertex.h">
+    <ClInclude Include="UI.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="shader.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="scene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="RoomUI.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="roomScene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="pipeline.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="LoginUI.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="loginScene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="LobbyUI.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="lobbyScene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="InGameUI.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="inGameScene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="heightMapImage.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="gameTimer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="gameObject.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="gameFramework.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="dxException.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader12.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="d3dFramework.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="basewin.h">
+    <ClInclude Include="camera.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="shadowMapRenderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="NetLib\NetClient.h">
+      <Filter>헤더 파일\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="NetLib\NetCommon.h">
+      <Filter>헤더 파일\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="NetLib\NetModule.h">
+      <Filter>헤더 파일\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="bulletWrap.h">
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="constantBuffer.h">
+    <ClInclude Include="basewin.h">
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
     <ClInclude Include="d3dExtension.h">
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="DDSTextureLoader12.h">
-      <Filter>헤더 파일\Helper</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="dxException.h">
-      <Filter>헤더 파일\Helper</Filter>
-    </ClInclude>
-    <ClInclude Include="gameTimer.h">
-      <Filter>헤더 파일\Helper</Filter>
-    </ClInclude>
-    <ClInclude Include="shadowMapRenderer.h">
+    <ClInclude Include="constantBuffer.h">
       <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="NetLib\NetCommon.h">
-      <Filter>헤더 파일\Network</Filter>
-    </ClInclude>
-    <ClInclude Include="NetLib\NetClient.h">
-      <Filter>헤더 파일\Network</Filter>
-    </ClInclude>
-    <ClInclude Include="inGameScene.h">
-      <Filter>헤더 파일\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="loginScene.h">
-      <Filter>헤더 파일\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="lobbyScene.h">
-      <Filter>헤더 파일\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="roomScene.h">
-      <Filter>헤더 파일\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="NetLib\NetModule.h">
-      <Filter>헤더 파일\Network</Filter>
-    </ClInclude>
-
-    <ClInclude Include="UI.h">
-      <Filter>헤더 파일\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="LoginUI.h">
-      <Filter>헤더 파일\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="LobbyUI.h">
-      <Filter>헤더 파일\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="RoomUI.h">
-      <Filter>헤더 파일\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="InGameUI.h">
-      <Filter>헤더 파일\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="scene.h">
-      <Filter>헤더 파일\Scene</Filter>
-    <ClInclude Include="bulletWrap.h">
-      <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\skybox.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\lighting.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\normalmap.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\terrain.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
     <None Include="Shaders\billboard.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\cubemap.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\common.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\default.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\shadow.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\shadowDebug.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="Shaders\blur.hlsl">
@@ -262,11 +200,55 @@
     <None Include="Shaders\color.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="Shaders\shadowTerrain.hlsl">
+    <None Include="Shaders\common.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\cubemap.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\default.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\lighting.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="Shaders\motionBlur.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="Shaders\normalmap.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\shadow.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\shadowDebug.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\shadowTerrain.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\skybox.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\terrain.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{99ac7eb6-e3c4-4cc5-8285-2e92dd0adb6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{41c453c2-8e51-4f44-ba4e-3b9c33b9006f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{14ad8711-ec5e-44a2-8b75-e8e98fe8bd02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Network">
+      <UniqueIdentifier>{c32b806d-b00b-43d8-a743-a74980398ac1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Helper">
+      <UniqueIdentifier>{c19e756f-592c-419c-9a9a-c7d41fc866ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
