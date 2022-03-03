@@ -36,6 +36,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	std::shared_ptr<Mesh> new_mesh;
 
 	std::string info;
+
 	while (std::getline(in_file, info))
 	{
 		std::stringstream ss(info);
@@ -85,8 +86,9 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			new_mesh = std::make_shared<Mesh>(mtl_name);
 			new_mesh->LoadMesh(
-				device, cmdList, in_file, 
+				device, cmdList, in_file,
 				positions, normals, texcoords, mats[mtl_name]);
+
 			mMeshes.push_back(new_mesh);
 		}
 	}
@@ -224,6 +226,64 @@ void GameObject::LoadTexture(
 	mTextures.push_back(std::move(tex));
 }
 
+// Scale을 설정한 뒤 호출할 것!
+void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics)
+{
+	std::ifstream in_file{ path, std::ios::binary };
+	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+
+	std::vector<XMFLOAT3> positions;
+
+	mBtCollisionShape = new btCompoundShape();
+
+	std::string info;
+
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+		std::string type;
+
+		ss >> type;
+
+		if (type == "v")
+		{
+			XMFLOAT3 pos;
+			ss >> pos.x >> pos.y >> pos.z;
+			pos.z *= -1.0f;
+
+			positions.push_back(Vector3::Multiply(mScaling, pos));
+		}
+		else if (type == "s")
+		{
+			btConvexHullShape* convexHull = new btConvexHullShape();
+
+			for (int i = 0; i < positions.size(); ++i)
+				convexHull->addPoint(btVector3(positions[i].x, positions[i].y, positions[i].z));
+
+			positions.clear();
+
+			btTransform localTransform;
+			localTransform.setIdentity();
+			localTransform.setOrigin(btVector3(0, 0, 0));
+
+			physics->AddShape(convexHull);
+			mBtCollisionShape->addChildShape(localTransform, convexHull);
+		}
+	}
+}
+
+//오브젝트 생성 시 마지막으로 호출할 것
+void GameObject::BuildRigidBody(float mass, std::shared_ptr<BulletWrapper> physics)
+{
+	if (mBtCollisionShape)
+	{
+		btTransform btObjectTransform;
+		btObjectTransform.setIdentity();
+		btObjectTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
+		mBtRigidBody = physics->CreateRigidBody(mass, btObjectTransform, mBtCollisionShape);
+	}
+}
+
 void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 {
 	mLook = Vector3::Normalize(mLook);
@@ -234,9 +294,6 @@ void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 
 	UpdateTransform(parent);
 	UpdateBoundingBox();
-
-	if (mChild) mChild->Update(elapsedTime, &mWorld);
-	if (mSibling) mSibling->Update(elapsedTime, parent);
 }
 
 void GameObject::Draw(
@@ -299,6 +356,8 @@ void GameObject::Draw(
 
 void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 {
+	mOldWorld = mWorld;
+
 	mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;	
 	mWorld(0, 2) = mRight.z;
@@ -341,19 +400,6 @@ void GameObject::UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, 
 {
 	for (int i = 0; i < mMeshes.size(); i++)
 		matCnst->CopyData(offset + i, mMeshes[i]->GetMaterialConstant());
-}
-
-void GameObject::SetChild(GameObject* child)
-{
-	if (child)
-		child->mParent = this;
-	if (mChild)
-	{
-		if (child) child->mSibling = mChild->mSibling;
-		mChild->mSibling = child;
-	}
-	else
-		mChild = child;
 }
 
 void GameObject::SetPosition(float x, float y, float z)
@@ -504,6 +550,8 @@ ObjectConstants GameObject::GetObjectConstants()
 		objCnst.World = Matrix4x4::Transpose(mWorld);
 		objCnst.oldWorld = Matrix4x4::Transpose(mOldWorld);
 	}
+	objCnst.cubemapOn = mCubemapOn;
+
 	return objCnst;
 }
 

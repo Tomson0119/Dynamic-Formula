@@ -19,6 +19,10 @@ Mesh::Mesh(const std::string& name)
 	mName = name;
 }
 
+Mesh::~Mesh()
+{
+}
+
 void Mesh::CreateResourceInfo(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList,
@@ -168,6 +172,17 @@ void Mesh::LoadMesh(
 			indices.push_back(k++);
 		}
 	}
+
+	const auto& [min_x, max_x] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) { return (a.x < b.x); });
+	const auto& [min_y, max_y] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) {return (a.y < b.y); });
+	const auto& [min_z, max_z] = std::minmax_element(positions.begin(), positions.end(),
+		[](const XMFLOAT3& a, const XMFLOAT3& b) {return (a.z < b.z); });
+
+	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
+	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
+
 	std::reverse(indices.begin(), indices.end());
 	Mesh::CreateResourceInfo(device, cmdList, sizeof(Vertex), sizeof(UINT),
 		D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
@@ -525,7 +540,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 
 HeightMapPatchListMesh::~HeightMapPatchListMesh()
 {
-	delete mHeightmapData;
+	delete[] mHeightmapData;
 }
 
 float HeightMapPatchListMesh::GetHeight(int x, int z, HeightMapImage* context) const
