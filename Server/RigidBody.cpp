@@ -166,7 +166,9 @@ void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
 {
 	auto rigid = mVehicle->getRigidBody();
-	if (rigid) transform = rigid->getWorldTransform();
+	if(rigid)
+		rigid->getMotionState()->getWorldTransform(transform);
+	//if (rigid) transform = rigid->getWorldTransform();
 }
 
 void VehicleRigidBody::UpdateRigidBody()
