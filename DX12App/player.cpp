@@ -357,10 +357,26 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		{
 			mVehicle->getWheelInfo(i).m_frictionSlip = 4.0f;
 		}
+
+		float Epsilon = 30.0f;
+
+		XMFLOAT3 forward = Vector3::btVectorToXM(mVehicle->getForwardVector());
+		float angle = acos(Vector3::Dot(mLook, forward) / (Vector3::Length(mLook) * Vector3::Length(forward)));
+
+		if (Epsilon < angle && mDriftGauge < 100.0f)
+		{
+			mDriftGauge += Elapsed * 10.0f;
+		}
+		if (mDriftGauge > 100.0f)
+		{
+			mDriftGauge = 0.0f;
+			if(mItemNum < 2)
+				mItemNum++;
+		}
 	}
 	else
 	{
-		for (int i = 0; i < 4; ++i)
+		for (int i = 2; i < 4; ++i)
 		{
 			mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
 		}

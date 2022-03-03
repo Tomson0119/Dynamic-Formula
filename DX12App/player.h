@@ -110,6 +110,9 @@ public:
 	void SetRemoveFlag(bool flag) { mRemoveFlag = flag; }
 	bool GetRemoveFlag() const { return mRemoveFlag; }
 
+	int GetItemNum() { return mItemNum; }
+	float GetDriftGauge() { return mDriftGauge; }
+
 private:
 	WheelObject* mWheel[4];
 	btRaycastVehicle::btVehicleTuning mTuning;
@@ -132,6 +135,9 @@ private:
 	float mMaxSpeed = 1000.0f;
 
 	float mFovCoefficient = 1.0f;
+
+	int mItemNum = 0;
+	float mDriftGauge = 0.0f;
 
 public:
 	virtual void BuildDsvRtvView(ID3D12Device* device) override;

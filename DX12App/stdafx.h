@@ -245,6 +245,11 @@ namespace Math
 
 namespace Vector3
 {
+	inline XMFLOAT3 btVectorToXM(const btVector3& v)
+	{
+		return XMFLOAT3(v.x(), v.y(), v.z());
+	}
+
 	inline XMFLOAT3 Zero()
 	{
 		return XMFLOAT3(0.0f, 0.0f, 0.0f);
