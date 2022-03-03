@@ -31,7 +31,8 @@ public:
 		float aspect,
 		std::shared_ptr<BulletWrapper> physics) override;
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
-
+	virtual void OnProcessMouseDown(HWND hwnd, WPARAM btnState, int x, int y);
+	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y);
 	virtual void Update(
 		ID3D12GraphicsCommandList* cmdList,
 		const GameTimer& timer,

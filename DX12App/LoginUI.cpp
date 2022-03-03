@@ -224,7 +224,7 @@ void LoginUI::SetTextRect()
     mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth / 40 * 25, mfHeight / 64 * 28, mfWidth / 40 * 29, mfHeight / 128 * 71);
     mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth / 200 * 81, mfHeight / 64 * 28,  mfWidth / 200 * 119,  mfHeight / 128 * 63);
     mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth / 200 * 81,  mfHeight / 128 * 64, mfWidth / 200 * 119,  mfHeight / 128 * 71);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth / 5 * 2, mfHeight / 128 * 73, mfWidth / 5 * 3, mfHeight / 128 * 80);
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth / 5 * 2, mfHeight / 128 * 73, mfWidth / 2 , mfHeight / 128 * 80);
     mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth / 160 * 117, mfHeight / 256 * 102,  mfWidth / 160 * 119, mfHeight / 256 * 114);
 }
 

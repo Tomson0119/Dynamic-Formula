@@ -17,6 +17,10 @@ public:
 	void Reset();
 	void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
+	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y);
+	virtual char OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y);
+	bool LobbyUI::MouseCollisionCheck(float x, float y, const TextBlock& TB);
+
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
@@ -25,6 +29,7 @@ private:
 
 	UINT TextCnt;
 	UINT UICnt;
+	std::vector<D2D1::ColorF> mvColors;
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 	std::vector<TextBlock>          mvTextBlocks;

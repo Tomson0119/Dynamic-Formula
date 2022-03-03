@@ -42,6 +42,21 @@ void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 }
+void LobbyScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
+{
+	float dx = static_cast<float>(x);
+	float dy = static_cast<float>(y);
+	mpUI.get()->OnProcessMouseMove(btnState, x, y);
+}
+void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+{
+	if (buttonState)
+	{
+		//LoginCheck
+		/*if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);*/
+	}
+}
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
 	mpUI.get()->Update(timer.TotalTime());
