@@ -143,6 +143,7 @@ protected:
 	XMFLOAT4X4 mReflectMatrix = Matrix4x4::Identity4x4();
 
 	bool mCubemapOn = false;
+	bool mMotionBlurOn = true;
 };
 
 

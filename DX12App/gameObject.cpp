@@ -549,6 +549,7 @@ ObjectConstants GameObject::GetObjectConstants()
 		objCnst.oldWorld = Matrix4x4::Transpose(mOldWorld);
 	}
 	objCnst.cubemapOn = mCubemapOn;
+	objCnst.motionBlurOn = mMotionBlurOn;
 
 	return objCnst;
 }
