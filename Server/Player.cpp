@@ -6,7 +6,8 @@
 Player::Player()
 	: mPosition{ 0.0f, 0.0f, 0.0f },
 	  Empty{ true }, Color{ -1 }, Ready{ false }, 
-	  ID{ -1 }, Name{ }, LoadDone{ false }
+	  ID{ -1 }, Name{ }, LoadDone{ false },
+	  mPrevVelocity{ }, mCurrVelocity{ }, mAcceleration{ }
 {
 	mKeyMap[VK_UP]	   = false;
 	mKeyMap[VK_DOWN]   = false;
@@ -34,7 +35,7 @@ void Player::CreateVehicleRigidBody(
 	{
 		mVehicleRigidBody.CreateRigidBody(
 			mass,
-			shape->GetCollisionShape(), mPosition);
+			shape->GetCompoundShape(), mPosition);
 
 		mVehicleRigidBody.CreateRaycastVehicle(
 			physicsWorld, shape->GetExtents(),
@@ -76,10 +77,13 @@ void Player::ClearVehicleComponent()
 	comp.VehicleSteering = 0.0f;
 	comp.FrictionSlip	 = mConstantPtr->WheelDefaultFriction;
 	comp.MaxSpeed		 = mConstantPtr->DefaultMaxSpeed;
+
+	for (auto& [key, val] : mKeyMap) val = false;
 }
 
 void Player::UpdateVehicleComponent(float elapsed)
 {
+	CalculateAcceleration(elapsed);
 	UpdateSteering(elapsed);
 	UpdateEngineForce();
 }
@@ -135,6 +139,16 @@ void Player::UpdateEngineForce()
 		else
 			component.EngineForce = 0.0f;
 	}
+}
+
+void Player::CalculateAcceleration(float elapsed)
+{
+	const float mps = 0.277778f;
+	mCurrVelocity = mVehicleRigidBody.GetVehicle()->getForwardVector()
+		* mVehicleRigidBody.GetComponent().CurrentSpeed * mps;
+	
+	mAcceleration = (mCurrVelocity - mPrevVelocity) / elapsed;
+	mPrevVelocity = mCurrVelocity;
 }
 
 void Player::ToggleKeyValue(uint8_t key, bool pressed)

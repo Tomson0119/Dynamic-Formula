@@ -30,12 +30,16 @@ public:
 	void UpdateSteering(float elapsed);
 	void UpdateEngineForce();
 
+	void CalculateAcceleration(float elapsed);
+
 	void ToggleKeyValue(uint8_t key, bool pressed);
 
 public:
 	void SetPosition(float x, float y, float z);
 	const btVector3& GetPosition() const { return mPosition; }
 	const btVector4& GetQuaternion() const { return mQuaternion; }
+	const btVector3& GetVelocity() const { return mCurrVelocity; }
+	const btVector3& GetAcceleration() const { return mAcceleration; }
 
 public:
 	std::atomic_bool Empty;
@@ -51,6 +55,10 @@ private:
 
 	btVector4 mQuaternion;
 	btVector3 mPosition;
+
+	btVector3 mPrevVelocity;
+	btVector3 mCurrVelocity;
+	btVector3 mAcceleration;
 
 	VehicleRigidBody mVehicleRigidBody;
 	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
