@@ -27,7 +27,7 @@ private:
     float mfHeight = 0.0f;
 
     UINT uItemCnt = 0;
-    float fDraftGage = 0.0f;    
+    float fDriftGauge = 0.0f;    
 
     UINT TextCnt;
     UINT UICnt;

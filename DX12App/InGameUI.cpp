@@ -161,14 +161,11 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 
    /* for (int i = 0; i < TextCnt; ++i)
         mvTextBlocks[i].strText = TextUI[i];*/
-    if (fDraftGage >= 1.0f)
-    {
-        fDraftGage = 0.0f;
-        if (uItemCnt < 2)
-            uItemCnt += 1;
-    }
+   
+	fDriftGauge = mPlayer->GetDriftGauge();
+	//uItemCnt = mPlayer->GetItemNum();
     //DraftGage Set
-    SetDraftGage();
+    //SetDraftGage();
 }
 void InGameUI::Update(float GTime, std::vector<std::string> Texts)
 {
@@ -226,7 +223,7 @@ void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
 void InGameUI::SetDraftGage()
 {
-    fDraftGage += 0.001f;
+    fDriftGauge += 0.001f;
 }
 
 void InGameUI::Draw(UINT nFrame)
@@ -235,36 +232,46 @@ void InGameUI::Draw(UINT nFrame)
     XMFLOAT4 RectLTRB[] =
     {
         {
-            mfWidth * (3.0f / 16.0f), mfHeight * (5.0f / 6.0f),
+            mfWidth * (3.0f / 16.0f), 
+			mfHeight * (5.0f / 6.0f),
         mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)),
         mfHeight * (8.0f / 9.0f)
-        }, //DraftGage
+        }, //DriftGauge
         {
-            mfWidth * (17.0f / 32.0f), mfHeight * (5.0f / 6.0f),
-        mfWidth * (18.0f / 32.0f), mfHeight * (8.0f / 9.0f)
+            mfWidth * (17.0f / 32.0f), 
+			mfHeight * (5.0f / 6.0f),
+        mfWidth * (18.0f / 32.0f), 
+		mfHeight * (8.0f / 9.0f)
         }, //Item1 UI
         {
-            mfWidth * (19.0f / 32.0f), mfHeight * (5.0f / 6.0f),
-        mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)
+            mfWidth * (19.0f / 32.0f), 
+			mfHeight * (5.0f / 6.0f),
+        mfWidth * (20.0f / 32.0f),
+		mfHeight * (8.0f / 9.0f)
         }//Item2 UI
     };
     XMFLOAT4 FillLTRB[] = 
     { 
         {
-            mfWidth * (3.0f / 16.0f), mfHeight * (5.0f / 6.0f), 
-        mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)) * fDraftGage, 
-        mfHeight * (8.0f / 9.0f)
-        }, //DraftGage
+            mfWidth * (3.0f / 16.0f), 
+			mfHeight * (5.0f / 6.0f), 
+			mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)) * fDriftGauge, 
+			mfHeight * (8.0f / 9.0f)
+        }, //DriftGauge
         {
-            mfWidth * (17.0f / 32.0f), mfHeight * (5.0f / 6.0f), 
-        mfWidth * (18.0f / 32.0f), mfHeight * (8.0f / 9.0f)
+            mfWidth * (17.0f / 32.0f), 
+			mfHeight * (5.0f / 6.0f), 
+			mfWidth * (18.0f / 32.0f), 
+			mfHeight * (8.0f / 9.0f)
         }, //Item1 UI
         {
-            mfWidth * (19.0f / 32.0f), mfHeight * (5.0f / 6.0f), 
-        mfWidth * (20.0f / 32.0f), mfHeight * (8.0f / 9.0f)
+            mfWidth * (19.0f / 32.0f),
+			mfHeight * (5.0f / 6.0f), 
+			mfWidth * (20.0f / 32.0f), 
+			mfHeight * (8.0f / 9.0f)
         }//Item2 UI
     };
-	UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt, 2-uItemCnt, 1);
+	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 2-uItemCnt, 1);
 	UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 	UI::EndDraw(nFrame);

@@ -80,7 +80,7 @@ void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTex
             mvdwTextFormat[i].Get(), mvTextBlocks[i].d2dLayoutRect, mvd2dSolidBrush[i+1].Get());
     }
 }
-void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt)
+void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT noFill, UINT GradientCnt)
 {
     if (md2dLinearGradientBrush.Get())
     {
@@ -93,7 +93,7 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT b
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt; ++i)
             mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
     
-    for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt-bias; ++i)
+    for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt-noFill; ++i)
             mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mvd2dSolidBrush[i+TextCnt].Get());
     
 }

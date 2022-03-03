@@ -43,6 +43,10 @@ public:
 	virtual void OnPlayerUpdate(float elapsedTime) { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
+
+	virtual int GetItemNum() { return 0; }
+	virtual float GetDriftGauge() { return 0.0f; }
+
 protected:
 	XMFLOAT3 mVelocity = {};
 	XMFLOAT3 mGravity = {};
@@ -110,14 +114,14 @@ public:
 	
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 
-	void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
+	//void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
 	virtual void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
 
 	void SetRemoveFlag(bool flag) { mRemoveFlag = flag; }
 	bool GetRemoveFlag() const { return mRemoveFlag; }
 
-	int GetItemNum() { return mItemNum; }
-	float GetDriftGauge() { return mDriftGauge; }
+	virtual int GetItemNum() { return mItemNum; }
+	virtual float GetDriftGauge() { return mDriftGauge; }
 
 private:
 	WheelObject* mWheel[4];
