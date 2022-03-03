@@ -65,7 +65,6 @@ public:
 	void SetRotation(XMFLOAT3& axis, float speed);
 	void SetMovement(XMFLOAT3& dir, float speed);
 
-	void SetReflected(XMFLOAT4& plane);
 	void SetWorld(XMFLOAT4X4 world) { mWorld = world; }
 
 	void SetCBVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mCbvGPUAddress = gpuHandle; }
