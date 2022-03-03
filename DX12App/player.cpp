@@ -3,7 +3,7 @@
 #include "camera.h"
 
 Player::Player()
-	: GameObject()
+	: GameObject(), mUpdateFlag{ UPDATE_FLAG::NONE }
 {
 
 }
@@ -92,6 +92,11 @@ void Player::Pitch(float angle)
 	}
 }
 
+void Player::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
+{
+	mUpdateFlag.compare_exchange_strong(expected, desired);
+}
+
 Camera* Player::ChangeCameraMode(int cameraMode)
 {	
 	if (mCamera && (int)mCamera->GetMode() == cameraMode)
@@ -163,7 +168,7 @@ void Player::Update(float elapsedTime, XMFLOAT4X4* parent)
 }
 
 
-PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID), mUpdateFlag{ UPDATE_FLAG::NONE }
+PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
@@ -367,7 +372,8 @@ void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
 void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 {
 	btScalar m[16];
-	btTransform& btMat = mVehicle->getRigidBody()->getWorldTransform();
+	btTransform btMat{};
+	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
 	btMat.getOpenGLMatrix(m);
 
 	mOldWorld = mWorld;
@@ -496,64 +502,62 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 	}
 }
 
-void PhysicsPlayer::InterpolateTransform(float elapsed)
+void PhysicsPlayer::InterpolateTransform(float elapsed, float latency)
 {
-	auto rigid = mVehicle->getRigidBody();
-	auto& transform = rigid->getWorldTransform();
-	
+	auto motionState = mVehicle->getRigidBody()->getMotionState();
+
+	btTransform transform{};
+	motionState->getWorldTransform(transform);
+
 	auto& currentOrigin = transform.getOrigin();
 	auto& currentQuat = transform.getRotation();
-	
-	double epsilon = 0.01;
-	if (BulletVector::Equals(currentOrigin, mCorrectionOrigin, epsilon))
+
+	//rigid->getAngularVelocity();
+	//rigid->getLinearVelocity();
+
+	btVector3 correctOrigin = mCorrectionOrigin.GetBtVector3();
+	if (mCorrectionOrigin.IsZero() ||
+		BulletVector::Equals(currentOrigin, correctOrigin, 0.1f))
 	{
-		OutputDebugStringW(L"End update.\n");
+		OutputDebugStringA("Stop correction.\n");
+		mCorrectionOrigin.SetZero();
 		ChangeUpdateFlag(UPDATE_FLAG::UPDATE, UPDATE_FLAG::NONE);
 		return;
 	}
 
-	btVector3 nextOrigin = currentOrigin.lerp(mCorrectionOrigin, elapsed * mInterpSpeed);
-	btQuaternion nextQuat = currentQuat.slerp(mCorrectionQuat, elapsed * mInterpSpeed);
+	btVector3 nextOrigin{};
+	nextOrigin.setInterpolate3(currentOrigin, correctOrigin, elapsed * mInterpSpeed);
+	btQuaternion nextQuat = currentQuat.slerp(mCorrectionQuat.GetBtQuaternion(), elapsed * mInterpSpeed);
 
 	btTransform nextTransform = btTransform::getIdentity();
 	nextTransform.setOrigin(nextOrigin);
 	nextTransform.setRotation(nextQuat);
 
-	rigid->setWorldTransform(nextTransform);
+	motionState->setWorldTransform(nextTransform);
 }
 
-void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck)
+void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
 {
-	mCorrectionOrigin.setValue(
+	mCorrectionOrigin.SetValue(
 		pck->position[0],
 		pck->position[1],
 		pck->position[2]);
 
-	mCorrectionQuat.setValue(
+	mCorrectionQuat.SetValue(
 		pck->quaternion[0],
 		pck->quaternion[1],
 		pck->quaternion[2],
 		pck->quaternion[3]);
 
-	/*mCorrection.setIdentity();
-	mCorrection.setOrigin(
-		btVector3{ 
-			pck->position[0],
-			pck->position[1],
-			pck->position[2]
-		});
-	mCorrection.setRotation(
-		btQuaternion{ 
-			pck->quaternion[0], 
-			pck->quaternion[1], 
-			pck->quaternion[2],
-			pck->quaternion[3] 
-		});*/
-}
+	/*btVector3 vel{ 
+		pck->velocity[0] / FIXED_FLOAT_LIMIT, 
+		pck->velocity[1] / FIXED_FLOAT_LIMIT,
+		pck->velocity[2] / FIXED_FLOAT_LIMIT };
+	btVector3 accel{ 
+		pck->acceleration[0] / FIXED_FLOAT_LIMIT,
+		pck->acceleration[1] / FIXED_FLOAT_LIMIT,
+		pck->acceleration[2] / FIXED_FLOAT_LIMIT };*/
 
-void PhysicsPlayer::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
-{
-	mUpdateFlag.compare_exchange_strong(expected, desired);
 }
 
 void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)

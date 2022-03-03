@@ -4,6 +4,13 @@
 #include "camera.h"
 #include "inGameScene.h"
 
+enum class UPDATE_FLAG : char
+{
+	NONE = 0,
+	UPDATE,
+	REMOVE
+};
+
 class Player : public GameObject
 {
 public:
@@ -34,6 +41,10 @@ public:
 	XMFLOAT3 GetVelocity() const { return mVelocity; }
 	XMFLOAT3 GetGravity() const { return mGravity; }
 
+	void ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
+	void SetUpdateFlag(UPDATE_FLAG flag) { mUpdateFlag = flag; }
+	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
+
 public:
 	virtual Camera* ChangeCameraMode(int cameraMode);
 
@@ -42,6 +53,7 @@ public:
 	virtual void OnPlayerUpdate(float elapsedTime) { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
+
 protected:
 	XMFLOAT3 mVelocity = {};
 	XMFLOAT3 mGravity = {};
@@ -54,6 +66,8 @@ protected:
 	void* mCameraUpdateContext = nullptr;
 
 	Camera* mCamera = nullptr;
+
+	std::atomic<UPDATE_FLAG> mUpdateFlag;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -66,13 +80,6 @@ public:
 	virtual ~WheelObject();
 
 	void UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform);
-};
-
-enum class UPDATE_FLAG : char
-{
-	NONE = 0,
-	UPDATE,
-	REMOVE
 };
 
 class PhysicsPlayer : public Player
@@ -97,12 +104,8 @@ public:
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
 	void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
 
-	void InterpolateTransform(float elapsed);
-	void SetCorrectionTransform(SC::packet_player_transform* pck);
-
-	void ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
-	void SetUpdateFlag(UPDATE_FLAG flag) { mUpdateFlag = flag; }
-	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
+	void InterpolateTransform(float elapsed, float latency);
+	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
 
 private:
 	WheelObject* mWheel[4];
@@ -110,11 +113,10 @@ private:
 	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::shared_ptr<btRaycastVehicle> mVehicle;
 
-	btVector3 mCorrectionOrigin{};
-	btQuaternion mCorrectionQuat{};
-	btTransform mCorrection{};
+	AtomicInt3 mCorrectionOrigin{};
+	AtomicInt4 mCorrectionQuat{};
 
-	const float mInterpSpeed = 10.0f;
+	const float mInterpSpeed = 5.0f;
 
 	float mBoosterLeft = 0.0f;
 	float mBoosterTime = 5.0f;
@@ -168,5 +170,4 @@ private:
 	UINT mCurrentRenderTarget = 0;
 
 	UINT mNetID = -1;
-	std::atomic<UPDATE_FLAG> mUpdateFlag;
 };
