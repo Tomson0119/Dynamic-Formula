@@ -180,6 +180,7 @@ void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
 
 		mSunRange[i] = sunRange;
 	}
+	mSunRange[0] *= 1.5f;
 }
 
 XMFLOAT4X4 ShadowMapRenderer::GetShadowTransform(int idx) const
