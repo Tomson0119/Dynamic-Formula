@@ -15,6 +15,7 @@ InGameServer::InGameServer()
 	mVehicleConstants = std::make_shared<VehicleConstant>();
 
 	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin");
+	mBtCarShape->LoadConvexHullShape("Resource\\Car_Body_Convex_Hull.obj");
 	mTerrainShapes[0] = std::make_unique<BtTerrainShape>("Resource\\PlaneMap_Data.bin");
 }
 
@@ -78,7 +79,7 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 			mLoginPtr->Disconnect(id);
 			break;
 		}
-		gClients[id]->SetRecvTime(pck->send_time);
+		gClients[id]->SetTransferTime(pck->send_time);
 		msWorlds[roomID]->HandleKeyInput(idx, pck->key, pck->pressed);
 		break;
 	}
