@@ -1,8 +1,11 @@
 #include "stdafx.h"
-#include "inGameScene.h"
 #include "Mesh.h"
 #include "shadowMapRenderer.h"
+#include "LoginUI.h"
+#include "InGameUI.h"
+#pragma once
 #include "NetLib/NetModule.h"
+#include "inGameScene.h"
 
 using namespace std;
 
@@ -18,6 +21,7 @@ InGameScene::InGameScene(NetModule* netPtr)
 	mKeyMap[VK_LSHIFT] = false;
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
+
 }
 
 InGameScene::~InGameScene()
@@ -28,9 +32,13 @@ void InGameScene::OnResize(float aspect)
 {
 	if(mMainCamera)
 		mMainCamera->SetLens(aspect);
+	mpUI.get()->Reset();
+	//mpUI.get()->OnResize();
 }
 
-void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<BulletWrapper> physics)
+void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height,  float aspect,
+shared_ptr<BulletWrapper> physics)
 {
 	mDevice = device;
 
@@ -63,6 +71,8 @@ void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsComman
 	BuildGameObjects(cmdList, physics);
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
+	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);
 }
 
 void InGameScene::BuildRootSignature()
@@ -411,10 +421,23 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 		mMainCamera->Pitch(0.25f * dy);
 		mMainCamera->RotateY(0.25f * dx);
 	}
+	//mpUI.get()->OnProcessMouseMove(buttonState, x, y);
 }
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	switch (uMsg)
+	{
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case VK_END:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+			break;
+		
+		}
+	}
+	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
 }
 
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed)
@@ -432,8 +455,8 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::sha
 	{
 		mMissileInterval -= elapsed;
 	}
-	
-	if(mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
+	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
+
 #else
 	for (auto& [key, val] : mKeyMap)
 	{
@@ -474,6 +497,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	UpdateMissileObject();
 	
 	UpdateConstants(timer);
+
+	mpUI.get()->Update(timer.TotalTime(), mPlayer);
 	UpdateDynamicsWorld();
 }
 
@@ -566,7 +591,7 @@ void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 	cmdList->SetGraphicsRootConstantBufferView(2, mGameInfoCB->GetGPUVirtualAddress(0));
 }
 
-void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer)
+void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
 	const XMFLOAT4& velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
 	cmdList->ClearRenderTargetView(mVelocityMapRtvHandle, (FLOAT*)&velocity, 0, nullptr);
@@ -584,6 +609,8 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	mPostProcessingPipelines[Layer::MotionBlur]->Dispatch(cmdList);
 
 	mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
+
+	mpUI.get()->Draw(nFrame);
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)

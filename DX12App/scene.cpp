@@ -1,6 +1,8 @@
 #include "stdafx.h"
-#include "scene.h"
+#pragma once
 #include "NetLib/NetModule.h"
+#include "scene.h"
+#include "UI.h"
 
 Scene::Scene(SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr)
 	: mSceneState{ stat },

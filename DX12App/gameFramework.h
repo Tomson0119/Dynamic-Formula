@@ -2,8 +2,8 @@
 
 #include "d3dFramework.h"
 #include "scene.h"
+#include "UI.h"
 
-class UI;
 class Camera;
 
 class GameFramework : public D3DFramework
@@ -24,6 +24,8 @@ private:
 	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	virtual void Update() override;
+	//void UIUpdate();
+
 	virtual void Draw() override;
 
 private:

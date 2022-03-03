@@ -1,13 +1,15 @@
 #include "stdafx.h"
-#include "roomScene.h"
+#include "RoomUI.h"
 #include "NetLib/NetModule.h"
+#pragma once
+#include "roomScene.h"
 
 RoomScene::RoomScene(NetModule* netPtr)
 	: Scene{ SCENE_STAT::ROOM, (XMFLOAT4)Colors::Chocolate, netPtr }
 {
 	OutputDebugStringW(L"Room Scene Entered.\n");
 #ifdef STANDALONE
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #elif defined(START_GAME_INSTANT)
 	mStartTime = std::chrono::high_resolution_clock::now();
 	mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
@@ -15,13 +17,34 @@ RoomScene::RoomScene(NetModule* netPtr)
 #endif
 }
 
-void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, std::shared_ptr<BulletWrapper> physics)
+void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
+	std::shared_ptr<BulletWrapper> physics)
 {
 	mDevice = device;
+	mpUI = std::make_unique<RoomUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);
+	
 }
-
+void RoomScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (msg)
+	{
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case VK_HOME:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+			break;
+		case VK_END:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+			break;
+		}
+	}
+	}
 void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
 {
+	mpUI.get()->Update(timer.TotalTime());
 	// TEST
 #ifdef START_GAME_INSTANT
 	// send start packet again until game actually start
@@ -33,8 +56,9 @@ void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& time
 #endif
 }
 
-void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer)
+void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
+	mpUI.get()->Draw(nFrame);
 }
 
 bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
