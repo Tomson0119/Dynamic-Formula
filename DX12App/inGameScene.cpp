@@ -398,7 +398,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::TRANSFER_TIME:
 	{
 		SC::packet_transfer_time* pck = reinterpret_cast<SC::packet_transfer_time*>(packet);
-		
+		mNetPtr->SetLatency(pck->send_time);
 		break;
 	}
 	case SC::PLAYER_TRANSFORM:
@@ -407,7 +407,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		auto player = mPlayerObjects[pck->player_idx];
 		if (player)
 		{
-			player->SetCorrectionTransform(pck);
+			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
 			player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
 		}
 		break;
@@ -522,12 +522,11 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 {
 	float elapsed = timer.ElapsedTime();
 
+	UpdatePlayerObjects(elapsed);
+	OnPreciseKeyInput(cmdList, physics, elapsed);
+
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
-	
-	UpdatePlayerObjects(elapsed);
-
-	OnPreciseKeyInput(cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
 	mCurrentCamera->Update(elapsed);
@@ -761,13 +760,13 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 		}
 		case UPDATE_FLAG::UPDATE:
 		{
-			player->InterpolateTransform(elapsed);
+			player->InterpolateTransform(elapsed, mNetPtr->GetLatency());
 			//player->CorrectWorldTransform();
 			break;
 		}
 		case UPDATE_FLAG::NONE:
 			continue;
-		}		
+		}
 	}
 	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
-}
+} 
