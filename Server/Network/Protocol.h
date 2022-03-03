@@ -12,6 +12,8 @@ const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
 const int MaxBufferSize = 1024;
 
+const float FIXED_FLOAT_LIMIT = 10000.0f;
+
 enum class LOGIN_STAT : char
 {	
 	INVALID_IDPWD = -2,
@@ -201,9 +203,9 @@ namespace SC
 	struct packet_game_start_success : packet_header
 	{
 		int room_id;
-		float x[MAX_ROOM_CAPACITY];
-		float y[MAX_ROOM_CAPACITY];
-		float z[MAX_ROOM_CAPACITY];
+		int x[MAX_ROOM_CAPACITY];
+		int y[MAX_ROOM_CAPACITY];
+		int z[MAX_ROOM_CAPACITY];
 	};
 
 	struct packet_start_signal : packet_header
@@ -221,8 +223,10 @@ namespace SC
 	{
 		int world_id;
 		int player_idx;
-		float position[3];
-		float quaternion[4];
+		int position[3];
+		int quaternion[4];
+		/*int velocity[3];
+		int acceleration[3];*/
 	};
 }
 #pragma pack(pop)
