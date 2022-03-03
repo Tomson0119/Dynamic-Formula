@@ -126,7 +126,7 @@ Camera* Player::ChangeCameraMode(int cameraMode)
 	return newCamera;
 }
 
-void Player::Update(float elapsedTime, XMFLOAT4X4* parent)
+void Player::Update(float elapsedTime)
 {
 	mVelocity = Vector3::Add(mVelocity, mGravity);
 
@@ -159,7 +159,7 @@ void Player::Update(float elapsedTime, XMFLOAT4X4* parent)
 	velocity = Vector3::ScalarProduct(mVelocity, -deceleration);
 	mVelocity = Vector3::Add(mVelocity, Vector3::Normalize(velocity));
 
-	GameObject::Update(elapsedTime, parent);
+	GameObject::Update(elapsedTime);
 }
 
 
@@ -475,7 +475,7 @@ void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
 	mRight.z = mWorld(0, 2);
 }
 
-void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
+void PhysicsPlayer::Update(float elapsedTime)
 {
 	btScalar m[16];
 	btTransform btMat;
@@ -498,7 +498,6 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 		btTransform wheelTransform = mVehicle->getWheelTransformWS(i);
 		mWheel[i]->UpdateRigidBody(elapsedTime, wheelTransform);
 	}
-
 
 	mLook = Vector3::Normalize(mLook);
 	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));

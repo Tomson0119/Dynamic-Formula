@@ -15,8 +15,8 @@ public:
 
 	void BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
 
-	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
-	virtual void UpdateTransform(XMFLOAT4X4* parent);
+	virtual void Update(float elapsedTime);
+	virtual void UpdateTransform();
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
@@ -224,7 +224,7 @@ class MissileObject : public GameObject
 public:
 	MissileObject();
 	virtual ~MissileObject();
-	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
+	virtual void Update(float elapsedTime);
 	void SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
 private:
