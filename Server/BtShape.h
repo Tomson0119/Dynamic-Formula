@@ -10,13 +10,18 @@ public:
 
 	virtual void LoadShapeData(std::string_view filename) = 0;
 	virtual void BuildCollisionShape() = 0;
+	virtual void LoadConvexHullShape(std::string_view filename);
 
 	const btVector3& GetExtents() const { return mExtents; }
 	btCollisionShape* GetCollisionShape() const { return mCollisionShape.get(); }
+	btCollisionShape* GetCompoundShape() const { return mCompoundShape.get(); }
 
 protected:
 	btVector3 mExtents;
 	std::unique_ptr<btCollisionShape> mCollisionShape;
+
+	std::vector<std::unique_ptr<btConvexHullShape>> mConvexHullShapes;
+	std::unique_ptr<btCompoundShape> mCompoundShape;
 };
 
 class BtBoxShape : public BtShapeBase
