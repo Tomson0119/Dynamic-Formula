@@ -29,7 +29,7 @@ void Timer::Tick()
 
 float Timer::GetElapsed() const
 {
-	return (float)mElapsed.count();
+	return (float)mElapsed.count() / 1000.0f;
 }
 
 
