@@ -359,10 +359,17 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 			mVehicle->getWheelInfo(i).m_frictionSlip = 4.0f;
 		}
 
-		float Epsilon = 30.0f;
+		float Epsilon = 60.0f / 180.0f;
 
-		XMFLOAT3 forward = Vector3::btVectorToXM(mVehicle->getForwardVector());
-		float angle = acos(Vector3::Dot(mLook, forward) / (Vector3::Length(mLook) * Vector3::Length(forward)));
+		auto camLook = mCamera->GetLook();
+		camLook.y = 0.0f;
+		camLook = Vector3::Normalize(camLook);
+
+		auto playerLook = mLook;
+		playerLook.y = 0.0f;
+		playerLook = Vector3::Normalize(playerLook);
+
+		float angle = acos(Vector3::Dot(camLook, playerLook) / (Vector3::Length(camLook) * Vector3::Length(playerLook)));
 
 		if (Epsilon < angle && mDriftGauge < 100.0f)
 		{
