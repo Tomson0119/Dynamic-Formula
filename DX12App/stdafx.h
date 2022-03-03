@@ -71,6 +71,7 @@
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
+#include "BulletCollision/GImpact/btGImpactShape.h"
 
 #include "d3dExtension.h"
 #include "dxException.h"
@@ -202,7 +203,7 @@ struct ObjectConstants
 {
 	XMFLOAT4X4 World;
 	XMFLOAT4X4 oldWorld;
-	//Material Mat;
+	bool cubemapOn;
 };
 
 struct MaterialConstants
@@ -245,6 +246,11 @@ namespace Math
 
 namespace Vector3
 {
+	inline XMFLOAT3 btVectorToXM(const btVector3& v)
+	{
+		return XMFLOAT3(v.x(), v.y(), v.z());
+	}
+
 	inline XMFLOAT3 Zero()
 	{
 		return XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -267,6 +273,11 @@ namespace Vector3
 		XMFLOAT3 ret;
 		XMStoreFloat3(&ret, scalar * XMLoadFloat3(&v));
 		return ret;
+	}
+
+	inline XMFLOAT3 Multiply(const XMFLOAT3& v1, const XMFLOAT3& v2)
+	{
+		return XMFLOAT3(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z);
 	}
 
 	inline XMFLOAT3 Divide(float scalar, XMFLOAT3& v)

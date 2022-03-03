@@ -111,9 +111,13 @@ public:
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 
 	void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
+	virtual void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
 
 	void SetRemoveFlag(bool flag) { mRemoveFlag = flag; }
 	bool GetRemoveFlag() const { return mRemoveFlag; }
+
+	int GetItemNum() { return mItemNum; }
+	float GetDriftGauge() { return mDriftGauge; }
 
 private:
 	WheelObject* mWheel[4];
@@ -125,7 +129,6 @@ private:
 	float mBoosterTime = 5.0f;
 
 	float mEngineForce = 0.f;
-	float mBreakingForce = 0.f;
 
 	float mMaxEngineForce = 8000.f;
 	float mBoosterEngineForce = 300000.f;
@@ -138,6 +141,9 @@ private:
 	float mMaxSpeed = 1000.0f;
 
 	float mFovCoefficient = 1.0f;
+
+	int mItemNum = 0;
+	float mDriftGauge = 0.0f;
 
 public:
 	virtual void BuildDsvRtvView(ID3D12Device* device) override;

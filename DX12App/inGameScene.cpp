@@ -254,6 +254,15 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	mMeshList[MeshType::Missile].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5, 5, 5));
 	mMeshList[MeshType::Grid].push_back(make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f));
 
+	auto lamp = make_shared<GameObject>();
+	mMeshList[MeshType::StreetLamp] = lamp->LoadModel(mDevice.Get(), cmdList, L"Models\\street_lamp1.obj");
+	lamp->LoadTexture(mDevice.Get(), cmdList, L"Resources\\_MG_1470.dds");
+	lamp->Scale(50.0f, 50.0f, 50.0f);
+	lamp->LoadConvexHullShape(L"Models\\street_lamp1_Convex_Hull.obj", physics);
+	lamp->SetPosition(500.0f, lamp->GetBoundingBox().Extents.y * 20, 540.0f);
+	lamp->BuildRigidBody(0.0f, physics);
+	mPipelines[Layer::Default]->AppendObject(lamp);
+
 	auto grid = make_shared<GameObject>();
 	grid->SetMeshes(mMeshList[MeshType::Grid]);
 	grid->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
@@ -271,6 +280,8 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
 	mPipelines[Layer::Terrain]->AppendObject(terrain);
+
+	physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 
 #ifdef STANDALONE
 	BuildCarObjects({ 500.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
