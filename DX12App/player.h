@@ -38,7 +38,7 @@ public:
 	virtual Camera* ChangeCameraMode(int cameraMode);
 
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex) {};
-	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
+	virtual void Update(float elapsedTime) override;
 	virtual void OnPlayerUpdate(float elapsedTime) { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
@@ -94,9 +94,9 @@ public:
 
 	virtual void OnCameraUpdate(float elapsedTime);
 	virtual void OnPlayerUpdate(float elapsedTime);
-	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
+	virtual void Update(float elapsedTime) override;
 	virtual void OnPreciseKeyInput(float Elapsed);
-	virtual void UpdateTransform(XMFLOAT4X4* parent) { }
+	virtual void UpdateTransform() { }
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }

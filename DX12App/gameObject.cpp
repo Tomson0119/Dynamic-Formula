@@ -284,7 +284,7 @@ void GameObject::BuildRigidBody(float mass, std::shared_ptr<BulletWrapper> physi
 	}
 }
 
-void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
+void GameObject::Update(float elapsedTime)
 {
 	mLook = Vector3::Normalize(mLook);
 	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
@@ -292,7 +292,7 @@ void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 
 	Animate(elapsedTime);
 
-	UpdateTransform(parent);
+	UpdateTransform();
 	UpdateBoundingBox();
 }
 
@@ -354,7 +354,7 @@ void GameObject::Draw(
 	}
 }
 
-void GameObject::UpdateTransform(XMFLOAT4X4* parent)
+void GameObject::UpdateTransform()
 {
 	mOldWorld = mWorld;
 
@@ -373,8 +373,6 @@ void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 	mWorld(3, 0) = mPosition.x;
 	mWorld(3, 1) = mPosition.y;
 	mWorld(3, 2) = mPosition.z;
-
-	mWorld = (parent) ? Matrix4x4::Multiply(mWorld, *parent) : mWorld;
 }
 
 void GameObject::UpdateBoundingBox()
@@ -424,7 +422,7 @@ void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
 void GameObject::SetLook(XMFLOAT3& look)
 {
 	mLook = look;
-	GameObject::Update(1.0f, nullptr);
+	GameObject::Update(1.0f);
 }
 
 void GameObject::SetRotation(XMFLOAT3& axis, float speed)
@@ -551,6 +549,7 @@ ObjectConstants GameObject::GetObjectConstants()
 		objCnst.oldWorld = Matrix4x4::Transpose(mOldWorld);
 	}
 	objCnst.cubemapOn = mCubemapOn;
+	objCnst.motionBlurOn = mMotionBlurOn;
 
 	return objCnst;
 }
@@ -677,7 +676,7 @@ void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLO
 	auto missileExtents = btVector3(mMeshes[0]->mOOBB.Extents.x, mMeshes[0]->mOOBB.Extents.y, mMeshes[0]->mOOBB.Extents.z);
 	btCollisionShape* missileShape = new btBoxShape(missileExtents);
 
-	btVector3 bulletPosition = 10 * forward;
+	btVector3 bulletPosition = 15 * forward;
 
 	btTransform btMissileTransform;
 	btMissileTransform.setIdentity();
@@ -689,7 +688,7 @@ void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLO
 	mBtRigidBody->setLinearVelocity(forward * 1000.0f);
 }
 
-void MissileObject::Update(float elapsedTime, XMFLOAT4X4* parent)
+void MissileObject::Update(float elapsedTime)
 {
 	btScalar m[16];
 	btTransform btMat;

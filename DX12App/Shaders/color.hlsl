@@ -97,8 +97,17 @@ PixelOut PS(VertexOut pin)
     }
 
     pout.f4Color = result;
-    pout.f4Direction = float4((pin.newPosWVP.xyz / pin.newPosWVP.z) - (pin.oldPosWVP.xyz / pin.oldPosWVP.z), 1.0f);
-    pout.f4Direction.z = PosV.z;
+
+    if (gMotionBlurOn)
+    {
+        pout.f4Direction = float4((pin.newPosWVP.xyz / pin.newPosWVP.z) - (pin.oldPosWVP.xyz / pin.oldPosWVP.z), 1.0f);
+        pout.f4Direction.z = PosV.z;
+    }
+    else
+    {
+        pout.f4Direction = float4(0.0f, 0.0f, 0.0f, 0.0f);
+        pout.f4Direction.z = PosV.z;
+    }
 
     return pout;
 }

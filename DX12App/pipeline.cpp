@@ -276,7 +276,7 @@ void Pipeline::SetStencilOp(
 void Pipeline::Update(const float elapsed, Camera* camera)
 {
 	for (const auto& obj : mRenderObjects)
-		obj->Update(elapsed, nullptr);
+		obj->Update(elapsed);
 }
 
 void Pipeline::UpdateConstants()
