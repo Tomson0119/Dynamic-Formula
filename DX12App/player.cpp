@@ -371,11 +371,11 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 		float angle = acos(Vector3::Dot(camLook, playerLook) / (Vector3::Length(camLook) * Vector3::Length(playerLook)));
 
-		if (Epsilon < angle && mDriftGauge < 100.0f)
+		if (Epsilon < angle && mDriftGauge < 1.0f)
 		{
-			mDriftGauge += Elapsed * 10.0f;
+			mDriftGauge += Elapsed / 3.0f;
 		}
-		if (mDriftGauge > 100.0f)
+		if (mDriftGauge > 1.0f)
 		{
 			mDriftGauge = 0.0f;
 			if(mItemNum < 2)
