@@ -76,7 +76,9 @@ btRigidBody* BulletWrapper::CreateRigidBody(btScalar mass, const btTransform& st
 
 void BulletWrapper::StepSimulation(float elapsed)
 {
-	mBtDynamicsWorld->stepSimulation(elapsed, 2);
+	/*btScalar timeStep = mPhysicsTimer.getTimeSeconds();
+	mPhysicsTimer.reset();*/
+	mBtDynamicsWorld->stepSimulation(elapsed, 10);
 }
 
 void BulletWrapper::SetTerrainRigidBodies(const std::vector<btRigidBody*>& TerrainRigidBodies)

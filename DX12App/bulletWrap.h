@@ -30,4 +30,6 @@ private:
 	btAlignedObjectArray<btRigidBody*> mTerrainRigidBodies;
 
 	btAlignedObjectArray<btCollisionShape*> mCollisionShapes;
+
+	/*btClock mPhysicsTimer;*/
 };

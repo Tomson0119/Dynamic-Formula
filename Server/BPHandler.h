@@ -22,4 +22,6 @@ private:
 	std::unique_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
 
 	std::unique_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
+
+	/*btClock mPhysicsTimer;*/
 };
