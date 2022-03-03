@@ -127,9 +127,9 @@ void GameWorld::SendGameStartSuccess()
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
 		const btVector3 pos = mPlayerList[i]->GetPosition();
-		info_pck.x[i] = pos.x();
-		info_pck.y[i] = pos.y();
-		info_pck.z[i] = pos.z();
+		info_pck.x[i] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
+		info_pck.y[i] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
+		info_pck.z[i] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
 	}
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&info_pck), info_pck.size);
 }
@@ -156,15 +156,25 @@ void GameWorld::PushTransformPacket(int target, int receiver)
 
 	const btVector3& pos = mPlayerList[target]->GetPosition();
 	const btVector4& quat = mPlayerList[target]->GetQuaternion();
+	/*const btVector3& vel = mPlayerList[target]->GetVelocity();
+	const btVector3& accel = mPlayerList[target]->GetAcceleration();*/
 
-	pck.position[0] = pos.x();
-	pck.position[1] = pos.y();
-	pck.position[2] = pos.z();
+	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
+	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
+	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
 
-	pck.quaternion[0] = quat.x();
-	pck.quaternion[1] = quat.y();
-	pck.quaternion[2] = quat.z();
-	pck.quaternion[3] = quat.w();
+	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
+
+	/*pck.velocity[0] = (int)(vel.x() * FIXED_FLOAT_LIMIT);
+	pck.velocity[1] = (int)(vel.y() * FIXED_FLOAT_LIMIT);
+	pck.velocity[2] = (int)(vel.z() * FIXED_FLOAT_LIMIT);
+	
+	pck.acceleration[0] = (int)(accel.x() * FIXED_FLOAT_LIMIT);
+	pck.acceleration[1] = (int)(accel.y() * FIXED_FLOAT_LIMIT);
+	pck.acceleration[2] = (int)(accel.z() * FIXED_FLOAT_LIMIT);*/
 
 	int hostID = mPlayerList[receiver]->ID;
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
