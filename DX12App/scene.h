@@ -4,7 +4,7 @@
 #include "mesh.h"
 #include "gameObject.h"
 
-//#define STANDALONE
+#define STANDALONE
 #define START_GAME_INSTANT
 
 class NetModule;
