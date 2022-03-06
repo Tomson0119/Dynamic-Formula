@@ -188,7 +188,7 @@ PhysicsPlayer::~PhysicsPlayer()
 
 }
 
-void PhysicsPlayer::UpdateTransform(XMFLOAT4X4* parent)
+void PhysicsPlayer::UpdateTransform()
 {
 	mWorld = Matrix4x4::Identity4x4();
 

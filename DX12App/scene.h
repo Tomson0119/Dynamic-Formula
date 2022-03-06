@@ -65,6 +65,7 @@ public:
 
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
 	UI* GetUI() { return mpUI.get(); }
+
 public:
 	SCENE_CHANGE_FLAG GetSceneChangeFlag() const { return mSceneChangeFlag; }
 	void SetSceneChangeFlag(SCENE_CHANGE_FLAG flag) { mSceneChangeFlag = flag; }
