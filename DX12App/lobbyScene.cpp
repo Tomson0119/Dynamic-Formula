@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "lobbyScene.h"
 #include "NetLib/NetModule.h"
+#include "LobbyUI.h"
 
 LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
 	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::Bisque, netPtr }
@@ -15,18 +16,57 @@ LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
 #endif
 }
 
-void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, const std::shared_ptr<BulletWrapper>& physics)
+void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
+	const std::shared_ptr<BulletWrapper>& physics)
 {
 	mDevice = device;
+	mpUI = std::make_unique<LobbyUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);
+}
+
+void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (msg)
+	{
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case VK_HOME:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+			break;
+		case VK_END:
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+			break;
+		}
+	}
+}
+
+void LobbyScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
+{
+	float dx = static_cast<float>(x);
+	float dy = static_cast<float>(y);
+	mpUI.get()->OnProcessMouseMove(btnState, x, y);
+}
+
+void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+{
+	if (buttonState)
+	{
+		//LoginCheck
+		/*if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);*/
+	}
 }
 
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
-
+	mpUI.get()->Update(timer.TotalTime());
 }
 
-void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer)
+void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
+	mpUI.get()->Draw(nFrame);
 }
 
 bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)

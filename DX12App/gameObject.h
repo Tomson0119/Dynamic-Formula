@@ -15,8 +15,8 @@ public:
 
 	void BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
 
-	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
-	virtual void UpdateTransform(XMFLOAT4X4* parent);
+	virtual void Update(float elapsedTime);
+	virtual void UpdateTransform();
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
@@ -51,7 +51,7 @@ public:
 		const std::wstring& path,
 		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
 	virtual void LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics);
-
+	virtual void BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>& physics);
 public:
 	virtual void SetPosition(float x, float y, float z);
 	virtual void SetPosition(const XMFLOAT3& pos);
@@ -60,7 +60,9 @@ public:
 
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
-	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes.insert(mMeshes.end(), meshes.begin(), meshes.end()); }
+	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
+
+	void SetBoudingBoxFromMeshes();
 
 	void SetRotation(XMFLOAT3& axis, float speed);
 	void SetMovement(XMFLOAT3& dir, float speed);
@@ -145,6 +147,7 @@ protected:
 	XMFLOAT4X4 mReflectMatrix = Matrix4x4::Identity4x4();
 
 	bool mCubemapOn = false;
+	bool mMotionBlurOn = true;
 };
 
 
@@ -226,7 +229,7 @@ class MissileObject : public GameObject
 public:
 	MissileObject();
 	virtual ~MissileObject();
-	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
+	virtual void Update(float elapsedTime);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
 private:

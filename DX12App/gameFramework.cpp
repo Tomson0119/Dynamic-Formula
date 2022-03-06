@@ -1,7 +1,13 @@
 #include "stdafx.h"
 #include "gameFramework.h"
 #include "camera.h"
-#include "UI.h"
+
+
+#include "InGameUI.h"
+#include "LobbyUI.h"
+#include "RoomUI.h"
+#include "LoginUI.h"
+
 
 #include "loginScene.h"
 #include "lobbyScene.h"
@@ -11,6 +17,7 @@
 GameFramework::GameFramework()
 	: D3DFramework()
 {
+
 }
 
 GameFramework::~GameFramework()
@@ -31,7 +38,11 @@ bool GameFramework::InitFramework()
 void GameFramework::OnResize()
 {
 	D3DFramework::OnResize();
-	if (!mScenes.empty()) mScenes.top()->OnResize(GetAspect());
+	if (!mScenes.empty()) 
+	{ 
+		mScenes.top()->OnResize(GetAspect()); 
+		mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+	}
 }
 
 void GameFramework::OnProcessMouseDown(WPARAM buttonState, int x, int y)
@@ -67,7 +78,11 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_F9:
+			mScenes.top().get()->GetUI()->Reset();
 			D3DFramework::ChangeFullScreenState();
+			mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+
+
 			break;
 		}
 		break;
@@ -103,7 +118,8 @@ void GameFramework::InitScene(SCENE_STAT state)
 		break;
 	}
 
-	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
+	//mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
+	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight, GetAspect(), mBulletPhysics);
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
@@ -114,6 +130,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 
 void GameFramework::OnPreciseKeyInput()
 {
+
 }
 
 void GameFramework::CheckAndChangeScene()
@@ -163,7 +180,8 @@ void GameFramework::Draw()
 	// Command List를 Pipeline State로 묶는다. 
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
-	mCommandList->SetGraphicsRootSignature(mScenes.top()->GetRootSignature());
+	if(mScenes.top()->GetRootSignature())
+		mCommandList->SetGraphicsRootSignature(mScenes.top()->GetRootSignature());
 
 	Update();
 
@@ -184,7 +202,7 @@ void GameFramework::Draw()
 
 	// 렌더링할 버퍼를 구체적으로 설정한다.
 
-	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer());
+	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer(), mCurrBackBufferIndex);
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
@@ -195,6 +213,7 @@ void GameFramework::Draw()
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	
+	mScenes.top().get()->GetUI()->Flush();
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 

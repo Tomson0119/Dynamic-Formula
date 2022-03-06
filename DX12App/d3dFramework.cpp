@@ -1,6 +1,11 @@
  #include "stdafx.h"
 #include "d3dFramework.h"
-#include "UI.h"
+
+#include "InGameUI.h"
+#include "LobbyUI.h"
+#include "RoomUI.h"
+#include "LoginUI.h"
+
 #include "NetLib/NetModule.h"
 
 D3DFramework::D3DFramework()
@@ -232,13 +237,16 @@ void D3DFramework::CreateRtvDsvDescriptorHeaps()
 void D3DFramework::OnResize()
 {
 	// 사이즈를 변경하기 전에 명령 목록을 비운다.
+
 	WaitUntilGPUComplete();
 
 	// 커맨드 리스트를 초기화하고, 리소스들의 Com 포인터를 Release한다.
+	
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 	for (int i = 0; i < mSwapChainBufferCount; ++i)
 		mSwapChainBuffers[i].Reset();
 	
+
 	ThrowIfFailed(mSwapChain->ResizeBuffers(
 		mSwapChainBufferCount,
 		gFrameWidth, gFrameHeight,
@@ -451,20 +459,6 @@ void D3DFramework::UpdateFrameStates()
 		elapsed += 1.0f;
 	}
 }
-
-//void D3DFramework::UpdateUI()
-//{
-//	std::vector<std::wstring> labels;
-//
-//	labels.push_back(L"한글 테스트 궁서체\n");
-//
-//	std::wstring uiText = L"";
-//	for (auto s : labels)
-//	{
-//		uiText += s;
-//	}
-//	mpUI->UpdateLabels(uiText);
-//}
 
 void D3DFramework::ChangeFullScreenState()
 {

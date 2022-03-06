@@ -1,8 +1,11 @@
 #include "stdafx.h"
-#include "inGameScene.h"
 #include "Mesh.h"
 #include "shadowMapRenderer.h"
+#include "LoginUI.h"
+#include "InGameUI.h"
+#pragma once
 #include "NetLib/NetModule.h"
+#include "inGameScene.h"
 
 using namespace std;
 
@@ -38,7 +41,13 @@ void InGameScene::OnResize(float aspect)
 		mDirectorCamera->SetLens(aspect);
 }
 
-void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, float aspect, const std::shared_ptr<BulletWrapper>& physics)
+void InGameScene::BuildObjects(
+	ComPtr<ID3D12Device> device, 
+	ID3D12GraphicsCommandList* cmdList, 
+	ID3D12CommandQueue* cmdQueue,
+	UINT nFrame, ID3D12Resource** backBuffer, 
+	float Width, float Height,  float aspect,
+	const shared_ptr<BulletWrapper>& physics)
 {
 	mDevice = device;
 
@@ -79,6 +88,8 @@ void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsComman
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
 
+	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
 	mNetPtr->Client()->SendLoadSequenceDone(mNetPtr->GetRoomID());
@@ -264,6 +275,15 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mMeshList[MeshType::Missile].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
 	mMeshList[MeshType::Grid].push_back(make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f));
 
+	auto lamp = make_shared<GameObject>();
+	mMeshList[MeshType::StreetLamp] = lamp->LoadModel(mDevice.Get(), cmdList, L"Models\\street_lamp1.obj");
+	lamp->LoadTexture(mDevice.Get(), cmdList, L"Resources\\_MG_1470.dds");
+	lamp->Scale(50.0f, 50.0f, 50.0f);
+	lamp->LoadConvexHullShape(L"Models\\street_lamp1_Convex_Hull.obj", physics);
+	lamp->SetPosition(500.0f, lamp->GetBoundingBox().Extents.y * 20, 540.0f);
+	lamp->BuildRigidBody(0.0f, physics);
+	mPipelines[Layer::Default]->AppendObject(lamp);
+
 	auto grid = make_shared<GameObject>();
 	grid->SetMeshes(mMeshList[MeshType::Grid]);
 	grid->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
@@ -293,11 +313,6 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-
-			std::stringstream ss;
-			ss << i << " -> " << (int)mNetPtr->GetPlayerIndex() <<", " <<isPlayer<<  "\n";
-			OutputDebugStringA(ss.str().c_str());
-
 			BuildCarObjects(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
 		}
 		i++;
@@ -450,6 +465,7 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 		mDirectorCamera->Pitch(0.25f * dy);
 		mDirectorCamera->RotateY(0.25f * dx);
 	}
+	//mpUI.get()->OnProcessMouseMove(buttonState, x, y);
 }
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -464,8 +480,11 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			else
 				mCurrentCamera = mDirectorCamera.get();
 		}
+		if(wParam == VK_END)
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 		break;
 	}
+	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
 }
 
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed)
@@ -545,6 +564,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	UpdateMissileObject();
 	
 	UpdateConstants(timer);
+
+	mpUI.get()->Update(timer.TotalTime(), mPlayer);
 	UpdateDynamicsWorld();
 }
 
@@ -637,7 +658,7 @@ void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 	cmdList->SetGraphicsRootConstantBufferView(2, mGameInfoCB->GetGPUVirtualAddress(0));
 }
 
-void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer)
+void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
 	const XMFLOAT4& velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
 	cmdList->ClearRenderTargetView(mVelocityMapRtvHandle, (FLOAT*)&velocity, 0, nullptr);
@@ -655,6 +676,8 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	mPostProcessingPipelines[Layer::MotionBlur]->Dispatch(cmdList);
 
 	mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
+
+	mpUI.get()->Draw(nFrame);
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
@@ -750,6 +773,7 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 				if (*p == colorObjects[j])
 				{
 					mPipelines[Layer::Color]->DeleteObject(j);
+					break;
 				}
 			}
 

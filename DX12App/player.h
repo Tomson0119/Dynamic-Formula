@@ -47,12 +47,16 @@ public:
 
 public:
 	virtual Camera* ChangeCameraMode(int cameraMode);
+	virtual float GetCurrentVelocity() { return 0.0f; }
 
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex) {};
-	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
+	virtual void Update(float elapsedTime) override;
 	virtual void OnPlayerUpdate(float elapsedTime) { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
+
+	virtual int GetItemNum() { return 0; }
+	virtual float GetDriftGauge() { return 0.0f; }
 
 protected:
 	XMFLOAT3 mVelocity = {};
@@ -88,11 +92,11 @@ public:
 	PhysicsPlayer(UINT netID);
 	virtual ~PhysicsPlayer();
 
-	virtual void UpdateTransform(XMFLOAT4X4* parent) override;
+	virtual void UpdateTransform() override;
 
 	virtual void OnCameraUpdate(float elapsedTime);
 	virtual void OnPlayerUpdate(float elapsedTime);
-	virtual void Update(float elapsedTime, XMFLOAT4X4* parent) override;
+	virtual void Update(float elapsedTime) override;
 	virtual void OnPreciseKeyInput(float Elapsed);
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
@@ -102,10 +106,19 @@ public:
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
 	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
-	void BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics);
+	//void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+
+	WheelObject* GetWheel(int index) { return mWheel[index]; }	
+	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
+
+	//void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
+	virtual void BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics);
 
 	void InterpolateTransform(float elapsed, float latency);
 	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
+
+	virtual int GetItemNum() { return mItemNum; }
+	virtual float GetDriftGauge() { return mDriftGauge; }
 
 private:
 	WheelObject* mWheel[4];
@@ -134,6 +147,9 @@ private:
 	float mMaxSpeed = 1000.0f;
 
 	float mFovCoefficient = 1.0f;
+
+	int mItemNum = 0;
+	float mDriftGauge = 0.0f;
 
 public:
 	virtual void BuildDsvRtvView(ID3D12Device* device) override;

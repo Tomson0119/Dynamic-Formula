@@ -1,16 +1,16 @@
 #pragma once
-
-#include "scene.h"
-
 #include "gameTimer.h"
 #include "camera.h"
 #include "constantBuffer.h"
+
 
 #include "mesh.h"
 #include "pipeline.h"
 #include "player.h"
 #include "shader.h"
 #include "texture.h"
+
+#include "scene.h"
 
 class DynamicCubeRenderer;
 class ShadowMapRenderer;
@@ -24,11 +24,16 @@ public:
 	virtual ~InGameScene();
 
 public:
-	virtual void OnResize(float aspect) override;
+	virtual void OnResize(float aspect) ;
 
 	virtual void BuildObjects(
 		ComPtr<ID3D12Device> device,
 		ID3D12GraphicsCommandList* cmdList,
+		ID3D12CommandQueue* cmdQueue,
+		UINT nFrame,
+		ID3D12Resource** backBuffer,
+		float Width,
+		float Height,
 		float aspect,
 		const std::shared_ptr<BulletWrapper>& physics) override;
 	
@@ -37,7 +42,7 @@ public:
 		const GameTimer& timer,
 		const std::shared_ptr<BulletWrapper>& physics) override;
 	
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer) override;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame);
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
@@ -139,6 +144,8 @@ private:
 	float mCubemapInterval = 0.0f;
 
 	UINT mCubemapDrawIndex = 0;
+
+	std::vector<std::wstring> Texts;
 
 	// Key pressed flag
 	std::map<int, bool> mKeyMap;

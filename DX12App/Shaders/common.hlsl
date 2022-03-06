@@ -44,7 +44,8 @@ cbuffer ObjectCB : register(b4)
 {
     matrix gWorld : packoffset(c0);
     matrix gOldWorld : packoffset(c4);
-    bool gCubemapOn : packoffset(c8);
+    bool gCubemapOn : packoffset(c8.x);
+    bool gMotionBlurOn : packoffset(c8.y);
 }
 
 cbuffer ShadowCB : register(b5)

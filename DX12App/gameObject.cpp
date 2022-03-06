@@ -226,6 +226,7 @@ void GameObject::LoadTexture(
 	mTextures.push_back(std::move(tex));
 }
 
+// Scale을 설정한 뒤 호출할 것!
 void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics)
 {
 	std::ifstream in_file{ path, std::ios::binary };
@@ -250,7 +251,7 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<B
 			ss >> pos.x >> pos.y >> pos.z;
 			pos.z *= -1.0f;
 
-			positions.push_back(pos);
+			positions.push_back(Vector3::Multiply(mScaling, pos));
 		}
 		else if (type == "s")
 		{
@@ -271,7 +272,19 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<B
 	}
 }
 
-void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
+//오브젝트 생성 시 마지막으로 호출할 것
+void GameObject::BuildRigidBody(float mass, std::shared_ptr<BulletWrapper> physics)
+{
+	if (mBtCollisionShape)
+	{
+		btTransform btObjectTransform;
+		btObjectTransform.setIdentity();
+		btObjectTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
+		mBtRigidBody = physics->CreateRigidBody(mass, btObjectTransform, mBtCollisionShape);
+	}
+}
+
+void GameObject::Update(float elapsedTime)
 {
 	mLook = Vector3::Normalize(mLook);
 	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
@@ -279,7 +292,7 @@ void GameObject::Update(float elapsedTime, XMFLOAT4X4* parent)
 
 	Animate(elapsedTime);
 
-	UpdateTransform(parent);
+	UpdateTransform();
 	UpdateBoundingBox();
 }
 
@@ -341,8 +354,10 @@ void GameObject::Draw(
 	}
 }
 
-void GameObject::UpdateTransform(XMFLOAT4X4* parent)
+void GameObject::UpdateTransform()
 {
+	mOldWorld = mWorld;
+
 	mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;	
 	mWorld(0, 2) = mRight.z;
@@ -354,6 +369,10 @@ void GameObject::UpdateTransform(XMFLOAT4X4* parent)
 	mWorld(2, 0) = mLook.x;		
 	mWorld(2, 1) = mLook.y;		
 	mWorld(2, 2) = mScaling.z * mLook.z;
+
+	mWorld(3, 0) = mPosition.x;
+	mWorld(3, 1) = mPosition.y;
+	mWorld(3, 2) = mPosition.z;
 }
 
 void GameObject::UpdateBoundingBox()
@@ -400,7 +419,45 @@ void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
 void GameObject::SetLook(XMFLOAT3& look)
 {
 	mLook = look;
-	GameObject::Update(1.0f, nullptr);
+	GameObject::Update(1.0f);
+}
+
+void GameObject::SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
+{ 
+	mMeshes.insert(mMeshes.end(), meshes.begin(), meshes.end());
+	SetBoudingBoxFromMeshes();
+}
+
+void GameObject::SetBoudingBoxFromMeshes()
+{
+	float min_x = 0, max_x = 0, min_y = 0, max_y = 0, min_z = 0, max_z = 0;
+
+	for (int i = 0; i < mMeshes.size(); ++i)
+	{
+		XMFLOAT3 corners[8];
+		mMeshes[i]->mOOBB.GetCorners(corners);
+
+		for (int j = 0; j < 8; ++j)
+		{
+			if (corners[j].x < min_x)
+				min_x = corners[j].x;
+			else
+				max_x = corners[j].x;
+
+			if (corners[j].y < min_y)
+				min_y = corners[j].y;
+			else
+				max_y = corners[j].y;
+
+			if (corners[j].z < min_z)
+				min_z = corners[j].z;
+			else
+				max_z = corners[j].z;
+		}
+	}
+
+	mOOBB.Center = { (min_x + max_x) / 2, (min_y + max_y) / 2, (min_z + max_z) / 2 };
+	mOOBB.Extents = { (max_x - min_x) / 2, (max_y - min_y) / 2, (max_z - min_z) / 2 };
 }
 
 void GameObject::SetRotation(XMFLOAT3& axis, float speed)
@@ -527,6 +584,7 @@ ObjectConstants GameObject::GetObjectConstants()
 		objCnst.oldWorld = Matrix4x4::Transpose(mOldWorld);
 	}
 	objCnst.cubemapOn = mCubemapOn;
+	objCnst.motionBlurOn = mMotionBlurOn;
 
 	return objCnst;
 }
@@ -653,7 +711,7 @@ void MissileObject::SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward
 	auto missileExtents = btVector3(mMeshes[0]->mOOBB.Extents.x, mMeshes[0]->mOOBB.Extents.y, mMeshes[0]->mOOBB.Extents.z);
 	btCollisionShape* missileShape = new btBoxShape(missileExtents);
 
-	btVector3 bulletPosition = 10 * forward;
+	btVector3 bulletPosition = 15 * forward;
 
 	btTransform btMissileTransform;
 	btMissileTransform.setIdentity();
@@ -665,7 +723,7 @@ void MissileObject::SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward
 	mBtRigidBody->setLinearVelocity(forward * 1000.0f);
 }
 
-void MissileObject::Update(float elapsedTime, XMFLOAT4X4* parent)
+void MissileObject::Update(float elapsedTime)
 {
 	btScalar m[16];
 	btTransform btMat;

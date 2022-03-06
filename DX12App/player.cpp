@@ -131,7 +131,7 @@ Camera* Player::ChangeCameraMode(int cameraMode)
 	return newCamera;
 }
 
-void Player::Update(float elapsedTime, XMFLOAT4X4* parent)
+void Player::Update(float elapsedTime)
 {
 	mVelocity = Vector3::Add(mVelocity, mGravity);
 
@@ -164,7 +164,7 @@ void Player::Update(float elapsedTime, XMFLOAT4X4* parent)
 	velocity = Vector3::ScalarProduct(mVelocity, -deceleration);
 	mVelocity = Vector3::Add(mVelocity, Vector3::Normalize(velocity));
 
-	GameObject::Update(elapsedTime, parent);
+	GameObject::Update(elapsedTime);
 }
 
 
@@ -173,6 +173,7 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
 
+	mMotionBlurOn = false;
 	mCubemapOn = true;
 
 	for (std::unique_ptr<Camera>& camera : mCameras)
@@ -274,10 +275,33 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		{
 			mVehicle->getWheelInfo(i).m_frictionSlip = 4.0f;
 		}
+
+		float Epsilon = 60.0f / 180.0f;
+
+		auto camLook = mCamera->GetLook();
+		camLook.y = 0.0f;
+		camLook = Vector3::Normalize(camLook);
+
+		auto playerLook = mLook;
+		playerLook.y = 0.0f;
+		playerLook = Vector3::Normalize(playerLook);
+
+		float angle = acos(Vector3::Dot(camLook, playerLook) / (Vector3::Length(camLook) * Vector3::Length(playerLook)));
+
+		if (Epsilon < angle && mDriftGauge < 1.0f)
+		{
+			mDriftGauge += Elapsed / 2.0f;
+		}
+		if (mDriftGauge > 1.0f)
+		{
+			mDriftGauge = 0.0f;
+			if(mItemNum < 2)
+				mItemNum++;
+		}
 	}
 	else
 	{
-		for (int i = 0; i < 4; ++i)
+		for (int i = 2; i < 4; ++i)
 		{
 			mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
 		}
@@ -370,7 +394,7 @@ void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
 	mRight.z = mWorld(0, 2);
 }
 
-void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
+void PhysicsPlayer::Update(float elapsedTime)
 {
 	btScalar m[16];
 	btTransform btMat{};
@@ -699,6 +723,7 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 
 WheelObject::WheelObject() : GameObject()
 {
+	mMotionBlurOn = false;
 }
 
 WheelObject::~WheelObject()
