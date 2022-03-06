@@ -40,8 +40,10 @@ void GameFramework::OnResize()
 	D3DFramework::OnResize();
 	if (!mScenes.empty()) 
 	{ 
-		mScenes.top()->OnResize(GetAspect()); 
-		mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+		mScenes.top()->OnResize(GetAspect());
+
+		auto ui = mScenes.top()->GetUI();
+		//if(ui) ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 	}
 }
 
@@ -78,10 +80,12 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_F9:
-			mScenes.top().get()->GetUI()->Reset();
+			auto ui = mScenes.top()->GetUI();
+			//if (ui) ui->Reset();
+		
 			D3DFramework::ChangeFullScreenState();
-			mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 
+			//if(ui) ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 
 			break;
 		}
@@ -213,13 +217,14 @@ void GameFramework::Draw()
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	
-	mScenes.top().get()->GetUI()->Flush();
+	auto ui = mScenes.top()->GetUI();
+	//if(ui) ui->Flush();
+
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	
-
 	
 	// 다음 후면버퍼 위치로 이동한 후 다시 기다린다.
 	mCurrBackBufferIndex = mSwapChain->GetCurrentBackBufferIndex();

@@ -3,7 +3,6 @@
 #include "shadowMapRenderer.h"
 #include "LoginUI.h"
 #include "InGameUI.h"
-#pragma once
 #include "NetLib/NetModule.h"
 #include "inGameScene.h"
 
@@ -88,8 +87,9 @@ void InGameScene::BuildObjects(
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
 
-	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, Width, Height);
+	/*mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);*/
+
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
 	mNetPtr->Client()->SendLoadSequenceDone(mNetPtr->GetRoomID());
@@ -275,14 +275,14 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mMeshList[MeshType::Missile].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
 	mMeshList[MeshType::Grid].push_back(make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f));
 
-	auto lamp = make_shared<GameObject>();
+	/*auto lamp = make_shared<GameObject>();
 	mMeshList[MeshType::StreetLamp] = lamp->LoadModel(mDevice.Get(), cmdList, L"Models\\street_lamp1.obj");
 	lamp->LoadTexture(mDevice.Get(), cmdList, L"Resources\\_MG_1470.dds");
 	lamp->Scale(50.0f, 50.0f, 50.0f);
 	lamp->LoadConvexHullShape(L"Models\\street_lamp1_Convex_Hull.obj", physics);
 	lamp->SetPosition(500.0f, lamp->GetBoundingBox().Extents.y * 20, 540.0f);
 	lamp->BuildRigidBody(0.0f, physics);
-	mPipelines[Layer::Default]->AppendObject(lamp);
+	mPipelines[Layer::Default]->AppendObject(lamp);*/
 
 	auto grid = make_shared<GameObject>();
 	grid->SetMeshes(mMeshList[MeshType::Grid]);
@@ -365,6 +365,7 @@ void InGameScene::BuildCarObjects(
 	}
 	carObj->BuildRigidBody(physics);
 	carObj->BuildDsvRtvView(mDevice.Get());
+
 	if (isPlayer) mPlayer = carObj.get();
 	mPipelines[Layer::Color]->AppendObject(carObj);
 	mPlayerObjects[netID] = std::move(carObj);
@@ -428,7 +429,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (player)
 		{
 			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
-			player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
+			//player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
 		}
 		break;
 	}
@@ -484,7 +485,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 		break;
 	}
-	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
+	//mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
 }
 
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed)
@@ -565,7 +566,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	
 	UpdateConstants(timer);
 
-	mpUI.get()->Update(timer.TotalTime(), mPlayer);
+	//mpUI.get()->Update(timer.TotalTime(), mPlayer);
 	UpdateDynamicsWorld();
 }
 
@@ -677,7 +678,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 
 	mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
 
-	mpUI.get()->Draw(nFrame);
+	//mpUI.get()->Draw(nFrame);
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
