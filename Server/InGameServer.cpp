@@ -46,7 +46,7 @@ void InGameServer::PrepareToStartGame(int roomID)
 			continue;
 		}
 
-		msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * i);
+		msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * (btScalar)i);
 		msWorlds[roomID]->CreatePlayerRigidBody(i, 1000.0f, mBtCarShape.get());
 	}
 	msWorlds[roomID]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);
