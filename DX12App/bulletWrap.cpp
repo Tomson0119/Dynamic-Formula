@@ -1,6 +1,6 @@
 #include "bulletWrap.h"
 
-BulletWrapper::BulletWrapper(const float& gravity)
+BulletWrapper::BulletWrapper(float gravity)
 {
 	mBtCollisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
 
@@ -78,7 +78,7 @@ void BulletWrapper::StepSimulation(float elapsed)
 {
 	/*btScalar timeStep = mPhysicsTimer.getTimeSeconds();
 	mPhysicsTimer.reset();*/
-	mBtDynamicsWorld->stepSimulation(elapsed, 10);
+	mBtDynamicsWorld->stepSimulation(elapsed, 2);
 }
 
 void BulletWrapper::SetTerrainRigidBodies(const std::vector<btRigidBody*>& TerrainRigidBodies)
