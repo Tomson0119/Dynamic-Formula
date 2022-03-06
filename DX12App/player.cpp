@@ -184,6 +184,7 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 
 PhysicsPlayer::~PhysicsPlayer()
 {
+
 }
 
 void PhysicsPlayer::UpdateTransform(XMFLOAT4X4* parent)
@@ -376,6 +377,14 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
 	btMat.getOpenGLMatrix(m);
 
+	/*if (mNetID > 0)
+	{
+		const btVector3& pos = btMat.getOrigin();
+		std::stringstream ss;
+		ss << "ID: " << mNetID<<" -> " << pos.x() << " " << pos.y() << " " << pos.z() << "\n";
+		OutputDebugStringA(ss.str().c_str());
+	}*/
+
 	mOldWorld = mWorld;
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 	UpdateBoundingBox();
@@ -387,7 +396,6 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 		btTransform wheelTransform = mVehicle->getWheelTransformWS(i);
 		mWheel[i]->UpdateRigidBody(elapsedTime, wheelTransform);
 	}
-
 
 	mLook = Vector3::Normalize(mLook);
 	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
@@ -437,7 +445,7 @@ void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIn
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuStart);
 }
 
-void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
+void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics)
 {
 	auto dynamicsWorld = physics->GetDynamicsWorld();
 
@@ -453,7 +461,7 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", physics);
 
 	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, mBtCollisionShape);
-	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld.get());
+	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld);
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
@@ -477,19 +485,19 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 	float connectionHeight = -0.9f;
 
 	btVector3 connectionPointCS0(vehicleExtents.x - 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
 
 	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
 
 	// µÞ¹ÙÄû
 	isFrontWheel = false;
 
 	connectionPointCS0 = btVector3(vehicleExtents.x - 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
 
 	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
 
 	for (int i = 0; i < mVehicle->getNumWheels(); i++)
 	{
