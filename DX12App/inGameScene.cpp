@@ -701,6 +701,7 @@ void InGameScene::UpdatePlayerObjects()
 			btRigidBody* rigidBody = i->get()->GetRigidBody();
 			delete rigidBody->getMotionState();
 			mDynamicsWorld->removeRigidBody(rigidBody);
+			mDynamicsWorld->removeAction(i->get()->GetVehicle().get());
 			delete rigidBody;
 			auto& colorObjects = mPipelines[Layer::Color]->GetRenderObjects();
 			for (int j = 0; j < colorObjects.size(); ++j)

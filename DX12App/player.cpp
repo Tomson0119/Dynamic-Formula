@@ -373,7 +373,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 		if (Epsilon < angle && mDriftGauge < 1.0f)
 		{
-			mDriftGauge += Elapsed / 3.0f;
+			mDriftGauge += Elapsed / 2.0f;
 		}
 		if (mDriftGauge > 1.0f)
 		{
