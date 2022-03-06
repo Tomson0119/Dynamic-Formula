@@ -24,29 +24,30 @@ void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 	mLoginPtr = loginPtr;
 	mTimerQueue.Start(this);
 
-	const float offset_x = 20.0f;
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
 		msWorlds[i] = std::make_unique<GameWorld>(mVehicleConstants);
-		msWorlds[i]->InitPhysics(-10.0f);
-		msWorlds[i]->InitPlayerList(mStartPosition, offset_x, roomList[i].get());		
+		msWorlds[i]->InitPhysics(-10.0f);	
+		msWorlds[i]->InitPlayerList(roomList[i].get());
 	}
 }
 
 void InGameServer::PrepareToStartGame(int roomID)
 {
-	for (int idx = 0; const auto& player : msWorlds[roomID]->GetPlayerList())
+	const auto& players = msWorlds[roomID]->GetPlayerList();
+	for (int i = 0; i < players.size(); i++)
 	{
-		const int hostID = player->ID;
-		if (hostID < 0) continue;
+		if (players[i]->Empty) continue;
 
+		const int hostID = players[i]->ID;
 		if (gClients[hostID]->ChangeState(CLIENT_STAT::IN_ROOM, CLIENT_STAT::IN_GAME) == false)
 		{
 			mLoginPtr->Disconnect(hostID);
 			continue;
 		}
 
-		msWorlds[roomID]->CreatePlayerRigidBody(idx++, 1000.0f, mBtCarShape.get());
+		msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * i);
+		msWorlds[roomID]->CreatePlayerRigidBody(i, 1000.0f, mBtCarShape.get());
 	}
 	msWorlds[roomID]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);
 	msWorlds[roomID]->SendGameStartSuccess();

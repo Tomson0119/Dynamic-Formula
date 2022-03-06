@@ -58,6 +58,8 @@ private:
 	std::shared_ptr<VehicleConstant> mVehicleConstants;
 
 	const btVector3 mStartPosition = { 500.0f, 10.0f, 500.0f };
+	const btVector3 mOffset = { 20.0f, 0.0f, 0.0f };
+
 	const int mPhysicsDuration = 16;
 	const int mBroadcastDuration = 1000;
 };

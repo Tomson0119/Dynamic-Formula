@@ -29,7 +29,7 @@ void GameWorld::InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector
 	// TODO: CreateStaticObjectRigidBodies;
 }
 
-void GameWorld::InitPlayerList(const btVector3 startPosition, btScalar offsetX, WaitRoom* room)
+void GameWorld::InitPlayerList(WaitRoom* room)
 {
 	mID = room->GetID();
 
@@ -37,12 +37,13 @@ void GameWorld::InitPlayerList(const btVector3 startPosition, btScalar offsetX, 
 	{
 		player = room->GetPlayerPtr(i);
 		player->SetVehicleConstant(mConstantPtr);
-		player->SetPosition(
-			startPosition.x() + offsetX * i,
-			startPosition.y(),
-			startPosition.z());
 		i++;
 	}
+}
+
+void GameWorld::SetPlayerPosition(int idx, const btVector3& pos)
+{
+	mPlayerList[idx]->SetPosition(pos.x(), pos.y(), pos.z());
 }
 
 void GameWorld::CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape)

@@ -16,7 +16,9 @@ public:
 	
 	void InitPhysics(float gravity);
 	void InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes);
-	void InitPlayerList(const btVector3 startPosition, btScalar offsetX, WaitRoom* room);
+	void InitPlayerList(WaitRoom* room);
+
+	void SetPlayerPosition(int idx, const btVector3& pos);
 
 	void CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape);
 	void UpdatePhysicsWorld();
