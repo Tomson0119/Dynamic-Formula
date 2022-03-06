@@ -111,6 +111,8 @@ public:
 	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
 	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
 	void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+
+	WheelObject* GetWheel(int index) { return mWheel[index]; }
 	
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 

@@ -709,6 +709,7 @@ void InGameScene::UpdatePlayerObjects()
 				if (*i == colorObjects[j])
 				{
 					mPipelines[Layer::Color]->DeleteObject(j);
+					break;
 				}
 			}
 

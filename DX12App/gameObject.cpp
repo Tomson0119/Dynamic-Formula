@@ -425,6 +425,44 @@ void GameObject::SetLook(XMFLOAT3& look)
 	GameObject::Update(1.0f);
 }
 
+void GameObject::SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
+{ 
+	mMeshes.insert(mMeshes.end(), meshes.begin(), meshes.end());
+	SetBoudingBoxFromMeshes();
+}
+
+void GameObject::SetBoudingBoxFromMeshes()
+{
+	int min_x = 0, max_x = 0, min_y = 0, max_y = 0, min_z = 0, max_z = 0;
+
+	for (int i = 0; i < mMeshes.size(); ++i)
+	{
+		XMFLOAT3 corners[8];
+		mMeshes[i]->mOOBB.GetCorners(corners);
+
+		for (int j = 0; j < 8; ++j)
+		{
+			if (corners[j].x < min_x)
+				min_x = corners[j].x;
+			else
+				max_x = corners[j].x;
+
+			if (corners[j].y < min_y)
+				min_y = corners[j].y;
+			else
+				max_y = corners[j].y;
+
+			if (corners[j].z < min_z)
+				min_z = corners[j].z;
+			else
+				max_z = corners[j].z;
+		}
+	}
+
+	mOOBB.Center = { (min_x + max_x) / 2, (min_y + max_y) / 2, (min_z + max_z) / 2 };
+	mOOBB.Extents = { (max_x - min_x) / 2, (max_y - min_y) / 2, (max_z - min_z) / 2 };
+}
+
 void GameObject::SetRotation(XMFLOAT3& axis, float speed)
 {
 	mRotationAxis = axis;
