@@ -377,14 +377,6 @@ void PhysicsPlayer::Update(float elapsedTime, XMFLOAT4X4* parent)
 	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
 	btMat.getOpenGLMatrix(m);
 
-	/*if (mNetID > 0)
-	{
-		const btVector3& pos = btMat.getOrigin();
-		std::stringstream ss;
-		ss << "ID: " << mNetID<<" -> " << pos.x() << " " << pos.y() << " " << pos.z() << "\n";
-		OutputDebugStringA(ss.str().c_str());
-	}*/
-
 	mOldWorld = mWorld;
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 	UpdateBoundingBox();
