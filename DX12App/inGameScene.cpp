@@ -756,6 +756,7 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 			btRigidBody* rigidBody = player->GetRigidBody();
 			delete rigidBody->getMotionState();
 			mDynamicsWorld->removeRigidBody(rigidBody);
+			mDynamicsWorld->removeVehicle(player->GetVehicle().get());
 			delete rigidBody;
 
 			p->reset();
