@@ -27,7 +27,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	const std::wstring& path)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
@@ -229,7 +229,7 @@ void GameObject::LoadTexture(
 void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
 
 	std::vector<XMFLOAT3> positions;
 
@@ -644,7 +644,7 @@ MissileObject::~MissileObject()
 {
 }
 
-void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics)
+void MissileObject::SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics)
 {
 	GameObject::SetMesh(mesh);
 

@@ -174,7 +174,7 @@ public:
 	float GetWidth() const { return mWidth * mTerrainScale.x; }
 	float GetDepth() const { return mDepth * mTerrainScale.z; }
 
-	std::pair<int, int> GetBlockSize() { return std::make_pair(mBlockWidth * mTerrainScale.x, mBlockDepth * mTerrainScale.z); }
+	std::pair<float, float> GetBlockSize() { return std::make_pair(mBlockWidth * mTerrainScale.x, mBlockDepth * mTerrainScale.z); }
 
 	std::vector<btRigidBody*> GetTerrainRigidBodies() { return mTerrainRigidBodies; }
 
@@ -227,7 +227,7 @@ public:
 	MissileObject();
 	virtual ~MissileObject();
 	virtual void Update(float elapsedTime, XMFLOAT4X4* parent);
-	void SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
+	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
 private:
 	float mDuration = 3.0f;

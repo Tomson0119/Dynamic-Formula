@@ -78,7 +78,7 @@ bool D3DFramework::InitDirect3D()
 
 bool D3DFramework::InitBulletPhysics()
 {
-	mBulletPhysics = std::make_shared<BulletWrapper>(-10);
+	mBulletPhysics = std::make_shared<BulletWrapper>(-10.f);
 
 	return true;
 }
