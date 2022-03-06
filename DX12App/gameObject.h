@@ -60,7 +60,9 @@ public:
 
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
-	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes.insert(mMeshes.end(), meshes.begin(), meshes.end()); }
+	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
+
+	void SetBoudingBoxFromMeshes();
 
 	void SetRotation(XMFLOAT3& axis, float speed);
 	void SetMovement(XMFLOAT3& dir, float speed);

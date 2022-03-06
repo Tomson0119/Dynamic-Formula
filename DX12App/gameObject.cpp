@@ -433,7 +433,7 @@ void GameObject::SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
 
 void GameObject::SetBoudingBoxFromMeshes()
 {
-	int min_x = 0, max_x = 0, min_y = 0, max_y = 0, min_z = 0, max_z = 0;
+	float min_x = 0, max_x = 0, min_y = 0, max_y = 0, min_z = 0, max_z = 0;
 
 	for (int i = 0; i < mMeshes.size(); ++i)
 	{
