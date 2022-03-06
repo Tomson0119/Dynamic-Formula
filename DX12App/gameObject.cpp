@@ -227,7 +227,7 @@ void GameObject::LoadTexture(
 }
 
 // Scale을 설정한 뒤 호출할 것!
-void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics)
+void GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics)
 {
 	std::ifstream in_file{ path, std::ios::binary };
 	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
@@ -273,7 +273,7 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<B
 }
 
 //오브젝트 생성 시 마지막으로 호출할 것
-void GameObject::BuildRigidBody(float mass, std::shared_ptr<BulletWrapper> physics)
+void GameObject::BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>& physics)
 {
 	if (mBtCollisionShape)
 	{
@@ -441,17 +441,20 @@ void GameObject::SetBoudingBoxFromMeshes()
 		{
 			if (corners[j].x < min_x)
 				min_x = corners[j].x;
-			else
+			
+			if(corners[j].x > max_x)
 				max_x = corners[j].x;
 
 			if (corners[j].y < min_y)
 				min_y = corners[j].y;
-			else
+			
+			if(corners[j].y > max_y)
 				max_y = corners[j].y;
 
 			if (corners[j].z < min_z)
 				min_z = corners[j].z;
-			else
+			
+			if(corners[j].z > max_z)
 				max_z = corners[j].z;
 		}
 	}
