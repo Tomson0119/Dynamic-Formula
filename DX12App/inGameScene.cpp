@@ -261,7 +261,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 {
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
-	mMeshList[MeshType::Missile].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5, 5, 5));
+	mMeshList[MeshType::Missile].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
 	mMeshList[MeshType::Grid].push_back(make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f));
 
 	auto grid = make_shared<GameObject>();
@@ -293,7 +293,12 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-			BuildCarObjects(info.StartPosition, info.Color, true, cmdList, physics, i);
+
+			std::stringstream ss;
+			ss << i << " -> " << (int)mNetPtr->GetPlayerIndex() <<", " <<isPlayer<<  "\n";
+			OutputDebugStringA(ss.str().c_str());
+
+			BuildCarObjects(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
 		}
 		i++;
 	}
@@ -522,11 +527,11 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 {
 	float elapsed = timer.ElapsedTime();
 
-	UpdatePlayerObjects(elapsed);
-	OnPreciseKeyInput(cmdList, physics, elapsed);
-
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
+
+	UpdatePlayerObjects(elapsed);
+	OnPreciseKeyInput(cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
 	mCurrentCamera->Update(elapsed);
@@ -603,8 +608,8 @@ void InGameScene::UpdateDynamicsWorld()
 		{
 			auto pos = body->getCenterOfMassPosition();
 
-			int xIndex = pos.x() / blockWidth;
-			int zIndex = pos.z() / blockDepth;
+			int xIndex = (int)(pos.x() / blockWidth);
+			int zIndex = (int)(pos.z() / blockDepth);
 
 			for (int j = 0; j < 3; ++j)
 			{
@@ -739,11 +744,6 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 		{
 		case UPDATE_FLAG::REMOVE:
 		{
-			btRigidBody* rigidBody = player->GetRigidBody();
-			delete rigidBody->getMotionState();
-			mDynamicsWorld->removeRigidBody(rigidBody);
-			delete rigidBody;
-
 			auto& colorObjects = mPipelines[Layer::Color]->GetRenderObjects();
 			for (int j = 0; j < colorObjects.size(); ++j)
 			{
@@ -752,6 +752,11 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 					mPipelines[Layer::Color]->DeleteObject(j);
 				}
 			}
+
+			btRigidBody* rigidBody = player->GetRigidBody();
+			delete rigidBody->getMotionState();
+			mDynamicsWorld->removeRigidBody(rigidBody);
+			delete rigidBody;
 
 			p->reset();
 			removed_flag = true;
