@@ -33,7 +33,7 @@ void BPHandler::StepSimulation(float elapsed)
 {
 	/*btScalar timeStep = mPhysicsTimer.getTimeSeconds();
 	mPhysicsTimer.reset();*/
-	mBtDynamicsWorld->stepSimulation(elapsed, 2);
+	mBtDynamicsWorld->stepSimulation(elapsed, 3);
 }
 
 void BPHandler::Flush()
