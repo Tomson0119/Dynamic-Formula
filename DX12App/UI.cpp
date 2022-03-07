@@ -4,10 +4,12 @@ UI::UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommand
 {
     UI::Initialize(device, pd3dCommandQueue);
 }
+
 UI::~UI() 
 {
 
 }
+
 void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
     UINT d3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
@@ -64,6 +66,7 @@ void UI::SetVectorSize(UINT nFrame)
     mvd2dRenderTargets.resize(nFrame);
    //mvd2dLinearGradientBrush.resize(TextCnt);
 }
+
 void UI::BeginDraw(UINT nFrame)
 {
     mpd3d11On12Device->AcquireWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 1);
@@ -81,6 +84,7 @@ void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTex
             mvdwTextFormat[i].Get(), mvTextBlocks[i].d2dLayoutRect, mvd2dSolidBrush[i+1].Get());
     }
 }
+
 void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT noFill, UINT GradientCnt)
 {
     if (md2dLinearGradientBrush.Get())
@@ -98,6 +102,7 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT n
             mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mvd2dSolidBrush[i+TextCnt].Get());
     
 }
+
 void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt)
 {
     if (md2dLinearGradientBrush.Get())
@@ -115,15 +120,18 @@ void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt,
         mpd2dDeviceContext.Get()->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[i + TextCnt].Get());
 
 }
+
 void UI::EndDraw(UINT nFrame)
 {
     mpd2dDeviceContext.Get()->EndDraw();
     mpd3d11On12Device->ReleaseWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 1);
 }
+
 void UI::Flush()
 {
     mpd3d11DeviceContext.Get()->Flush();
 }
+
 void UI::Update(float GTime)
 {
 
@@ -153,6 +161,7 @@ void UI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
         mpd2dDeviceContext->CreateBitmapFromDxgiSurface(pdxgiSurface.Get(), &d2dBitmapProperties, &mvd2dRenderTargets[i]);
     }
 }
+
 void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts, UINT TextCnt, DWRITE_TEXT_ALIGNMENT* Alignment)
 {
     mvdwTextFormat.resize(TextCnt);
@@ -166,11 +175,10 @@ void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts
     }
 }
 
-
 void UI::BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, 
     UINT gradientCnt, D2D1::ColorF* gradientColors)
 {
-   BuildSolidBrush(UICnt, TextCnt, ColorList);
+    BuildSolidBrush(UICnt, TextCnt, ColorList);
     BuildLinearGradientBrush(gradientCnt, gradientColors);
 }
 
@@ -232,6 +240,7 @@ void UI::Reset()
     mvWrappedRenderTargets.clear();
     mvd2dRenderTargets.clear();
 }
+
 void UI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
