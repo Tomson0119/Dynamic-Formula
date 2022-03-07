@@ -209,8 +209,8 @@ void GameFramework::Draw()
 	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer(), mCurrBackBufferIndex);
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
-	mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));*/
 
 	ThrowIfFailed(mCommandList->Close());
 
@@ -218,7 +218,7 @@ void GameFramework::Draw()
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	
 	auto ui = mScenes.top()->GetUI();
-	//if(ui) ui->Flush();
+	if(ui) ui->Flush();
 
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
