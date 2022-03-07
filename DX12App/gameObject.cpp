@@ -424,7 +424,10 @@ void GameObject::SetLook(XMFLOAT3& look)
 
 void GameObject::SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
 { 
-	mMeshes.insert(mMeshes.end(), meshes.begin(), meshes.end());
+	for (int i = 0; i < meshes.size(); ++i)
+	{
+		mMeshes.push_back(std::make_shared<Mesh>(*meshes[i]));
+	}
 	SetBoudingBoxFromMeshes();
 }
 
