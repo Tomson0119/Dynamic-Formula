@@ -549,15 +549,30 @@ void PhysicsPlayer::InterpolateTransform(float elapsed, float latency)
 		return;
 	}
 
-	btVector3 nextOrigin{};
-	nextOrigin.setInterpolate3(currentOrigin, correctOrigin, elapsed * mInterpSpeed);
-	btQuaternion nextQuat = currentQuat.slerp(mCorrectionQuat.GetBtQuaternion(), elapsed * mInterpSpeed);
+	btScalar dt = elapsed * mInterpSpeed;
+	btClamp(dt, 0.0f, 1.0f);
+
+	btVector3 nextOrigin = currentOrigin.lerp(correctOrigin, dt);
+	//nextOrigin.setInterpolate3(currentOrigin, correctOrigin, elapsed * mInterpSpeed);
+	btQuaternion nextQuat = currentQuat.slerp(mCorrectionQuat.GetBtQuaternion(), dt);
 
 	btTransform nextTransform = btTransform::getIdentity();
 	nextTransform.setOrigin(nextOrigin);
 	nextTransform.setRotation(nextQuat);
 
-	motionState->setWorldTransform(nextTransform);
+	if (mNetID == 0)
+	{
+		std::stringstream ss;
+		ss << "Current: " << currentOrigin.x() << " " << currentOrigin.y() << " " << currentOrigin.z() << "\n";
+		ss << "Correction: " << correctOrigin.x() << " " << correctOrigin.y() << " " << correctOrigin.z() << "\n";
+		ss << "Next: " << nextOrigin.x() << " " << nextOrigin.y() << " " << nextOrigin.z() << "\n";
+		
+		OutputDebugStringA(ss.str().c_str());
+	}
+
+	//mVehicle->getRigidBody()->setWorldTransform(nextTransform);
+	//motionState->setWorldTransform(nextTransform);
+	mVehicle->getRigidBody()->setCenterOfMassTransform(nextTransform);
 }
 
 void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
@@ -572,6 +587,7 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 		pck->quaternion[1],
 		pck->quaternion[2],
 		pck->quaternion[3]);
+
 
 	/*btVector3 vel{ 
 		pck->velocity[0] / FIXED_FLOAT_LIMIT, 
