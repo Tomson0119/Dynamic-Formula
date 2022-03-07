@@ -429,7 +429,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (player)
 		{
 			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
-			//player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
+			player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
 		}
 		break;
 	}
@@ -765,10 +765,6 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 
 		auto player = p->get();
 
-		std::shared_ptr<WheelObject> wheel[4];
-		for(int i = 0; i < 4; ++i)
-			wheel[i] = player->GetWheel(i);
-
 		switch(player->GetUpdateFlag())
 		{
 		case UPDATE_FLAG::REMOVE:
@@ -782,6 +778,10 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 					break;
 				}
 			}
+
+			std::shared_ptr<WheelObject> wheel[4];
+			for (int i = 0; i < 4; ++i)
+				wheel[i] = player->GetWheel(i);
 
 			int remove_count = 0;
 			for (auto j = colorObjects.begin(); j < colorObjects.end();)

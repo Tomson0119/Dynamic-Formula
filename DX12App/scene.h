@@ -4,7 +4,7 @@
 #include "mesh.h"
 #include "gameObject.h"
 
-#define STANDALONE
+//#define STANDALONE
 #define START_GAME_INSTANT
 
 class NetModule;
@@ -25,7 +25,6 @@ enum class SCENE_CHANGE_FLAG : char
 	POP,
 	LOGOUT
 };
-
 
 class Scene
 {
