@@ -105,10 +105,10 @@ public:
 
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
 	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
-	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
+	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
 	//void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
 
-	WheelObject* GetWheel(int index) { return mWheel[index]; }	
+	std::shared_ptr<WheelObject> GetWheel(int index) { return mWheel[index]; }
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 
 	//void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
@@ -121,7 +121,7 @@ public:
 	virtual float GetDriftGauge() { return mDriftGauge; }
 
 private:
-	WheelObject* mWheel[4];
+	std::shared_ptr<WheelObject> mWheel[4];
 	btRaycastVehicle::btVehicleTuning mTuning;
 	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::shared_ptr<btRaycastVehicle> mVehicle;

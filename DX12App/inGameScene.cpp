@@ -306,6 +306,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 #ifdef STANDALONE
 	BuildCarObjects({ 500.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObjects({ 500.0f, 30.0f, 540.0f }, 4, false, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -360,7 +361,7 @@ void InGameScene::BuildCarObjects(
 				wheelObj->SetMeshes(mMeshList[MeshType::Wheel_R]);
 		}
 
-		carObj->SetWheel(wheelObj.get(), i);
+		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
 	carObj->BuildRigidBody(physics);
@@ -764,6 +765,11 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 		if (*p == nullptr) continue;
 
 		auto player = p->get();
+
+		std::shared_ptr<WheelObject> wheel[4];
+		for(int i = 0; i < 4; ++i)
+			wheel[i] = player->GetWheel(i);
+
 		switch(player->GetUpdateFlag())
 		{
 		case UPDATE_FLAG::REMOVE:
@@ -776,6 +782,27 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 					mPipelines[Layer::Color]->DeleteObject(j);
 					break;
 				}
+			}
+
+			int remove_count = 0;
+			for (auto j = colorObjects.begin(); j < colorObjects.end();)
+			{
+				bool wheel_removed = false;
+				for (int k = 0; k < 4; ++k)
+				{
+					if (wheel[k] == *j)
+					{
+						j = mPipelines[Layer::Color]->DeleteObject(j);
+						remove_count++;
+						wheel_removed = true;
+						break;
+					}
+				}
+				if (remove_count == 4)
+					break;
+
+				if (!wheel_removed)
+					j++;
 			}
 
 			btRigidBody* rigidBody = player->GetRigidBody();
