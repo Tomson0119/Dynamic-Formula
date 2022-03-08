@@ -831,11 +831,6 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		XMFLOAT4 quaternion;
 		ss >> quaternion.x >> quaternion.y >> quaternion.z >> quaternion.w;
 
-		std::string texture;
-		ss >> texture;
-
-		texture += ".dds";
-
 		auto tmpstr = std::string("Models\\") + objName;
 
 		wstring objPath;
@@ -854,13 +849,6 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 		obj->Scale(1.0f, 1.0f, 1.0f);
 		obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", physics);
-
-		tmpstr.clear();
-		tmpstr = "Resources\\" + texture;
-		wstring texturePath;
-		texturePath.assign(tmpstr.begin(), tmpstr.end());
-
-		obj->LoadTexture(mDevice.Get(), cmdList, texturePath);
 		obj->SetPosition(pos);
 		obj->RotateQuaternion(quaternion);
 		obj->BuildRigidBody(0.0f, physics);

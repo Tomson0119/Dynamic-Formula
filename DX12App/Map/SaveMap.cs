@@ -22,13 +22,9 @@ public class SaveMap : MonoBehaviour
 
             //쿼터니언 회전각
             Quaternion orientation = obj.transform.rotation;
-
-            string texture = obj.GetComponentInChildren<MeshFilter>().GetComponent<MeshRenderer>().materials[0].name;
-            texture = texture.Replace(" (Instance)", "");
-            
-
             writer.Write(name + ".obj " + pos.x.ToString() + " " + pos.y.ToString() + " " + pos.z.ToString() +
-                " " + orientation.x.ToString() + " " + orientation.y.ToString() + " " + orientation.z.ToString() + " " + orientation.w.ToString() + " " + texture + "\r\n");
+                " " + orientation.x.ToString() + " " + orientation.y.ToString() + " " + orientation.z.ToString() + " " + orientation.w.ToString() + "\r\n");
+
             Debug.Log("Successfully Write " + name + "\r\n");
         }
         writer.Flush();
