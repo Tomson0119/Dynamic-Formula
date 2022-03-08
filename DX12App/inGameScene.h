@@ -93,6 +93,8 @@ private:
 
 	void UpdatePlayerObjects(float elapsed);
 
+	void LoadWorldMap(const std::wstring& path);
+
 private:
 	std::unique_ptr<Camera> mMainCamera;
 	std::unique_ptr<Camera> mDirectorCamera;
@@ -118,7 +120,7 @@ private:
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
 
-	std::map<MeshType, std::vector<std::shared_ptr<Mesh>>> mMeshList;
+	std::map<std::wstring, std::vector<std::shared_ptr<Mesh>>> mMeshList;
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
