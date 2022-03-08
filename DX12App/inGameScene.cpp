@@ -272,7 +272,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 {
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
-	mMeshList[L"Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
+	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
 
 	// 지형 스케일에는 정수를 넣는 것을 권장
 	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
@@ -287,8 +287,10 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 	physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 
+	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
+
 #ifdef STANDALONE
-	BuildCarObjects({ 500.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObjects({ 480.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -318,10 +320,10 @@ void InGameScene::BuildCarObjects(
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
 
-	if (mMeshList[L"Car_Body.obj"].empty())
-		mMeshList[L"Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
+	if (mMeshList["Car_Body.obj"].empty())
+		mMeshList["Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
 	else
-		carObj->SetMeshes(mMeshList[L"Car_Body.obj"]);
+		carObj->SetMeshes(mMeshList["Car_Body.obj"]);
 
 	carObj->SetDiffuse("Car_Texture", mColorMap[(int)color]);
 	for (int i = 0; i < 4; ++i)
@@ -330,17 +332,17 @@ void InGameScene::BuildCarObjects(
 
 		if (i % 2 == 0)
 		{
-			if (mMeshList[L"Car_Wheel_L.obj"].empty())
-				mMeshList[L"Car_Wheel_L.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
+			if (mMeshList["Car_Wheel_L.obj"].empty())
+				mMeshList["Car_Wheel_L.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
 			else
-				wheelObj->SetMeshes(mMeshList[L"Car_Wheel_L.obj"]);
+				wheelObj->SetMeshes(mMeshList["Car_Wheel_L.obj"]);
 		}
 		else
 		{
-			if (mMeshList[L"Car_Wheel_R.obj"].empty())
-				mMeshList[L"Car_Wheel_R.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
+			if (mMeshList["Car_Wheel_R.obj"].empty())
+				mMeshList["Car_Wheel_R.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
 			else
-				wheelObj->SetMeshes(mMeshList[L"Car_Wheel_R.obj"]);
+				wheelObj->SetMeshes(mMeshList["Car_Wheel_R.obj"]);
 		}
 
 		carObj->SetWheel(wheelObj, i);
@@ -702,7 +704,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* ca
 void InGameScene::AppendMissileObject(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
 {
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
-	missile->SetMesh(mMeshList[L"Missile"][0], mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), physics);
+	missile->SetMesh(mMeshList["Missile"][0], mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), physics);
 	missile->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
 
 	mMissileObjects.push_back(missile);
@@ -809,4 +811,52 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 		}
 	}
 	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
-} 
+}
+
+void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path)
+{
+	std::ifstream in_file{ path };
+	std::string info;
+
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+		std::string objName;
+
+		ss >> objName;
+
+		XMFLOAT3 pos;
+
+		ss >> pos.x >> pos.y >> pos.z;
+
+		XMFLOAT4 quaternion;
+		ss >> quaternion.x >> quaternion.y >> quaternion.z >> quaternion.w;
+
+		auto tmpstr = std::string("Models\\") + objName;
+
+		wstring objPath;
+		objPath.assign(tmpstr.begin(), tmpstr.end());
+
+		auto obj = make_shared<GameObject>();
+
+		if (mMeshList[objName].empty())
+			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath);
+		else
+			obj->SetMeshes(mMeshList[objName]);
+
+		//임시 방편, 현재 맵에는 가로등밖에 없으므로.
+		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\_MG_1470.dds");
+
+		wstring convexObjPath;
+		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
+		convexObjPath.assign(tmpstr.begin(), tmpstr.end());
+
+		obj->Scale(1.0f, 1.0f, 1.0f);
+		obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", physics);
+		obj->SetPosition(pos);
+		obj->RotateQuaternion(quaternion);
+		obj->BuildRigidBody(0.0f, physics);
+
+		mPipelines[Layer::Default]->AppendObject(obj);
+	}
+}

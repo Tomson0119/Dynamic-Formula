@@ -92,6 +92,8 @@ public:
 	void Rotate(float pitch, float yaw, float roll);
 	void Rotate(const XMFLOAT3& axis, float angle);
 
+	void RotateQuaternion(XMFLOAT4 quaternion);
+
 	void RotateQuaternion(float x, float y, float z, float w);
 
 	void Scale(float xScale, float yScale, float zScale);

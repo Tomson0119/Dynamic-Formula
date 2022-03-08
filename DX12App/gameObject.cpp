@@ -540,6 +540,11 @@ void GameObject::Rotate(const XMFLOAT3& axis, float angle)
 	mLook = Vector3::TransformNormal(mLook, R);
 }
 
+void GameObject::RotateQuaternion(XMFLOAT4 quaternion)
+{
+	RotateQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+}
+
 void GameObject::RotateQuaternion(float x, float y, float z, float w)
 {
 	XMMATRIX R = XMMatrixRotationQuaternion(XMVECTOR{ x,y,z,w });
