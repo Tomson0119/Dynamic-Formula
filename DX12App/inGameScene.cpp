@@ -280,7 +280,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	lamp->LoadTexture(mDevice.Get(), cmdList, L"Resources\\_MG_1470.dds");
 	lamp->Scale(1.0f, 1.0f, 1.0f);
 	lamp->LoadConvexHullShape(L"Models\\street_lamp1_Convex_Hull.obj", physics);
-	lamp->SetPosition(500.0f, lamp->GetBoundingBox().Extents.y, 540.0f);
+	lamp->SetPosition(500.0f, lamp->GetBoundingBox().Extents.y - lamp->GetBoundingBox().Center.y, 540.0f);
 	lamp->BuildRigidBody(0.0f, physics);
 	mPipelines[Layer::Default]->AppendObject(lamp);
 
