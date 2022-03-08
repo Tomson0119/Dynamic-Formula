@@ -821,16 +821,20 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	while (std::getline(in_file, info))
 	{
 		std::stringstream ss(info);
-		std::string objName;
 
+		std::string objName;
 		ss >> objName;
 
 		XMFLOAT3 pos;
-
 		ss >> pos.x >> pos.y >> pos.z;
 
 		XMFLOAT4 quaternion;
 		ss >> quaternion.x >> quaternion.y >> quaternion.z >> quaternion.w;
+
+		std::string texture;
+		ss >> texture;
+
+		texture += ".dds";
 
 		auto tmpstr = std::string("Models\\") + objName;
 
@@ -844,15 +848,19 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		else
 			obj->SetMeshes(mMeshList[objName]);
 
-		//임시 방편, 현재 맵에는 가로등밖에 없으므로.
-		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\_MG_1470.dds");
-
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
 		convexObjPath.assign(tmpstr.begin(), tmpstr.end());
 
 		obj->Scale(1.0f, 1.0f, 1.0f);
 		obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", physics);
+
+		tmpstr.clear();
+		tmpstr = "Resources\\" + texture;
+		wstring texturePath;
+		texturePath.assign(tmpstr.begin(), tmpstr.end());
+
+		obj->LoadTexture(mDevice.Get(), cmdList, texturePath);
 		obj->SetPosition(pos);
 		obj->RotateQuaternion(quaternion);
 		obj->BuildRigidBody(0.0f, physics);
