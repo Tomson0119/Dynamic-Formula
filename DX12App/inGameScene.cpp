@@ -273,26 +273,9 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
 	mMeshList[L"Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
-	mMeshList[L"Grid"].push_back(make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f));
-
-	auto lamp = make_shared<GameObject>();
-	mMeshList[L"street_lamp1.obj"] = lamp->LoadModel(mDevice.Get(), cmdList, L"Models\\street_lamp1.obj");
-	lamp->LoadTexture(mDevice.Get(), cmdList, L"Resources\\_MG_1470.dds");
-	lamp->Scale(1.0f, 1.0f, 1.0f);
-	lamp->LoadConvexHullShape(L"Models\\street_lamp1_Convex_Hull.obj", physics);
-	lamp->SetPosition(500.0f, lamp->GetBoundingBox().Extents.y - lamp->GetBoundingBox().Center.y, 540.0f);
-	lamp->BuildRigidBody(0.0f, physics);
-	mPipelines[Layer::Default]->AppendObject(lamp);
-
-	auto grid = make_shared<GameObject>();
-	grid->SetMeshes(mMeshList[L"Grid"]);
-	grid->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
-	grid->Rotate(90.0f, 0.0f, 0.0f);
-	mPipelines[Layer::Default]->AppendObject(grid);
 
 	// 지형 스케일에는 정수를 넣는 것을 권장
 	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
-	//terrain->BuildHeightMap(L"Resources\\heightmap.raw");
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
 	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 129, 129);
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
