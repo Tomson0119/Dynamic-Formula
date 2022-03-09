@@ -8,15 +8,15 @@
 class BulletWrapper
 {
 public:
-	BulletWrapper(const float& gravity);
+	BulletWrapper(float gravity);
 	~BulletWrapper();
 
 	btRigidBody* CreateRigidBody(btScalar mass, const btTransform& startTransform, btCollisionShape* shape);
 
-	std::shared_ptr<btDiscreteDynamicsWorld> GetDynamicsWorld() { return mBtDynamicsWorld; }
+	btDiscreteDynamicsWorld* GetDynamicsWorld() { return mBtDynamicsWorld.get(); }
 
 	void AddShape(btCollisionShape* shape) { mCollisionShapes.push_back(shape); }
-	void StepSimulation(float elapsed) { mBtDynamicsWorld->stepSimulation(elapsed); }
+	void StepSimulation(float elapsed);
 
 	void SetTerrainRigidBodies(const std::vector<btRigidBody*>& TerrainRigidBodies);
 
@@ -25,9 +25,11 @@ private:
 	std::shared_ptr<btCollisionDispatcher> mBtDispatcher;
 	std::shared_ptr<btBroadphaseInterface> mBtOverlappingPairCache;
 	std::shared_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
-	std::shared_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
+	std::unique_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
 
 	btAlignedObjectArray<btRigidBody*> mTerrainRigidBodies;
 
 	btAlignedObjectArray<btCollisionShape*> mCollisionShapes;
+
+	/*btClock mPhysicsTimer;*/
 };

@@ -1,52 +1,59 @@
 #pragma once
 
+
+class Timer
+{
+public:
+	Timer();
+	~Timer();
+
+	void Start();
+	void Tick();
+
+	float GetElapsed() const;
+
+private:
+	Clock::time_point mPrev;
+	Clock::time_point mCurr;
+
+	std::chrono::milliseconds mElapsed;
+};
+
+
 enum class EVENT_TYPE : char
 {
 	PHYSICS = 0,
 	BROADCAST
 };
 
-class InGameServer;
-
-class Timer
+class TimerQueue
 {
 public:
-	using Clock = std::chrono::high_resolution_clock;
-
 	struct TimerEvent
 	{
 		Clock::time_point StartTime;
 		EVENT_TYPE Type;
 		int WorldID;
-		float TimeStep;
 
 		TimerEvent();
-		TimerEvent(std::chrono::milliseconds duration, 
-			EVENT_TYPE type, int worldID, float timeStep);
+		TimerEvent(std::chrono::milliseconds duration, EVENT_TYPE type, int worldID);
 
 		constexpr bool operator<(const TimerEvent& other) const;
 	};
 
 public:
-	Timer();
-	~Timer();
+	TimerQueue();
+	~TimerQueue();
 
-	void Start(InGameServer* ptr);
-
+	void Start(class InGameServer* ptr);
 	void AddTimerEvent(const TimerEvent& evnt);
-	static void TimerThreadFunc(Timer& timer);
+	static void TimerThreadFunc(TimerQueue& timer);
 
 private:
-	Clock::time_point m_start;
-	Clock::time_point m_prev;
-	Clock::time_point m_curr;
-
-	float m_elapsed;
-
 	std::atomic_bool mLoop;
-	std::thread m_thread;
+	std::thread mThread;
 
-	concurrency::concurrent_priority_queue<TimerEvent> mTimerQueue;
+	concurrency::concurrent_priority_queue<TimerEvent> mQueue;
 
-	InGameServer* mGameServerPtr;
+	class InGameServer* mGameServerPtr;
 };

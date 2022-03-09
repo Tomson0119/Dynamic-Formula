@@ -20,7 +20,7 @@ class PhysicsPlayer;
 class InGameScene : public Scene
 {
 public:
-	InGameScene(NetModule* netPtr);
+	InGameScene(HWND hwnd, NetModule* netPtr);
 	virtual ~InGameScene();
 
 public:
@@ -35,17 +35,17 @@ public:
 		float Width,
 		float Height,
 		float aspect,
-		std::shared_ptr<BulletWrapper> physics) override;
+		const std::shared_ptr<BulletWrapper>& physics) override;
 	
 	virtual void Update(
 		ID3D12GraphicsCommandList* cmdList, 
 		const GameTimer& timer,
-		std::shared_ptr<BulletWrapper> physics) override;
+		const std::shared_ptr<BulletWrapper>& physics) override;
 	
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame);
-	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) ;
+	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
 
-	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) ;
+	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 
 public:
 	void UpdateLight(float elapsed);
@@ -59,19 +59,20 @@ public:
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0);
 
-	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed);
+	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed);
 
 public:
-	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y) ;
-	virtual void OnProcessMouseUp(WPARAM buttonState, int x, int y) ;
-	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) ;
-	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) ;
-	virtual ID3D12RootSignature* GetRootSignature() const { return mRootSignature.Get(); }
-	
+	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) override;
+	virtual void OnProcessMouseUp(WPARAM buttonState, int x, int y) override;
+	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
+	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+	virtual ID3D12RootSignature* GetRootSignature() const override { return mRootSignature.Get(); }
+
 private:
 	void BuildRootSignature();
 	void BuildComputeRootSignature();
-	void BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics);
+	void BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics);
 	void BuildConstantBuffers();
 	void BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap();
@@ -81,18 +82,24 @@ private:
 		char color,
 		bool isPlayer,
 		ID3D12GraphicsCommandList* cmdList, 
-		std::shared_ptr<BulletWrapper>& dynamicsWorld, UINT netID);
+		const std::shared_ptr<BulletWrapper>& dynamicsWorld, 
+		UINT netID);
 
 	void CreateVelocityMapViews();
 	void CreateVelocityMapDescriptorHeaps();
 
-	void AppendMissileObject(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics);
+	void AppendMissileObject(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics);
 	void UpdateMissileObject();
 
-	void UpdatePlayerObjects();
+	void UpdatePlayerObjects(float elapsed);
+
+	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path);
 
 private:
 	std::unique_ptr<Camera> mMainCamera;
+	std::unique_ptr<Camera> mDirectorCamera;
+	Camera* mCurrentCamera;
+
 	POINT mLastMousePos{};
 
 	float mCameraRadius = 30.0f;
@@ -112,22 +119,21 @@ private:
 
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
-	
+
+	std::map<std::string, std::vector<std::shared_ptr<Mesh>>> mMeshList;
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
-
-	std::map<MeshType, std::vector<std::shared_ptr<Mesh>>> mMeshList;
 
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
 
 	Player* mPlayer = nullptr;
 	std::vector<std::shared_ptr<MissileObject>> mMissileObjects;
-	std::vector<std::shared_ptr<PhysicsPlayer>> mPlayerObjects;
+	std::array<std::shared_ptr<PhysicsPlayer>, MAX_ROOM_CAPACITY> mPlayerObjects;
 
 	std::shared_ptr<Billboard> mFlameBillboard;
 	std::shared_ptr<Billboard> mDustBillboard;
-	std::shared_ptr<btDiscreteDynamicsWorld> mDynamicsWorld;
+	btDiscreteDynamicsWorld* mDynamicsWorld;
 
 	std::chrono::high_resolution_clock::time_point mPrevTime;
 
@@ -146,6 +152,9 @@ private:
 	// Key pressed flag
 	std::map<int, bool> mKeyMap;
 
+	// set true when server start game.
+	std::atomic_bool mGameStarted;
+
 	// color map
 	const std::array<XMFLOAT4, MAX_ROOM_CAPACITY> mColorMap = {
 		(XMFLOAT4)Colors::Red, (XMFLOAT4)Colors::Blue,
@@ -153,5 +162,4 @@ private:
 		(XMFLOAT4)Colors::Black, (XMFLOAT4)Colors::White,
 		(XMFLOAT4)Colors::Orange, (XMFLOAT4)Colors::Yellow
 	};
-
 };

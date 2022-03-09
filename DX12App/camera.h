@@ -114,10 +114,7 @@ protected:
 	float mNearZNeutral = 0.0f;
 	float mAspectNeutral = 0.0f;
 
-
 	float mFovCoefficient = 1.0f;
-
-
 
 	CameraMode mMode = CameraMode::THIRD_PERSON_CAMERA;
 };

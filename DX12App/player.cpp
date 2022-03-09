@@ -3,7 +3,7 @@
 #include "camera.h"
 
 Player::Player()
-	: GameObject()
+	: GameObject(), mUpdateFlag{ UPDATE_FLAG::NONE }
 {
 
 }
@@ -92,6 +92,11 @@ void Player::Pitch(float angle)
 	}
 }
 
+void Player::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
+{
+	mUpdateFlag.compare_exchange_strong(expected, desired);
+}
+
 Camera* Player::ChangeCameraMode(int cameraMode)
 {	
 	if (mCamera && (int)mCamera->GetMode() == cameraMode)
@@ -163,107 +168,7 @@ void Player::Update(float elapsedTime)
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////
-//
-TerrainPlayer::TerrainPlayer(void* context)
-	: Player()
-{
-	TerrainObject* terrain = (TerrainObject*)context;
-	float xPos = terrain->GetWidth() * 0.5f;
-	float zPos = terrain->GetDepth() * 0.5f;
-	float yPos = terrain->GetHeight(xPos, zPos) + 30.0f;
-	SetPosition(xPos, yPos, zPos);
-
-	SetPlayerContext(terrain);
-	SetCameraContext(terrain);
-}
-
-TerrainPlayer::~TerrainPlayer()
-{
-}
-
-Camera* TerrainPlayer::ChangeCameraMode(int cameraMode)
-{
-	if (mCamera && cameraMode == (int)mCamera->GetMode())
-		return nullptr;
-
-	mCamera = Player::ChangeCameraMode(cameraMode);
-
-	switch (mCamera->GetMode())
-	{
-	case CameraMode::FIRST_PERSON_CAMERA:
-		mFriction = 50.0f;
-		mGravity = { 0.0f, -9.8f, 0.0f };
-		mMaxVelocityXZ = 25.5f;
-		mMaxVelocityY = 40.0f;
-
-		mCamera->SetOffset(0.0f, 2.0f, 0.0f);
-		mCamera->SetTimeLag(0.0f);
-		break;
-
-	case CameraMode::THIRD_PERSON_CAMERA:
-		mFriction = 50.0f;
-		mGravity = { 0.0f, -9.8f, 0.0f };
-		mMaxVelocityXZ = 25.5f;
-		mMaxVelocityY = 40.0f;
-
-		mCamera->SetOffset(0.0f, 5.0f, -10.0f);
-		mCamera->SetTimeLag(0.25f);
-		break;
-
-	case CameraMode::TOP_DOWN_CAMERA:
-		mFriction = 50.0f;
-		mGravity = { 0.0f, -9.8f, 0.0f };
-		mMaxVelocityXZ = 25.5f;
-		mMaxVelocityY = 40.0f;
-
-		mCamera->SetOffset(-50.0f, 50.0f, -50.0f);
-		mCamera->SetTimeLag(0.25f);
-		break;
-	}
-
-	mCamera->SetPosition(Vector3::Add(mPosition, mCamera->GetOffset()));
-	mCamera->Update(1.0f);
-
-	return mCamera;
-}
-
-void TerrainPlayer::OnPlayerUpdate(float elapsedTime)
-{
-	XMFLOAT3 playerPos = GetPosition();
-	TerrainObject* terrain = (TerrainObject*)mPlayerUpdateContext;
-
-	float playerHalfHeight = mOOBB.Extents.y * 0.5f;
-	
-	float height = terrain->GetHeight(playerPos.x, playerPos.z) + playerHalfHeight - 0.5f;
-
-	if (playerPos.y < height)
-	{
-		XMFLOAT3 playerVelocity = GetVelocity();
-		playerVelocity.y = 0.0f;
-		SetVelocity(playerVelocity);
-		playerPos.y = height;
-		SetPosition(playerPos);
-	}
-}
-
-void TerrainPlayer::OnCameraUpdate(float elapsedTime)
-{
-	XMFLOAT3 cameraPos = mCamera->GetPosition();
-	TerrainObject* terrain = (TerrainObject*)mCameraUpdateContext;
-
-	float height = terrain->GetHeight(cameraPos.x, cameraPos.z) + 5.0f;
-	
-	if (cameraPos.y <= height)
-	{
-		cameraPos.y = height;
-		mCamera->SetPosition(cameraPos);
-	}
-	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
-		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
-}
-
-PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID), mRemoveFlag{ false }
+PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
@@ -280,6 +185,18 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID), mRemoveFlag{
 
 PhysicsPlayer::~PhysicsPlayer()
 {
+
+}
+
+void PhysicsPlayer::UpdateTransform()
+{
+	mWorld = Matrix4x4::Identity4x4();
+
+	mWorld(3, 0) = mPosition.x;
+	mWorld(3, 1) = mPosition.y;
+	mWorld(3, 2) = mPosition.z;
+
+	mWorld = Matrix4x4::Multiply(mQuaternion, mWorld);
 }
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
@@ -380,7 +297,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 		if (Epsilon < angle && mDriftGauge < 1.0f)
 		{
-			mDriftGauge += Elapsed / 3.0f;
+			mDriftGauge += Elapsed / 2.0f;
 		}
 		if (mDriftGauge > 1.0f)
 		{
@@ -396,7 +313,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 			mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
 		}
 	}
-
+	
 	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
 
@@ -409,7 +326,6 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	wheelIndex = 1;
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
-
 }
 
 
@@ -462,14 +378,9 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 
 void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 {
-	XMFLOAT3 cameraPos = mCamera->GetPosition();
-	
-	mCamera->SetPosition(cameraPos);
-
 	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
-		mCamera->LookAt(mCamera->GetPosition(), XMFLOAT3(GetPosition().x, GetPosition().y, GetPosition().z), XMFLOAT3(0.0f, 1.0f, 0.0f));
+		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
 }
-
 
 void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
 {
@@ -493,7 +404,7 @@ void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
 void PhysicsPlayer::Update(float elapsedTime)
 {
 	btScalar m[16];
-	btTransform btMat;
+	btTransform btMat{};
 	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
 	btMat.getOpenGLMatrix(m);
 
@@ -502,11 +413,6 @@ void PhysicsPlayer::Update(float elapsedTime)
 	UpdateBoundingBox();
 
 	OnPlayerUpdate(elapsedTime);
-
-	if (mCamera) {
-		OnCameraUpdate(elapsedTime);
-		mCamera->UpdateViewMatrix();
-	}
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -562,7 +468,7 @@ void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIn
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuStart);
 }
 
-void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
+void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics)
 {
 	auto dynamicsWorld = physics->GetDynamicsWorld();
 
@@ -578,7 +484,7 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", physics);
 
 	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, mBtCollisionShape);
-	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld.get());
+	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld);
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
@@ -602,19 +508,19 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 	float connectionHeight = -0.9f;
 
 	btVector3 connectionPointCS0(vehicleExtents.x - 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
 
 	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
 
 	// µÞ¹ÙÄû
 	isFrontWheel = false;
 
 	connectionPointCS0 = btVector3(vehicleExtents.x - 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
 
 	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6, wheelRadius, mTuning, isFrontWheel);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
 
 	for (int i = 0; i < mVehicle->getNumWheels(); i++)
 	{
@@ -625,6 +531,64 @@ void PhysicsPlayer::BuildRigidBody(std::shared_ptr<BulletWrapper> physics)
 		wheel.m_frictionSlip = wheelFriction;
 		wheel.m_rollInfluence = rollInfluence;
 	}
+}
+
+void PhysicsPlayer::InterpolateTransform(float elapsed, float latency)
+{
+	auto motionState = mVehicle->getRigidBody()->getMotionState();
+
+	btTransform transform{};
+	motionState->getWorldTransform(transform);
+
+	auto& currentOrigin = transform.getOrigin();
+	auto& currentQuat = transform.getRotation();
+
+	//rigid->getAngularVelocity();
+	//rigid->getLinearVelocity();
+
+	btVector3 correctOrigin = mCorrectionOrigin.GetBtVector3();
+	if (mCorrectionOrigin.IsZero() ||
+		BulletVector::Equals(currentOrigin, correctOrigin, 0.1f))
+	{
+		OutputDebugStringA("Stop correction.\n");
+		mCorrectionOrigin.SetZero();
+		ChangeUpdateFlag(UPDATE_FLAG::UPDATE, UPDATE_FLAG::NONE);
+		return;
+	}
+
+	btVector3 nextOrigin{};
+	nextOrigin.setInterpolate3(currentOrigin, correctOrigin, elapsed * mInterpSpeed);
+	btQuaternion nextQuat = currentQuat.slerp(mCorrectionQuat.GetBtQuaternion(), elapsed * mInterpSpeed);
+
+	btTransform nextTransform = btTransform::getIdentity();
+	nextTransform.setOrigin(nextOrigin);
+	nextTransform.setRotation(nextQuat);
+
+	motionState->setWorldTransform(nextTransform);
+}
+
+void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
+{
+	mCorrectionOrigin.SetValue(
+		pck->position[0],
+		pck->position[1],
+		pck->position[2]);
+
+	mCorrectionQuat.SetValue(
+		pck->quaternion[0],
+		pck->quaternion[1],
+		pck->quaternion[2],
+		pck->quaternion[3]);
+
+	/*btVector3 vel{ 
+		pck->velocity[0] / FIXED_FLOAT_LIMIT, 
+		pck->velocity[1] / FIXED_FLOAT_LIMIT,
+		pck->velocity[2] / FIXED_FLOAT_LIMIT };
+	btVector3 accel{ 
+		pck->acceleration[0] / FIXED_FLOAT_LIMIT,
+		pck->acceleration[1] / FIXED_FLOAT_LIMIT,
+		pck->acceleration[2] / FIXED_FLOAT_LIMIT };*/
+
 }
 
 void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)

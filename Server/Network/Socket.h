@@ -15,6 +15,7 @@ public:
 	virtual ~Socket();
 
 	void Close();
+	void SetNagleOption(char val);
 
 	void Init();
 	void Bind(const EndPoint& ep);

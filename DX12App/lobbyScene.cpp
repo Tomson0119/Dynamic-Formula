@@ -1,16 +1,14 @@
-#
 #include "stdafx.h"
-
-#include "LobbyUI.h"
-#include "NetLib/NetModule.h"
-#pragma once
 #include "lobbyScene.h"
-LobbyScene::LobbyScene(NetModule* netPtr)
-	: Scene{ SCENE_STAT::LOBBY, (XMFLOAT4)Colors::Bisque, netPtr }
+#include "NetLib/NetModule.h"
+#include "LobbyUI.h"
+
+LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
+	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::Bisque, netPtr }
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
 #ifdef STANDALONE
-	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #else
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
@@ -20,12 +18,13 @@ LobbyScene::LobbyScene(NetModule* netPtr)
 
 void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
-	std::shared_ptr<BulletWrapper> physics)
+	const std::shared_ptr<BulletWrapper>& physics)
 {
 	mDevice = device;
-	mpUI = std::make_unique<LobbyUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, Width, Height);
+	/*mpUI = std::make_unique<LobbyUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);*/
 }
+
 void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -42,12 +41,14 @@ void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 }
+
 void LobbyScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 {
 	float dx = static_cast<float>(x);
 	float dy = static_cast<float>(y);
-	mpUI.get()->OnProcessMouseMove(btnState, x, y);
+	//mpUI.get()->OnProcessMouseMove(btnState, x, y);
 }
+
 void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 {
 	if (buttonState)
@@ -57,14 +58,15 @@ void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);*/
 	}
 }
-void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
+
+void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
-	mpUI.get()->Update(timer.TotalTime());
+	//mpUI.get()->Update(timer.TotalTime());
 }
 
 void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
-	mpUI.get()->Draw(nFrame);
+	//mpUI.get()->Draw(nFrame);
 }
 
 bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)

@@ -30,6 +30,11 @@ void Socket::Close()
 		closesocket(mSckHandle);
 }
 
+void Socket::SetNagleOption(char val)
+{
+	setsockopt(mSckHandle, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+}
+
 void Socket::Init()
 {
 	mSckHandle = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);

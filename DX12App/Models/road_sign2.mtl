@@ -45,7 +45,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.11
 Ns 287.999996
@@ -58,7 +57,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.12
 Ns 287.999996
@@ -71,7 +69,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.13
 Ns 287.999996
@@ -84,7 +81,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.14
 Ns 287.999996
@@ -97,7 +93,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.15
 Ns 287.999996
@@ -110,7 +105,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.16
 Ns 287.999996
@@ -123,7 +117,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.17
 Ns 287.999996
@@ -136,7 +129,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.18
 Ns 287.999996
@@ -149,7 +141,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.19
 Ns 287.999996
@@ -162,7 +153,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.20
 Ns 287.999996
@@ -175,7 +165,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.21
 Ns 287.999996
@@ -188,7 +177,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.22
 Ns 287.999996
@@ -201,7 +189,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.23
 Ns 287.999996
@@ -214,7 +201,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.24
 Ns 287.999996
@@ -227,7 +213,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.25
 Ns 287.999996
@@ -240,7 +225,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.26
 Ns 287.999996
@@ -253,7 +237,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.27
 Ns 287.999996
@@ -266,7 +249,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.28
 Ns 287.999996
@@ -279,7 +261,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.29
 Ns 287.999996
@@ -292,7 +273,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.3
 Ns 287.999996
@@ -305,7 +285,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.30
 Ns 287.999996
@@ -318,7 +297,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.31
 Ns 287.999996
@@ -331,7 +309,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.32
 Ns 287.999996
@@ -344,7 +321,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.33
 Ns 287.999996
@@ -357,7 +333,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.34
 Ns 287.999996
@@ -370,7 +345,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.35
 Ns 287.999996
@@ -383,7 +357,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.36
 Ns 287.999996
@@ -396,7 +369,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.37
 Ns 287.999996
@@ -409,7 +381,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.38
 Ns 287.999996
@@ -422,7 +393,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.39
 Ns 287.999996
@@ -435,7 +405,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.4
 Ns 287.999996
@@ -448,7 +417,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.40
 Ns 287.999996
@@ -461,7 +429,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.41
 Ns 287.999996
@@ -474,7 +441,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.42
 Ns 287.999996
@@ -487,7 +453,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.43
 Ns 287.999996
@@ -500,7 +465,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.44
 Ns 287.999996
@@ -513,7 +477,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.45
 Ns 287.999996
@@ -526,7 +489,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.46
 Ns 287.999996
@@ -539,7 +501,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.47
 Ns 287.999996
@@ -552,7 +513,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.48
 Ns 287.999996
@@ -565,7 +525,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.49
 Ns 287.999996
@@ -578,7 +537,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.5
 Ns 287.999996
@@ -591,7 +549,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.50
 Ns 287.999996
@@ -604,7 +561,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.51
 Ns 287.999996
@@ -617,7 +573,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.52
 Ns 287.999996
@@ -630,7 +585,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.53
 Ns 287.999996
@@ -643,7 +597,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.54
 Ns 287.999996
@@ -656,7 +609,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.55
 Ns 287.999996
@@ -669,7 +621,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.56
 Ns 287.999996
@@ -682,7 +633,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.57
 Ns 287.999996
@@ -695,7 +645,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.58
 Ns 287.999996
@@ -708,7 +657,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.59
 Ns 287.999996
@@ -721,7 +669,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.6
 Ns 287.999996
@@ -734,7 +681,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.60
 Ns 287.999996
@@ -747,7 +693,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.61
 Ns 287.999996
@@ -760,7 +705,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.62
 Ns 287.999996
@@ -773,7 +717,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.63
 Ns 287.999996
@@ -786,7 +729,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.64
 Ns 287.999996
@@ -799,7 +741,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.65
 Ns 287.999996
@@ -812,7 +753,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.66
 Ns 287.999996
@@ -825,7 +765,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.67
 Ns 287.999996
@@ -838,7 +777,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.68
 Ns 287.999996
@@ -851,7 +789,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.69
 Ns 287.999996
@@ -864,7 +801,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.7
 Ns 287.999996
@@ -877,7 +813,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.70
 Ns 287.999996
@@ -890,7 +825,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.71
 Ns 287.999996
@@ -903,7 +837,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.72
 Ns 287.999996
@@ -916,7 +849,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.73
 Ns 287.999996
@@ -929,7 +861,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.74
 Ns 287.999996
@@ -942,7 +873,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.75
 Ns 287.999996
@@ -955,7 +885,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.76
 Ns 287.999996
@@ -968,7 +897,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.77
 Ns 287.999996
@@ -981,7 +909,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.78
 Ns 287.999996
@@ -994,7 +921,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.79
 Ns 287.999996
@@ -1007,7 +933,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.8
 Ns 287.999996
@@ -1020,7 +945,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.80
 Ns 287.999996
@@ -1033,7 +957,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.81
 Ns 287.999996
@@ -1046,7 +969,6 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 
 newmtl Old_Iron.9
 Ns 287.999996
@@ -1059,4 +981,3 @@ d 1.000000
 illum 3
 map_Bump -bm 0.280000 -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
 map_Kd -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG
-refl -o -0.000000 -5.000000 0.000000 -s 0.150000 0.200000 1.000000 road_elements_pack_fbx.fbm\\_MG_1470.JPG

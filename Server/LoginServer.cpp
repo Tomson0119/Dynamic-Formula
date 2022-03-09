@@ -7,18 +7,17 @@ std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
 IOCP LoginServer::msIOCP;
 
 LoginServer::LoginServer(const EndPoint& ep)
-	: mLoop{ true }
 {
 	std::signal(SIGINT, SignalHandler);
 
-#ifdef USE_DATABASE
 	for (int i = 0; i < MAX_THREADS; i++)
 	{
+	#ifdef USE_DATABASE
 		if (mDBHandlers[i].ConnectToDB(L"sql_server"))
 			mDBHandlers[i].ResetAllHost();
 		else std::cout << "failed to connect to DB\n";
+	#endif
 	}
-#endif
 
 	mLobby.Init(this);
 	
@@ -61,16 +60,22 @@ void LoginServer::Run()
 
 void LoginServer::NetworkThreadFunc(LoginServer& server)
 {
+	bool loop = true;
 	CompletionInfo info{};
-	while (server.mLoop)
+	while (loop)
 	{
 		try {
 			server.msIOCP.GetCompletionInfo(info);
 
 			int client_id = static_cast<int>(info.key);
 			WSAOVERLAPPEDEX* over_ex = reinterpret_cast<WSAOVERLAPPEDEX*>(info.overEx);
-			
-			if (over_ex == nullptr || info.success == FALSE)
+
+			if (over_ex == nullptr)
+			{
+				loop = false;
+				continue;
+			}
+			if (info.success == FALSE)
 			{
 				server.Disconnect(client_id);
 				if (over_ex && over_ex->Operation == OP::SEND)
@@ -106,7 +111,9 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	case OP::SEND:
 	{
 		if (bytes != over->WSABuffer.len)
+		{
 			Disconnect(id);
+		}
 		delete over;
 		break;
 	}
@@ -125,14 +132,8 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	}
 	case OP::PHYSICS:
 	{
-		float timeStep = *reinterpret_cast<float*>(over->NetBuffer.BufStartPtr());
-		mLobby.GetInGameServer().RunPhysicsSimulation(id, timeStep);
+		mLobby.GetInGameServer().RunPhysicsSimulation(id);
 		break;
-	}
-	case OP::SHUTDOWN:
-	{
-		mLoop = false;
-		delete over;
 	}
 	}
 }
@@ -282,6 +283,6 @@ void LoginServer::SignalHandler(int signal)
 	{
 		std::cout << "Terminating Server..\n";
 		for(int i=0;i<MAX_THREADS;i++)
-			msIOCP.PostToCompletionQueue(new WSAOVERLAPPEDEX(OP::SHUTDOWN), -1);
+			msIOCP.PostToCompletionQueue(nullptr, -1);
 	}
 }

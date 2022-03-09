@@ -26,6 +26,7 @@
 #define ABS(x) ((x < 0) ? -(x) : (x))
 
 using namespace std::chrono_literals;
+using Clock = std::chrono::high_resolution_clock;
 
 inline char GetPacketType(std::byte* pck)
 {

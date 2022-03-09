@@ -6,11 +6,13 @@ const short SERVER_PORT = 4000;
 const int MAX_NAME_SIZE = 20;
 const int MAX_PWD_SIZE  = 20;
 
-const int MAX_PLAYER_SIZE = 1000;
+const int MAX_PLAYER_SIZE = 100;
 const int MAX_ROOM_CAPACITY = 8;
 const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
 const int MaxBufferSize = 1024;
+
+const float FIXED_FLOAT_LIMIT = 10000.0f;
 
 enum class LOGIN_STAT : char
 {	
@@ -50,7 +52,8 @@ namespace CS
 	const char REVERT_SCENE = 5;
 	const char SWITCH_MAP   = 6;
 	const char PRESS_READY  = 7;
-	const char KEY_INPUT	= 8;
+	const char LOAD_DONE	= 8;
+	const char KEY_INPUT	= 9;
 
 	struct packet_login : packet_header
 	{
@@ -86,11 +89,17 @@ namespace CS
 		//uint64_t send_time;
 	};
 
+	struct packet_load_done : packet_header
+	{
+		int room_id;
+	};
+
 	struct packet_key_input : packet_header
 	{
 		int room_id;
 		uint8_t key;
 		bool pressed;
+		uint64_t send_time;
 	};
 }
 
@@ -116,6 +125,9 @@ namespace SC
 	const char REMOVE_PLAYER	  = 9;
 	const char GAME_START_FAIL	  = 10;
 	const char GAME_START_SUCCESS = 11;
+	const char START_SIGNAL		  = 12;
+	const char TRANSFER_TIME	  = 13;
+	const char PLAYER_TRANSFORM	  = 14;
 
 	struct packet_force_logout : packet_header { };
 
@@ -191,9 +203,30 @@ namespace SC
 	struct packet_game_start_success : packet_header
 	{
 		int room_id;
-		float x[MAX_ROOM_CAPACITY];
-		float y[MAX_ROOM_CAPACITY];
-		float z[MAX_ROOM_CAPACITY];
+		int x[MAX_ROOM_CAPACITY];
+		int y[MAX_ROOM_CAPACITY];
+		int z[MAX_ROOM_CAPACITY];
+	};
+
+	struct packet_start_signal : packet_header
+	{
+		int world_id;
+	};
+
+	struct packet_transfer_time : packet_header
+	{
+		uint64_t recv_time;
+		uint64_t send_time;
+	};
+
+	struct packet_player_transform : packet_header
+	{
+		int world_id;
+		int player_idx;
+		int position[3];
+		int quaternion[4];
+		/*int velocity[3];
+		int acceleration[3];*/
 	};
 }
 #pragma pack(pop)

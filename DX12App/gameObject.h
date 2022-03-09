@@ -50,8 +50,9 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		const std::wstring& path,
 		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
-	virtual void LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics);
-	virtual void BuildRigidBody(float mass, std::shared_ptr<BulletWrapper> physics);
+	virtual void LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics);
+	virtual void BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>& physics);
+
 public:
 	virtual void SetPosition(float x, float y, float z);
 	virtual void SetPosition(const XMFLOAT3& pos);
@@ -60,12 +61,13 @@ public:
 
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
-	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes.insert(mMeshes.end(), meshes.begin(), meshes.end()); }
+	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
+
+	void SetBoudingBoxFromMeshes();
 
 	void SetRotation(XMFLOAT3& axis, float speed);
 	void SetMovement(XMFLOAT3& dir, float speed);
 
-	void SetReflected(XMFLOAT4& plane);
 	void SetWorld(XMFLOAT4X4 world) { mWorld = world; }
 
 	void SetCBVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mCbvGPUAddress = gpuHandle; }
@@ -89,6 +91,10 @@ public:
 
 	void Rotate(float pitch, float yaw, float roll);
 	void Rotate(const XMFLOAT3& axis, float angle);
+
+	void RotateQuaternion(XMFLOAT4 quaternion);
+
+	void RotateQuaternion(float x, float y, float z, float w);
 
 	void Scale(float xScale, float yScale, float zScale);
 	void Scale(const XMFLOAT3& scale);
@@ -122,6 +128,7 @@ protected:
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mQuaternion = Matrix4x4::Identity4x4();
 
 	btRigidBody* mBtRigidBody = NULL;
 	btCompoundShape* mBtCollisionShape = NULL;
@@ -158,7 +165,7 @@ public:
 	virtual ~TerrainObject();
 
 	void BuildHeightMap(const std::wstring& path);
-	void BuildTerrainMesh(ID3D12Device* device,	ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics,int blockWidth, int blockDepth);
+	void BuildTerrainMesh(ID3D12Device* device,	ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics,int blockWidth, int blockDepth);
 
 public:
 	float GetHeight(float x, float z) const;
@@ -173,7 +180,7 @@ public:
 	float GetWidth() const { return mWidth * mTerrainScale.x; }
 	float GetDepth() const { return mDepth * mTerrainScale.z; }
 
-	std::pair<int, int> GetBlockSize() { return std::make_pair(mBlockWidth * mTerrainScale.x, mBlockDepth * mTerrainScale.z); }
+	std::pair<float, float> GetBlockSize() { return std::make_pair(mBlockWidth * mTerrainScale.x, mBlockDepth * mTerrainScale.z); }
 
 	std::vector<btRigidBody*> GetTerrainRigidBodies() { return mTerrainRigidBodies; }
 
@@ -226,7 +233,7 @@ public:
 	MissileObject();
 	virtual ~MissileObject();
 	virtual void Update(float elapsedTime);
-	void SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
+	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
 private:
 	float mDuration = 3.0f;

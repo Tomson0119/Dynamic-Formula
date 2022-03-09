@@ -5,6 +5,7 @@ NetClient::NetClient()
 	: mSendOverlapped{ nullptr }
 {
 	mSocket.Init();
+	mSocket.SetNagleOption(1);
 }
 
 bool NetClient::Connect(const char* ip, short port)
@@ -128,16 +129,30 @@ void NetClient::ToggleReady(int roomID)
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
-void NetClient::SendKeyInput(int roomID, int key, bool pressed)
+void NetClient::SendLoadSequenceDone(int roomID)
 {
 #ifdef _DEBUG
-	OutputDebugStringW(L"Sending key input.\n");
+	OutputDebugStringW(L"Sending Loading done packet.\n");
 #endif
+
+	CS::packet_load_done pck{};
+	pck.size = sizeof(CS::packet_load_done);
+	pck.type = CS::LOAD_DONE;
+	pck.room_id = roomID;
+	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void NetClient::SendKeyInput(int roomID, int key, bool pressed)
+{
 	CS::packet_key_input pck{};
 	pck.size = sizeof(CS::packet_key_input);
 	pck.type = CS::KEY_INPUT;
 	pck.key = (uint8_t)key;
 	pck.pressed = pressed;
 	pck.room_id = roomID;
+
+	auto duration = Clock::now().time_since_epoch();
+	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+	
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
