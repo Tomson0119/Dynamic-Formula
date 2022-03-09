@@ -163,7 +163,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
         mvTextBlocks[i].strText = TextUI[i];*/
    
 	fDriftGauge = mPlayer->GetDriftGauge();
-	//uItemCnt = mPlayer->GetItemNum();
+	uItemCnt = mPlayer->GetItemNum();
     //DraftGage Set
     //SetDraftGage();
 }

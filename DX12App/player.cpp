@@ -347,11 +347,18 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		else
 			mEngineForce = 0.0f;
 	}
-	if (GetAsyncKeyState('Z') & 0x8000)
+	if (GetAsyncKeyState('Z') & 0x8000/*&&mItemNum>0*/)
 	{
 		if (mBoosterLeft == 0.0f)
 			mBoosterLeft = mBoosterTime;
+		//mItemNum-=1;
+		//ItemUsingTime Ã³¸®
+
 	}
+	// if (GetAsyncKeyState('X') & 0x8000/*&&mItemNum>0*/)
+	//{
+	//
+	//}
 	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
 	{
 		for (int i = 2; i < 4; ++i)

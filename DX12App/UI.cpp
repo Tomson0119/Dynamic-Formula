@@ -67,7 +67,7 @@ void UI::SetVectorSize(UINT nFrame)
 void UI::BeginDraw(UINT nFrame)
 {
     mpd2dDeviceContext.Get()->BeginDraw();
-    mpd3d11On12Device->AcquireWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), nFrame);
+    mpd3d11On12Device->AcquireWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 2);
     mpd2dDeviceContext.Get()->SetTarget(mvd2dRenderTargets[nFrame].Get());
 }
 
@@ -117,7 +117,7 @@ void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt,
 void UI::EndDraw(UINT nFrame)
 {
     mpd2dDeviceContext.Get()->EndDraw();
-    mpd3d11On12Device->ReleaseWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 0);
+    mpd3d11On12Device->ReleaseWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 1);
 }
 void UI::Flush()
 {
@@ -146,8 +146,8 @@ void UI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
     for (UINT i = 0; i < GetRenderTargetsCount(); ++i)
     {
         D3D11_RESOURCE_FLAGS d3d11Flags = { D3D11_BIND_RENDER_TARGET };
-        mpd3d11On12Device->CreateWrappedResource(ppd3dRenderTargets[i], &d3d11Flags, D3D12_RESOURCE_STATE_PRESENT,
-            D3D12_RESOURCE_STATE_RENDER_TARGET, IID_PPV_ARGS(&mvWrappedRenderTargets[i]));
+        mpd3d11On12Device->CreateWrappedResource(ppd3dRenderTargets[i], &d3d11Flags, D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_PRESENT, IID_PPV_ARGS(&mvWrappedRenderTargets[i]));
         mvWrappedRenderTargets[i]->QueryInterface(__uuidof(IDXGISurface), (void**)&pdxgiSurface);
         mpd2dDeviceContext->CreateBitmapFromDxgiSurface(pdxgiSurface.Get(), &d2dBitmapProperties, &mvd2dRenderTargets[i]);
     }
