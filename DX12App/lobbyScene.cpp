@@ -22,7 +22,7 @@ void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 {
 	mDevice = device;
 	mpUI = std::make_unique<LobbyUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, Width, Height);
+	mpUI.get()->PreDraw(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)

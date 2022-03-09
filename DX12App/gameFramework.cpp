@@ -77,7 +77,7 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_ESCAPE:
-			if (mScenes.size() > 0);
+			//if (mScenes.size() > 0);
 				//mScenes.pop();
 
 			if (mScenes.empty()) {
@@ -128,7 +128,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 	}
 
 	//mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
-	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight, GetAspect(), mBulletPhysics);
+	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), static_cast<float>(gFrameWidth), static_cast<float>(gFrameHeight), GetAspect(), mBulletPhysics);
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };

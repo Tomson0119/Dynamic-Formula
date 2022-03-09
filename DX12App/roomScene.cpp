@@ -22,7 +22,7 @@ void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandL
 {
 	mDevice = device;
 	mpUI = std::make_unique<RoomUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, Width, Height);	
+	mpUI.get()->PreDraw(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void RoomScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)

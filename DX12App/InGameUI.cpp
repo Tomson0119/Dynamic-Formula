@@ -85,11 +85,11 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	
 
 
-	for(int i=0;i<TextCnt;++i)
+	for(int i=0;i<static_cast<int>(TextCnt);++i)
 		mvTextBlocks[i].strText.clear();
 
 	float LapTime = GTime - CountdownTime;
-	UINT Min = 0;
+	int Min = 0;
 	float Sec = 0.0;
 	Min = LapTime / 60.0f;
 	Sec = LapTime - (Min * 60.0f);
@@ -178,12 +178,12 @@ void InGameUI::Update(float GTime, std::vector<std::string> Texts)
 
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	switch (msg)
+	/*switch (msg)
 	{
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
-		/*case 'Z':
+		case 'Z':
 			if (uItemCnt > 0 && !mItemOff)
 			{
 				uItemCnt -= 1;
@@ -195,9 +195,9 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				uItemCnt -= 1;
 				mIsShootingMissile = true;
-			}*/
+			}
 		}
-	}
+	}*/
 	/*if (!mItemOff)
 	{
 		if ((GetAsyncKeyState('Z') & 0x8000) == 1 && uItemCnt > 0)
@@ -320,7 +320,7 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
 
-    D2D1::ColorF colorList[8] = { D2D1::ColorF::Black, (0xE12C38, 1.0f), (0xE12C38, 1.0f), D2D1::ColorF::Black, D2D1::ColorF::OrangeRed, D2D1::ColorF::Yellow, D2D1::ColorF::Red, D2D1::ColorF::Aqua };
+    D2D1::ColorF colorList[8] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f),D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f), D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f), D2D1::ColorF(D2D1::ColorF::Red, 1.0f), D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f) };
     D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
     UI::BuildBrush(UICnt, TextCnt, colorList,  4, gradientColors);
     

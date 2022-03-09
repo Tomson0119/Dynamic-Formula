@@ -31,7 +31,7 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 {
 	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, Width, Height);
+	mpUI.get()->PreDraw(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void LoginScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
@@ -98,16 +98,16 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		if ((GetKeyState(VK_CAPITAL) & 0x0001) == 0)
 		{
 			if ((GetAsyncKeyState(VK_SHIFT) & 0x0001) == 1)
-				Texts[IsPwd].push_back(wParam);
+				Texts[IsPwd].push_back(static_cast<char>(wParam));
 			else
-				Texts[IsPwd].push_back(tolower(wParam));
+				Texts[IsPwd].push_back(tolower(static_cast<int>(wParam)));
 		}
 		else
 		{
 			if ((GetAsyncKeyState(VK_SHIFT) & 0x0001) == 1)
-				Texts[IsPwd].push_back(tolower(wParam));
+				Texts[IsPwd].push_back(tolower(static_cast<int>(wParam)));
 			else
-				Texts[IsPwd].push_back(wParam);
+				Texts[IsPwd].push_back(static_cast<char>(wParam));
 		}
 	}
 }

@@ -41,7 +41,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         mvColors[0].a = 0.1f;
     else
         mvColors[0].a = 0.9f;
-    for (int i = 1; i < TextCnt; ++i)
+    for (int i = 1; i < static_cast<int>(TextCnt); ++i)
     {// 12, 34, 56, 78, 910, 1112
         if (MouseCollisionCheck(dx, dy, mvTextBlocks[i]))
         {
@@ -57,7 +57,7 @@ char LobbyUI::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
-    for (int i = 1; i < TextCnt; ++i)
+    for (int i = 1; i < static_cast<int>(TextCnt); ++i)
     {
         if (MouseCollisionCheck(dx, dy, mvTextBlocks[i]))
         {
