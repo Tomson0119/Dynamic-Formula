@@ -66,9 +66,9 @@ void UI::SetVectorSize(UINT nFrame)
 }
 void UI::BeginDraw(UINT nFrame)
 {
-    mpd2dDeviceContext.Get()->BeginDraw();
-    mpd3d11On12Device->AcquireWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 2);
+    mpd3d11On12Device->AcquireWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 1);
     mpd2dDeviceContext.Get()->SetTarget(mvd2dRenderTargets[nFrame].Get());
+    mpd2dDeviceContext.Get()->BeginDraw();
 }
 
 void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks)

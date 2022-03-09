@@ -87,8 +87,8 @@ void InGameScene::BuildObjects(
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
 
-	/*mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, Width, Height);*/
+	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->PreDraw(backBuffer, Width, Height);
 
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
@@ -451,7 +451,7 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 		mDirectorCamera->Pitch(0.25f * dy);
 		mDirectorCamera->RotateY(0.25f * dx);
 	}
-	//mpUI.get()->OnProcessMouseMove(buttonState, x, y);
+	mpUI.get()->OnProcessMouseMove(buttonState, x, y);
 }
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -470,7 +470,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 		break;
 	}
-	//mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
+	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
 }
 
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed)
@@ -551,7 +551,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	
 	UpdateConstants(timer);
 
-	//mpUI.get()->Update(timer.TotalTime(), mPlayer);
+	mpUI.get()->Update(timer.TotalTime(), mPlayer);
 	UpdateDynamicsWorld();
 }
 
@@ -663,7 +663,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 
 	mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
 
-	//mpUI.get()->Draw(nFrame);
+	mpUI.get()->Draw(nFrame);
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)

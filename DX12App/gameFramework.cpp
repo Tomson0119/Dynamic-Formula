@@ -30,8 +30,8 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
+	InitScene(SCENE_STAT::LOGIN); 
 	
-	InitScene(SCENE_STAT::LOGIN);
 	return true;
 }
 
@@ -40,10 +40,8 @@ void GameFramework::OnResize()
 	D3DFramework::OnResize();
 	if (!mScenes.empty()) 
 	{ 
-		mScenes.top()->OnResize(GetAspect());
-
-		auto ui = mScenes.top()->GetUI();
-		//if(ui) ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+		mScenes.top()->OnResize(GetAspect()); 
+		//mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 	}
 }
 
@@ -80,12 +78,10 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_F9:
-			auto ui = mScenes.top()->GetUI();
-			//if (ui) ui->Reset();
-		
+			//mScenes.top().get()->GetUI()->Reset();
 			D3DFramework::ChangeFullScreenState();
+			//mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 
-			//if(ui) ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 
 			break;
 		}
@@ -146,6 +142,7 @@ void GameFramework::CheckAndChangeScene()
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
 		InitScene(static_cast<SCENE_STAT>(nextScene));
+		// TODO: If scene is in_game scene then let server know loading has done.
 		break;
 	}
 	case SCENE_CHANGE_FLAG::POP:
@@ -167,6 +164,8 @@ void GameFramework::CheckAndChangeScene()
 
 void GameFramework::Update()
 {
+	mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
+
 	D3DFramework::UpdateFrameStates();
 	
 	OnPreciseKeyInput();
@@ -209,22 +208,22 @@ void GameFramework::Draw()
 	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer(), mCurrBackBufferIndex);
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
-	mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
+	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));*/
+	/*mCommandList->ResourceBarrier(1,&CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), 
+		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST));*/
 	ThrowIfFailed(mCommandList->Close());
 
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	
-	auto ui = mScenes.top()->GetUI();
-	//if(ui) ui->Flush();
-
+	mScenes.top().get()->GetUI()->Flush();
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	
+
 	
 	// 다음 후면버퍼 위치로 이동한 후 다시 기다린다.
 	mCurrBackBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
