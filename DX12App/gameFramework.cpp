@@ -37,12 +37,21 @@ bool GameFramework::InitFramework()
 
 void GameFramework::OnResize()
 {
+
+	if (!mScenes.empty())
+	{
+		mScenes.top().get()->GetUI().get()->Flush();
+		mScenes.top().get()->GetUI().get()->Reset();
+	}
 	D3DFramework::OnResize();
 	if (!mScenes.empty()) 
 	{ 
+		auto ui = mScenes.top().get()->GetUI();
+		//ui->Reset();
 		mScenes.top()->OnResize(GetAspect()); 
-		//mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+		ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 	}
+
 }
 
 void GameFramework::OnProcessMouseDown(WPARAM buttonState, int x, int y)
@@ -78,9 +87,9 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_F9:
-			//mScenes.top().get()->GetUI()->Reset();
+			mScenes.top().get()->GetUI()->Reset();
 			D3DFramework::ChangeFullScreenState();
-			//mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+			mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 
 
 			break;

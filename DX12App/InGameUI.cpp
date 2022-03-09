@@ -26,10 +26,12 @@ void InGameUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dC
 {
 
 }
+
 void InGameUI::StartPrint(const std::wstring& strUIText)
 {
     mvTextBlocks[TextCnt - 1].strText = strUIText;
 }
+
 void InGameUI::Update(float GTime, Player* mPlayer)
 {
 	/*TextUI.clear();
@@ -167,11 +169,13 @@ void InGameUI::Update(float GTime, Player* mPlayer)
     //DraftGage Set
     //SetDraftGage();
 }
+
 void InGameUI::Update(float GTime, std::vector<std::string> Texts)
 {
 	for (auto text : Texts[0])
 		mvTextBlocks[2].strText.push_back(text);
 }
+
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -208,6 +212,7 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 	}*/
 }
+
 void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
 	if (buttonState)

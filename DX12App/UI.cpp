@@ -72,10 +72,6 @@ void UI::BeginDraw(UINT nFrame)
     mpd3d11On12Device->AcquireWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 1);
     mpd2dDeviceContext.Get()->SetTarget(mvd2dRenderTargets[nFrame].Get());
     mpd2dDeviceContext.Get()->BeginDraw();
-    mpd3d11On12Device->AcquireWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 1);
-
-    mpd2dDeviceContext.Get()->SetTarget(mvd2dRenderTargets[nFrame].Get());
-    mpd2dDeviceContext.Get()->BeginDraw();
 }
 
 void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks)
@@ -169,9 +165,9 @@ void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts
 {
     mvdwTextFormat.resize(TextCnt);
 
-    for (int i = 0; i < Fonts.size(); ++i)
+    for (int i = 0; i < TextCnt; ++i)
         ThrowIfFailed(mpd2dWriteFactory->CreateTextFormat(Fonts[i].c_str(), nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, FontSize, L"en-us", mvdwTextFormat[i].GetAddressOf()));
-    for (int i = 0; i < Fonts.size(); ++i)
+    for (int i = 0; i < TextCnt; ++i)
     {
         ThrowIfFailed(mvdwTextFormat[i]->SetTextAlignment(Alignment[i]));
         ThrowIfFailed(mvdwTextFormat[i]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
@@ -195,6 +191,7 @@ void UI::BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList)
     // 0번 SolidBrush는 무조건 Black, 나머지는 인자로 받은 ColorList로 설정. 따라서 Resize할 때 UI와 Text 수에다가 1을 더해서 설정
     // 1번부터는 ColorList색. Text색 이후 UI 색으로 설정
 }
+
 void UI::BuildSolidBrush(UINT UICnt, UINT TextCnt, std::vector<D2D1::ColorF>& ColorList)
 {
     mvd2dSolidBrush.resize(TextCnt + UICnt);

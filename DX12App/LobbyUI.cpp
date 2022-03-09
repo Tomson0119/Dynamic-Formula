@@ -7,14 +7,17 @@ LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     SetVectorSize(nFrame, TextCnt);
     Initialize(device, pd3dCommandQueue);
 }
+
 LobbyUI::~LobbyUI()
 {
 
 }
+
 void LobbyUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
 
 }
+
 bool LobbyUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
 {
     if (x<TB.d2dLayoutRect.right && x>TB.d2dLayoutRect.left &&
@@ -22,12 +25,14 @@ bool LobbyUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
         return true;
     return false;
 }
+
 void LobbyUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 {
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
+
 void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
@@ -47,6 +52,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
 
 }
+
 char LobbyUI::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
@@ -313,6 +319,7 @@ void LobbyUI::SetTextRect()
     mvTextBlocks[12].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 20, mfHeight / 36 * 25, mfWidth / 32 * 22, mfHeight / 36 * 26);
 
 }
+
 void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
     mfWidth = static_cast<float>(nWidth);
