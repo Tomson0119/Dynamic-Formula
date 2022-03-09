@@ -164,8 +164,6 @@ void GameFramework::CheckAndChangeScene()
 
 void GameFramework::Update()
 {
-	mBulletPhysics->StepSimulation(mTimer.ElapsedTime());
-
 	D3DFramework::UpdateFrameStates();
 	
 	OnPreciseKeyInput();
@@ -210,20 +208,20 @@ void GameFramework::Draw()
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));*/
-	/*mCommandList->ResourceBarrier(1,&CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), 
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST));*/
+
 	ThrowIfFailed(mCommandList->Close());
 
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	
-	mScenes.top().get()->GetUI()->Flush();
+	auto ui = mScenes.top()->GetUI();
+	if(ui) ui->Flush();
+
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 
 	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	
-
 	
 	// 다음 후면버퍼 위치로 이동한 후 다시 기다린다.
 	mCurrBackBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
