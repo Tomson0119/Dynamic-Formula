@@ -90,7 +90,9 @@ void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbv
 {
 	UINT numDescriptors = (UINT)mRenderObjects.size();
 	for (const auto& obj : mRenderObjects)
+	{
 		numDescriptors += obj->GetTextureCount();
+	}
 
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
