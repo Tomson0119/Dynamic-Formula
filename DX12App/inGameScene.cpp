@@ -3,14 +3,13 @@
 #include "shadowMapRenderer.h"
 #include "LoginUI.h"
 #include "InGameUI.h"
-#pragma once
 #include "NetLib/NetModule.h"
 #include "inGameScene.h"
 
 using namespace std;
 
-InGameScene::InGameScene(NetModule* netPtr)
-	: Scene(SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr)
+InGameScene::InGameScene(HWND hwnd, NetModule* netPtr)
+	: Scene{ hwnd, SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"In Game Scene Entered.\n");
 	
@@ -22,6 +21,11 @@ InGameScene::InGameScene(NetModule* netPtr)
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
 
+#ifdef STANDALONE
+	mGameStarted = true;
+#else
+	mGameStarted = false;
+#endif
 }
 
 InGameScene::~InGameScene()
@@ -32,13 +36,17 @@ void InGameScene::OnResize(float aspect)
 {
 	if(mMainCamera)
 		mMainCamera->SetLens(aspect);
-	mpUI.get()->Reset();
-	//mpUI.get()->OnResize();
+	if (mDirectorCamera)
+		mDirectorCamera->SetLens(aspect);
 }
 
-void InGameScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
-UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height,  float aspect,
-shared_ptr<BulletWrapper> physics)
+void InGameScene::BuildObjects(
+	ComPtr<ID3D12Device> device, 
+	ID3D12GraphicsCommandList* cmdList, 
+	ID3D12CommandQueue* cmdQueue,
+	UINT nFrame, ID3D12Resource** backBuffer, 
+	float Width, float Height,  float aspect,
+	const shared_ptr<BulletWrapper>& physics)
 {
 	mDevice = device;
 
@@ -47,6 +55,13 @@ shared_ptr<BulletWrapper> physics)
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
+
+	mDirectorCamera = make_unique<Camera>();
+	mDirectorCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mDirectorCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
+	mDirectorCamera->SetPosition(500.0f, 50.0f, 500.0f);
+
+	mCurrentCamera = mDirectorCamera.get();
 
 	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	mMainLight.Lights[0].SetInfo(
@@ -71,8 +86,14 @@ shared_ptr<BulletWrapper> physics)
 	BuildGameObjects(cmdList, physics);
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
+
 	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
 	mpUI.get()->PreDraw(backBuffer, Width, Height);
+
+	// Let server know that loading sequence is done.
+#ifndef STANDALONE
+	mNetPtr->Client()->SendLoadSequenceDone(mNetPtr->GetRoomID());
+#endif
 }
 
 void InGameScene::BuildRootSignature()
@@ -173,7 +194,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(mDevice.Get());
 	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get());
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 2048, 2048, 3, mMainCamera.get());
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 2048, 2048, 3, mCurrentCamera);
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
@@ -247,21 +268,21 @@ void InGameScene::CreateVelocityMapDescriptorHeaps()
 		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
 }
 
-void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics)
+void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
-	mMeshList[MeshType::Missile].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5, 5, 5));
+	mMeshList[MeshType::Missile].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
 	mMeshList[MeshType::Grid].push_back(make_shared<GridMesh>(mDevice.Get(), cmdList, 50.0f, 50.0f, 10.0f, 10.0f));
 
-	auto lamp = make_shared<GameObject>();
+	/*auto lamp = make_shared<GameObject>();
 	mMeshList[MeshType::StreetLamp] = lamp->LoadModel(mDevice.Get(), cmdList, L"Models\\street_lamp1.obj");
 	lamp->LoadTexture(mDevice.Get(), cmdList, L"Resources\\_MG_1470.dds");
 	lamp->Scale(50.0f, 50.0f, 50.0f);
 	lamp->LoadConvexHullShape(L"Models\\street_lamp1_Convex_Hull.obj", physics);
 	lamp->SetPosition(500.0f, lamp->GetBoundingBox().Extents.y * 20, 540.0f);
 	lamp->BuildRigidBody(0.0f, physics);
-	mPipelines[Layer::Default]->AppendObject(lamp);
+	mPipelines[Layer::Default]->AppendObject(lamp);*/
 
 	auto grid = make_shared<GameObject>();
 	grid->SetMeshes(mMeshList[MeshType::Grid]);
@@ -300,6 +321,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, std::shar
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mCurrentCamera = mMainCamera.get();
 }
 
 void InGameScene::BuildCarObjects(
@@ -307,7 +329,7 @@ void InGameScene::BuildCarObjects(
 	char color,
 	bool isPlayer,
 	ID3D12GraphicsCommandList* cmdList, 
-	std::shared_ptr<BulletWrapper>& physics,
+	const std::shared_ptr<BulletWrapper>& physics,
 	UINT netID)
 {
 	auto carObj = make_shared<PhysicsPlayer>(netID);
@@ -338,14 +360,15 @@ void InGameScene::BuildCarObjects(
 				wheelObj->SetMeshes(mMeshList[MeshType::Wheel_R]);
 		}
 
-		carObj->SetWheel(wheelObj.get(), i);
+		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
 	carObj->BuildRigidBody(physics);
 	carObj->BuildDsvRtvView(mDevice.Get());
+
 	if (isPlayer) mPlayer = carObj.get();
 	mPipelines[Layer::Color]->AppendObject(carObj);
-	mPlayerObjects.push_back(carObj);
+	mPlayerObjects[netID] = std::move(carObj);
 }
 
 void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
@@ -377,26 +400,48 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 {
 	switch (type)
 	{
+	case SC::START_SIGNAL:
+	{
+		SC::packet_start_signal* pck = reinterpret_cast<SC::packet_start_signal*>(packet);
+		mGameStarted = true;
+		// TODO: Start signal
+		break;
+	}
 	case SC::REMOVE_PLAYER:
 	{
 		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 		mNetPtr->RemovePlayer(pck);
 
-		auto p = *std::find_if(mPlayerObjects.begin(), mPlayerObjects.end(),
-			[pck](const auto& p) { return (p->GetNetID() == pck->player_idx); });
-
-		p->SetRemoveFlag(true);
+		auto player = mPlayerObjects[pck->player_idx];
+		if (player)	player->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+		break;
+	}
+	case SC::TRANSFER_TIME:
+	{
+		SC::packet_transfer_time* pck = reinterpret_cast<SC::packet_transfer_time*>(packet);
+		mNetPtr->SetLatency(pck->send_time);
+		break;
+	}
+	case SC::PLAYER_TRANSFORM:
+	{
+		SC::packet_player_transform* pck = reinterpret_cast<SC::packet_player_transform*>(packet);
+		auto player = mPlayerObjects[pck->player_idx];
+		if (player)
+		{
+			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
+			//player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
+		}
 		break;
 	}
 	}
 	return true;
 }
 
-void InGameScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+void InGameScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
 	if ((buttonState) && !GetCapture())
 	{
-		SetCapture(hwnd);
+		SetCapture(mHwnd);
 		mLastMousePos.x = x;
 		mLastMousePos.y = y;
 	}
@@ -418,31 +463,52 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 		mLastMousePos.x = x;
 		mLastMousePos.y = y;
 
-		mMainCamera->Pitch(0.25f * dy);
-		mMainCamera->RotateY(0.25f * dx);
+		mDirectorCamera->Pitch(0.25f * dy);
+		mDirectorCamera->RotateY(0.25f * dx);
 	}
-	//mpUI.get()->OnProcessMouseMove(buttonState, x, y);
+	mpUI.get()->OnProcessMouseMove(buttonState, x, y);
 }
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
-	case WM_KEYDOWN:
-		switch (wParam)
+	case WM_KEYUP:
+		if (wParam == 'G')
 		{
-		case VK_END:
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
-			break;
-		
+			if (mCurrentCamera == mDirectorCamera.get())
+				mCurrentCamera = mMainCamera.get();
+			else
+				mCurrentCamera = mDirectorCamera.get();
 		}
+		if(wParam == VK_END)
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+		break;
 	}
 	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
 }
 
-void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics, float elapsed)
+void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed)
 {
-#ifdef STANDALONE
+	if (mHwnd != GetFocus()) return;
+
+	if (mCurrentCamera == mDirectorCamera.get())
+	{
+		const float dist = 60.0f;
+		if (GetAsyncKeyState('A') & 0x8000)
+			mDirectorCamera->Strafe(-dist * elapsed);
+		if (GetAsyncKeyState('D') & 0x8000)
+			mDirectorCamera->Strafe(dist * elapsed);
+		if (GetAsyncKeyState('W') & 0x8000)
+			mDirectorCamera->Walk(dist * elapsed);
+		if (GetAsyncKeyState('S') & 0x8000)
+			mDirectorCamera->Walk(-dist * elapsed);
+		if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+			mDirectorCamera->Upward(dist * elapsed);
+		if (GetAsyncKeyState(VK_LSHIFT) & 0x8000)
+			mDirectorCamera->Upward(-dist * elapsed);
+	}
+	
 	if (mMissileInterval < 0.0f)
 	{
 		if (GetAsyncKeyState('X') & 0x8000)
@@ -456,8 +522,8 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::sha
 		mMissileInterval -= elapsed;
 	}
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
-
-#else
+	
+#ifndef STANDALONE
 	for (auto& [key, val] : mKeyMap)
 	{
 		auto input = GetAsyncKeyState(key);
@@ -477,22 +543,24 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, std::sha
 #endif
 }
 
-void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, std::shared_ptr<BulletWrapper> physics)
+void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
 	float elapsed = timer.ElapsedTime();
-	
-	UpdatePlayerObjects();
 
+	if(mGameStarted)
+		physics->StepSimulation(elapsed);
+
+	UpdatePlayerObjects(elapsed);
 	OnPreciseKeyInput(cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
-	mMainCamera->Update(elapsed);
+	mCurrentCamera->Update(elapsed);
 
-	mShadowMapRenderer->UpdateSplitFrustum(mMainCamera.get());
+	mShadowMapRenderer->UpdateSplitFrustum(mCurrentCamera);
 	mShadowMapRenderer->UpdateDepthCamera(cmdList, mMainLight);
 
 	for (const auto& [_, pso] : mPipelines)
-		pso->Update(elapsed, mMainCamera.get());
+		pso->Update(elapsed, mCurrentCamera);
 
 	UpdateMissileObject();
 	
@@ -522,7 +590,7 @@ void InGameScene::UpdateCameraConstant(int idx, Camera* camera)
 
 void InGameScene::UpdateConstants(const GameTimer& timer)
 {
-	UpdateCameraConstant(0, mMainCamera.get());
+	UpdateCameraConstant(0, mCurrentCamera);
 	UpdateLightConstants();	
 
 	GameInfoConstants gameInfo{};
@@ -562,8 +630,8 @@ void InGameScene::UpdateDynamicsWorld()
 		{
 			auto pos = body->getCenterOfMassPosition();
 
-			int xIndex = pos.x() / blockWidth;
-			int zIndex = pos.z() / blockDepth;
+			int xIndex = (int)(pos.x() / blockWidth);
+			int zIndex = (int)(pos.z() / blockDepth);
 
 			for (int j = 0; j < 3; ++j)
 			{
@@ -621,9 +689,9 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 	for (const auto& [layer, pso] : mPipelines)
 	{
 		if (layer != Layer::Terrain && layer != Layer::SkyBox)
-			pso->SetAndDraw(cmdList, mMainCamera->GetWorldFrustum(), true, (bool)mLODSet);
+			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), true, (bool)mLODSet);
 		else if (layer != Layer::SkyBox)
-			pso->SetAndDraw(cmdList, mMainCamera->GetWorldFrustum(), false, (bool)mLODSet);
+			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else
 			pso->SetAndDraw(cmdList, (bool)mLODSet);
 	}
@@ -648,7 +716,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* ca
 	}
 }
 
-void InGameScene::AppendMissileObject(ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper> physics)
+void InGameScene::AppendMissileObject(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
 {
 	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
 	missile->SetMesh(mMeshList[MeshType::Missile][0], mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), physics);
@@ -667,12 +735,10 @@ void InGameScene::UpdateMissileObject()
 		if (i->get()->GetDuration() < 0.0f)
 		{
 			flag = true;
-
 			btRigidBody* rigidBody = i->get()->GetRigidBody();
 			delete rigidBody->getMotionState();
 			mDynamicsWorld->removeRigidBody(rigidBody);
 			delete rigidBody;
-
 			auto& defaultObjects = mPipelines[Layer::Default]->GetRenderObjects();
 			for (int j = 0; j < defaultObjects.size(); ++j)
 			{
@@ -690,33 +756,74 @@ void InGameScene::UpdateMissileObject()
 	if (flag) mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
 }
 
-void InGameScene::UpdatePlayerObjects()
+void InGameScene::UpdatePlayerObjects(float elapsed)
 {
-	bool flag = false;
-	for (auto i = mPlayerObjects.begin(); i < mPlayerObjects.end();)
+	bool removed_flag = false;
+	for (auto p = mPlayerObjects.begin(); p != mPlayerObjects.end();p++)
 	{
-		if (i->get()->GetRemoveFlag())
+		if (*p == nullptr) continue;
+
+		auto player = p->get();
+
+		std::shared_ptr<WheelObject> wheel[4];
+		for(int i = 0; i < 4; ++i)
+			wheel[i] = player->GetWheel(i);
+
+		switch(player->GetUpdateFlag())
 		{
-			flag = true;
-			btRigidBody* rigidBody = i->get()->GetRigidBody();
-			delete rigidBody->getMotionState();
-			mDynamicsWorld->removeRigidBody(rigidBody);
-			delete rigidBody;
+		case UPDATE_FLAG::REMOVE:
+		{
 			auto& colorObjects = mPipelines[Layer::Color]->GetRenderObjects();
 			for (int j = 0; j < colorObjects.size(); ++j)
 			{
-				if (*i == colorObjects[j])
+				if (*p == colorObjects[j])
 				{
 					mPipelines[Layer::Color]->DeleteObject(j);
+					break;
 				}
 			}
 
-			i = mPlayerObjects.erase(i);
+			int remove_count = 0;
+			for (auto j = colorObjects.begin(); j < colorObjects.end();)
+			{
+				bool wheel_removed = false;
+				for (int k = 0; k < 4; ++k)
+				{
+					if (wheel[k] == *j)
+					{
+						j = mPipelines[Layer::Color]->DeleteObject(j);
+						remove_count++;
+						wheel_removed = true;
+						break;
+					}
+				}
+				if (remove_count == 4)
+					break;
+
+				if (!wheel_removed)
+					j++;
+			}
+
+			btRigidBody* rigidBody = player->GetRigidBody();
+			delete rigidBody->getMotionState();
+			mDynamicsWorld->removeRigidBody(rigidBody);
+			mDynamicsWorld->removeVehicle(player->GetVehicle().get());
+			delete rigidBody;
+
+			p->reset();
+			removed_flag = true;
+			player->SetUpdateFlag(UPDATE_FLAG::NONE);
+			break;
 		}
-		else
-			++i;
+		case UPDATE_FLAG::UPDATE:
+		{
+			player->InterpolateTransform(elapsed, mNetPtr->GetLatency());
+			//player->CorrectWorldTransform();
+			break;
+		}
+		case UPDATE_FLAG::NONE:
+			continue;
+		}
 	}
-	if (flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
-}
-
-
+	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
+} 

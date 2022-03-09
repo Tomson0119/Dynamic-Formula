@@ -26,6 +26,7 @@ public:
 	void SwitchMap(int roomID);
 	void ToggleReady(int roomID);
 
+	void SendLoadSequenceDone(int roomID);
 	void SendKeyInput(int roomID, int key, bool pressed);
 
 public:

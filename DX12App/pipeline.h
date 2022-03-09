@@ -53,6 +53,7 @@ public:
 	void AppendObject(const std::shared_ptr<GameObject>& obj);
 
 	void DeleteObject(int idx);
+	std::vector<std::shared_ptr<GameObject>>::iterator DeleteObject(std::vector<std::shared_ptr<GameObject>>::iterator iter);
 	void ResetPipeline(ID3D12Device* device);
 
 	virtual void Update(const float elapsed, Camera* camera=nullptr);

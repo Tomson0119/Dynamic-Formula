@@ -40,15 +40,17 @@ public:
 	void SetInterface(Scene* scenePtr) { mScenePtr = scenePtr; }
 	NetClient* Client() const { return mNetClient.get(); }
 
-	void SetRoomID(int roomID) { mRoomID = roomID; }
-	
+	void SetRoomID(int roomID) { mRoomID = roomID; }	
 	int GetRoomID() const { return mRoomID; }
+
 	char GetPlayerIndex() const { return mPlayerIdx; }
 	char GetMapIndex() const { return mMapIdx; }
 
 	bool IsAdmin() const { return mPlayerIdx == mAdminIdx; }
-
 	const PlayerList& GetPlayersInfo() const { return mPlayerList; }
+
+	void SetLatency(uint64_t sendTime);
+	float GetLatency() const { return (float)mLatency / 1000.0f; }
 
 private:
 	void Init();
@@ -65,6 +67,8 @@ private:
 
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;
+
+	uint64_t mLatency;
 
 	IOCP mIOCP;
 	Scene* mScenePtr;

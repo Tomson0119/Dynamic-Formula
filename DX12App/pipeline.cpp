@@ -159,6 +159,11 @@ void Pipeline::DeleteObject(int idx)
 	mRenderObjects.erase(mRenderObjects.begin() + idx);
 }
 
+std::vector<std::shared_ptr<GameObject>>::iterator Pipeline::DeleteObject(std::vector<std::shared_ptr<GameObject>>::iterator iter)
+{
+	return mRenderObjects.erase(iter);
+}
+
 void Pipeline::ResetPipeline(ID3D12Device* device)
 {
 	BuildConstantBuffer(device);

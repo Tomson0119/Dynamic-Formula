@@ -27,7 +27,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	const std::wstring& path)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
@@ -227,10 +227,10 @@ void GameObject::LoadTexture(
 }
 
 // Scale을 설정한 뒤 호출할 것!
-void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<BulletWrapper> physics)
+void GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
 
 	std::vector<XMFLOAT3> positions;
 
@@ -273,7 +273,7 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, std::shared_ptr<B
 }
 
 //오브젝트 생성 시 마지막으로 호출할 것
-void GameObject::BuildRigidBody(float mass, std::shared_ptr<BulletWrapper> physics)
+void GameObject::BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>& physics)
 {
 	if (mBtCollisionShape)
 	{
@@ -377,12 +377,9 @@ void GameObject::UpdateTransform()
 
 void GameObject::UpdateBoundingBox()
 {
-	for (const auto& mesh : mMeshes)
-	{
-		mOOBB.Center = { 0.0f, 0.0f, 0.0f };
-		mOOBB.Transform(mOOBB, XMLoadFloat4x4(&mWorld));
-		XMStoreFloat4(&mOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&mOOBB.Orientation)));
-	}
+	mOOBB.Center = { 0.0f, 0.0f, 0.0f };
+	mOOBB.Transform(mOOBB, XMLoadFloat4x4(&mWorld));
+	XMStoreFloat4(&mOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&mOOBB.Orientation)));
 }
 
 void GameObject::Animate(float elapsedTime)
@@ -425,6 +422,50 @@ void GameObject::SetLook(XMFLOAT3& look)
 	GameObject::Update(1.0f);
 }
 
+void GameObject::SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
+{ 
+	for (int i = 0; i < meshes.size(); ++i)
+	{
+		mMeshes.push_back(std::make_shared<Mesh>(*meshes[i]));
+	}
+	SetBoudingBoxFromMeshes();
+}
+
+void GameObject::SetBoudingBoxFromMeshes()
+{
+	float min_x = 0, max_x = 0, min_y = 0, max_y = 0, min_z = 0, max_z = 0;
+
+	for (int i = 0; i < mMeshes.size(); ++i)
+	{
+		XMFLOAT3 corners[8];
+		mMeshes[i]->mOOBB.GetCorners(corners);
+
+		for (int j = 0; j < 8; ++j)
+		{
+			if (corners[j].x < min_x)
+				min_x = corners[j].x;
+			
+			if(corners[j].x > max_x)
+				max_x = corners[j].x;
+
+			if (corners[j].y < min_y)
+				min_y = corners[j].y;
+			
+			if(corners[j].y > max_y)
+				max_y = corners[j].y;
+
+			if (corners[j].z < min_z)
+				min_z = corners[j].z;
+			
+			if(corners[j].z > max_z)
+				max_z = corners[j].z;
+		}
+	}
+
+	mOOBB.Center = { (min_x + max_x) / 2, (min_y + max_y) / 2, (min_z + max_z) / 2 };
+	mOOBB.Extents = { (max_x - min_x) / 2, (max_y - min_y) / 2, (max_z - min_z) / 2 };
+}
+
 void GameObject::SetRotation(XMFLOAT3& axis, float speed)
 {
 	mRotationAxis = axis;
@@ -435,12 +476,6 @@ void GameObject::SetMovement(XMFLOAT3& dir, float speed)
 {
 	mMoveDirection = dir;
 	mMoveSpeed = speed;
-}
-
-void GameObject::SetReflected(XMFLOAT4& plane)
-{
-	mReflected = true;
-	mReflectMatrix = Matrix4x4::Reflect(plane);
 }
 
 void GameObject::Move(float dx, float dy, float dz)
@@ -503,6 +538,12 @@ void GameObject::Rotate(const XMFLOAT3& axis, float angle)
 	mRight = Vector3::TransformNormal(mRight, R);
 	mUp = Vector3::TransformNormal(mUp, R);
 	mLook = Vector3::TransformNormal(mLook, R);
+}
+
+void GameObject::RotateQuaternion(float x, float y, float z, float w)
+{
+	XMMATRIX R = XMMatrixRotationQuaternion(XMVECTOR{ x,y,z,w });
+	XMStoreFloat4x4(&mQuaternion, R);
 }
 
 void GameObject::RotateY(float angle)
@@ -572,7 +613,7 @@ void TerrainObject::BuildHeightMap(const std::wstring& path)
 	mHeightMapImage = std::make_unique<HeightMapImage>(path, mWidth, mDepth, mTerrainScale);
 }
 
-void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
+void TerrainObject::BuildTerrainMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, int blockWidth, int blockDepth)
 {	
 	mBlockWidth = blockWidth;
 	mBlockDepth = blockDepth;
@@ -667,7 +708,7 @@ MissileObject::~MissileObject()
 {
 }
 
-void MissileObject::SetMesh(std::shared_ptr<Mesh> mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics)
+void MissileObject::SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics)
 {
 	GameObject::SetMesh(mesh);
 

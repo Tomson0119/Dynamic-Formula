@@ -39,16 +39,16 @@ void RigidBody::Update(btDiscreteDynamicsWorld* physicsWorld)
 
 	case RigidBody::UPDATE_FLAG::UPDATE:
 		UpdateRigidBody();
-		break;
+		return;
 
 	case RigidBody::UPDATE_FLAG::DELETION:
 		RemoveRigidBody(physicsWorld);
 		break;
 
-	case UPDATE_FLAG::NONE:
+	case RigidBody::UPDATE_FLAG::NONE:
 		return;
 	}
-	SetUpdateFlag(UPDATE_FLAG::NONE);
+	SetUpdateFlag(UPDATE_FLAG::UPDATE);
 }
 
 void RigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
@@ -155,12 +155,35 @@ void VehicleRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
 	RigidBody::RemoveRigidBody(physicsWorld);
-	if(mVehicle) physicsWorld->removeVehicle(mVehicle.get());
+	if (mVehicle) 
+	{
+		physicsWorld->removeVehicle(mVehicle.get());
+		mVehicle.reset();
+		mVehicleRayCaster.reset();
+	}
+}
+
+void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
+{
+	auto rigid = mVehicle->getRigidBody();
+	if(rigid)
+		rigid->getMotionState()->getWorldTransform(transform);
+	//if (rigid) transform = rigid->getWorldTransform();
 }
 
 void VehicleRigidBody::UpdateRigidBody()
 {
-	// TODO: Update vehicle/wheel components and apply it.
+	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrictionSlip;
+	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrictionSlip;
+	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.FrictionSlip;
+	mVehicle->getWheelInfo(3).m_frictionSlip = mComponent.FrictionSlip;
+
+	mVehicle->applyEngineForce(mComponent.EngineForce, 0);
+	mVehicle->applyEngineForce(mComponent.EngineForce, 1);
+	mVehicle->setSteeringValue(mComponent.VehicleSteering, 0);
+	mVehicle->setSteeringValue(mComponent.VehicleSteering, 1);
+
+	mComponent.CurrentSpeed = mVehicle->getCurrentSpeedKmHour();
 }
 
 
@@ -186,7 +209,7 @@ void MapRigidBody::CreateStaticRigidBodies(std::string_view filename, btCollisio
 	//		 and create all rigidboies
 }
 
-void MapRigidBody::UpdateAllRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+void MapRigidBody::UpdateAllRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
 {
 	for (RigidBody& rigid : mStaticRigidBodies)
 	{

@@ -224,6 +224,106 @@ struct GameInfoConstants
 
 ////////////////////////////////////////////////////////////////////////////
 //
+struct AtomicInt3
+{
+	AtomicInt3()
+		: x{ 0 }, y{ 0 }, z{ 0 }
+	{
+	}
+
+	AtomicInt3(int x_, int y_, int z_)
+		: x{ x_ }, y{ y_ }, z{ z_ }
+	{
+	}
+
+	void SetZero()
+	{
+		x = 0;
+		y = 0;
+		z = 0;
+	}
+
+	bool IsZero()
+	{
+		return (x == 0 && y == 0 && z == 0);
+	}
+
+	void SetValue(int x_, int y_, int z_)
+	{
+		x = x_;
+		y = y_;
+		z = z_;
+	}
+
+	btVector3 GetBtVector3() const
+	{
+		btVector3 ret{ x / FIXED_FLOAT_LIMIT, y / FIXED_FLOAT_LIMIT, z / FIXED_FLOAT_LIMIT };
+		return ret;
+	}
+
+	std::atomic_int x;
+	std::atomic_int y;
+	std::atomic_int z;
+};
+
+struct AtomicInt4
+{
+	AtomicInt4()
+		: x{ 0 }, y{ 0 }, z{ 0 }, w{ 0 }
+	{
+	}
+
+	AtomicInt4(int x_, int y_, int z_, int w_)
+		: x{ x_ }, y{ y_ }, z{ z_ }, w{ w_ }
+	{
+	}
+
+	void SetValue(int x_, int y_, int z_, int w_)
+	{
+		x = x_;
+		y = y_;
+		z = z_;
+		w = w_;
+	}
+
+	btQuaternion GetBtQuaternion() const
+	{
+		btQuaternion ret{
+			x / FIXED_FLOAT_LIMIT,
+			y / FIXED_FLOAT_LIMIT,
+			z / FIXED_FLOAT_LIMIT,
+			w / FIXED_FLOAT_LIMIT };
+
+		return ret;
+	}
+
+	std::atomic_int x;
+	std::atomic_int y;
+	std::atomic_int z;
+	std::atomic_int w;
+};
+
+
+////////////////////////////////////////////////////////////////////////////
+//
+namespace BulletVector
+{
+	inline bool Equals(const btVector3& a, const btVector3& b, btScalar epsilon)
+	{
+		btScalar xSub = fabs(a.x() - b.x());
+		btScalar ySub = fabs(a.y() - b.y());
+		btScalar zSub = fabs(a.z() - b.z());
+
+		return (xSub < epsilon&& ySub < epsilon&& zSub < epsilon);
+	}
+
+	inline bool Equals(const btQuaternion& a, const btQuaternion& b, float epsilon)
+	{
+		btScalar len = (a - b).length2();
+		return (len < (epsilon * epsilon));
+	}
+}
+
 namespace Math
 {
 	const float PI = 3.1415926535f;

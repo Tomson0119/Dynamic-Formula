@@ -483,7 +483,7 @@ HeightMapPatchListMesh::HeightMapPatchListMesh(
 	int width, int depth, 
 	const XMFLOAT3& scale, 
 	HeightMapImage* context,
-	std::shared_ptr<BulletWrapper> physics)
+	const std::shared_ptr<BulletWrapper>& physics)
 	: Mesh(), mWidth(width), mDepth(depth), mScale(scale)
 {
 	const UINT verticesCount = 25;

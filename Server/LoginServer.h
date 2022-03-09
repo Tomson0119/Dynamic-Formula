@@ -40,9 +40,8 @@ private:
 	std::map<std::thread::id, int> mThreadIDs;
 	std::array<DBHandler, MAX_THREADS> mDBHandlers;
 	std::vector<std::thread> mThreads;
-	
+
 	static IOCP msIOCP;
-	std::atomic_bool mLoop;
 
 	/*
 		로비서버는 분산 서버 시스템에서 여러 개가 존재할 수 있다.

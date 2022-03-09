@@ -70,8 +70,6 @@ public:
 	void SetMaterial(Material mat) { mMaterial.Mat = mat; }
 	void SetSrvIndex(UINT idx) { mMaterial.SrvIndex = idx; }
 
-	btRigidBody* GetRigidBody() { return mBtRigidBody; }
-
 public:
 	MaterialConstants GetMaterialConstant() const;
 	UINT GetSrvIndex() const { return mMaterial.SrvIndex; }
@@ -97,7 +95,7 @@ protected:
 	MatInfo mMaterial = {};
 
 	std::string mName;
-	btRigidBody* mBtRigidBody = NULL;
+	//btRigidBody* mBtRigidBody = NULL;
 
 public:
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView = {};
@@ -184,7 +182,7 @@ public:
 		int width, int depth,
 		const XMFLOAT3& scale,
 		HeightMapImage* context,
-		std::shared_ptr<BulletWrapper> physics);
+		const std::shared_ptr<BulletWrapper>& physics);
 
 	virtual ~HeightMapPatchListMesh();
 
@@ -193,6 +191,8 @@ public:
 	void SetIndex(int x, int z);
 	std::pair<int, int> GetIndex() { return std::pair<int, int>(mXIndex, mZIndex); }
 	std::pair<float, float> GetMinMax() { return std::pair<float, float>(mMinHeight, mMaxHeight); }; // min, max
+
+	btRigidBody* GetRigidBody() { return mBtRigidBody; }
 
 private:
 	XMFLOAT3 mScale = {};
@@ -207,6 +207,7 @@ private:
 	int mZIndex = 0;
 
 	float* mHeightmapData = NULL;
+	btRigidBody* mBtRigidBody = NULL;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

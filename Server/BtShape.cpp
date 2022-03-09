@@ -8,6 +8,52 @@
 //
 //	BtBoxShape
 //
+void BtShapeBase::LoadConvexHullShape(std::string_view filename)
+{
+	std::ifstream in_file{ filename.data(), std::ios::binary };
+
+	mCompoundShape = std::make_unique<btCompoundShape>();
+	
+	std::vector<btVector3> positions;
+	std::string info;
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+		std::string type;
+
+		ss >> type;
+
+		if (type == "v")
+		{
+			float x, y, z;
+			ss >> x >> y >> z;
+			z *= -1.0f;
+
+			positions.push_back(btVector3{ x,y,z });
+		}
+		else if (type == "s")
+		{
+			auto convexHull = std::make_unique<btConvexHullShape>();
+
+			for (int i = 0; i < positions.size(); ++i)
+				convexHull->addPoint(positions[i]);
+
+			positions.clear();
+
+			btTransform localTransform;
+			localTransform.setIdentity();
+			localTransform.setOrigin(btVector3(0, 0, 0));
+
+			mCompoundShape->addChildShape(localTransform, convexHull.get());
+			mConvexHullShapes.push_back(std::move(convexHull));
+		}
+	}
+}
+
+
+//
+//	BtBoxShape
+//
 BtBoxShape::BtBoxShape(std::string_view filename)
 {
 	LoadShapeData(filename);
@@ -26,7 +72,7 @@ void BtBoxShape::LoadShapeData(std::string_view filename)
 
 void BtBoxShape::BuildCollisionShape()
 {
-	mCollisionShape = std::make_unique<btBoxShape>(mExtents);
+	//mCollisionShape = std::make_unique<btBoxShape>(mExtents);
 }
 
 
@@ -111,7 +157,7 @@ void BtCarShape::LoadShapeData(std::string_view filename)
 
 void BtCarShape::BuildCollisionShape()
 {
-	mCollisionShape = std::make_unique<btBoxShape>(mExtents);
+	/*mCollisionShape = std::make_unique<btBoxShape>(mExtents);*/
 }
 
 //
@@ -151,7 +197,7 @@ void BtTerrainShape::LoadShapeData(std::string_view filename)
 
 void BtTerrainShape::BuildCollisionShape()
 {
-	auto minmaxHeight = std::minmax_element(mHeightMapData, mHeightMapData + mMapRow*mMapCol,
+	auto minmaxHeight = std::minmax_element(mHeightMapData, mHeightMapData + mMapRow * mMapCol,
 		[](float a, float b)
 		{
 			return (a < b);

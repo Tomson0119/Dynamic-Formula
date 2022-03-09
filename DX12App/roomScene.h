@@ -7,7 +7,7 @@ class NetModule;
 class RoomScene : public Scene
 {
 public:
-	RoomScene(NetModule* netPtr);
+	RoomScene(HWND hwnd, NetModule* netPtr);
 	virtual ~RoomScene() = default;
 
 public:
@@ -20,12 +20,12 @@ public:
 		float Width,
 		float Height,
 		float aspect,
-		std::shared_ptr<BulletWrapper> physics) override;
+		const std::shared_ptr<BulletWrapper>& physics) override;
 
 	virtual void Update(
 		ID3D12GraphicsCommandList* cmdList,
 		const GameTimer& timer,
-		std::shared_ptr<BulletWrapper> physics) override;
+		const std::shared_ptr<BulletWrapper>& physics) override;
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame) override;

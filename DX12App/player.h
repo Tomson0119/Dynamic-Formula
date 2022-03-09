@@ -4,6 +4,13 @@
 #include "camera.h"
 #include "inGameScene.h"
 
+enum class UPDATE_FLAG : char
+{
+	NONE = 0,
+	UPDATE,
+	REMOVE
+};
+
 class Player : public GameObject
 {
 public:
@@ -34,6 +41,10 @@ public:
 	XMFLOAT3 GetVelocity() const { return mVelocity; }
 	XMFLOAT3 GetGravity() const { return mGravity; }
 
+	void ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
+	void SetUpdateFlag(UPDATE_FLAG flag) { mUpdateFlag = flag; }
+	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
+
 public:
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	virtual float GetCurrentVelocity() { return 0.0f; }
@@ -59,25 +70,9 @@ protected:
 	void* mCameraUpdateContext = nullptr;
 
 	Camera* mCamera = nullptr;
+
+	std::atomic<UPDATE_FLAG> mUpdateFlag;
 };
-
-
-/////////////////////////////////////////////////////////////////////////////////////
-//
-class TerrainPlayer : public Player
-{
-public:
-	TerrainPlayer(void* context);
-	TerrainPlayer(const TerrainPlayer& rhs) = delete;
-	TerrainPlayer& operator=(const TerrainPlayer& rhs) = delete;
-	virtual ~TerrainPlayer();
-
-	virtual Camera* ChangeCameraMode(int cameraMode) override;
-
-	virtual void OnPlayerUpdate(float elapsedTime) override;
-	virtual void OnCameraUpdate(float elapsedTime) override;
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
@@ -97,11 +92,12 @@ public:
 	PhysicsPlayer(UINT netID);
 	virtual ~PhysicsPlayer();
 
+	virtual void UpdateTransform() override;
+
 	virtual void OnCameraUpdate(float elapsedTime);
 	virtual void OnPlayerUpdate(float elapsedTime);
 	virtual void Update(float elapsedTime) override;
 	virtual void OnPreciseKeyInput(float Elapsed);
-	virtual void UpdateTransform() { }
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
@@ -109,25 +105,31 @@ public:
 
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
 	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
-	void SetWheel(WheelObject* wheel, int index) { mWheel[index] = wheel; }
-	void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
-	
+	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
+	//void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
+
+	std::shared_ptr<WheelObject> GetWheel(int index) { return mWheel[index]; }
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 
 	//void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
-	virtual void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
+	virtual void BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics);
 
-	void SetRemoveFlag(bool flag) { mRemoveFlag = flag; }
-	bool GetRemoveFlag() const { return mRemoveFlag; }
+	void InterpolateTransform(float elapsed, float latency);
+	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
 
 	virtual int GetItemNum() { return mItemNum; }
 	virtual float GetDriftGauge() { return mDriftGauge; }
 
 private:
-	WheelObject* mWheel[4];
+	std::shared_ptr<WheelObject> mWheel[4];
 	btRaycastVehicle::btVehicleTuning mTuning;
 	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::shared_ptr<btRaycastVehicle> mVehicle;
+
+	AtomicInt3 mCorrectionOrigin{};
+	AtomicInt4 mCorrectionQuat{};
+
+	const float mInterpSpeed = 5.0f;
 
 	float mBoosterLeft = 0.0f;
 	float mBoosterTime = 5.0f;
@@ -184,5 +186,4 @@ private:
 	UINT mCurrentRenderTarget = 0;
 
 	UINT mNetID = -1;
-	std::atomic_bool mRemoveFlag;
 };
