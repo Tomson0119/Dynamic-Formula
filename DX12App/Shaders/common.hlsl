@@ -55,6 +55,15 @@ cbuffer ShadowCB : register(b5)
     float gZSplit2 : packoffset(c0.z);
 }
 
+struct InstancingInfo
+{
+    matrix World;
+    matrix OldWorld;
+    bool CubemapOn;
+    bool MotionBlurOn;
+};
+StructuredBuffer<InstancingInfo> gInstancingInfo : register(t0, space3);
+
 float CalcShadowFactor(float4 shadowPos, int idx)
 {
     float result = 0.0f;

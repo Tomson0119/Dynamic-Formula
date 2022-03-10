@@ -17,7 +17,8 @@ enum class Layer : int
 	Transparent,
 	ShadowDebug,
 	DynamicCubeMap,
-	MotionBlur
+	MotionBlur,
+	Instancing
 };
 
 class Pipeline
@@ -138,6 +139,19 @@ private:
 	D3D12_STREAM_OUTPUT_DESC mStreamOutputDesc;
 	std::vector<D3D12_SO_DECLARATION_ENTRY> mSODeclarations;
 	std::vector<UINT> mStrides;
+};
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+class InstancingPipeline : public Pipeline
+{
+public:
+	InstancingPipeline();
+	virtual ~InstancingPipeline();
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
+
+	std::map<std::string, int> mInstancingCount;
+private:
 };
 
 

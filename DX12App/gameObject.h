@@ -28,6 +28,11 @@ public:
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffse, bool isSO=false);
 
+	virtual void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset,
+		const BoundingFrustum& viewFrustum, bool objectOOBB, int InstanceCount, bool isSO = false);
+
 	virtual void ChangeCurrentRenderTarget() {}
 
 	void UpdateBoundingBox();
@@ -69,6 +74,9 @@ public:
 	void SetMovement(XMFLOAT3& dir, float speed);
 
 	void SetWorld(XMFLOAT4X4 world) { mWorld = world; }
+
+	void SetName(std::string name) { mName = name; }
+	std::string GetName() { return mName; }
 
 	void SetCBVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mCbvGPUAddress = gpuHandle; }
 	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
@@ -151,6 +159,8 @@ protected:
 
 	bool mCubemapOn = false;
 	bool mMotionBlurOn = true;
+
+	std::string mName = NULL;
 };
 
 

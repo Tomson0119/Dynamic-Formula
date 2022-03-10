@@ -97,6 +97,40 @@ void Mesh::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewF
 		}
 	}
 }
+void Mesh::DrawInstanced(ID3D12GraphicsCommandList* cmdList, int InstanceCount, bool isSO)
+{
+	cmdList->IASetVertexBuffers(mSlot, 1, &mVertexBufferView);
+	cmdList->IASetPrimitiveTopology(mPrimitiveTopology);
+
+	if (mIndexCount > 0)
+	{
+		cmdList->IASetIndexBuffer(&mIndexBufferView);
+		cmdList->DrawIndexedInstanced(mIndexCount, InstanceCount, mStartIndex, mBaseVertex, 0);
+	}
+	else
+	{
+		cmdList->DrawInstanced(mVerticesCount, InstanceCount, mBaseVertex, 0);
+	}
+}
+
+void Mesh::DrawInstanced(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, int InstanceCount, bool isSO)
+{
+	if (viewFrustum.Intersects(mOOBB))
+	{
+		cmdList->IASetVertexBuffers(mSlot, 1, &mVertexBufferView);
+		cmdList->IASetPrimitiveTopology(mPrimitiveTopology);
+
+		if (mIndexCount > 0)
+		{
+			cmdList->IASetIndexBuffer(&mIndexBufferView);
+			cmdList->DrawIndexedInstanced(mIndexCount, InstanceCount, mStartIndex, mBaseVertex, 0);
+		}
+		else
+		{
+			cmdList->DrawInstanced(mVerticesCount, InstanceCount, mBaseVertex, 0);
+		}
+	}
+}
 
 void Mesh::LoadMesh(
 	ID3D12Device* device, 

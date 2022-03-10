@@ -221,6 +221,11 @@ struct GameInfoConstants
 	float ElapsedTime;
 };
 
+struct InstancingInfo
+{
+	XMFLOAT4X4 World;
+};
+
 
 ////////////////////////////////////////////////////////////////////////////
 //

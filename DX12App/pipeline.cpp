@@ -630,3 +630,35 @@ void ComputePipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 		D3D12_RESOURCE_STATE_COMMON));
 }
+
+InstancingPipeline::InstancingPipeline()
+{
+
+}
+
+InstancingPipeline::~InstancingPipeline()
+{
+
+}
+
+void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
+{
+	UINT matOffset = 0;
+	for (int i = 0; i < mRenderObjects.size(); i++)
+	{
+		if (mRenderObjects[i]->GetMeshCount() > 0)
+		{
+			mInstancingCount[mRenderObjects[i]->GetName()];
+			mRenderObjects[i]->DrawInstanced(
+				cmdList,
+				mRootParamMatIndex,
+				mRootParamCBVIndex,
+				mRootParamSRVIndex,
+				mMaterialCB->GetGPUVirtualAddress(matOffset),
+				mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
+
+			matOffset += mRenderObjects[i]->GetMeshCount();
+		}
+	}
+}
+
