@@ -17,7 +17,7 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	}
 	else OutputDebugStringW(L"Failed to connect to server.\n");
 #else
-	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #endif
 }
 
