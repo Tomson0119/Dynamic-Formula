@@ -107,18 +107,42 @@ void GameFramework::InitScene(SCENE_STAT state)
 	switch (state)
 	{
 	case SCENE_STAT::LOGIN:
+		if (!mScenes.empty())
+		{
+			mScenes.top()->GetUI()->Flush();
+			mScenes.top()->GetUI()->Reset();
+
+		}
 		mScenes.push(std::make_unique<LoginScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::LOBBY:
+		if (!mScenes.empty())
+		{
+			mScenes.top()->GetUI()->Flush();
+			mScenes.top()->GetUI()->Reset();
+
+		}
 		mScenes.push(std::make_unique<LobbyScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::ROOM:
+		if (!mScenes.empty())
+		{
+			mScenes.top()->GetUI()->Flush();
+			mScenes.top()->GetUI()->Reset();
+
+		}
 		mScenes.push(std::make_unique<RoomScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::IN_GAME:
+		if (!mScenes.empty())
+		{
+			mScenes.top()->GetUI()->Flush();
+			mScenes.top()->GetUI()->Reset();
+
+		}
 		mScenes.push(std::make_unique<InGameScene>(m_hwnd, mNetwork.get()));
 		break;
 

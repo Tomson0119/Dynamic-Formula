@@ -261,8 +261,7 @@ void LobbyUI::Draw(UINT nFrame)
 
 void LobbyUI::CreateFontFormat()
 {
-    float fFontSize = mfHeight / 25.0f;
-    std::vector<std::wstring> Fonts;
+    fFontSize = mfHeight / 25.0f;
     Fonts.push_back(L"Tahoma");
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
@@ -277,7 +276,6 @@ void LobbyUI::CreateFontFormat()
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
 
-    DWRITE_TEXT_ALIGNMENT TextAlignments[13];
     //TextAlignments.resize(TextCnt);
     TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
@@ -360,11 +358,6 @@ void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
         mvTextBlocks[11].strText.push_back(wc);
     for (auto wc : std::wstring{ L"6" })
         mvTextBlocks[12].strText.push_back(wc);
-    
-    
-    
-    
-    
 }
 
 void LobbyUI::Reset()
