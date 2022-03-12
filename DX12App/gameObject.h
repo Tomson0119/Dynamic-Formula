@@ -28,8 +28,13 @@ public:
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffse, bool isSO=false);
 
+
+	void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset, int InstanceCount, bool isSO = false);
+
 	virtual void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
-		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
+		UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffset,
 		const BoundingFrustum& viewFrustum, bool objectOOBB, int InstanceCount, bool isSO = false);
 
@@ -160,7 +165,7 @@ protected:
 	bool mCubemapOn = false;
 	bool mMotionBlurOn = true;
 
-	std::string mName = NULL;
+	std::string mName;
 };
 
 

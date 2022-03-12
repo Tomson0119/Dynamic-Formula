@@ -148,7 +148,10 @@ class InstancingPipeline : public Pipeline
 public:
 	InstancingPipeline();
 	virtual ~InstancingPipeline();
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
+	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame = false, bool setPipeline = true);
+	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame = false, bool setPipeline = true);
 
 	std::map<std::string, int> mInstancingCount;
 private:

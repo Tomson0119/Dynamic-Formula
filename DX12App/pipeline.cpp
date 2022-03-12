@@ -641,18 +641,45 @@ InstancingPipeline::~InstancingPipeline()
 
 }
 
-void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
+void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 {
 	UINT matOffset = 0;
+
+	cmdList->SetGraphicsRootShaderResourceView(9, mObjectCB->GetGPUVirtualAddress(0));
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
 		if (mRenderObjects[i]->GetMeshCount() > 0)
 		{
-			mInstancingCount[mRenderObjects[i]->GetName()];
+			cmdList->SetGraphicsRoot32BitConstants(8, 1, &mInstancingCount[mRenderObjects[i]->GetName()], 3);
+
 			mRenderObjects[i]->DrawInstanced(
 				cmdList,
 				mRootParamMatIndex,
-				mRootParamCBVIndex,
+				9,
+				mRootParamSRVIndex,
+				mMaterialCB->GetGPUVirtualAddress(matOffset),
+				mMaterialCB->GetByteSize(), mInstancingCount[mRenderObjects[i]->GetName()], isSO);
+
+			matOffset += mRenderObjects[i]->GetMeshCount();
+		}
+	}
+}
+
+void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
+{
+	UINT matOffset = 0;
+
+	cmdList->SetGraphicsRootShaderResourceView(9, mObjectCB->GetGPUVirtualAddress(0));
+	for (int i = 0; i < mRenderObjects.size(); i++)
+	{
+		if (mRenderObjects[i]->GetMeshCount() > 0)
+		{
+			cmdList->SetGraphicsRoot32BitConstants(8, 1, &mInstancingCount[mRenderObjects[i]->GetName()], 3);
+			
+			mRenderObjects[i]->DrawInstanced(
+				cmdList,
+				mRootParamMatIndex,
+				9,
 				mRootParamSRVIndex,
 				mMaterialCB->GetGPUVirtualAddress(matOffset),
 				mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
@@ -662,3 +689,34 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const Bounding
 	}
 }
 
+void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+	cmdList->OMSetStencilRef(mStencilRef);
+
+	if (setPipeline) {
+		if (mIsWiredFrame && drawWiredFrame)
+			cmdList->SetPipelineState(mPSO[1].Get());
+		else
+			cmdList->SetPipelineState(mPSO[0].Get());
+	}
+
+	Draw(cmdList);
+}
+
+void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+	cmdList->OMSetStencilRef(mStencilRef);
+
+	if (setPipeline) {
+		if (mIsWiredFrame && drawWiredFrame)
+			cmdList->SetPipelineState(mPSO[1].Get());
+		else
+			cmdList->SetPipelineState(mPSO[0].Get());
+	}
+
+	Draw(cmdList, viewFrustum, objectOOBB);
+}

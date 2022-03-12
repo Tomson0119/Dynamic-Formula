@@ -113,7 +113,7 @@ void InGameScene::BuildRootSignature()
 	parameters[5] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);				 // Texture, SRV
 	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap
 	parameters[7] = Extension::DescriptorTable(1, &descRanges[3], D3D12_SHADER_VISIBILITY_ALL);				 // CubeMap
-	parameters[8] = Extension::Constants(3, 5, D3D12_SHADER_VISIBILITY_ALL);                                 // Shadow ViewProjection
+	parameters[8] = Extension::Constants(4, 5, D3D12_SHADER_VISIBILITY_ALL);                                 // E.T.C - 기타 바로바로 올려야 할 필요가 있는 쉐이더 상수들
 	parameters[9] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_SRV, 0, D3D12_SHADER_VISIBILITY_ALL, 3); // Instancing Structured Buffer
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[5];
@@ -679,11 +679,11 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 
 	for (const auto& [layer, pso] : mPipelines)
 	{
-		if (layer != Layer::Terrain && layer != Layer::SkyBox)
+		/*if (layer != Layer::Terrain && layer != Layer::SkyBox)
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), true, (bool)mLODSet);
 		else if (layer != Layer::SkyBox)
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
-		else
+		else*/
 			pso->SetAndDraw(cmdList, (bool)mLODSet);
 	}
 }
