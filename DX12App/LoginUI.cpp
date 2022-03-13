@@ -19,16 +19,19 @@ void LoginUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCo
 {
 
 }
+
 void LoginUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 {
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
+
 void LoginUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 
 }
+
 bool LoginUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
 {
     if (x<TB.d2dLayoutRect.right && x>TB.d2dLayoutRect.left &&
@@ -36,6 +39,7 @@ bool LoginUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
         return true;
     return false;
 }
+
 char LoginUI::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
@@ -54,6 +58,7 @@ char LoginUI::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
     return 0;
 }
+
 void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
@@ -69,6 +74,7 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     else mvColors[4].a = 0.8f;
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
 }
+
 void LoginUI::Update(float GTime, std::vector <std::wstring>& Texts)
 {
     //mvTextBlocks[3].strText.clear();
@@ -84,11 +90,13 @@ void LoginUI::Update(float GTime, std::vector <std::wstring>& Texts)
         mvTextBlocks[3].strText.assign(Texts[1].begin(), Texts[1].end());
     }
 }
+
 void LoginUI::Update(std::vector<std::wstring>& Texts) 
 {
     mvTextBlocks[2].strText.assign(Texts[0].begin(), Texts[0].end());
     mvTextBlocks[3].strText.assign(Texts[1].begin(), Texts[1].end());
 }
+
 void LoginUI::ChangeTextAlignment(UINT uNum, UINT uState)
 {
     if (uNum == 0) {

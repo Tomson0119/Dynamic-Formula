@@ -326,7 +326,7 @@ namespace BulletVector
 	inline bool Equals(const btQuaternion& a, const btQuaternion& b, float epsilon)
 	{
 		btScalar len = (a - b).length2();
-		return (len < (epsilon * epsilon));
+		return (len < (epsilon* epsilon));
 	}
 }
 

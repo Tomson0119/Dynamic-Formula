@@ -30,21 +30,28 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
+	InitScene(SCENE_STAT::LOGIN); 
 	
-	InitScene(SCENE_STAT::LOGIN);
 	return true;
 }
 
 void GameFramework::OnResize()
 {
+
+	if (!mScenes.empty())
+	{
+		mScenes.top().get()->GetUI().get()->Flush();
+		mScenes.top().get()->GetUI().get()->Reset();
+	}
 	D3DFramework::OnResize();
 	if (!mScenes.empty()) 
 	{ 
-		mScenes.top()->OnResize(GetAspect());
-
-		auto ui = mScenes.top()->GetUI();
-		//if(ui) ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+		auto ui = mScenes.top().get()->GetUI();
+		//ui->Reset();
+		mScenes.top()->OnResize(GetAspect()); 
+		ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 	}
+
 }
 
 void GameFramework::OnProcessMouseDown(WPARAM buttonState, int x, int y)
@@ -70,7 +77,7 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_ESCAPE:
-			if (mScenes.size() > 0);
+			//if (mScenes.size() > 0);
 				//mScenes.pop();
 
 			if (mScenes.empty()) {
@@ -80,12 +87,10 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_F9:
-			auto ui = mScenes.top()->GetUI();
-			//if (ui) ui->Reset();
-		
+			mScenes.top().get()->GetUI()->Reset();
 			D3DFramework::ChangeFullScreenState();
+			mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 
-			//if(ui) ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 
 			break;
 		}
@@ -102,18 +107,42 @@ void GameFramework::InitScene(SCENE_STAT state)
 	switch (state)
 	{
 	case SCENE_STAT::LOGIN:
+		if (!mScenes.empty())
+		{
+			mScenes.top()->GetUI()->Flush();
+			mScenes.top()->GetUI()->Reset();
+
+		}
 		mScenes.push(std::make_unique<LoginScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::LOBBY:
+		if (!mScenes.empty())
+		{
+			mScenes.top()->GetUI()->Flush();
+			mScenes.top()->GetUI()->Reset();
+
+		}
 		mScenes.push(std::make_unique<LobbyScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::ROOM:
+		if (!mScenes.empty())
+		{
+			mScenes.top()->GetUI()->Flush();
+			mScenes.top()->GetUI()->Reset();
+
+		}
 		mScenes.push(std::make_unique<RoomScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::IN_GAME:
+		if (!mScenes.empty())
+		{
+			mScenes.top()->GetUI()->Flush();
+			mScenes.top()->GetUI()->Reset();
+
+		}
 		mScenes.push(std::make_unique<InGameScene>(m_hwnd, mNetwork.get()));
 		break;
 
@@ -123,7 +152,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 	}
 
 	//mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
-	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight, GetAspect(), mBulletPhysics);
+	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), static_cast<float>(gFrameWidth), static_cast<float>(gFrameHeight), GetAspect(), mBulletPhysics);
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
@@ -146,6 +175,7 @@ void GameFramework::CheckAndChangeScene()
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
 		InitScene(static_cast<SCENE_STAT>(nextScene));
+		// TODO: If scene is in_game scene then let server know loading has done.
 		break;
 	}
 	case SCENE_CHANGE_FLAG::POP:
@@ -209,8 +239,8 @@ void GameFramework::Draw()
 	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer(), mCurrBackBufferIndex);
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
-	mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));*/
 
 	ThrowIfFailed(mCommandList->Close());
 
@@ -218,7 +248,7 @@ void GameFramework::Draw()
 	mCommandQueue->ExecuteCommandLists(_countof(cmdList), cmdList);
 	
 	auto ui = mScenes.top()->GetUI();
-	//if(ui) ui->Flush();
+	if(ui) ui->Flush();
 
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();

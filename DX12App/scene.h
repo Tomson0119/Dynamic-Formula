@@ -5,7 +5,7 @@
 #include "gameObject.h"
 
 #define STANDALONE
-#define START_GAME_INSTANT
+//#define START_GAME_INSTANT
 
 class NetModule;
 class UI;
@@ -64,7 +64,7 @@ public:
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
 
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
-	UI* GetUI() { return mpUI.get(); }
+	std::shared_ptr<UI> GetUI() { return mpUI; }
 
 public:
 	SCENE_CHANGE_FLAG GetSceneChangeFlag() const { return mSceneChangeFlag; }
@@ -77,7 +77,7 @@ protected:
 	XMFLOAT4 mFrameColor;
 
 	//UI 
-	std::unique_ptr<UI> mpUI;
+	std::shared_ptr<UI> mpUI;
 
 	NetModule* mNetPtr;
 

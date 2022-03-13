@@ -49,7 +49,7 @@ public:
     //void SetTextcnt(UINT Cnt) { TextCnt = Cnt; }
     std::pair<float, float> GetFrame() const { return std::make_pair(mfWidth, mfHeight); }
    ID3D11Resource* GetRenderTarget() const { return mvWrappedRenderTargets[0].Get(); }
-   UINT GetRenderTargetsCount() const { return mvWrappedRenderTargets.size(); }
+   UINT GetRenderTargetsCount() const { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
 private:
 
     float mfHeight = 0.0f;

@@ -26,11 +26,13 @@ private:
 
 	float mfWidth = 0.0f;
 	float mfHeight = 0.0f;
-
+	
+	float fFontSize = 0.0f;
+	std::vector<std::wstring> Fonts;
+	DWRITE_TEXT_ALIGNMENT TextAlignments[13];
 	UINT TextCnt;
 	UINT UICnt;
 	std::vector<D2D1::ColorF> mvColors;
-
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 	std::vector<TextBlock>          mvTextBlocks;
 };
