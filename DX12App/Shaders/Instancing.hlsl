@@ -19,7 +19,6 @@ struct VertexOut
     float3 NormalW : NORMAL;
     float3 TangentW : TANGENT;
     float2 TexCoord : TEXCOORD;
-    int InstanceID : SV_InstanceID;
 };
 
 struct PixelOut
@@ -32,11 +31,11 @@ VertexOut VS(VertexIn vin, uint InstanceID : SV_InstanceID)
 {
     VertexOut vout;
 	
-    float4 posW = mul(float4(vin.PosL, 1.0f), gInstancingInfo[InstanceID].World);
+    float4 posW = mul(float4(vin.PosL, 1.0f), gInstancingInfo[InstanceID + gInstancingOffset].World);
     vout.PosW = posW.xyz;
     vout.PosH = mul(posW, gViewProj);
 
-    vout.oldPosWVP = mul(mul(float4(vin.PosL, 1.0f), gInstancingInfo[InstanceID].OldWorld), gOldViewProj);
+    vout.oldPosWVP = mul(mul(float4(vin.PosL, 1.0f), gInstancingInfo[InstanceID + gInstancingOffset].OldWorld), gOldViewProj);
     vout.newPosWVP = vout.PosH;
 
     float4x4 tWorld = transpose(gWorld);
@@ -46,8 +45,6 @@ VertexOut VS(VertexIn vin, uint InstanceID : SV_InstanceID)
     float4 texC = mul(float4(vin.TexCoord, 0.0f, 1.0f), gTexTransform);
     vout.TexCoord = texC.xy;
 	
-    vout.InstanceID = InstanceID;
-
     return vout;
 }
 

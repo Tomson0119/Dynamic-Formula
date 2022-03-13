@@ -669,7 +669,7 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const Bounding
 {
 	UINT matOffset = 0;
 
-	cmdList->SetGraphicsRootShaderResourceView(9, mObjectSB->GetGPUVirtualAddress(0));
+	cmdList->SetGraphicsRootShaderResourceView(mRootParamSBIndex, mObjectSB->GetGPUVirtualAddress(0));
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
 		if (mRenderObjects[i]->GetMeshCount() > 0)
@@ -736,7 +736,10 @@ void InstancingPipeline::UpdateConstants()
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
 		mObjectSB->CopyData(i, mRenderObjects[i]->GetInstancingInfo());
-		mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
-		matOffset += mRenderObjects[i]->GetMeshCount();
+		if (mRenderObjects[i]->GetMeshCount() > 0)
+		{
+			mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
+			matOffset += mRenderObjects[i]->GetMeshCount();
+		}
 	}
 }
