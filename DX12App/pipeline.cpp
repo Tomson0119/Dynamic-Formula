@@ -644,13 +644,14 @@ InstancingPipeline::~InstancingPipeline()
 void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 {
 	UINT matOffset = 0;
+	UINT instancingOffset = 0;
 
 	cmdList->SetGraphicsRootShaderResourceView(9, mObjectSB->GetGPUVirtualAddress(0));
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
 		if (mRenderObjects[i]->GetMeshCount() > 0)
 		{
-			cmdList->SetGraphicsRoot32BitConstants(8, 1, &mInstancingCount[mRenderObjects[i]->GetName()], 3);
+			cmdList->SetGraphicsRoot32BitConstants(8, 1, &instancingOffset, 3);
 
 			mRenderObjects[i]->DrawInstanced(
 				cmdList,
@@ -661,6 +662,7 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 				mMaterialCB->GetByteSize(), mInstancingCount[mRenderObjects[i]->GetName()], isSO);
 
 			matOffset += mRenderObjects[i]->GetMeshCount();
+			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];
 		}
 	}
 }
@@ -668,13 +670,14 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
 {
 	UINT matOffset = 0;
+	UINT instancingOffset = 0;
 
 	cmdList->SetGraphicsRootShaderResourceView(mRootParamSBIndex, mObjectSB->GetGPUVirtualAddress(0));
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
 		if (mRenderObjects[i]->GetMeshCount() > 0)
 		{
-			cmdList->SetGraphicsRoot32BitConstants(8, 1, &mInstancingCount[mRenderObjects[i]->GetName()], 3);
+			cmdList->SetGraphicsRoot32BitConstants(8, 1, &instancingOffset, 3);
 			
 			mRenderObjects[i]->DrawInstanced(
 				cmdList,
@@ -685,6 +688,7 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const Bounding
 				mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
 
 			matOffset += mRenderObjects[i]->GetMeshCount();
+			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];
 		}
 	}
 }
