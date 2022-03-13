@@ -127,7 +127,7 @@ public:
 
 	virtual ULONG GetCubeMapSize() const { return 0; }	
 	virtual ObjectConstants GetObjectConstants();
-
+	virtual InstancingInfo GetInstancingInfo();
 	BoundingOrientedBox GetBoundingBox() const { return mOOBB; }	
 	
 	btRigidBody* GetRigidBody() { return mBtRigidBody; }

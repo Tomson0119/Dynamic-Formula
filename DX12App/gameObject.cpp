@@ -654,6 +654,14 @@ ObjectConstants GameObject::GetObjectConstants()
 	return objCnst;
 }
 
+InstancingInfo GameObject::GetInstancingInfo()
+{
+	InstancingInfo instInfo = {};
+	instInfo.World = Matrix4x4::Transpose(mWorld);
+	instInfo.oldWorld = Matrix4x4::Transpose(mOldWorld);
+
+	return instInfo;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //

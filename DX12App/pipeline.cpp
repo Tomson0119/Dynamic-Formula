@@ -645,7 +645,7 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 {
 	UINT matOffset = 0;
 
-	cmdList->SetGraphicsRootShaderResourceView(9, mObjectCB->GetGPUVirtualAddress(0));
+	cmdList->SetGraphicsRootShaderResourceView(9, mObjectSB->GetGPUVirtualAddress(0));
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
 		if (mRenderObjects[i]->GetMeshCount() > 0)
@@ -655,7 +655,7 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 			mRenderObjects[i]->DrawInstanced(
 				cmdList,
 				mRootParamMatIndex,
-				9,
+				mRootParamSBIndex,
 				mRootParamSRVIndex,
 				mMaterialCB->GetGPUVirtualAddress(matOffset),
 				mMaterialCB->GetByteSize(), mInstancingCount[mRenderObjects[i]->GetName()], isSO);
@@ -669,7 +669,7 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const Bounding
 {
 	UINT matOffset = 0;
 
-	cmdList->SetGraphicsRootShaderResourceView(9, mObjectCB->GetGPUVirtualAddress(0));
+	cmdList->SetGraphicsRootShaderResourceView(9, mObjectSB->GetGPUVirtualAddress(0));
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
 		if (mRenderObjects[i]->GetMeshCount() > 0)
@@ -679,7 +679,7 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const Bounding
 			mRenderObjects[i]->DrawInstanced(
 				cmdList,
 				mRootParamMatIndex,
-				9,
+				mRootParamSBIndex,
 				mRootParamSRVIndex,
 				mMaterialCB->GetGPUVirtualAddress(matOffset),
 				mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
@@ -719,4 +719,24 @@ void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const Bo
 	}
 
 	Draw(cmdList, viewFrustum, objectOOBB);
+}
+
+void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
+{
+	UINT matCount = 0;
+	for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
+	mMaterialCB = std::make_unique<ConstantBuffer<MaterialConstants>>(device, matCount);
+
+	mObjectSB = std::make_unique<StructuredBuffer<InstancingInfo>>(device, (UINT)mRenderObjects.size());
+}
+
+void InstancingPipeline::UpdateConstants()
+{
+	UINT matOffset = 0;
+	for (int i = 0; i < mRenderObjects.size(); i++)
+	{
+		mObjectSB->CopyData(i, mRenderObjects[i]->GetInstancingInfo());
+		mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
+		matOffset += mRenderObjects[i]->GetMeshCount();
+	}
 }

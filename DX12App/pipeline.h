@@ -36,7 +36,7 @@ public:
 
 	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex);
 
-	void BuildConstantBuffer(ID3D12Device* device);
+	virtual void BuildConstantBuffer(ID3D12Device* device);
 	void BuildCBV(ID3D12Device* device);
 	void BuildSRV(ID3D12Device* device);
 
@@ -63,7 +63,7 @@ public:
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
 
-	void UpdateConstants();
+	virtual void UpdateConstants();
 
 	std::vector<std::shared_ptr<GameObject>>& GetRenderObjects() { return mRenderObjects; }
 
@@ -152,9 +152,13 @@ public:
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame = false, bool setPipeline = true);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame = false, bool setPipeline = true);
+	virtual void BuildConstantBuffer(ID3D12Device* device);
+	virtual void UpdateConstants();
 
 	std::map<std::string, int> mInstancingCount;
 private:
+	std::unique_ptr<StructuredBuffer<InstancingInfo>> mObjectSB;
+	UINT mRootParamSBIndex = 9;
 };
 
 

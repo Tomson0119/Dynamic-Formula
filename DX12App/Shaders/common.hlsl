@@ -61,8 +61,6 @@ struct InstancingInfo
 {
     matrix World;
     matrix OldWorld;
-    bool CubemapOn;
-    bool MotionBlurOn;
 };
 StructuredBuffer<InstancingInfo> gInstancingInfo : register(t0, space3);
 

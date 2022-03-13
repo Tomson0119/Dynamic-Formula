@@ -224,6 +224,7 @@ struct GameInfoConstants
 struct InstancingInfo
 {
 	XMFLOAT4X4 World;
+	XMFLOAT4X4 oldWorld;
 };
 
 
