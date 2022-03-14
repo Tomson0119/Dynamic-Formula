@@ -38,7 +38,7 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 	auto shadowMapTerrainShader = std::make_unique<ShadowTerrainShader>(L"Shaders\\shadowTerrain.hlsl");
 	auto shadowMapInstancingShader = std::make_unique<ShadowShader>(L"Shaders\\shadowInstancing.hlsl");
 
-	mRasterizerDesc.DepthBias = 100000;
+	mRasterizerDesc.DepthBias = 20000;
 	mRasterizerDesc.DepthBiasClamp = 0.0f;
 	mRasterizerDesc.SlopeScaledDepthBias = 1.0f;
 	mBackBufferFormat = DXGI_FORMAT_R32_FLOAT;
