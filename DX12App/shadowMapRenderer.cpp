@@ -18,7 +18,7 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 	mZSplits.resize(mMapCount + 1);
 
 	mZSplits[0] = mainCamera->GetNearZ();
-	mZSplits[mMapCount] = 1000;
+	mZSplits[mMapCount] = 1500;
 	for (UINT i = 1; i < mMapCount; ++i)
 	{
 		float index = (i / (float)mMapCount);
@@ -217,7 +217,6 @@ void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
 
 		mSunRange[i] = sunRange;
 	}
-	mSunRange[0] *= 1.5f;
 }
 
 XMFLOAT4X4 ShadowMapRenderer::GetShadowTransform(int idx) const
