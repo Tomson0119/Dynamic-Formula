@@ -66,4 +66,5 @@ private:
 	const int OrthographicPlaneHeight = 1024;
 
 	ComPtr<ID3D12PipelineState> mTerrainPSO;
+	ComPtr<ID3D12PipelineState> mInstancingPSO;
 };

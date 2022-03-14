@@ -36,6 +36,7 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 {
 	auto shadowMapShader = std::make_unique<ShadowShader>(L"Shaders\\shadow.hlsl");
 	auto shadowMapTerrainShader = std::make_unique<ShadowTerrainShader>(L"Shaders\\shadowTerrain.hlsl");
+	auto shadowMapInstancingShader = std::make_unique<ShadowShader>(L"Shaders\\shadowInstancing.hlsl");
 
 	mRasterizerDesc.DepthBias = 100000;
 	mRasterizerDesc.DepthBiasClamp = 0.0f;
@@ -94,12 +95,48 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 		ThrowIfFailed(device->CreateGraphicsPipelineState(
 			&psoDesc, IID_PPV_ARGS(&mPSO[1])));
 	}
+
+	auto Instancinglayout = shadowMapInstancingShader->GetInputLayout();
+
+	psoDesc.pRootSignature = rootSig;
+	psoDesc.InputLayout = {
+		Instancinglayout.data(),
+		(UINT)Instancinglayout.size()
+	};
+	psoDesc.VS = {
+		reinterpret_cast<BYTE*>(shadowMapInstancingShader->GetVS()->GetBufferPointer()),
+		shadowMapInstancingShader->GetVS()->GetBufferSize()
+	};
+	if (shadowMapInstancingShader->GetGS() != nullptr)
+	{
+		psoDesc.GS = {
+			reinterpret_cast<BYTE*>(shadowMapInstancingShader->GetGS()->GetBufferPointer()),
+			shadowMapInstancingShader->GetGS()->GetBufferSize()
+		};
+	}
+	if (shadowMapInstancingShader->GetDS() != nullptr)
+	{
+		psoDesc.DS = {
+			reinterpret_cast<BYTE*>(shadowMapInstancingShader->GetDS()->GetBufferPointer()),
+			shadowMapInstancingShader->GetDS()->GetBufferSize()
+		};
+	}
+	if (shadowMapInstancingShader->GetHS() != nullptr)
+	{
+		psoDesc.HS = {
+			reinterpret_cast<BYTE*>(shadowMapInstancingShader->GetHS()->GetBufferPointer()),
+			shadowMapInstancingShader->GetHS()->GetBufferSize()
+		};
+	}
+
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mInstancingPSO)));
 	
 	auto TerrainLayout = shadowMapTerrainShader->GetInputLayout();
 
 	psoDesc.InputLayout = {
-	TerrainLayout.data(),
-	(UINT)TerrainLayout.size()
+		TerrainLayout.data(),
+		(UINT)TerrainLayout.size()
 	};
 	psoDesc.VS = {
 		reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetVS()->GetBufferPointer()),
@@ -321,12 +358,22 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int 
 		{
 			cmdList->SetPipelineState(mTerrainPSO.Get());
 
-			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false, false);
+			//pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false, false);
+			pso->SetAndDraw(cmdList, false, false);
+			cmdList->SetPipelineState(mPSO[0].Get());
+		}
+		else if (layer == Layer::Instancing)
+		{
+			cmdList->SetPipelineState(mInstancingPSO.Get());
 
+			pso->SetAndDraw(cmdList, false, false);
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
 		else
-			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), true, false, false);
+		{
+			//pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), true, false, false);
+			pso->SetAndDraw(cmdList, false, false);
+		}
 	}
 }
 
