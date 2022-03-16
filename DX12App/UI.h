@@ -2,7 +2,7 @@
 #include "player.h"
 struct TextBlock
 {
-    std::wstring        strText;
+    std::string        strText;
     D2D1_RECT_F         d2dLayoutRect;
     IDWriteTextFormat* pdwFormat;
 };
@@ -50,6 +50,11 @@ public:
     std::pair<float, float> GetFrame() const { return std::make_pair(mfWidth, mfHeight); }
    ID3D11Resource* GetRenderTarget() const { return mvWrappedRenderTargets[0].Get(); }
    UINT GetRenderTargetsCount() const { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
+
+   virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair("", ""); }
+   virtual int GetLobbyPacket() { return -1; }
+   virtual int GetRoomPacket() { return -1; }
+
 private:
 
     float mfHeight = 0.0f;

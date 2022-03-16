@@ -16,7 +16,7 @@ public:
     void CreateFontFormat();
     void SetVectorSize(UINT nFrame, UINT TextCnt);
     void SetTextRect();
-    void StartPrint(const std::wstring& strUIText);
+    void StartPrint(const std::string& strUIText);
     void SetDraftGage();
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y);
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);

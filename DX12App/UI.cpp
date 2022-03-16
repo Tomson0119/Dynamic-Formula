@@ -76,10 +76,13 @@ void UI::BeginDraw(UINT nFrame)
 
 void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks)
 {
+    std::wstring Text;
+
     //0번은 테두리 색.
     for (int i =0; i < static_cast<int>(TextCnt); ++i)
     {
-        mpd2dDeviceContext.Get()->DrawTextW(mvTextBlocks[i].strText.c_str(), static_cast<UINT>(mvTextBlocks[i].strText.length()),
+        Text.assign(mvTextBlocks[i].strText.begin(), mvTextBlocks[i].strText.end());
+        mpd2dDeviceContext.Get()->DrawTextW(Text.c_str(), static_cast<UINT>(mvTextBlocks[i].strText.length()),
             mvdwTextFormat[i].Get(), mvTextBlocks[i].d2dLayoutRect, mvd2dSolidBrush[i+1].Get());
     }
 }

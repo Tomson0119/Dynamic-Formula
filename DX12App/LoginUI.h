@@ -25,6 +25,8 @@ public:
 	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
 	virtual void ChangeTextAlignment(UINT uNum, UINT uState  );
 
+	virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair(mvTextBlocks[3].strText, mvTextBlocks[4].strText); }
+
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
