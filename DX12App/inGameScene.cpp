@@ -846,6 +846,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 		if (mMeshList[objName].empty())
 			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath);
+		
 
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());

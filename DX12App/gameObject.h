@@ -60,7 +60,7 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		const std::wstring& path,
 		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
-	virtual void LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics);
+	virtual bool LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics);
 	virtual void BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>& physics);
 
 public:

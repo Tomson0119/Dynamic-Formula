@@ -58,6 +58,10 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			LoadMaterial(device, cmdList, mats, mtl_path);
 		}
+		else if (type.find("Collider"))
+		{
+			collider = true;
+		}
 		else if (type == "v")
 		{
 			XMFLOAT3 pos;
@@ -227,10 +231,12 @@ void GameObject::LoadTexture(
 }
 
 // Scale을 설정한 뒤 호출할 것!
-void GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics)
+bool GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+
+	if (!in_file.is_open())
+		return false;
 
 	std::vector<XMFLOAT3> positions;
 
@@ -270,6 +276,8 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared
 			mBtCollisionShape->addChildShape(localTransform, convexHull);
 		}
 	}
+
+	return true;
 }
 
 //오브젝트 생성 시 마지막으로 호출할 것
