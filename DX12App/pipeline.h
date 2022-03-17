@@ -57,6 +57,8 @@ public:
 	std::vector<std::shared_ptr<GameObject>>::iterator DeleteObject(std::vector<std::shared_ptr<GameObject>>::iterator iter);
 	void ResetPipeline(ID3D12Device* device);
 
+	void SetMsaa(bool msaaEnable, UINT msaaQuality) { mMsaa4xQualityLevels = msaaQuality; mMsaaEnable = msaaEnable; }
+
 	virtual void Update(const float elapsed, Camera* camera=nullptr);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true);
@@ -92,6 +94,9 @@ protected:
 
 	UINT mStencilRef = 0;
 	bool mIsWiredFrame = false;
+
+	UINT mMsaa4xQualityLevels = 0;
+	bool mMsaaEnable = false;
 };
 
 //////////////////////////////////////////////////////////////////////////////////

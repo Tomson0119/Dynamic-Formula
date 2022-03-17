@@ -20,7 +20,7 @@ class PhysicsPlayer;
 class InGameScene : public Scene
 {
 public:
-	InGameScene(HWND hwnd, NetModule* netPtr);
+	InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msaaQuality);
 	virtual ~InGameScene();
 
 public:
@@ -88,12 +88,17 @@ private:
 	void CreateVelocityMapViews();
 	void CreateVelocityMapDescriptorHeaps();
 
+	void CreateMsaaDescriptorHeaps();
+	void CreateMsaaViews();
+
 	void AppendMissileObject(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics);
 	void UpdateMissileObject();
 
 	void UpdatePlayerObjects(float elapsed);
 
 	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path);
+
+	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
 
 private:
 	std::unique_ptr<Camera> mMainCamera;
@@ -112,6 +117,12 @@ private:
 
 	ComPtr<ID3D12DescriptorHeap> mVelocityMapRtvDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mVelocityMapSrvDescriptorHeap;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaRtvHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaSrvHandle;
+	ComPtr<ID3D12Resource> mMsaaTarget;
+
+	ComPtr<ID3D12DescriptorHeap> mMsaaRtvDescriptorHeap;
 
 	std::unique_ptr<ConstantBuffer<CameraConstants>> mCameraCB;
 	std::unique_ptr<ConstantBuffer<LightConstants>> mLightCB;
@@ -162,4 +173,7 @@ private:
 		(XMFLOAT4)Colors::Black, (XMFLOAT4)Colors::White,
 		(XMFLOAT4)Colors::Orange, (XMFLOAT4)Colors::Yellow
 	};
+
+	UINT mMsaa4xQualityLevels = 0;
+	bool mMsaa4xEnable = false;
 };

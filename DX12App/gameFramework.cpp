@@ -143,7 +143,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 			mScenes.top()->GetUI()->Reset();
 
 		}
-		mScenes.push(std::make_unique<InGameScene>(m_hwnd, mNetwork.get()));
+		mScenes.push(std::make_unique<InGameScene>(m_hwnd, mNetwork.get(), mMsaa4xQualityLevels));
 		break;
 
 	default:

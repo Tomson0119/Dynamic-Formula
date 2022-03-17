@@ -192,8 +192,8 @@ void D3DFramework::CreateSwapChain()
 	swapChainDesc.BufferCount = mSwapChainBufferCount;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.OutputWindow = m_hwnd;
-	swapChainDesc.SampleDesc.Count = (mMsaa4xEnable) ? 4 : 1;
-	swapChainDesc.SampleDesc.Quality = (mMsaa4xEnable) ? (mMsaa4xQualityLevels - 1) : 0;
+	swapChainDesc.SampleDesc.Count = 1;
+	swapChainDesc.SampleDesc.Quality = 0;
 	swapChainDesc.Windowed = true;
 	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 

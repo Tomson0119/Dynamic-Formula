@@ -8,11 +8,12 @@
 
 using namespace std;
 
-InGameScene::InGameScene(HWND hwnd, NetModule* netPtr)
+InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msaaQuality)
 	: Scene{ hwnd, SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"In Game Scene Entered.\n");
-	
+	mMsaa4xQualityLevels = msaaQuality;
+	mMsaa4xEnable = msaaEnable;
 	mKeyMap[VK_LEFT] = false;
 	mKeyMap[VK_RIGHT] = false;
 	mKeyMap[VK_UP] = false;
@@ -224,6 +225,10 @@ void InGameScene::BuildDescriptorHeap()
 {
 	CreateVelocityMapDescriptorHeaps();
 	CreateVelocityMapViews();
+
+	CreateMsaaDescriptorHeaps();
+	CreateMsaaViews();
+
 	mShadowMapRenderer->BuildDescriptorHeap(mDevice.Get(), 3, 4, 5);
 	for (const auto& [_, pso] : mPipelines)
 		pso->BuildDescriptorHeap(mDevice.Get(), 3, 4, 5);
@@ -240,6 +245,7 @@ void InGameScene::CreateVelocityMapViews()
 		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mVelocityMapRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
 	mDevice->CreateRenderTargetView(mVelocityMap.Get(), nullptr, rtvHandle);
 	mVelocityMapRtvHandle = rtvHandle;
 
@@ -272,6 +278,33 @@ void InGameScene::CreateVelocityMapDescriptorHeaps()
 			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
 		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
+}
+
+void InGameScene::CreateMsaaDescriptorHeaps()
+{
+	ThrowIfFailed(mDevice->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			1,
+			D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
+		IID_PPV_ARGS(&mMsaaRtvDescriptorHeap)));
+}
+
+
+void InGameScene::CreateMsaaViews()
+{
+	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R32G32B32A32_FLOAT, {0.0f,0.0f,0.0f,0.0f} };
+
+	mMsaaTarget = CreateTexture2DResource(
+		mDevice.Get(), gFrameWidth, gFrameHeight, 1, 1,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, 4, mMsaa4xQualityLevels - 1);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mMsaaRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	mDevice->CreateRenderTargetView(mMsaaTarget.Get(), nullptr, rtvHandle);
+	mMsaaRtvHandle = rtvHandle;
 }
 
 void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
@@ -655,7 +688,10 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	const XMFLOAT4& velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
 	cmdList->ClearRenderTargetView(mVelocityMapRtvHandle, (FLOAT*)&velocity, 0, nullptr);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { backBufferview, mVelocityMapRtvHandle };
+	const XMFLOAT4& color = { 0.0f, 0.0f, 0.0f, 0.0f };
+	cmdList->ClearRenderTargetView(mMsaaRtvHandle, (FLOAT*)&color, 0, nullptr);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { mMsaaRtvHandle, mVelocityMapRtvHandle };
 
 	cmdList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &depthStencilView);
 
