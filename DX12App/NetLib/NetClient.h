@@ -10,11 +10,13 @@ public:
 	bool Connect(const char* ip, short port);
 	void Disconnect();
 
+	void BindUDPSocket(short port);
+
 	void PushPacket(std::byte* pck, int bytes);
 	void SendMsg(std::byte* pck, int bytes);
 	
 	void SendMsg();
-	void RecvMsg();
+	void RecvMsg(bool udp=false);
 	
 public:
 	void RequestLogin(const std::string& name, const std::string& pwd);
@@ -30,10 +32,17 @@ public:
 	void SendKeyInput(int roomID, int key, bool pressed);
 
 public:
-	SOCKET GetSocket() const { return mSocket.GetSocket(); }
+	SOCKET GetTCPSocket() const { return mTCPSocket.GetSocket(); }
+	SOCKET GetUDPSocket() const { return mUDPSocket.GetSocket(); }
 
 private:
-	Socket mSocket;
-	WSAOVERLAPPEDEX* mSendOverlapped;
-	WSAOVERLAPPEDEX mRecvOverlapped;
+	Socket mTCPSocket;
+	Socket mUDPSocket;
+
+	EndPoint mServerEp;
+
+	WSAOVERLAPPEDEX* mTCPSendOverlapped;
+
+	WSAOVERLAPPEDEX mTCPRecvOverlapped;
+	WSAOVERLAPPEDEX mUDPRecvOverlapped;
 };
