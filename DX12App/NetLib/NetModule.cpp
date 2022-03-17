@@ -52,17 +52,29 @@ void NetModule::NetworkFunc(NetModule& net)
 		try {
 			net.mIOCP.GetCompletionInfo(info);
 
-			int client_id = static_cast<int>(info.key);
+			int id = static_cast<int>(info.key);
 			WSAOVERLAPPEDEX* over_ex = reinterpret_cast<WSAOVERLAPPEDEX*>(info.overEx);
 			
-			if (over_ex == nullptr || info.success == FALSE)
+			if (over_ex == nullptr)
 			{
-				net.mNetClient->Disconnect();
+				net.PostDisconnect();
+				continue;
+			}
+			if (info.success == FALSE)
+			{
+				if (id == 1 && over_ex && over_ex->Operation == OP::RECV)
+				{
+					OutputDebugStringA("This shouldn't be called.\n");
+					over_ex->NetBuffer.Clear();
+					net.mNetClient->RecvMsg(true);
+					continue;
+				}
+				if (id == 0) net.PostDisconnect();
 				if (over_ex && over_ex->Operation == OP::SEND)
 					delete over_ex;
 				continue;
 			}
-			net.HandleCompletionInfo(over_ex, info.bytes);
+			net.HandleCompletionInfo(over_ex, info.bytes, id);
 		}
 		catch (std::exception& ex)
 		{
@@ -134,26 +146,26 @@ void NetModule::InitPlayersPosition(SC::packet_game_start_success* pck)
 	}
 }
 
-void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes)
+void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
 {
 	switch (over->Operation)
 	{
 	case OP::RECV:
 	{
-		if (bytes == 0)
+		if (id == 0 && bytes == 0)
 		{
-			mNetClient->Disconnect();
+			PostDisconnect();
 			break;
 		}
 		over->NetBuffer.ShiftWritePtr(bytes);
 		ReadRecvBuffer(over, bytes);
-		mNetClient->RecvMsg();
+		mNetClient->RecvMsg(id);
 		break;
 	}
 	case OP::SEND:
 	{
 		if (bytes != over->WSABuffer.len)
-			mNetClient->Disconnect();
+			PostDisconnect();
 		delete over;
 		break;
 	}
@@ -184,18 +196,24 @@ void NetModule::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes)
 			break;
 		}
 	}
-}
+}	
 
 void NetModule::SetLatency(uint64_t sendTime)
 {
 	auto duration = Clock::now().time_since_epoch();
 	auto now = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 	mLatency = now - sendTime;
+
+	mUpdateRate = std::chrono::duration_cast<std::chrono::milliseconds>(duration - mTimeStamp).count();
+	mTimeStamp = duration;
 }
 
 void NetModule::Init()
 {
-	mIOCP.RegisterDevice(mNetClient->GetSocket(), 0);
-	mNetClient->RecvMsg();
+	mIOCP.RegisterDevice(mNetClient->GetTCPSocket(), 0);
+	mNetClient->RecvMsg(false);
+
+	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
+	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };
 }
