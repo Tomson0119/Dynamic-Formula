@@ -96,7 +96,6 @@ void InGameServer::StartMatch(int roomID)
 	msWorlds[roomID]->SetActive(true);
 	msWorlds[roomID]->SendStartSignal();
 	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
-	AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
 }
 
 void InGameServer::RemovePlayer(int roomID, int hostID)
@@ -110,14 +109,6 @@ void InGameServer::AddTimerEvent(int roomID, EVENT_TYPE type, int duration)
 	TimerQueue::TimerEvent ev{ 
 		std::chrono::milliseconds(duration), type, roomID };
 	mTimerQueue.AddTimerEvent(ev);
-}
-
-void InGameServer::BroadcastTransforms(int roomID)
-{
-	msWorlds[roomID]->BroadcastAllTransform();
-	
-	if (msWorlds[roomID]->IsActive())
-		AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
 }
 
 void InGameServer::RunPhysicsSimulation(int roomID)
