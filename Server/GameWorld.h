@@ -53,6 +53,8 @@ private:
 	std::atomic_int mPlayerCount;
 	std::atomic_bool mActive;
 
+	std::atomic_int mUpdateTick;
+
 	BPHandler mPhysics;
 	MapRigidBody mMapRigidBody;
 	PlayerList mPlayerList;

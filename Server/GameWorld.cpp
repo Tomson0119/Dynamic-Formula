@@ -10,7 +10,7 @@
 
 GameWorld::GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
-	  mPlayerCount{ 0 },
+	  mPlayerCount{ 0 }, mUpdateTick{ 0 },
 	  mPhysicsOverlapped{ OP::PHYSICS }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
@@ -71,13 +71,20 @@ void GameWorld::UpdatePhysicsWorld()
 		if (player->Empty == false)
 			player->UpdateTransformVectors();
 	}
+
+	mUpdateTick += 1;
+	if (mUpdateTick == 2)
+	{
+		BroadcastAllTransform();
+		mUpdateTick = 0;
+	}
 }
 
 void GameWorld::FlushPhysicsWorld()
 {
 	for (Player* player : GetPlayerList())
 	{
-		player->RemoveRigidBody(mPhysics.GetDynamicsWorld());
+		player->ResetPlayer(mPhysics.GetDynamicsWorld());
 	}
 	mPhysics.Flush();
 }
@@ -157,8 +164,8 @@ void GameWorld::PushTransformPacket(int target, int receiver)
 
 	const btVector3& pos = mPlayerList[target]->GetPosition();
 	const btVector4& quat = mPlayerList[target]->GetQuaternion();
-	/*const btVector3& vel = mPlayerList[target]->GetVelocity();
-	const btVector3& accel = mPlayerList[target]->GetAcceleration();*/
+	const btVector3& lvel = mPlayerList[target]->GetLinearVelocity();
+	const btVector3& avel = mPlayerList[target]->GetAngularVelocity();
 
 	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
@@ -169,16 +176,16 @@ void GameWorld::PushTransformPacket(int target, int receiver)
 	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
 
-	/*pck.velocity[0] = (int)(vel.x() * FIXED_FLOAT_LIMIT);
-	pck.velocity[1] = (int)(vel.y() * FIXED_FLOAT_LIMIT);
-	pck.velocity[2] = (int)(vel.z() * FIXED_FLOAT_LIMIT);
-	
-	pck.acceleration[0] = (int)(accel.x() * FIXED_FLOAT_LIMIT);
-	pck.acceleration[1] = (int)(accel.y() * FIXED_FLOAT_LIMIT);
-	pck.acceleration[2] = (int)(accel.z() * FIXED_FLOAT_LIMIT);*/
+	pck.linear_vel[0] = (int)(lvel.x() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[1] = (int)(lvel.y() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[2] = (int)(lvel.z() * FIXED_FLOAT_LIMIT);
+
+	pck.angular_vel[0] = (int)(avel.x() * FIXED_FLOAT_LIMIT);
+	pck.angular_vel[1] = (int)(avel.y() * FIXED_FLOAT_LIMIT);
+	pck.angular_vel[2] = (int)(avel.z() * FIXED_FLOAT_LIMIT);
 
 	int hostID = mPlayerList[receiver]->ID;
-	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
 
 void GameWorld::BroadcastAllTransform()
@@ -187,21 +194,21 @@ void GameWorld::BroadcastAllTransform()
 	//std::cout << "[room id: " << mID << "] Send all transform packet to all.\n";
 #endif
 
-	for (int i = 0; i < mPlayerList.size(); i++)
+	for (int receiver = 0; receiver < mPlayerList.size(); receiver++)
 	{
-		if (mPlayerList[i]->Empty) continue;
+		if (mPlayerList[receiver]->Empty) continue;
 	
-		int id = mPlayerList[i]->ID;
-		gClients[id]->SendTransferTime(false);
+		int id = mPlayerList[receiver]->ID;
+		gClients[id]->SendTransferTime();
 
-		for (int j = 0; j < mPlayerList.size(); j++)
+		for (int target = 0; target < mPlayerList.size(); target++)
 		{
-			if(mPlayerList[j]->Empty == false)
+			if(mPlayerList[target]->Empty == false)
 			{
-				PushTransformPacket(i, j);
+				PushTransformPacket(target, receiver);
 			}
-		}		
-		gClients[id]->SendMsg();
+		}
+		gClients[id]->SendMsg(true);
 	}
 }
 
