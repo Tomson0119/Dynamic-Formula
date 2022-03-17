@@ -2,6 +2,7 @@
 
 const char* const SERVER_IP = "127.0.0.1";
 const short SERVER_PORT = 4000;
+const short CLIENT_PORT = 4001;
 
 const int MAX_NAME_SIZE = 20;
 const int MAX_PWD_SIZE  = 20;
@@ -134,6 +135,7 @@ namespace SC
 	struct packet_login_result : packet_header 
 	{
 		char result;
+		short port; // temporary, for test in localhost
 	};
 
 	struct packet_register_result : packet_header
@@ -225,8 +227,8 @@ namespace SC
 		int player_idx;
 		int position[3];
 		int quaternion[4];
-		/*int velocity[3];
-		int acceleration[3];*/
+		int linear_vel[3];
+		int angular_vel[3];
 	};
 }
 #pragma pack(pop)
