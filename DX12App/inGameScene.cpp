@@ -420,6 +420,9 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_transfer_time* pck = reinterpret_cast<SC::packet_transfer_time*>(packet);
 		mNetPtr->SetLatency(pck->send_time);
+		
+		OutputDebugStringA((std::to_string(mNetPtr->GetUpdateRate()) + "\n").c_str());
+
 		break;
 	}
 	case SC::PLAYER_TRANSFORM:
@@ -817,7 +820,7 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 		}
 		case UPDATE_FLAG::UPDATE:
 		{
-			player->InterpolateTransform(elapsed, mNetPtr->GetLatency());
+			player->InterpolateTransform(elapsed, mNetPtr->GetUpdateRate());
 			//player->CorrectWorldTransform();
 			break;
 		}
