@@ -66,10 +66,15 @@ void RigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 	if (mRigidBody)
 	{
 		auto motionState = mRigidBody->getMotionState();
-		if (motionState) delete motionState;
+		if (motionState)
+		{
+			delete motionState;
+			motionState = nullptr;
+		}
 
 		physicsWorld->removeRigidBody(mRigidBody);
 		delete mRigidBody;
+		mRigidBody = nullptr;
 	}
 }
 
