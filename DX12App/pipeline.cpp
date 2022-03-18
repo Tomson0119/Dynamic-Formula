@@ -60,7 +60,7 @@ void Pipeline::BuildPipeline(
 	psoDesc.RasterizerState = mRasterizerDesc;
 
 	psoDesc.SampleDesc.Count = mMsaaEnable ? 4 : 1;
-	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels - 1 : 0;
+	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels : 0;
 
 	psoDesc.BlendState = mBlendDesc;
 	psoDesc.DepthStencilState = mDepthStencilDesc;
@@ -343,7 +343,7 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 	psoDesc.RasterizerState = mRasterizerDesc;
 
 	psoDesc.SampleDesc.Count = mMsaaEnable ? 4 : 1;
-	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels - 1 : 0;
+	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels : 0;
 
 	psoDesc.BlendState = mBlendDesc;
 	psoDesc.DepthStencilState = mDepthStencilDesc;

@@ -144,7 +144,7 @@ void D3DFramework::CreateD3DDevice()
 		sizeof(d3dMsaaQualityLevels)));
 
 	mMsaa4xQualityLevels = d3dMsaaQualityLevels.NumQualityLevels;
-	mMsaa4xEnable = (mMsaa4xQualityLevels > 1) ? true : false;
+	mMsaa4xEnable = (mMsaa4xQualityLevels > 0) ? true : false;
 
 	ThrowIfFailed(mD3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
 	for (int i = 0; i < mSwapChainBufferCount; i++) mFenceValues[i] = 1;
@@ -296,8 +296,8 @@ void D3DFramework::CreateDepthStencilView()
 	resourceDesc.MipLevels = 1;
 
 	resourceDesc.Format = mDepthStencilBufferFormat;
-	resourceDesc.SampleDesc.Count = mMsaa4xEnable ? 4 : 1;
-	resourceDesc.SampleDesc.Quality = mMsaa4xEnable ? (mMsaa4xQualityLevels - 1) : 0;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
@@ -317,7 +317,7 @@ void D3DFramework::CreateDepthStencilView()
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
 	depthStencilDesc.Format = mDepthStencilBufferFormat;
-	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
 	depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
 	
 	mD3dDevice->CreateDepthStencilView(
