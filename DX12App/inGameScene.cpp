@@ -206,6 +206,15 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Instancing, mPipelines[Layer::Instancing].get());
 	mShadowMapRenderer->BuildPipeline(mDevice.Get(), mRootSignature.Get());
+
+	if (mMsaa4xEnable)
+	{
+		for (const auto& [_, pso] : mPipelines)
+		{
+			if (pso)
+				pso->SetMsaa(mMsaa4xEnable, mMsaa4xQualityLevels);
+		}
+	}
 }
 
 void InGameScene::BuildConstantBuffers()
@@ -293,11 +302,11 @@ void InGameScene::CreateMsaaDescriptorHeaps()
 
 void InGameScene::CreateMsaaViews()
 {
-	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R32G32B32A32_FLOAT, {0.0f,0.0f,0.0f,0.0f} };
+	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,0.0f} };
 
 	mMsaaTarget = CreateTexture2DResource(
 		mDevice.Get(), gFrameWidth, gFrameHeight, 1, 1,
-		DXGI_FORMAT_R32G32B32A32_FLOAT,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, 4, mMsaa4xQualityLevels - 1);
 
@@ -697,6 +706,20 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 
 	cmdList->SetGraphicsRootSignature(mRootSignature.Get());
 	RenderPipelines(cmdList, 0);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_DEST));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mMsaaTarget.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE));
+
+	cmdList->ResolveSubresource(backBuffer, 0, mMsaaTarget.Get(), 0, DXGI_FORMAT_R8G8B8A8_UNORM);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		backBuffer, D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mMsaaTarget.Get(), D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, mVelocityMap.Get(), 0);
 	mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, backBuffer, 1);

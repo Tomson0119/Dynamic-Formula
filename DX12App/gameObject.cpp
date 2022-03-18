@@ -27,7 +27,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	const std::wstring& path)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
@@ -58,10 +58,9 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			LoadMaterial(device, cmdList, mats, mtl_path);
 		}
-		else if (type.find("Collider"))
+		/*else if (type.find("Collider"))
 		{
-			collider = true;
-		}
+		}*/
 		else if (type == "v")
 		{
 			XMFLOAT3 pos;

@@ -51,7 +51,7 @@ ComPtr<ID3D12Resource> CreateTexture2DResource(
 	ID3D12Device* device,
 	UINT width, UINT height, UINT elements, UINT miplevels, 
 	DXGI_FORMAT format, D3D12_RESOURCE_FLAGS resourceFlags, 
-	D3D12_RESOURCE_STATES resourceStates, D3D12_CLEAR_VALUE* clearValue, UINT sampleCount = 1, UINT sampleQuality = 0)
+	D3D12_RESOURCE_STATES resourceStates, D3D12_CLEAR_VALUE* clearValue, UINT sampleCount, UINT sampleQuality)
 {
 	ComPtr<ID3D12Resource> textureResource;
 

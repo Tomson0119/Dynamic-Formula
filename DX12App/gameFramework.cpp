@@ -37,7 +37,6 @@ bool GameFramework::InitFramework()
 
 void GameFramework::OnResize()
 {
-
 	if (!mScenes.empty())
 	{
 		mScenes.top().get()->GetUI().get()->Flush();
@@ -51,7 +50,6 @@ void GameFramework::OnResize()
 		mScenes.top()->OnResize(GetAspect()); 
 		ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
 	}
-
 }
 
 void GameFramework::OnProcessMouseDown(WPARAM buttonState, int x, int y)
@@ -143,7 +141,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 			mScenes.top()->GetUI()->Reset();
 
 		}
-		mScenes.push(std::make_unique<InGameScene>(m_hwnd, mNetwork.get(), mMsaa4xQualityLevels));
+		mScenes.push(std::make_unique<InGameScene>(m_hwnd, mNetwork.get(), mMsaa4xEnable, mMsaa4xQualityLevels));
 		break;
 
 	default:

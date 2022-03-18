@@ -55,7 +55,13 @@ void Pipeline::BuildPipeline(
 			shader->GetPS()->GetBufferSize()
 		};
 	}
+
+	mRasterizerDesc.AntialiasedLineEnable = mMsaaEnable;
 	psoDesc.RasterizerState = mRasterizerDesc;
+
+	psoDesc.SampleDesc.Count = mMsaaEnable ? 4 : 1;
+	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels - 1 : 0;
+
 	psoDesc.BlendState = mBlendDesc;
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
@@ -64,8 +70,6 @@ void Pipeline::BuildPipeline(
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
 	psoDesc.RTVFormats[1] = mVelocityMapFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
-	psoDesc.SampleDesc.Count = 1;
-	//psoDesc.SampleDesc.Quality = gMsaaStateDesc.Quality;
 
 	ThrowIfFailed(device->CreateGraphicsPipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSO[0])));
@@ -334,7 +338,13 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 		reinterpret_cast<BYTE*>(skyboxShader->GetPS()->GetBufferPointer()),
 		skyboxShader->GetPS()->GetBufferSize()
 	};
+
+	mRasterizerDesc.AntialiasedLineEnable = mMsaaEnable;
 	psoDesc.RasterizerState = mRasterizerDesc;
+
+	psoDesc.SampleDesc.Count = mMsaaEnable ? 4 : 1;
+	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels - 1 : 0;
+
 	psoDesc.BlendState = mBlendDesc;
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
@@ -343,7 +353,6 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
 	psoDesc.RTVFormats[1] = mVelocityMapFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
-	psoDesc.SampleDesc.Count = 1;
 
 	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
 	
