@@ -44,8 +44,8 @@ namespace Extension
 		resourceDesc.DepthOrArraySize = depthOrArraySize;
 		resourceDesc.MipLevels = mipLevels;
 		resourceDesc.Format = format;
-		resourceDesc.SampleDesc.Count = 1;
-		resourceDesc.SampleDesc.Quality = 0;
+		resourceDesc.SampleDesc.Count = sampleCount;
+		resourceDesc.SampleDesc.Quality = sampleQuality;
 		resourceDesc.Layout = layout;
 		resourceDesc.Flags = flag;
 		return resourceDesc;

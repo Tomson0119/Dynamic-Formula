@@ -254,17 +254,21 @@ void InGameScene::CreateVelocityMapViews()
 		mDevice.Get(), gFrameWidth, gFrameHeight, 1, 1,
 		DXGI_FORMAT_R32G32B32A32_FLOAT,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue);
+		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, 4, mMsaa4xQualityLevels - 1);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mVelocityMapRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	mDevice->CreateRenderTargetView(mVelocityMap.Get(), nullptr, rtvHandle);
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+	rtvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+	mDevice->CreateRenderTargetView(mVelocityMap.Get(), &rtvDesc, rtvHandle);
 	mVelocityMapRtvHandle = rtvHandle;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
@@ -315,7 +319,11 @@ void InGameScene::CreateMsaaViews()
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mMsaaRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	mDevice->CreateRenderTargetView(mMsaaTarget.Get(), nullptr, rtvHandle);
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	mDevice->CreateRenderTargetView(mMsaaTarget.Get(), &rtvDesc, rtvHandle);
 	mMsaaRtvHandle = rtvHandle;
 }
 
@@ -415,7 +423,7 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 	if (mCubemapInterval < 0.0f)
 	{
 		mCubemapInterval = 0.03f;
-		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
+		//mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
 		if (mCubemapDrawIndex < 5)
 			mCubemapDrawIndex++;

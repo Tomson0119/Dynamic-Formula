@@ -60,7 +60,7 @@ void Pipeline::BuildPipeline(
 	psoDesc.RasterizerState = mRasterizerDesc;
 
 	psoDesc.SampleDesc.Count = mMsaaEnable ? 4 : 1;
-	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels : 0;
+	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels - 1 : 0;
 
 	psoDesc.BlendState = mBlendDesc;
 	psoDesc.DepthStencilState = mDepthStencilDesc;
@@ -343,7 +343,7 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 	psoDesc.RasterizerState = mRasterizerDesc;
 
 	psoDesc.SampleDesc.Count = mMsaaEnable ? 4 : 1;
-	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels : 0;
+	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels - 1 : 0;
 
 	psoDesc.BlendState = mBlendDesc;
 	psoDesc.DepthStencilState = mDepthStencilDesc;
@@ -589,7 +589,7 @@ void ComputePipeline::BuildSRVAndUAV(ID3D12Device* device)
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
 

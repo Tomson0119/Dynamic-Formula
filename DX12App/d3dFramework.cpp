@@ -296,8 +296,9 @@ void D3DFramework::CreateDepthStencilView()
 	resourceDesc.MipLevels = 1;
 
 	resourceDesc.Format = mDepthStencilBufferFormat;
-	resourceDesc.SampleDesc.Count = 1;
-	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.SampleDesc.Count = mMsaa4xEnable ? 4 : 1;
+	resourceDesc.SampleDesc.Quality = mMsaa4xEnable ? mMsaa4xQualityLevels - 1 : 0;
+
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
