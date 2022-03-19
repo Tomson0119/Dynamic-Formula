@@ -199,7 +199,7 @@ void GameWorld::BroadcastAllTransform()
 		if (mPlayerList[receiver]->Empty) continue;
 	
 		int id = mPlayerList[receiver]->ID;
-		gClients[id]->SendTransferTime();
+		//gClients[id]->SendTransferTime();
 
 		for (int target = 0; target < mPlayerList.size(); target++)
 		{
