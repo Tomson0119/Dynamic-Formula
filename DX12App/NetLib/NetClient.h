@@ -31,6 +31,8 @@ public:
 	void SendLoadSequenceDone(int roomID);
 	void SendKeyInput(int roomID, int key, bool pressed);
 
+	void ReturnSendTimeBack(uint64_t sendTime);
+
 public:
 	SOCKET GetTCPSocket() const { return mTCPSocket.GetSocket(); }
 	SOCKET GetUDPSocket() const { return mUDPSocket.GetSocket(); }

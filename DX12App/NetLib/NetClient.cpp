@@ -161,6 +161,10 @@ void NetClient::SendLoadSequenceDone(int roomID)
 	pck.size = sizeof(CS::packet_load_done);
 	pck.type = CS::LOAD_DONE;
 	pck.room_id = roomID;
+
+	auto duration = Clock::now().time_since_epoch();
+	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -176,5 +180,14 @@ void NetClient::SendKeyInput(int roomID, int key, bool pressed)
 	auto duration = Clock::now().time_since_epoch();
 	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 	
+	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void NetClient::ReturnSendTimeBack(uint64_t sendTime)
+{
+	CS::packet_transfer_time pck{};
+	pck.size = sizeof(CS::packet_transfer_time);
+	pck.type = CS::TRANSFER_TIME;
+	pck.send_time = sendTime;
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
