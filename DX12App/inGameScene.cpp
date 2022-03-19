@@ -419,18 +419,18 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::TRANSFER_TIME:
 	{
 		SC::packet_transfer_time* pck = reinterpret_cast<SC::packet_transfer_time*>(packet);
-		mNetPtr->SetLatency(pck->send_time);
-		
-		OutputDebugStringA((std::to_string(mNetPtr->GetUpdateRate()) + "\n").c_str());
-
+		mNetPtr->SetLatency(pck->c_send_time);
+		mNetPtr->Client()->ReturnSendTimeBack(pck->s_send_time);
 		break;
 	}
 	case SC::PLAYER_TRANSFORM:
 	{
 		SC::packet_player_transform* pck = reinterpret_cast<SC::packet_player_transform*>(packet);
 		auto player = mPlayerObjects[pck->player_idx];
+		
 		if (player)
 		{
+			if (player.get() == mPlayer) mNetPtr->SetUpdateRate();
 			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
 			player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
 		}
