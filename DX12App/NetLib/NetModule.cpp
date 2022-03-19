@@ -202,9 +202,7 @@ void NetModule::SetLatency(uint64_t sendTime)
 {
 	auto duration = Clock::now().time_since_epoch();
 	auto now = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-	mLatency = now - sendTime;
-
-	OutputDebugStringA((std::to_string(mLatency) + "\n").c_str());
+	mLatency = (now - sendTime) / 2;
 }
 
 void NetModule::SetUpdateRate()

@@ -32,6 +32,7 @@ void Client::AssignAcceptedID(int id, SOCKET sck, sockaddr_in* addr)
 	ID = id;
 	mTCPSocket.SetSocket(sck);
 	
+	// TOOD: Shouldn't assing port by server..
 	addr->sin_port = htons(CLIENT_PORT + (short)id); // test	
 	SetHostEp(EndPoint(*addr));
 }
@@ -80,9 +81,7 @@ void Client::SetLatency(uint64_t sendTime)
 
 	auto duration = Clock::now().time_since_epoch();
 	auto now = duration_cast<milliseconds>(duration).count();
-	mLatency = now - sendTime;
-
-	std::cout << "[id: " << ID << "] : " << mLatency << "\n";
+	mLatency = (now - sendTime) / 2;
 }
 
 bool Client::ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired)
@@ -99,6 +98,7 @@ void Client::SendLoginResult(LOGIN_STAT result, bool instSend)
 	pck.size = sizeof(SC::packet_login_result);
 	pck.type = SC::LOGIN_RESULT;
 	pck.result = (char)result;
+	// TODO: Shouldn't send port in real life enviroment.
 	pck.port = ntohs(mHostEp.mAddress.sin_port);
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if(instSend) SendMsg();
