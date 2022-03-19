@@ -11,7 +11,7 @@ Client::Client(int id, Socket* udpSck)
 	  mUDPSendOverlapped{},
 	  mState{ CLIENT_STAT::EMPTY },
 	  RoomID(-1), PlayerIndex(-1),
-	  mTransferTime{ 0 }
+	  mLatency{ 0 }
 {
 	mTCPSocket.Init(SocketType::TCP);
 	mTCPSocket.SetNagleOption(1);
@@ -74,11 +74,15 @@ void Client::RecvMsg()
 	mTCPSocket.Recv(&mTCPRecvOverlapped);	
 }
 
-void Client::SetTransferTime(uint64_t sendTime)
+void Client::SetLatency(uint64_t sendTime)
 {
+	using namespace std::chrono;
+
 	auto duration = Clock::now().time_since_epoch();
-	auto now = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-	mTransferTime = now - sendTime;
+	auto now = duration_cast<milliseconds>(duration).count();
+	mLatency = now - sendTime;
+
+	std::cout << "[id: " << ID << "] : " << mLatency << "\n";
 }
 
 bool Client::ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired)
@@ -151,16 +155,16 @@ void Client::SendForceLogout()
 	SendMsg();
 }
 
-void Client::SendTransferTime(bool instSend)
+void Client::ReturnSendTimeBack(uint64_t sendTime)
 {
 	SC::packet_transfer_time pck{};
 	pck.size = sizeof(SC::packet_transfer_time);
 	pck.type = SC::TRANSFER_TIME;
-	pck.recv_time = mTransferTime;
-	
+	pck.c_send_time = sendTime;
+
 	auto duration = Clock::now().time_since_epoch();
-	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+	pck.s_send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	if (instSend) SendMsg();
+	SendMsg();
 }
