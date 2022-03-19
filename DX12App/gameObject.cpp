@@ -58,10 +58,10 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			LoadMaterial(device, cmdList, mats, mtl_path);
 		}
-		else if (type.find("Collider"))
-		{
-			collider = true;
-		}
+		//else if (type.find("Collider"))
+		//{
+		//	//collider = true;
+		//}
 		else if (type == "v")
 		{
 			XMFLOAT3 pos;
