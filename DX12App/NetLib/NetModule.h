@@ -50,6 +50,8 @@ public:
 	const PlayerList& GetPlayersInfo() const { return mPlayerList; }
 
 	void SetLatency(uint64_t sendTime);
+	void SetUpdateRate();
+
 	float GetLatency() const { return (float)mLatency / 1000.0f; }
 	float GetUpdateRate() const { return (float)mUpdateRate / 1000.0f; }
 
@@ -70,8 +72,8 @@ private:
 	std::thread mNetThread;
 
 	Clock::duration mTimeStamp;
-	uint64_t mLatency;
-	uint64_t mUpdateRate;
+	std::atomic_uint64_t mLatency;
+	std::atomic_uint64_t mUpdateRate;
 
 	IOCP mIOCP;
 	Scene* mScenePtr;
