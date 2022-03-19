@@ -130,7 +130,7 @@ Camera* Player::ChangeCameraMode(int cameraMode)
 	return newCamera;
 }
 
-void Player::Update(float elapsedTime)
+void Player::Update(float elapsedTime, float updateRate)
 {
 	mVelocity = Vector3::Add(mVelocity, mGravity);
 
@@ -163,7 +163,7 @@ void Player::Update(float elapsedTime)
 	velocity = Vector3::ScalarProduct(mVelocity, -deceleration);
 	mVelocity = Vector3::Add(mVelocity, Vector3::Normalize(velocity));
 
-	GameObject::Update(elapsedTime);
+	GameObject::Update(elapsedTime, updateRate);
 }
 
 
@@ -199,16 +199,16 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& Mesh)
 	GameObject::SetMesh(Mesh);
 }
 
-void PhysicsPlayer::UpdateTransform()
-{
-	mWorld = Matrix4x4::Identity4x4();
-
-	mWorld(3, 0) = mPosition.x;
-	mWorld(3, 1) = mPosition.y;
-	mWorld(3, 2) = mPosition.z;
-
-	mWorld = Matrix4x4::Multiply(mQuaternion, mWorld);
-}
+//void PhysicsPlayer::UpdateTransform()
+//{
+//	mWorld = Matrix4x4::Identity4x4();
+//
+//	mWorld(3, 0) = mPosition.x;
+//	mWorld(3, 1) = mPosition.y;
+//	mWorld(3, 2) = mPosition.z;
+//
+//	mWorld = Matrix4x4::Multiply(mQuaternion, mWorld);
+//}
 
 Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 {
@@ -261,25 +261,6 @@ void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 {
 	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
 		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
-}
-
-void PhysicsPlayer::OnPlayerUpdate(float elapsedTime)
-{
-	mPosition.x = mWorld(3, 0);
-	mPosition.y = mWorld(3, 1);
-	mPosition.z = mWorld(3, 2);
-
-	mLook.x = mWorld(2, 0);
-	mLook.y = mWorld(2, 1);
-	mLook.z = mWorld(2, 2);
-
-	mUp.x = mWorld(1, 0);
-	mUp.y = mWorld(1, 1);
-	mUp.z = mWorld(1, 2);
-
-	mRight.x = mWorld(0, 0);
-	mRight.y = mWorld(0, 1);
-	mRight.z = mWorld(0, 2);
 }
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
@@ -404,28 +385,15 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 }
 
-void PhysicsPlayer::Update(float elapsedTime)
+void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 {
-	btScalar m[16];
-	btTransform btMat{};
-	mVehicle->getRigidBody()->getMotionState()->getWorldTransform(btMat);
-	btMat.getOpenGLMatrix(m);
-
-	mOldWorld = mWorld;
-	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
-	UpdateBoundingBox();
-
-	OnPlayerUpdate(elapsedTime);
+	GameObject::Update(elapsedTime, updateRate);	
 
 	for (int i = 0; i < 4; ++i)
 	{
 		btTransform wheelTransform = mVehicle->getWheelTransformWS(i);
-		mWheel[i]->UpdateRigidBody(elapsedTime, wheelTransform);
+		mWheel[i]->UpdatePosition(elapsedTime, wheelTransform);
 	}
-
-	mLook = Vector3::Normalize(mLook);
-	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
-	mRight = Vector3::Cross(mUp, mLook);
 
 	if (mBoosterLeft > 0.0f)
 	{
@@ -477,6 +445,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, mBtCollisionShape);
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld);
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
+	mBtRigidBody = mVehicle->getRigidBody();
 
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
 	dynamicsWorld->addVehicle(mVehicle.get());
@@ -522,67 +491,6 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 		wheel.m_frictionSlip = wheelFriction;
 		wheel.m_rollInfluence = rollInfluence;
 	}
-}
-
-void PhysicsPlayer::InterpolateTransform(float elapsed, float updateRate)
-{
-	auto rigid = mVehicle->getRigidBody();
-
-	if (mPrevOrigin.IsZero())
-	{
-		auto motionState = rigid->getMotionState();
-
-		btTransform transform{};
-		motionState->getWorldTransform(transform);
-
-		// Get current state of position/rotation.
-		auto& currentOrigin = transform.getOrigin();
-		auto& currentQuat = transform.getRotation();
-
-		mPrevOrigin.SetValue(currentOrigin);
-		mPrevQuat.SetValue(currentQuat);
-	}	
-
-	const btVector3& prevOrigin = mPrevOrigin.GetBtVector3();
-	const btQuaternion& prevQuat = mPrevQuat.GetBtQuaternion();
-
-	// Get correction state of extrapolated server postion/rotation.
-	const btVector3& correctOrigin = mCorrectionOrigin.GetBtVector3();
-	const btQuaternion& correctQuat = mCorrectionQuat.GetBtQuaternion();
-
-	if (BulletMath::IsZero(correctQuat) || updateRate <= 0.0f) return;
-
-	float progress = mProgress / FIXED_FLOAT_LIMIT;
-	progress = std::min(1.0f, progress + elapsed / updateRate);
-	mProgress = (int)(progress * FIXED_FLOAT_LIMIT);
-
-	btVector3 nextOrigin = prevOrigin.lerp(correctOrigin, progress);
-	btQuaternion nextQuat = prevQuat.slerp(correctQuat, progress);
-
-	btTransform nextTransform{};
-	nextTransform.setOrigin(nextOrigin);
-	nextTransform.setRotation(nextQuat);
-
-	// manually set rigidbody tranform.
-	rigid->setWorldTransform(nextTransform);
-}
-
-void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
-{
-	mProgress = 0;
-	mPrevOrigin = mCorrectionOrigin;
-	mPrevQuat = mCorrectionQuat;
-
-	mCorrectionOrigin.SetValue(
-		(int)(pck->position[0] + pck->linear_vel[0] * latency),
-		(int)(pck->position[1] + pck->linear_vel[1] * latency),
-		(int)(pck->position[2] + pck->linear_vel[2] * latency));
-	
-	mCorrectionQuat.SetValue(
-		pck->quaternion[0],
-		(int)(pck->quaternion[1] * (1 + 0.5f * latency * pck->angular_vel[0])),
-		(int)(pck->quaternion[2] * (1 + 0.5f * latency * pck->angular_vel[1])),
-		(int)(pck->quaternion[3] * (1 + 0.5f * latency * pck->angular_vel[2])));
 }
 
 void PhysicsPlayer::BuildDsvRtvView(ID3D12Device* device)
@@ -731,7 +639,7 @@ WheelObject::~WheelObject()
 {
 }
 
-void WheelObject::UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform)
+void WheelObject::UpdatePosition(const float& Elapsed, const btTransform& wheelTransform)
 {
 	btScalar m[16];
 	wheelTransform.getOpenGLMatrix(m);

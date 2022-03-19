@@ -56,7 +56,7 @@ public:
 	std::vector<std::shared_ptr<GameObject>>::iterator DeleteObject(std::vector<std::shared_ptr<GameObject>>::iterator iter);
 	void ResetPipeline(ID3D12Device* device);
 
-	virtual void Update(const float elapsed, Camera* camera=nullptr);
+	virtual void Update(float elapsed, float updateRate, Camera* camera=nullptr);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);

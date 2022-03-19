@@ -284,15 +284,25 @@ void GameObject::BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>
 	}
 }
 
-void GameObject::Update(float elapsedTime)
+void GameObject::Update(float elapsedTime, float updateRate)
 {
 	mLook = Vector3::Normalize(mLook);
 	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
 	mRight = Vector3::Cross(mUp, mLook);
 
-	Animate(elapsedTime);
+	mOldWorld = mWorld;
 
-	UpdateTransform();
+	if (mBtRigidBody)
+	{
+		InterpolateTransform(elapsedTime, updateRate);
+		SetWorldByMotionState();
+
+	}
+	else
+	{
+		UpdateTransform();
+	}
+
 	UpdateBoundingBox();
 }
 
@@ -356,8 +366,6 @@ void GameObject::Draw(
 
 void GameObject::UpdateTransform()
 {
-	mOldWorld = mWorld;
-
 	mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;	
 	mWorld(0, 2) = mRight.z;
@@ -373,6 +381,36 @@ void GameObject::UpdateTransform()
 	mWorld(3, 0) = mPosition.x;
 	mWorld(3, 1) = mPosition.y;
 	mWorld(3, 2) = mPosition.z;
+}
+
+void GameObject::SetWorldByMotionState()
+{
+	btScalar m[16];
+	btTransform btMat{};
+	mBtRigidBody->getMotionState()->getWorldTransform(btMat);
+	btMat.getOpenGLMatrix(m);
+
+	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+	ResetTransformVectors();
+}
+
+void GameObject::ResetTransformVectors()
+{
+	mPosition.x = mWorld(3, 0);
+	mPosition.y = mWorld(3, 1);
+	mPosition.z = mWorld(3, 2);
+
+	mLook.x = mWorld(2, 0);
+	mLook.y = mWorld(2, 1);
+	mLook.z = mWorld(2, 2);
+
+	mUp.x = mWorld(1, 0);
+	mUp.y = mWorld(1, 1);
+	mUp.z = mWorld(1, 2);
+
+	mRight.x = mWorld(0, 0);
+	mRight.y = mWorld(0, 1);
+	mRight.z = mWorld(0, 2);
 }
 
 void GameObject::UpdateBoundingBox()
@@ -397,6 +435,74 @@ void GameObject::UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, 
 		matCnst->CopyData(offset + i, mMeshes[i]->GetMaterialConstant());
 }
 
+void GameObject::InterpolateTransform(float elapsed, float updateRate)
+{
+	auto rigid = mBtRigidBody;
+	if (rigid == nullptr) return;
+
+	if (mPrevOrigin.IsZero())
+	{
+		auto motionState = rigid->getMotionState();
+
+		btTransform transform{};
+		motionState->getWorldTransform(transform);
+
+		// Get current state of position/rotation.
+		auto& currentOrigin = transform.getOrigin();
+		auto& currentQuat = transform.getRotation();
+
+		mPrevOrigin.SetValue(currentOrigin);
+		mPrevQuat.SetValue(currentQuat);
+	}
+
+	const btVector3& prevOrigin = mPrevOrigin.GetBtVector3();
+	const btQuaternion& prevQuat = mPrevQuat.GetBtQuaternion();
+
+	// Get correction state of extrapolated server postion/rotation.
+	const btVector3& correctOrigin = mCorrectionOrigin.GetBtVector3();
+	const btQuaternion& correctQuat = mCorrectionQuat.GetBtQuaternion();
+
+	if (BulletMath::IsZero(correctQuat) || updateRate <= 0.0f) return;
+
+	float progress = mProgress / FIXED_FLOAT_LIMIT;
+	progress = std::min(1.0f, progress + elapsed / updateRate);
+	mProgress = (int)(progress * FIXED_FLOAT_LIMIT);
+
+	btVector3 nextOrigin = prevOrigin.lerp(correctOrigin, progress);
+	btQuaternion nextQuat = prevQuat.slerp(correctQuat, progress);
+
+	btTransform nextTransform{};
+	nextTransform.setOrigin(nextOrigin);
+	nextTransform.setRotation(nextQuat);
+
+	// manually set rigidbody tranform.
+	rigid->setWorldTransform(nextTransform);
+}
+
+void GameObject::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
+{
+	mProgress = 0;
+	mPrevOrigin = mCorrectionOrigin;
+	mPrevQuat = mCorrectionQuat;
+
+	mCorrectionOrigin.SetValue(
+		(int)(pck->position[0] + pck->linear_vel[0] * latency),
+		(int)(pck->position[1] + pck->linear_vel[1] * latency),
+		(int)(pck->position[2] + pck->linear_vel[2] * latency));
+
+	mCorrectionQuat.SetValue(
+		pck->quaternion[0],
+		(int)(pck->quaternion[1] * (1 + 0.5f * latency * pck->angular_vel[0])),
+		(int)(pck->quaternion[2] * (1 + 0.5f * latency * pck->angular_vel[1])),
+		(int)(pck->quaternion[3] * (1 + 0.5f * latency * pck->angular_vel[2])));
+
+	/*auto& quat = mCorrectionQuat.GetBtQuaternion();
+	std::stringstream ss;
+	ss << "NetID: " << mNetID << "\n";
+	ss << "Quat: " << quat.x() << ", " << quat.y() << ", " << quat.z() << ", " << quat.w() << "\n";
+	OutputDebugStringA(ss.str().c_str());*/
+}
+
 void GameObject::SetPosition(float x, float y, float z)
 {
 	mPosition = { x,y,z };
@@ -419,7 +525,7 @@ void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
 void GameObject::SetLook(XMFLOAT3& look)
 {
 	mLook = look;
-	GameObject::Update(1.0f);
+	//GameObject::Update(1.0f);
 }
 
 void GameObject::SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
@@ -729,31 +835,8 @@ void MissileObject::SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward
 	mBtRigidBody->setLinearVelocity(forward * 1000.0f);
 }
 
-void MissileObject::Update(float elapsedTime)
+void MissileObject::Update(float elapsedTime, float updateRate)
 {
-	btScalar m[16];
-	btTransform btMat;
-	mBtRigidBody->getMotionState()->getWorldTransform(btMat);
-	btMat.getOpenGLMatrix(m);
-
-	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
-	UpdateBoundingBox();
-
-	mPosition.x = mWorld(3, 0);
-	mPosition.y = mWorld(3, 1);
-	mPosition.z = mWorld(3, 2);
-
-	mLook.x = mWorld(2, 0);
-	mLook.y = mWorld(2, 1);
-	mLook.z = mWorld(2, 2);
-
-	mUp.x = mWorld(1, 0);
-	mUp.y = mWorld(1, 1);
-	mUp.z = mWorld(1, 2);
-
-	mRight.x = mWorld(0, 0);
-	mRight.y = mWorld(0, 1);
-	mRight.z = mWorld(0, 2);
-
+	GameObject::Update(elapsedTime, updateRate);
 	mDuration -= elapsedTime;
 }

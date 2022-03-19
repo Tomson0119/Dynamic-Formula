@@ -50,8 +50,8 @@ public:
 	virtual float GetCurrentVelocity() { return 0.0f; }
 
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex) {};
-	virtual void Update(float elapsedTime) override;
-	virtual void OnPlayerUpdate(float elapsedTime) { }
+	virtual void Update(float elapsedTime, float updateRate) override;
+	virtual void OnPlayerUpdate(float elapsedTime) final { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
 
@@ -83,7 +83,7 @@ public:
 	WheelObject();
 	virtual ~WheelObject();
 
-	void UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform);
+	void UpdatePosition(const float& Elapsed, const btTransform& wheelTransform);
 };
 
 class PhysicsPlayer : public Player
@@ -92,11 +92,10 @@ public:
 	PhysicsPlayer(UINT netID);
 	virtual ~PhysicsPlayer();
 
-	virtual void UpdateTransform() override;
+	//virtual void UpdateTransform() override;
 
 	virtual void OnCameraUpdate(float elapsedTime);
-	virtual void OnPlayerUpdate(float elapsedTime);
-	virtual void Update(float elapsedTime) override;
+	virtual void Update(float elapsedTime, float updateRate) override;
 	virtual void OnPreciseKeyInput(float Elapsed);
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
@@ -111,9 +110,6 @@ public:
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
 	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
 	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
-
-	void InterpolateTransform(float elapsed, float updateRate);
-	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
 
 	void BuildCameras();	
 
@@ -158,16 +154,6 @@ private:
 	btRaycastVehicle::btVehicleTuning mTuning;
 	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::shared_ptr<btRaycastVehicle> mVehicle;
-	
-	// Members for interpolation.
-	std::atomic_int mProgress = 0;
-
-	AtomicInt3 mPrevOrigin;
-	AtomicInt4 mPrevQuat;
-
-	AtomicInt3 mCorrectionOrigin{};
-	AtomicInt4 mCorrectionQuat{};
-	// Members for interpolation.
 
 	float mBoosterLeft = 0.0f;
 	float mBoosterTime = 5.0f;

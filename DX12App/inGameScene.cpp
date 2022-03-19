@@ -563,7 +563,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	mShadowMapRenderer->UpdateDepthCamera(cmdList, mMainLight);
 
 	for (const auto& [_, pso] : mPipelines)
-		pso->Update(elapsed, mCurrentCamera);
+		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
 
 	UpdateMissileObject();
 	
@@ -816,12 +816,6 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 			p->reset();
 			removed_flag = true;
 			player->SetUpdateFlag(UPDATE_FLAG::NONE);
-			break;
-		}
-		case UPDATE_FLAG::UPDATE:
-		{
-			player->InterpolateTransform(elapsed, mNetPtr->GetUpdateRate());
-			//player->CorrectWorldTransform();
 			break;
 		}
 		case UPDATE_FLAG::NONE:

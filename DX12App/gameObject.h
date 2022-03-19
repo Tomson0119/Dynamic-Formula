@@ -15,7 +15,7 @@ public:
 
 	void BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
 
-	virtual void Update(float elapsedTime);
+	virtual void Update(float elapsedTime, float updateRate);
 	virtual void UpdateTransform();
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList,
@@ -30,10 +30,16 @@ public:
 
 	virtual void ChangeCurrentRenderTarget() {}
 
+	void SetWorldByMotionState();
+	void ResetTransformVectors();
+
 	void UpdateBoundingBox();
 	void Animate(float elapsedTime);
 
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
+
+	void InterpolateTransform(float elapsed, float updateRate);
+	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
 
 public:
 	virtual std::vector<std::shared_ptr<Mesh>> LoadModel(
@@ -73,9 +79,9 @@ public:
 	void SetCBVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mCbvGPUAddress = gpuHandle; }
 	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
 
+
 public:
-	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) { }
-	
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) { }	
 	virtual void BuildDsvRtvView(ID3D12Device* device) { }
 
 public:
@@ -127,6 +133,16 @@ protected:
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mQuaternion = Matrix4x4::Identity4x4();
+
+	// Members for interpolation.
+	std::atomic_int mProgress = 0;
+
+	AtomicInt3 mPrevOrigin;
+	AtomicInt4 mPrevQuat;
+
+	AtomicInt3 mCorrectionOrigin{};
+	AtomicInt4 mCorrectionQuat{};
+	// Members for interpolation.
 
 	btRigidBody* mBtRigidBody = NULL;
 	btCompoundShape* mBtCollisionShape = NULL;
@@ -230,9 +246,12 @@ class MissileObject : public GameObject
 public:
 	MissileObject();
 	virtual ~MissileObject();
-	virtual void Update(float elapsedTime);
+
+	virtual void Update(float elapsedTime, float updateRate) override;
+
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
+
 private:
 	float mDuration = 3.0f;
 };

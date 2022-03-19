@@ -278,10 +278,10 @@ void Pipeline::SetStencilOp(
 	mStencilRef = stencilRef;
 }
 
-void Pipeline::Update(const float elapsed, Camera* camera)
+void Pipeline::Update(float elapsed, float updateRate, Camera* camera)
 {
 	for (const auto& obj : mRenderObjects)
-		obj->Update(elapsed);
+		obj->Update(elapsed, updateRate);
 }
 
 void Pipeline::UpdateConstants()
