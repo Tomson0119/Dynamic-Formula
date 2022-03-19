@@ -4,7 +4,7 @@
 #include "mesh.h"
 #include "gameObject.h"
 
-//#define STANDALONE
+#//define STANDALONE
 #define START_GAME_INSTANT
 
 class NetModule;
@@ -29,7 +29,7 @@ enum class SCENE_CHANGE_FLAG : char
 class Scene
 {
 public:
-	explicit Scene(HWND hwnd, SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr);
+	Scene(HWND hwnd, SCENE_STAT stat, const XMFLOAT4& color, NetModule* netPtr);
 	Scene(const Scene& rhs) = delete;
 	Scene& operator=(const Scene& rhs) = delete;
 	virtual ~Scene() = default;
