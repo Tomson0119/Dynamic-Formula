@@ -209,12 +209,10 @@ PixelOut PS(DsOut din)
     float3 view = normalize(gCameraPos - din.PosW);
     float4 ambient = gAmbient * float4(gMat.Ambient, 1.0f) * diffuse;
 
-    float shadowFactor[3] = { 1.0f, 1.0f, 1.0f };
-    for (int i = 0; i < 3; i++)
-        shadowFactor[i] = CalcShadowFactor(PosS, idx);
+    float shadowFactor = CalcShadowFactor(PosS, idx);
         
     float4 directLight;
-    float shadowFactorOut[3] = { 1.0f, 1.0f, 1.0f };
+    float shadowFactorOut = 1.0f;
     if (PosS.x < 0.0f || PosS.x > 1.0f || PosS.z < 0.0f || PosS.z > 1.0f || PosS.y < 0.0f || PosS.y > 1.0f || idx == -1)
         directLight = ComputeLighting(gLights, gMat, normalize(din.NormalW), view, shadowFactorOut);
     else

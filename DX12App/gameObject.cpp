@@ -58,6 +58,10 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			LoadMaterial(device, cmdList, mats, mtl_path);
 		}
+		else if (type.find("Collider"))
+		{
+			collider = true;
+		}
 		else if (type == "v")
 		{
 			XMFLOAT3 pos;
@@ -227,10 +231,12 @@ void GameObject::LoadTexture(
 }
 
 // Scale을 설정한 뒤 호출할 것!
-void GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics)
+bool GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+
+	if (!in_file.is_open())
+		return false;
 
 	std::vector<XMFLOAT3> positions;
 
@@ -270,6 +276,8 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared
 			mBtCollisionShape->addChildShape(localTransform, convexHull);
 		}
 	}
+
+	return true;
 }
 
 //오브젝트 생성 시 마지막으로 호출할 것
@@ -328,6 +336,60 @@ void GameObject::Draw(
 		}
 		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
 		mMeshes[i]->Draw(cmdList, isSO);
+
+		matGPUAddress += byteOffset;
+	}
+}
+void GameObject::DrawInstanced(ID3D12GraphicsCommandList* cmdList,
+	UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
+	UINT64 matGPUAddress, UINT64 byteOffset, int InstanceCount, bool isSO)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	for (int i = 0; i < mMeshes.size(); i++)
+	{
+		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
+
+		int srvIndex = mMeshes[i]->GetSrvIndex();
+
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
+		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
+
+		mMeshes[i]->DrawInstanced(cmdList, InstanceCount, isSO);
+
+		matGPUAddress += byteOffset;
+	}
+}
+
+
+void GameObject::DrawInstanced(ID3D12GraphicsCommandList* cmdList, 
+	UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
+	UINT64 matGPUAddress, UINT64 byteOffset, const BoundingFrustum& viewFrustum,
+	bool objectOOBB, int InstanceCount, bool isSO)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	for (int i = 0; i < mMeshes.size(); i++)
+	{
+		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
+
+		int srvIndex = mMeshes[i]->GetSrvIndex();
+
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
+		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
+
+		if (objectOOBB && viewFrustum.Intersects(mOOBB))
+			mMeshes[i]->DrawInstanced(cmdList, InstanceCount, isSO);
+		else if (!objectOOBB)
+			mMeshes[i]->DrawInstanced(cmdList, viewFrustum, InstanceCount, isSO);
 
 		matGPUAddress += byteOffset;
 	}
@@ -646,6 +708,11 @@ void GameObject::Rotate(const XMFLOAT3& axis, float angle)
 	mLook = Vector3::TransformNormal(mLook, R);
 }
 
+void GameObject::RotateQuaternion(XMFLOAT4 quaternion)
+{
+	RotateQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+}
+
 void GameObject::RotateQuaternion(float x, float y, float z, float w)
 {
 	XMMATRIX R = XMMatrixRotationQuaternion(XMVECTOR{ x,y,z,w });
@@ -701,6 +768,14 @@ ObjectConstants GameObject::GetObjectConstants()
 	return objCnst;
 }
 
+InstancingInfo GameObject::GetInstancingInfo()
+{
+	InstancingInfo instInfo = {};
+	instInfo.World = Matrix4x4::Transpose(mWorld);
+	instInfo.oldWorld = Matrix4x4::Transpose(mOldWorld);
+
+	return instInfo;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //

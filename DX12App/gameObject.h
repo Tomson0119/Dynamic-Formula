@@ -28,6 +28,16 @@ public:
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffse, bool isSO=false);
 
+
+	void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset, int InstanceCount, bool isSO = false);
+
+	virtual void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset,
+		const BoundingFrustum& viewFrustum, bool objectOOBB, int InstanceCount, bool isSO = false);
+
 	virtual void ChangeCurrentRenderTarget() {}
 
 	void SetWorldByMotionState();
@@ -56,7 +66,7 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		const std::wstring& path,
 		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
-	virtual void LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics);
+	virtual bool LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics);
 	virtual void BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>& physics);
 
 public:
@@ -75,6 +85,9 @@ public:
 	void SetMovement(XMFLOAT3& dir, float speed);
 
 	void SetWorld(XMFLOAT4X4 world) { mWorld = world; }
+
+	void SetName(std::string name) { mName = name; }
+	std::string GetName() { return mName; }
 
 	void SetCBVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mCbvGPUAddress = gpuHandle; }
 	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
@@ -98,6 +111,8 @@ public:
 	void Rotate(float pitch, float yaw, float roll);
 	void Rotate(const XMFLOAT3& axis, float angle);
 
+	void RotateQuaternion(XMFLOAT4 quaternion);
+
 	void RotateQuaternion(float x, float y, float z, float w);
 
 	void Scale(float xScale, float yScale, float zScale);
@@ -118,7 +133,7 @@ public:
 
 	virtual ULONG GetCubeMapSize() const { return 0; }	
 	virtual ObjectConstants GetObjectConstants();
-
+	virtual InstancingInfo GetInstancingInfo();
 	BoundingOrientedBox GetBoundingBox() const { return mOOBB; }	
 	
 	btRigidBody* GetRigidBody() { return mBtRigidBody; }
@@ -165,6 +180,8 @@ protected:
 
 	bool mCubemapOn = false;
 	bool mMotionBlurOn = true;
+
+	std::string mName;
 };
 
 

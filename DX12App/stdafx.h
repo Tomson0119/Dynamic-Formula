@@ -221,6 +221,12 @@ struct GameInfoConstants
 	float ElapsedTime;
 };
 
+struct InstancingInfo
+{
+	XMFLOAT4X4 World;
+	XMFLOAT4X4 oldWorld;
+};
+
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -359,7 +365,7 @@ namespace BulletMath
 	inline bool Equals(const btQuaternion& a, const btQuaternion& b, float epsilon)
 	{
 		btScalar len = (a - b).length2();
-		return (len < (epsilon * epsilon));
+		return (len < (epsilon* epsilon));
 	}
 
 	inline bool IsZero(const btQuaternion& quat)

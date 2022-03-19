@@ -90,7 +90,9 @@ void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbv
 {
 	UINT numDescriptors = (UINT)mRenderObjects.size();
 	for (const auto& obj : mRenderObjects)
+	{
 		numDescriptors += obj->GetTextureCount();
+	}
 
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
@@ -627,4 +629,121 @@ void ComputePipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 		mBlurMapOutput->GetResource(),
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 		D3D12_RESOURCE_STATE_COMMON));
+}
+
+InstancingPipeline::InstancingPipeline()
+{
+
+}
+
+InstancingPipeline::~InstancingPipeline()
+{
+
+}
+
+void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
+{
+	UINT matOffset = 0;
+	UINT instancingOffset = 0;
+
+	cmdList->SetGraphicsRootShaderResourceView(9, mObjectSB->GetGPUVirtualAddress(0));
+	for (int i = 0; i < mRenderObjects.size(); i++)
+	{
+		if (mRenderObjects[i]->GetMeshCount() > 0)
+		{
+			cmdList->SetGraphicsRoot32BitConstants(8, 1, &instancingOffset, 3);
+
+			mRenderObjects[i]->DrawInstanced(
+				cmdList,
+				mRootParamMatIndex,
+				mRootParamSBIndex,
+				mRootParamSRVIndex,
+				mMaterialCB->GetGPUVirtualAddress(matOffset),
+				mMaterialCB->GetByteSize(), mInstancingCount[mRenderObjects[i]->GetName()], isSO);
+
+			matOffset += mRenderObjects[i]->GetMeshCount();
+			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];
+		}
+	}
+}
+
+void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
+{
+	UINT matOffset = 0;
+	UINT instancingOffset = 0;
+
+	cmdList->SetGraphicsRootShaderResourceView(mRootParamSBIndex, mObjectSB->GetGPUVirtualAddress(0));
+	for (int i = 0; i < mRenderObjects.size(); i++)
+	{
+		if (mRenderObjects[i]->GetMeshCount() > 0)
+		{
+			cmdList->SetGraphicsRoot32BitConstants(8, 1, &instancingOffset, 3);
+			
+			mRenderObjects[i]->DrawInstanced(
+				cmdList,
+				mRootParamMatIndex,
+				mRootParamSBIndex,
+				mRootParamSRVIndex,
+				mMaterialCB->GetGPUVirtualAddress(matOffset),
+				mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
+
+			matOffset += mRenderObjects[i]->GetMeshCount();
+			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];
+		}
+	}
+}
+
+void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+	cmdList->OMSetStencilRef(mStencilRef);
+
+	if (setPipeline) {
+		if (mIsWiredFrame && drawWiredFrame)
+			cmdList->SetPipelineState(mPSO[1].Get());
+		else
+			cmdList->SetPipelineState(mPSO[0].Get());
+	}
+
+	Draw(cmdList);
+}
+
+void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+	cmdList->OMSetStencilRef(mStencilRef);
+
+	if (setPipeline) {
+		if (mIsWiredFrame && drawWiredFrame)
+			cmdList->SetPipelineState(mPSO[1].Get());
+		else
+			cmdList->SetPipelineState(mPSO[0].Get());
+	}
+
+	Draw(cmdList, viewFrustum, objectOOBB);
+}
+
+void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
+{
+	UINT matCount = 0;
+	for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
+	mMaterialCB = std::make_unique<ConstantBuffer<MaterialConstants>>(device, matCount);
+
+	mObjectSB = std::make_unique<StructuredBuffer<InstancingInfo>>(device, (UINT)mRenderObjects.size());
+}
+
+void InstancingPipeline::UpdateConstants()
+{
+	UINT matOffset = 0;
+	for (int i = 0; i < mRenderObjects.size(); i++)
+	{
+		mObjectSB->CopyData(i, mRenderObjects[i]->GetInstancingInfo());
+		if (mRenderObjects[i]->GetMeshCount() > 0)
+		{
+			mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
+			matOffset += mRenderObjects[i]->GetMeshCount();
+		}
+	}
 }

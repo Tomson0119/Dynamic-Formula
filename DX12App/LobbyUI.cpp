@@ -7,14 +7,17 @@ LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     SetVectorSize(nFrame, TextCnt);
     Initialize(device, pd3dCommandQueue);
 }
+
 LobbyUI::~LobbyUI()
 {
 
 }
+
 void LobbyUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
 
 }
+
 bool LobbyUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
 {
     if (x<TB.d2dLayoutRect.right && x>TB.d2dLayoutRect.left &&
@@ -22,12 +25,14 @@ bool LobbyUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
         return true;
     return false;
 }
+
 void LobbyUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 {
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
+
 void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
@@ -36,7 +41,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         mvColors[0].a = 0.1f;
     else
         mvColors[0].a = 0.9f;
-    for (int i = 1; i < TextCnt; ++i)
+    for (int i = 1; i < static_cast<int>(TextCnt); ++i)
     {// 12, 34, 56, 78, 910, 1112
         if (MouseCollisionCheck(dx, dy, mvTextBlocks[i]))
         {
@@ -47,11 +52,12 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
 
 }
+
 char LobbyUI::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
-    for (int i = 1; i < TextCnt; ++i)
+    for (int i = 1; i < static_cast<int>(TextCnt); ++i)
     {
         if (MouseCollisionCheck(dx, dy, mvTextBlocks[i]))
         {
@@ -255,8 +261,7 @@ void LobbyUI::Draw(UINT nFrame)
 
 void LobbyUI::CreateFontFormat()
 {
-    float fFontSize = mfHeight / 25.0f;
-    std::vector<std::wstring> Fonts;
+    fFontSize = mfHeight / 25.0f;
     Fonts.push_back(L"Tahoma");
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
@@ -271,7 +276,6 @@ void LobbyUI::CreateFontFormat()
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
 
-    DWRITE_TEXT_ALIGNMENT TextAlignments[13];
     //TextAlignments.resize(TextCnt);
     TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
@@ -313,6 +317,7 @@ void LobbyUI::SetTextRect()
     mvTextBlocks[12].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 20, mfHeight / 36 * 25, mfWidth / 32 * 22, mfHeight / 36 * 26);
 
 }
+
 void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
     mfWidth = static_cast<float>(nWidth);
@@ -353,11 +358,6 @@ void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
         mvTextBlocks[11].strText.push_back(wc);
     for (auto wc : std::wstring{ L"6" })
         mvTextBlocks[12].strText.push_back(wc);
-    
-    
-    
-    
-    
 }
 
 void LobbyUI::Reset()

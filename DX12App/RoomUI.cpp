@@ -8,6 +8,7 @@ RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     SetVectorSize(nFrame, TextCnt);
     Initialize(device, pd3dCommandQueue);
 }
+
 RoomUI::~RoomUI()
 {
 

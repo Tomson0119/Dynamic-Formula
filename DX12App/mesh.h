@@ -25,19 +25,6 @@ struct MatInfo
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-
-enum class MeshType : int
-{
-	Car,
-	Wheel_L,
-	Wheel_R,
-	Grid,
-	Missile,
-	StreetLamp
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//
 class Mesh 
 {
 public:
@@ -56,6 +43,8 @@ public:
 	virtual void PrepareBufferViews(ID3D12GraphicsCommandList* cmdList, bool isSO) { }
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO=false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool isSO = false);
+	virtual void DrawInstanced(ID3D12GraphicsCommandList* cmdList, int InstanceCount, bool isSO);
+	virtual void DrawInstanced(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, int InstanceCount, bool isSO = false);
 
 	void LoadMesh(
 		ID3D12Device* device, 
