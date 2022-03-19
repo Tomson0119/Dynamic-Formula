@@ -2,6 +2,7 @@
 
 const char* const SERVER_IP = "127.0.0.1";
 const short SERVER_PORT = 4000;
+const short CLIENT_PORT = 4001;
 
 const int MAX_NAME_SIZE = 20;
 const int MAX_PWD_SIZE  = 20;
@@ -54,6 +55,7 @@ namespace CS
 	const char PRESS_READY  = 7;
 	const char LOAD_DONE	= 8;
 	const char KEY_INPUT	= 9;
+	const char TRANSFER_TIME = 10;
 
 	struct packet_login : packet_header
 	{
@@ -86,12 +88,12 @@ namespace CS
 	struct packet_press_ready : packet_header
 	{
 		int room_id;
-		//uint64_t send_time;
 	};
 
 	struct packet_load_done : packet_header
 	{
 		int room_id;
+		uint64_t send_time;
 	};
 
 	struct packet_key_input : packet_header
@@ -99,6 +101,11 @@ namespace CS
 		int room_id;
 		uint8_t key;
 		bool pressed;
+		uint64_t send_time;
+	};
+
+	struct packet_transfer_time : packet_header
+	{
 		uint64_t send_time;
 	};
 }
@@ -134,6 +141,7 @@ namespace SC
 	struct packet_login_result : packet_header 
 	{
 		char result;
+		short port; // temporary, for test in localhost
 	};
 
 	struct packet_register_result : packet_header
@@ -145,13 +153,11 @@ namespace SC
 	{
 		int room_id;
 		bool game_started;
-		//uint64_t send_time;
 	};
 
 	struct packet_access_room_deny : packet_header
 	{
 		char reason;
-		//uint64_t send_time;
 	};
 
 	struct packet_room_inside_info : packet_header
@@ -178,7 +184,6 @@ namespace SC
 		uint8_t admin_idx : 4;
 		uint8_t player_idx : 4;
 		PlayerInfo player_info;
-		//uint64_t send_time;
 	};
 
 	struct packet_update_map_info : packet_header
@@ -197,7 +202,6 @@ namespace SC
 	struct packet_game_start_fail : packet_header
 	{
 		int room_id;
-		//uint64_t send_time;
 	};
 
 	struct packet_game_start_success : packet_header
@@ -215,8 +219,8 @@ namespace SC
 
 	struct packet_transfer_time : packet_header
 	{
-		uint64_t recv_time;
-		uint64_t send_time;
+		uint64_t c_send_time;
+		uint64_t s_send_time;
 	};
 
 	struct packet_player_transform : packet_header
@@ -225,8 +229,8 @@ namespace SC
 		int player_idx;
 		int position[3];
 		int quaternion[4];
-		/*int velocity[3];
-		int acceleration[3];*/
+		int linear_vel[3];
+		int angular_vel[3];
 	};
 }
 #pragma pack(pop)

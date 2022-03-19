@@ -15,8 +15,8 @@ Socket::Socket()
 }
 
 Socket::Socket(SOCKET sck)
+	: mSckHandle{ sck }
 {
-	mSckHandle = sck;
 }
 
 Socket::~Socket()
@@ -35,16 +35,23 @@ void Socket::SetNagleOption(char val)
 	setsockopt(mSckHandle, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
 }
 
-void Socket::Init()
+void Socket::Init(const SocketType& type)
 {
-	mSckHandle = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
+	if (type == SocketType::TCP) 
+	{
+		mSckHandle = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
+	}
+	else if (type == SocketType::UDP)
+	{
+		mSckHandle = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, 0, 0, WSA_FLAG_OVERLAPPED);
+	}
 	if (mSckHandle == INVALID_SOCKET)
 		throw NetException("Socket creation failed");
 }
 
 void Socket::Bind(const EndPoint& ep)
 {
-	if (bind(mSckHandle, reinterpret_cast<const sockaddr*>(&ep.address), sizeof(ep.address)) != 0)
+	if (bind(mSckHandle, reinterpret_cast<const sockaddr*>(&ep.mAddress), sizeof(ep.mAddress)) != 0)
 		throw NetException("Bind failed");
 }
 
@@ -75,8 +82,8 @@ void Socket::AsyncAccept(WSAOVERLAPPEDEX* accept_ex)
 bool Socket::Connect(const EndPoint& ep)
 {
 	if (WSAConnect(mSckHandle,
-		reinterpret_cast<const sockaddr*>(&ep.address), 
-		sizeof(ep.address),	0, 0, 0, 0) != 0)
+		reinterpret_cast<const sockaddr*>(&ep.mAddress), 
+		sizeof(ep.mAddress), 0, 0, 0, 0) != 0)
 	{
 		return false;
 	}
@@ -92,7 +99,7 @@ int Socket::Send(WSAOVERLAPPEDEX* overlapped)
 		&overlapped->Overlapped, NULL) != 0)
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
-			return 0;
+			return -1;
 	}
 	return (int)bytes;
 }
@@ -107,7 +114,40 @@ int Socket::Recv(WSAOVERLAPPEDEX* overlapped)
 		&overlapped->Overlapped, NULL) != 0)
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
-			return 0;
+			return -1;
+	}
+	return (int)bytes;
+}
+
+int Socket::SendTo(WSAOVERLAPPEDEX* overlapped, const EndPoint& hostEp)
+{
+	DWORD bytes = 0;
+
+	if (WSASendTo(mSckHandle,
+		&overlapped->WSABuffer, 1, &bytes, 0,
+		reinterpret_cast<const sockaddr*>(&hostEp.mAddress), sizeof(hostEp.mAddress),
+		&overlapped->Overlapped, NULL) != 0)
+	{
+		if (WSAGetLastError() != WSA_IO_PENDING)
+			return -1;
+	}
+	return (int)bytes;
+}
+
+int Socket::RecvFrom(WSAOVERLAPPEDEX* overlapped, EndPoint& hostEp)
+{
+	DWORD flag = 0;
+	DWORD bytes = 0;
+
+	int ip_len = sizeof(hostEp.mAddress);
+
+	if (WSARecvFrom(mSckHandle,
+		&overlapped->WSABuffer, 1, &bytes, &flag,
+		reinterpret_cast<sockaddr*>(&hostEp.mAddress), &ip_len,
+		&overlapped->Overlapped, NULL) != 0)
+	{
+		if (WSAGetLastError() != WSA_IO_PENDING)
+			return -1;
 	}
 	return (int)bytes;
 }

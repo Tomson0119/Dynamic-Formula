@@ -3,16 +3,18 @@
 #include "WSAOverlappedEx.h"
 
 
-Client::Client(int id)
-	: ID(id),
-	  mRecvOverlapped{},
-	  mSendOverlapped{},
+Client::Client(int id, Socket* udpSck)
+	: ID(id), mUDPSocketPtr{ udpSck },
+	  mHostEp{},
+	  mTCPRecvOverlapped{},
+	  mTCPSendOverlapped{},
+	  mUDPSendOverlapped{},
 	  mState{ CLIENT_STAT::EMPTY },
 	  RoomID(-1), PlayerIndex(-1),
-	  mTransferTime{ 0 }
+	  mLatency{ 0 }
 {
-	mSocket.Init();
-	mSocket.SetNagleOption(1);
+	mTCPSocket.Init(SocketType::TCP);
+	mTCPSocket.SetNagleOption(1);
 }
 
 Client::~Client()
@@ -22,43 +24,64 @@ Client::~Client()
 void Client::Disconnect()
 {	
 	mState = CLIENT_STAT::EMPTY;
-	mSocket.Close();
+	mTCPSocket.Close();
 }
 
-void Client::AssignAcceptedID(int id, SOCKET sck)
+void Client::AssignAcceptedID(int id, SOCKET sck, sockaddr_in* addr)
 {
 	ID = id;
-	mSocket.SetSocket(sck);
+	mTCPSocket.SetSocket(sck);
+	
+	// TOOD: Shouldn't assing port by server..
+	addr->sin_port = htons(CLIENT_PORT + (short)id); // test	
+	SetHostEp(EndPoint(*addr));
 }
 
-void Client::PushPacket(std::byte* pck, int bytes)
+void Client::PushPacket(std::byte* pck, int bytes, bool udp)
 {
-	if (mSendOverlapped == nullptr)
-		mSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
-	else
-		mSendOverlapped->PushMsg(pck, bytes);
-}
-
-void Client::SendMsg()
-{
-	if (mSendOverlapped)
+	if (udp == false)
 	{
-		mSocket.Send(mSendOverlapped);
-		mSendOverlapped = nullptr;
+		if (mTCPSendOverlapped == nullptr)
+			mTCPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
+		else
+			mTCPSendOverlapped->PushMsg(pck, bytes);
+	}
+	else
+	{
+		if (mUDPSendOverlapped == nullptr)
+			mUDPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
+		else
+			mUDPSendOverlapped->PushMsg(pck, bytes);
+	}
+}
+
+void Client::SendMsg(bool udp)
+{
+	if (udp == false && mTCPSendOverlapped)
+	{
+		mTCPSocket.Send(mTCPSendOverlapped);
+		mTCPSendOverlapped = nullptr;
+	}
+	else if (udp == true && mUDPSendOverlapped)
+	{
+		mUDPSocketPtr->SendTo(mUDPSendOverlapped, mHostEp);
+		mUDPSendOverlapped = nullptr;
 	}
 }
 
 void Client::RecvMsg()
-{
-	mRecvOverlapped.Reset(OP::RECV);
-	mSocket.Recv(&mRecvOverlapped);
+{	
+	mTCPRecvOverlapped.Reset(OP::RECV);
+	mTCPSocket.Recv(&mTCPRecvOverlapped);	
 }
 
-void Client::SetTransferTime(uint64_t sendTime)
+void Client::SetLatency(uint64_t sendTime)
 {
+	using namespace std::chrono;
+
 	auto duration = Clock::now().time_since_epoch();
-	auto now = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-	mTransferTime = now - sendTime;
+	auto now = duration_cast<milliseconds>(duration).count();
+	mLatency = (now - sendTime) / 2;
 }
 
 bool Client::ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired)
@@ -75,6 +98,8 @@ void Client::SendLoginResult(LOGIN_STAT result, bool instSend)
 	pck.size = sizeof(SC::packet_login_result);
 	pck.type = SC::LOGIN_RESULT;
 	pck.result = (char)result;
+	// TODO: Shouldn't send port in real life enviroment.
+	pck.port = ntohs(mHostEp.mAddress.sin_port);
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if(instSend) SendMsg();
 }
@@ -130,16 +155,16 @@ void Client::SendForceLogout()
 	SendMsg();
 }
 
-void Client::SendTransferTime(bool instSend)
+void Client::ReturnSendTimeBack(uint64_t sendTime)
 {
 	SC::packet_transfer_time pck{};
 	pck.size = sizeof(SC::packet_transfer_time);
 	pck.type = SC::TRANSFER_TIME;
-	pck.recv_time = mTransferTime;
-	
+	pck.c_send_time = sendTime;
+
 	auto duration = Clock::now().time_since_epoch();
-	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+	pck.s_send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	if (instSend) SendMsg();
+	SendMsg();
 }

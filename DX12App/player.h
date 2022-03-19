@@ -50,8 +50,8 @@ public:
 	virtual float GetCurrentVelocity() { return 0.0f; }
 
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex) {};
-	virtual void Update(float elapsedTime) override;
-	virtual void OnPlayerUpdate(float elapsedTime) { }
+	virtual void Update(float elapsedTime, float updateRate) override;
+	virtual void OnPlayerUpdate(float elapsedTime) final { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
 
@@ -83,7 +83,7 @@ public:
 	WheelObject();
 	virtual ~WheelObject();
 
-	void UpdateRigidBody(const float& Elapsed, const btTransform& wheelTransform);
+	void UpdatePosition(const float& Elapsed, const btTransform& wheelTransform);
 };
 
 class PhysicsPlayer : public Player
@@ -92,77 +92,37 @@ public:
 	PhysicsPlayer(UINT netID);
 	virtual ~PhysicsPlayer();
 
-	virtual void UpdateTransform() override;
+	//virtual void UpdateTransform() override;
 
 	virtual void OnCameraUpdate(float elapsedTime);
-	virtual void OnPlayerUpdate(float elapsedTime);
-	virtual void Update(float elapsedTime) override;
+	virtual void Update(float elapsedTime, float updateRate) override;
 	virtual void OnPreciseKeyInput(float Elapsed);
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
-	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
-	virtual UINT GetNetID() { return mNetID; }
-
-	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
-	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
-	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
-	//void BuildRigidBody(std::shared_ptr<btDiscreteDynamicsWorld> dynamicsWorld);
-
-	std::shared_ptr<WheelObject> GetWheel(int index) { return mWheel[index]; }
-	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
-
-	//void BuildRigidBody(std::shared_ptr<BulletWrapper> physics);
-	virtual void BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics);
-
-	void InterpolateTransform(float elapsed, float latency);
-	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
-
-	virtual int GetItemNum() { return mItemNum; }
-	virtual float GetDriftGauge() { return mDriftGauge; }
-
-private:
-	std::shared_ptr<WheelObject> mWheel[4];
-	btRaycastVehicle::btVehicleTuning mTuning;
-	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
-	std::shared_ptr<btRaycastVehicle> mVehicle;
-
-	AtomicInt3 mCorrectionOrigin{};
-	AtomicInt4 mCorrectionQuat{};
-
-	const float mInterpSpeed = 5.0f;
-
-	float mBoosterLeft = 0.0f;
-	float mBoosterTime = 5.0f;
-
-	float mEngineForce = 0.f;
-
-	float mMaxEngineForce = 20000.f;
-	float mMaxBackwardEngineForce = 10000.f;
-	float mBoosterEngineForce = 50000.f;
-
-	float mVehicleSteering = 0.f;
-	float mSteeringIncrement = 8.0f;
-	float mSteeringClamp = 0.5f;
-
-	float mCurrentSpeed = 0.0f;
-	float mMaxSpeed = 800.0f;
-
-	float mBreakingForce = 0.f;
-
-	float mFovCoefficient = 1.0f;
-
-	int mItemNum = 0;
-	float mDriftGauge = 0.0f;
-
-public:
+	
 	virtual void BuildDsvRtvView(ID3D12Device* device) override;
-
-	void BuildCameras();
+	virtual void BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics);
 
 	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) override;
 	virtual void ChangeCurrentRenderTarget() { mCurrentRenderTarget = 1 - mCurrentRenderTarget; }
 
 public:
+	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
+	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
+	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
+
+	void BuildCameras();	
+
+public:
+	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
+	virtual UINT GetNetID() { return mNetID; }
+
+	std::shared_ptr<WheelObject> GetWheel(int index) { return mWheel[index]; }
+	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
+
+	virtual int GetItemNum() { return mItemNum; }
+	virtual float GetDriftGauge() { return mDriftGauge; }
+
 	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
 
 private:
@@ -189,4 +149,32 @@ private:
 	UINT mCurrentRenderTarget = 0;
 
 	UINT mNetID = -1;
+
+	std::shared_ptr<WheelObject> mWheel[4];
+	btRaycastVehicle::btVehicleTuning mTuning;
+	std::shared_ptr<btVehicleRaycaster> mVehicleRayCaster;
+	std::shared_ptr<btRaycastVehicle> mVehicle;
+
+	float mBoosterLeft = 0.0f;
+	float mBoosterTime = 5.0f;
+
+	float mEngineForce = 0.f;
+
+	float mMaxEngineForce = 8000.f;
+	float mMaxBackwardEngineForce = 10000.f;
+	float mBoosterEngineForce = 300000.f;
+
+	float mVehicleSteering = 0.f;
+	float mSteeringIncrement = 8.0f;
+	float mSteeringClamp = 0.5f;
+
+	float mCurrentSpeed = 0.0f;
+	float mMaxSpeed = 1000.0f;
+
+	float mBreakingForce = 0.0f;
+
+	float mFovCoefficient = 1.0f;
+
+	int mItemNum = 0;
+	float mDriftGauge = 0.0f;
 };

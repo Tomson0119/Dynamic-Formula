@@ -57,6 +57,12 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 {
 	switch (type)
 	{
+	case CS::TRANSFER_TIME:
+	{
+		CS::packet_transfer_time* pck = reinterpret_cast<CS::packet_transfer_time*>(packet);
+		gClients[id]->SetLatency(pck->send_time);
+		break;
+	}
 	case CS::LOAD_DONE:
 	{
 		CS::packet_load_done* pck = reinterpret_cast<CS::packet_load_done*>(packet);
@@ -65,6 +71,9 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 			mLoginPtr->Disconnect(id);
 			break;
 		}
+		
+		gClients[id]->ReturnSendTimeBack(pck->send_time);
+
 		bool res = msWorlds[pck->room_id]->CheckIfAllLoaded(gClients[id]->PlayerIndex);
 		if (res) StartMatch(pck->room_id);
 		break;
@@ -80,7 +89,7 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 			mLoginPtr->Disconnect(id);
 			break;
 		}
-		gClients[id]->SetTransferTime(pck->send_time);
+		gClients[id]->ReturnSendTimeBack(pck->send_time);
 		msWorlds[roomID]->HandleKeyInput(idx, pck->key, pck->pressed);
 		break;
 	}
@@ -96,7 +105,6 @@ void InGameServer::StartMatch(int roomID)
 	msWorlds[roomID]->SetActive(true);
 	msWorlds[roomID]->SendStartSignal();
 	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
-	AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
 }
 
 void InGameServer::RemovePlayer(int roomID, int hostID)
@@ -110,14 +118,6 @@ void InGameServer::AddTimerEvent(int roomID, EVENT_TYPE type, int duration)
 	TimerQueue::TimerEvent ev{ 
 		std::chrono::milliseconds(duration), type, roomID };
 	mTimerQueue.AddTimerEvent(ev);
-}
-
-void InGameServer::BroadcastTransforms(int roomID)
-{
-	msWorlds[roomID]->BroadcastAllTransform();
-	
-	if (msWorlds[roomID]->IsActive())
-		AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
 }
 
 void InGameServer::RunPhysicsSimulation(int roomID)

@@ -9,15 +9,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int mCmdShow)
 	try
 	{
 		GameFramework app;
-		app.SetResolution(1920, 1080);
+		app.SetResolution(800, 600);
 
 		if (!app.InitFramework())
-			return 0;		
+			return -1;		
 		app.Run();
 	}
-	catch (DxException& error)
+	catch (std::exception& ex)
 	{
-		MessageBox(nullptr, error.ToString().c_str(), L"HR ERROR", MB_OK);
-		return 0;
+		MessageBoxA(nullptr, ex.what(), "ERROR", MB_OK);
+		return -1;
 	}
+	return 0;
 }

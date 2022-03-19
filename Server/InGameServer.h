@@ -37,8 +37,7 @@ public:
 	void StartMatch(int roomID);
 	void RemovePlayer(int roomID, int hostID);
 
-	void AddTimerEvent(int roomID, EVENT_TYPE type, int duration);	
-	void BroadcastTransforms(int roomID);	
+	void AddTimerEvent(int roomID, EVENT_TYPE type, int duration);
 	void RunPhysicsSimulation(int roomID);
 
 	void PostPhysicsOperation(int roomID);
@@ -61,5 +60,4 @@ private:
 	const btVector3 mOffset = { 20.0f, 0.0f, 0.0f };
 
 	const int mPhysicsDuration = 16;
-	const int mBroadcastDuration = 1000;
 };

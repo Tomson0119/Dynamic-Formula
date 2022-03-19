@@ -242,6 +242,14 @@ struct AtomicInt3
 	{
 	}
 
+	AtomicInt3& operator=(const AtomicInt3& other)
+	{
+		x.store(other.x);
+		y.store(other.y);
+		z.store(other.z);
+		return *this;
+	}
+
 	void SetZero()
 	{
 		x = 0;
@@ -259,6 +267,14 @@ struct AtomicInt3
 		x = x_;
 		y = y_;
 		z = z_;
+	}
+
+	void SetValue(const btVector3& vec)
+	{
+		SetValue(
+			(int)(vec.x() * FIXED_FLOAT_LIMIT),
+			(int)(vec.y() * FIXED_FLOAT_LIMIT),
+			(int)(vec.z() * FIXED_FLOAT_LIMIT));
 	}
 
 	btVector3 GetBtVector3() const
@@ -284,12 +300,35 @@ struct AtomicInt4
 	{
 	}
 
+	AtomicInt4& operator=(const AtomicInt4& other)
+	{
+		x.store(other.x);
+		y.store(other.y);
+		z.store(other.z);
+		w.store(other.w);
+		return *this;
+	}
+
 	void SetValue(int x_, int y_, int z_, int w_)
 	{
 		x = x_;
 		y = y_;
 		z = z_;
 		w = w_;
+	}
+
+	void SetValue(const btQuaternion& quat)
+	{
+		SetValue(
+			(int)(quat.x() * FIXED_FLOAT_LIMIT),
+			(int)(quat.y() * FIXED_FLOAT_LIMIT),
+			(int)(quat.z() * FIXED_FLOAT_LIMIT),
+			(int)(quat.w() * FIXED_FLOAT_LIMIT));
+	}
+
+	bool IsZero() const
+	{
+		return (x == 0.0f && y == 0.0f && z == 0.0f && w == 0.0f);
 	}
 
 	btQuaternion GetBtQuaternion() const
@@ -312,7 +351,7 @@ struct AtomicInt4
 
 ////////////////////////////////////////////////////////////////////////////
 //
-namespace BulletVector
+namespace BulletMath
 {
 	inline bool Equals(const btVector3& a, const btVector3& b, btScalar epsilon)
 	{
@@ -327,6 +366,11 @@ namespace BulletVector
 	{
 		btScalar len = (a - b).length2();
 		return (len < (epsilon* epsilon));
+	}
+
+	inline bool IsZero(const btQuaternion& quat)
+	{
+		return (quat.x() == 0.0f && quat.y() == 0.0f && quat.z() == 0.0f && quat.w() == 0.0f);
 	}
 }
 
