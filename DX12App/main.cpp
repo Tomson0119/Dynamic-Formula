@@ -12,12 +12,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int mCmdShow)
 		app.SetResolution(800, 600);
 
 		if (!app.InitFramework())
-			return 0;		
+			return -1;		
 		app.Run();
 	}
 	catch (std::exception& ex)
 	{
 		MessageBoxA(nullptr, ex.what(), "ERROR", MB_OK);
-		return 0;
+		return -1;
 	}
+	return 0;
 }
