@@ -18,6 +18,11 @@ GameWorld::GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantPtr)
 	mConstantPtr = constantPtr;
 }
 
+GameWorld::~GameWorld()
+{
+	mPhysics.Flush();
+}
+
 void GameWorld::InitPhysics(float gravity)
 {
 	mPhysics.Init(gravity);

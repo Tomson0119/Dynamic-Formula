@@ -12,7 +12,7 @@ class GameWorld
 	using PlayerList = std::array<Player*, MAX_ROOM_CAPACITY>;
 public:
 	GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantsPtr);
-	~GameWorld() = default;
+	~GameWorld();
 	
 	void InitPhysics(float gravity);
 	void InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes);
