@@ -274,6 +274,10 @@ void InGameScene::CreateVelocityMapDescriptorHeaps()
 		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
 }
 
+void InGameScene::CreateNewMissileObject(ID3D12GraphicsCommandList* cmdList)
+{
+}
+
 void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mDynamicsWorld = physics->GetDynamicsWorld();
@@ -293,7 +297,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 	physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 
-	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
+	//LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
 	BuildCarObjects({ 480.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
