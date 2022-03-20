@@ -907,6 +907,9 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		XMFLOAT4 quaternion;
 		ss >> quaternion.x >> quaternion.y >> quaternion.z >> quaternion.w;
 
+		XMFLOAT3 scale;
+		ss >> scale.x >> scale.y >> scale.z;
+
 		auto tmpstr = std::string("Models\\") + objName;
 
 		wstring objPath;
@@ -917,12 +920,38 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		if (mMeshList[objName].empty())
 			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath);
 		
+		auto& meshes = obj->GetMesh();
+
+		btCompoundShape* compound = NULL;
+
+		for (int i = 0; i < obj->GetMeshCount(); ++i)
+		{
+			if (meshes[i]->GetMeshShape())
+			{
+				if (compound == NULL)
+					compound = new btCompoundShape();
+
+				btTransform btLocalTransform;
+				btLocalTransform.setIdentity();
+
+				compound->addChildShape(btLocalTransform, meshes[i]->GetMeshShape().get());
+			}
+		}
+
+		if (compound)
+		{
+			btTransform btObjectTransform;
+			btObjectTransform.setIdentity();
+			btObjectTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+
+			obj->SetRigidBody(physics->CreateRigidBody(0.0f, btObjectTransform, compound));
+		}
 
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
 		convexObjPath.assign(tmpstr.begin(), tmpstr.end());
 
-		obj->Scale(1.0f, 1.0f, 1.0f);
+		obj->Scale(scale);
 		obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", physics);
 		obj->SetPosition(pos);
 		obj->RotateQuaternion(quaternion);

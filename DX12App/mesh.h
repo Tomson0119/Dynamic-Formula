@@ -53,11 +53,16 @@ public:
 		const std::vector<XMFLOAT3>& positions,
 		const std::vector<XMFLOAT3>& normals,
 		const std::vector<XMFLOAT2>& texcoords,
-		const MatInfo& mat);
+		const MatInfo& mat,
+		const bool& createShape = false);
 
 	void SetMatDiffuse(const XMFLOAT4& diffuse) { mMaterial.Mat.Diffuse = diffuse; }
 	void SetMaterial(Material mat) { mMaterial.Mat = mat; }
 	void SetSrvIndex(UINT idx) { mMaterial.SrvIndex = idx; }
+
+	void CreateMeshShape(const std::vector<Vertex>& targetVertices, const std::vector<UINT>& targetIndices);
+
+	std::shared_ptr<btBvhTriangleMeshShape> GetMeshShape() { return mMeshShape; }
 
 public:
 	MaterialConstants GetMaterialConstant() const;
@@ -84,7 +89,9 @@ protected:
 	MatInfo mMaterial = {};
 
 	std::string mName;
-	//btRigidBody* mBtRigidBody = NULL;
+
+	std::shared_ptr<btBvhTriangleMeshShape> mMeshShape = NULL;
+	btTriangleIndexVertexArray* mTriangleVertexArray = NULL;
 
 public:
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView = {};

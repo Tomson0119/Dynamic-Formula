@@ -37,6 +37,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 	std::string info;
 
+	bool collider = false;
 	while (std::getline(in_file, info))
 	{
 		std::stringstream ss(info);
@@ -90,7 +91,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 			new_mesh = std::make_shared<Mesh>(mtl_name);
 			new_mesh->LoadMesh(
 				device, cmdList, in_file,
-				positions, normals, texcoords, mats[mtl_name]);
+				positions, normals, texcoords, mats[mtl_name], collider);
 
 			mMeshes.push_back(new_mesh);
 		}

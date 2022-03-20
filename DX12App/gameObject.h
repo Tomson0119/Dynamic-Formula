@@ -86,6 +86,8 @@ public:
 	void SetCBVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mCbvGPUAddress = gpuHandle; }
 	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
 
+	void SetRigidBody(btRigidBody* rigidbody) { mBtRigidBody = rigidbody; }
+
 public:
 	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) { }
 	
@@ -124,6 +126,8 @@ public:
 	//UINT GetSRVIndex() const { return mSrvIndex; }
 	UINT GetMeshCount() const { return (UINT)mMeshes.size(); }
 	UINT GetTextureCount() const { return (UINT)mTextures.size(); }
+
+	std::vector<std::shared_ptr<Mesh>>& GetMesh() { return mMeshes; }
 
 	virtual ULONG GetCubeMapSize() const { return 0; }	
 	virtual ObjectConstants GetObjectConstants();
