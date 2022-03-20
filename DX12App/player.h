@@ -96,7 +96,7 @@ public:
 
 	virtual void OnCameraUpdate(float elapsedTime);
 	virtual void Update(float elapsedTime, float updateRate) override;
-	virtual void OnPreciseKeyInput(float Elapsed);
+	virtual void OnPreciseKeyInput(float Elapsed) override;
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	
