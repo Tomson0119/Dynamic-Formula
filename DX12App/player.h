@@ -4,13 +4,6 @@
 #include "camera.h"
 #include "inGameScene.h"
 
-enum class UPDATE_FLAG : char
-{
-	NONE = 0,
-	UPDATE,
-	REMOVE
-};
-
 class Player : public GameObject
 {
 public:
@@ -41,10 +34,6 @@ public:
 	XMFLOAT3 GetVelocity() const { return mVelocity; }
 	XMFLOAT3 GetGravity() const { return mGravity; }
 
-	void ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
-	void SetUpdateFlag(UPDATE_FLAG flag) { mUpdateFlag = flag; }
-	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
-
 public:
 	virtual Camera* ChangeCameraMode(int cameraMode);
 	virtual float GetCurrentVelocity() { return 0.0f; }
@@ -70,8 +59,6 @@ protected:
 	void* mCameraUpdateContext = nullptr;
 
 	Camera* mCamera = nullptr;
-
-	std::atomic<UPDATE_FLAG> mUpdateFlag;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -106,18 +93,22 @@ public:
 	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) override;
 	virtual void ChangeCurrentRenderTarget() { mCurrentRenderTarget = 1 - mCurrentRenderTarget; }
 
+	virtual void RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& pipeline) override;
+
 public:
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
 	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
 	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
 
-	void BuildCameras();	
+	void BuildCameras();
+
+	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
 
 public:
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
 	virtual UINT GetNetID() { return mNetID; }
 
-	std::shared_ptr<WheelObject> GetWheel(int index) { return mWheel[index]; }
+	WheelObject* GetWheel(int index) { return mWheel[index].get(); }
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 
 	virtual int GetItemNum() { return mItemNum; }

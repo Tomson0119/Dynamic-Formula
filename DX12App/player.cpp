@@ -3,7 +3,7 @@
 #include "camera.h"
 
 Player::Player()
-	: GameObject(), mUpdateFlag{ UPDATE_FLAG::NONE }
+	: GameObject()
 {
 }
 
@@ -89,11 +89,6 @@ void Player::Pitch(float angle)
 			break;
 		}
 	}
-}
-
-void Player::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
-{
-	mUpdateFlag.compare_exchange_strong(expected, desired);
 }
 
 Camera* Player::ChangeCameraMode(int cameraMode)
@@ -621,6 +616,24 @@ void PhysicsPlayer::BuildCameras()
 	}
 }
 
+void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
+{
+	mProgress = 0;
+	mPrevOrigin = mCorrectionOrigin;
+	mPrevQuat = mCorrectionQuat;
+
+	mCorrectionOrigin.SetValue(
+		(int)(pck->position[0] + pck->linear_vel[0] * latency),
+		(int)(pck->position[1] + pck->linear_vel[1] * latency),
+		(int)(pck->position[2] + pck->linear_vel[2] * latency));
+
+	mCorrectionQuat.SetValue(
+		pck->quaternion[0],
+		(int)(pck->quaternion[1] * (1 + 0.5f * latency * pck->angular_vel[0])),
+		(int)(pck->quaternion[2] * (1 + 0.5f * latency * pck->angular_vel[1])),
+		(int)(pck->quaternion[3] * (1 + 0.5f * latency * pck->angular_vel[2])));
+}
+
 void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex)
 {
 	BuildCameras();
@@ -644,6 +657,39 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 	// resource barrier
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		mCubeMap[mCurrentRenderTarget]->GetResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+}
+
+void PhysicsPlayer::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& pipeline)
+{
+	GameObject::RemoveObject(dynamicsWorld, pipeline);
+
+	if (mVehicle)
+	{
+		dynamicsWorld.removeVehicle(mVehicle.get());
+	}
+
+	int remove_count = 0;
+	auto& objs = pipeline.GetRenderObjects();
+	for (auto iter = objs.begin(); iter != objs.end();)
+	{
+		bool wheel_removed = false;
+		for (int k = 0; k < 4; ++k)
+		{
+			auto wheel = GetWheel(k);
+			if (wheel == iter->get())
+			{
+				iter = pipeline.DeleteObject(iter);
+				remove_count++;
+				wheel_removed = true;
+				break;
+			}
+		}
+		if (remove_count == 4)
+			break;
+
+		if (!wheel_removed)
+			iter++;
+	}
 }
 
 WheelObject::WheelObject() : GameObject()

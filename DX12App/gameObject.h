@@ -6,6 +6,14 @@
 #include "texture.h"
 
 class InGameScene;
+class Pipeline;
+
+enum class UPDATE_FLAG : char
+{
+	NONE = 0,
+	CREATE,
+	REMOVE
+};
 
 class GameObject
 {
@@ -28,7 +36,6 @@ public:
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffse, bool isSO=false);
 
-
 	void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffset, int InstanceCount, bool isSO = false);
@@ -49,7 +56,7 @@ public:
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
 
 	void InterpolateTransform(float elapsed, float updateRate);
-	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
+	
 
 public:
 	virtual std::vector<std::shared_ptr<Mesh>> LoadModel(
@@ -69,6 +76,8 @@ public:
 	virtual bool LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics);
 	virtual void BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>& physics);
 
+	virtual void RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& pipeline);
+
 public:
 	virtual void SetPosition(float x, float y, float z);
 	virtual void SetPosition(const XMFLOAT3& pos);
@@ -77,7 +86,8 @@ public:
 
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
-	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
+	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes = meshes; }
+	void CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
 
 	void SetBoudingBoxFromMeshes();
 
@@ -138,6 +148,10 @@ public:
 	
 	btRigidBody* GetRigidBody() { return mBtRigidBody; }
 
+	void ChangeUpdateFlag(UPDATE_FLAG expected, const UPDATE_FLAG& desired);
+	void SetUpdateFlag(const UPDATE_FLAG& flag) { mUpdateFlag = flag; }
+	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
+
 protected:
 	XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
 	XMFLOAT3 mRight = { 1.0f, 0.0f, 0.0f };
@@ -158,6 +172,8 @@ protected:
 	AtomicInt3 mCorrectionOrigin{};
 	AtomicInt4 mCorrectionQuat{};
 	// Members for interpolation.
+
+	std::atomic<UPDATE_FLAG> mUpdateFlag;
 
 	btRigidBody* mBtRigidBody = NULL;
 	btCompoundShape* mBtCollisionShape = NULL;
@@ -261,7 +277,7 @@ private:
 class MissileObject : public GameObject
 {
 public:
-	MissileObject();
+	MissileObject(const XMFLOAT3& position);
 	virtual ~MissileObject();
 
 	virtual void Update(float elapsedTime, float updateRate) override;
@@ -269,6 +285,13 @@ public:
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
 
+	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
+
+public:
+	void SetActive(bool state) { mActive = state; }
+	bool IsActive() const { return mActive; }
+
 private:
 	float mDuration = 3.0f;
+	std::atomic_bool mActive;
 };

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "gameObject.h"
 #include "inGameScene.h"
-
+#include "pipeline.h"
 
 GameObject::GameObject()
 {
@@ -292,6 +292,27 @@ void GameObject::BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>
 	}
 }
 
+void GameObject::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& pipeline)
+{
+	if (mBtRigidBody)
+	{
+		delete mBtRigidBody->getMotionState();
+		dynamicsWorld.removeRigidBody(mBtRigidBody);
+		delete mBtRigidBody;
+		mBtRigidBody = nullptr;
+	}
+
+	for (int idx = 0; const auto& obj : pipeline.GetRenderObjects())
+	{
+		if (this == obj.get())
+		{
+			pipeline.DeleteObject(idx);
+			break;
+		}
+		idx += 1;
+	}
+}
+
 void GameObject::Update(float elapsedTime, float updateRate)
 {
 	mLook = Vector3::Normalize(mLook);
@@ -541,30 +562,6 @@ void GameObject::InterpolateTransform(float elapsed, float updateRate)
 	rigid->setWorldTransform(nextTransform);
 }
 
-void GameObject::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
-{
-	mProgress = 0;
-	mPrevOrigin = mCorrectionOrigin;
-	mPrevQuat = mCorrectionQuat;
-
-	mCorrectionOrigin.SetValue(
-		(int)(pck->position[0] + pck->linear_vel[0] * latency),
-		(int)(pck->position[1] + pck->linear_vel[1] * latency),
-		(int)(pck->position[2] + pck->linear_vel[2] * latency));
-
-	mCorrectionQuat.SetValue(
-		pck->quaternion[0],
-		(int)(pck->quaternion[1] * (1 + 0.5f * latency * pck->angular_vel[0])),
-		(int)(pck->quaternion[2] * (1 + 0.5f * latency * pck->angular_vel[1])),
-		(int)(pck->quaternion[3] * (1 + 0.5f * latency * pck->angular_vel[2])));
-
-	/*auto& quat = mCorrectionQuat.GetBtQuaternion();
-	std::stringstream ss;
-	ss << "NetID: " << mNetID << "\n";
-	ss << "Quat: " << quat.x() << ", " << quat.y() << ", " << quat.z() << ", " << quat.w() << "\n";
-	OutputDebugStringA(ss.str().c_str());*/
-}
-
 void GameObject::SetPosition(float x, float y, float z)
 {
 	mPosition = { x,y,z };
@@ -590,7 +587,7 @@ void GameObject::SetLook(XMFLOAT3& look)
 	//GameObject::Update(1.0f);
 }
 
-void GameObject::SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
+void GameObject::CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
 {
 	for (int i = 0; i < meshes.size(); ++i)
 	{
@@ -644,6 +641,11 @@ void GameObject::SetMovement(XMFLOAT3& dir, float speed)
 {
 	mMoveDirection = dir;
 	mMoveSpeed = speed;
+}
+
+void GameObject::ChangeUpdateFlag(UPDATE_FLAG expected, const UPDATE_FLAG& desired)
+{
+	mUpdateFlag.compare_exchange_strong(expected, desired);
 }
 
 void GameObject::Move(float dx, float dy, float dz)
@@ -881,8 +883,10 @@ bool Billboard::IsTimeOver(std::chrono::steady_clock::time_point& currentTime)
 	return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - mCreationTime) > mDurationTime;
 }
 
-MissileObject::MissileObject()
+MissileObject::MissileObject(const XMFLOAT3& position)
+	: GameObject(), mActive{ false } 
 {
+	SetPosition(position);
 }
 
 MissileObject::~MissileObject()
@@ -910,8 +914,23 @@ void MissileObject::SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward
 	mBtRigidBody->setLinearVelocity(forward * 1000.0f);
 }
 
+void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, float latency)
+{
+	mProgress = 0;
+	mPrevOrigin = mCorrectionOrigin;
+	mPrevQuat = mCorrectionQuat;
+
+	mCorrectionOrigin.SetValue(
+		(int)(pck->position[0] + pck->linear_vel[0] * latency),
+		(int)(pck->position[1] + pck->linear_vel[1] * latency),
+		(int)(pck->position[2] + pck->linear_vel[2] * latency));
+}
+
 void MissileObject::Update(float elapsedTime, float updateRate)
 {
-	GameObject::Update(elapsedTime, updateRate);
-	mDuration -= elapsedTime;
+	if (mActive)
+	{
+		GameObject::Update(elapsedTime, updateRate);
+		mDuration -= elapsedTime;
+	}
 }
