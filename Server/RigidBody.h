@@ -17,13 +17,13 @@ public:
 	RigidBody();
 	virtual ~RigidBody() = default;
 
-	virtual void CreateRigidBody(
-		btScalar mass,
-		btCollisionShape* shape,
-		const btVector3& position,
-		const btVector3& offset = btVector3{ 0.0f,0.0f,0.0f });
+	virtual void CreateRigidBody(btScalar mass, btCollisionShape* shape);
+
+	void SetPosition(const btVector3& position) { mPosition = position; }
+	void SetTransform(const btVector3& position, const btQuaternion& rotation);
 
 	void Update(btDiscreteDynamicsWorld* physicsWorld);
+	void UpdateTransformVectors();
 
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld);
 	virtual void UpdateRigidBody();
@@ -33,11 +33,23 @@ public:
 	void SetUpdateFlag(UPDATE_FLAG flag) { mFlag = flag; }
 	bool ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired);
 	UPDATE_FLAG GetUpdateFlag() const { return mFlag; }
-
 	btRigidBody* GetRigidBody() const { return mRigidBody; }
+
+public:
+	const btVector3& GetPosition() const { return mPosition; }
+	const btQuaternion& GetQuaternion() const { return mQuaternion; }
+	const btVector3& GetLinearVelocity() const { return mLinearVelocity; }
+	const btVector3& GetAngularVelocity() const { return mAngularVelocity; }
 
 protected:
 	btRigidBody* mRigidBody;
+
+	btVector3 mPosition;
+	btQuaternion mQuaternion;
+
+	btVector3 mLinearVelocity;
+	btVector3 mAngularVelocity;
+
 	std::atomic<UPDATE_FLAG> mFlag;
 };
 
@@ -57,7 +69,7 @@ public:
 	};
 
 public:
-	VehicleRigidBody() = default;
+	VehicleRigidBody();
 	virtual ~VehicleRigidBody() = default;
 
 	void CreateRaycastVehicle(
@@ -76,7 +88,6 @@ public:
 public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }
 	const Tuning& GetTuning() const { return mTuning; }
-
 	VehicleComponent& GetComponent() { return mComponent; }
 
 private:
@@ -95,7 +106,7 @@ public:
 	void CreateTerrainRigidBody(BtTerrainShape* shape);
 	void CreateStaticRigidBodies(std::string_view filename,	btCollisionShape* shape);
 
-	void UpdateAllRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
+	void UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
 
 private:
 	std::deque<RigidBody> mStaticRigidBodies;

@@ -2,15 +2,16 @@
 #include "RigidBody.h"
 
 RigidBody::RigidBody()
-	: mRigidBody{ nullptr }, mFlag{ UPDATE_FLAG::NONE }
+	: mRigidBody{ nullptr }, 
+	  mPosition{ 0.0f, 0.0f, 0.0f },
+	  mQuaternion{ 0.0f, 0.0f, 0.0f, 1.0f },
+	  mLinearVelocity{ 0.0f, 0.0f, 0.0f },
+	  mAngularVelocity{ 0.0f, 0.0f, 0.0f },
+	  mFlag{ UPDATE_FLAG::NONE }
 {
 }
 
-void RigidBody::CreateRigidBody(
-	btScalar mass, 
-	btCollisionShape* shape, 
-	const btVector3& position, 
-	const btVector3& offset)
+void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape* shape)
 {
 	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
 
@@ -21,7 +22,7 @@ void RigidBody::CreateRigidBody(
 	}
 
 	btTransform originTransform = btTransform::getIdentity();
-	originTransform.setOrigin(position + offset);
+	originTransform.setOrigin(mPosition);
 
 	btDefaultMotionState* motionState = new btDefaultMotionState(originTransform);
 	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, motionState, shape, inertia);
@@ -49,6 +50,28 @@ void RigidBody::Update(btDiscreteDynamicsWorld* physicsWorld)
 		return;
 	}
 	SetUpdateFlag(UPDATE_FLAG::UPDATE);
+}
+
+void RigidBody::UpdateTransformVectors()
+{
+	if (mRigidBody)
+	{
+		btTransform transform{};
+		mRigidBody->getMotionState()->getWorldTransform(transform);
+
+		mPosition = transform.getOrigin();
+		mQuaternion = transform.getRotation();
+		mLinearVelocity = mRigidBody->getInterpolationLinearVelocity();
+		mAngularVelocity = mRigidBody->getInterpolationAngularVelocity();
+	}
+}
+
+void RigidBody::SetTransform(const btVector3& position, const btQuaternion& rotation)
+{
+	btTransform newTransform{};
+	newTransform.setOrigin(position);
+	newTransform.setRotation(rotation);
+	mRigidBody->setWorldTransform(newTransform);
 }
 
 void RigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
@@ -94,6 +117,11 @@ bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 //
 // VehicleRigidBody
 //
+VehicleRigidBody::VehicleRigidBody()
+	: RigidBody()
+{
+}
+
 void VehicleRigidBody::CreateRaycastVehicle(
 	btDiscreteDynamicsWorld* physicsWorld,
 	const btVector3& bodyExtents, 
@@ -198,11 +226,8 @@ void MapRigidBody::CreateTerrainRigidBody(BtTerrainShape* shape)
 	mStaticRigidBodies.emplace_back();
 
 	RigidBody& terrainRigidBody = mStaticRigidBodies.back();
-	terrainRigidBody.CreateRigidBody(
-		0.0f,
-		shape->GetCollisionShape(),
-		shape->GetOriginPosition());
-
+	terrainRigidBody.SetPosition(shape->GetOriginPosition());
+	terrainRigidBody.CreateRigidBody(0.0f, shape->GetCollisionShape());
 	terrainRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 }
 
@@ -212,7 +237,7 @@ void MapRigidBody::CreateStaticRigidBodies(std::string_view filename, btCollisio
 	//		 and create all rigidboies
 }
 
-void MapRigidBody::UpdateAllRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
+void MapRigidBody::UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
 {
 	for (RigidBody& rigid : mStaticRigidBodies)
 	{
