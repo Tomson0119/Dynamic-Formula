@@ -135,6 +135,8 @@ namespace SC
 	const char START_SIGNAL		  = 12;
 	const char TRANSFER_TIME	  = 13;
 	const char PLAYER_TRANSFORM	  = 14;
+	const char MISSILE_TRANSFORM  = 15;
+	const char REMOVE_MISSILE	  = 16;
 
 	struct packet_force_logout : packet_header { };
 
@@ -231,6 +233,21 @@ namespace SC
 		int quaternion[4];
 		int linear_vel[3];
 		int angular_vel[3];
+	};
+
+	struct packet_missile_transform : packet_header
+	{
+		int world_id;
+		int missile_idx;
+		int position[3];
+		int quaternion[4];
+		int linear_vel[3];
+	};
+
+	struct packet_remove_missile : packet_header
+	{
+		int world_id;
+		int missile_idx;
 	};
 }
 #pragma pack(pop)
