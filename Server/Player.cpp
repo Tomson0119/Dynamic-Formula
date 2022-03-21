@@ -20,7 +20,7 @@ void Player::SetPosition(float x, float y, float z)
 	mMissileRigidBody.SetPosition({ x, y, z });
 }
 
-void Player::SetVehicleConstant(std::shared_ptr<InGameServer::VehicleConstant> constantPtr)
+void Player::SetVehicleConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
 {
 	mConstantPtr = constantPtr;
 }
@@ -168,16 +168,29 @@ void Player::ToggleKeyValue(uint8_t key, bool pressed)
 	{
 		if (key == 'X')
 		{
-			btVector3 pos = mVehicleRigidBody.GetPosition()
-				+ msForwardOffset * mVehicleRigidBody.GetVehicle()->getForwardVector();
-			const btQuaternion& quat = mVehicleRigidBody.GetQuaternion();
-			mMissileRigidBody.SetTransform(pos, quat);
-			mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
-			std::cout << "Hi missile is launched.\n";
+			InitMissileRigidBody();
 		}
 	}
 	else
 	{
 		mKeyMap[key] = pressed;
 	}
+}
+
+void Player::InitMissileRigidBody()
+{
+	const btVector3& pos = mVehicleRigidBody.GetPosition();
+	const btVector3& forward = mVehicleRigidBody.GetVehicle()->getForwardVector();
+	const btQuaternion& quat = mVehicleRigidBody.GetQuaternion();
+	mMissileRigidBody.SetMissileComponents(
+		pos, forward, quat,
+		mConstantPtr->MissileGravity,
+		mConstantPtr->MissileForwardOffset,
+		mConstantPtr->MissileSpeed);
+	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
+}
+
+bool Player::CheckMissileExist() const
+{
+	return (mMissileRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::UPDATE);
 }

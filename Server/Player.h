@@ -11,7 +11,7 @@ public:
 	Player();
 	~Player() = default;
 
-	void SetVehicleConstant(std::shared_ptr<InGameServer::VehicleConstant> constantPtr);
+	void SetVehicleConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr);
 	void SetPosition(float x, float y, float z);
 
 	void CreateVehicleRigidBody(
@@ -37,9 +37,13 @@ public:
 	bool CheckDriftGauge();
 	void ToggleKeyValue(uint8_t key, bool pressed);
 
+	void InitMissileRigidBody();
+
 public:
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
 	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
+	
+	bool CheckMissileExist() const;
 
 public:
 	std::atomic_bool Empty;
@@ -54,8 +58,7 @@ private:
 	std::map<int, std::atomic_bool> mKeyMap;
 
 	VehicleRigidBody mVehicleRigidBody;
-	RigidBody mMissileRigidBody;
-	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
+	MissileRigidBody mMissileRigidBody;
 
-	inline static const float msForwardOffset = 15.0f;
+	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };
