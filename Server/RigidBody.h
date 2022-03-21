@@ -20,8 +20,7 @@ public:
 	virtual void CreateRigidBody(btScalar mass, btCollisionShape* shape);
 
 	void SetPosition(const btVector3& position) { mPosition = position; }
-	void SetTransform(const btVector3& position, const btQuaternion& rotation);
-
+	
 	void Update(btDiscreteDynamicsWorld* physicsWorld);
 	void UpdateTransformVectors();
 
@@ -51,6 +50,21 @@ protected:
 	btVector3 mAngularVelocity;
 
 	std::atomic<UPDATE_FLAG> mFlag;
+};
+
+class MissileRigidBody : public RigidBody
+{
+public:
+	MissileRigidBody();
+	virtual ~MissileRigidBody() = default;
+
+public:
+	void SetMissileComponents(
+		const btVector3& position, 
+		const btVector3& forward,
+		const btQuaternion& rotation,
+		const btVector3& gravity,
+		float forwardOffset, float speed);
 };
 
 class VehicleRigidBody : public RigidBody

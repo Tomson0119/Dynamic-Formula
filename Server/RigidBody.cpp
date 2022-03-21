@@ -66,14 +66,6 @@ void RigidBody::UpdateTransformVectors()
 	}
 }
 
-void RigidBody::SetTransform(const btVector3& position, const btQuaternion& rotation)
-{
-	btTransform newTransform{};
-	newTransform.setOrigin(position);
-	newTransform.setRotation(rotation);
-	mRigidBody->setWorldTransform(newTransform);
-}
-
 void RigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
 	if(mRigidBody)
@@ -82,6 +74,7 @@ void RigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 
 void RigidBody::UpdateRigidBody()
 {
+	UpdateTransformVectors();
 }
 
 void RigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
@@ -111,6 +104,30 @@ bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 		return false;
 	}
 	return true;
+}
+
+
+//
+// MissileRigidBody
+//
+MissileRigidBody::MissileRigidBody()
+	: RigidBody()
+{
+}
+
+void MissileRigidBody::SetMissileComponents(
+	const btVector3& position,
+	const btVector3& forward,
+	const btQuaternion& rotation,
+	const btVector3& gravity,
+	float forwardOffset, float speed)
+{
+	btTransform newTransform{};
+	newTransform.setOrigin(position + forward * forwardOffset);
+	newTransform.setRotation(rotation);
+	mRigidBody->setWorldTransform(newTransform);
+	mRigidBody->setGravity(gravity);
+	mRigidBody->setLinearVelocity(forward * speed);
 }
 
 
@@ -204,6 +221,8 @@ void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
 
 void VehicleRigidBody::UpdateRigidBody()
 {
+	RigidBody::UpdateRigidBody();
+
 	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrictionSlip;
 	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrictionSlip;
 	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.FrictionSlip;
