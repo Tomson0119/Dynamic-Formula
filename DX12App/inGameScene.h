@@ -77,7 +77,7 @@ private:
 	void BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap();
 
-	void BuildCarObjects(
+	void BuildCarObject(
 		const XMFLOAT3& position,
 		char color,
 		bool isPlayer,
@@ -85,15 +85,13 @@ private:
 		const std::shared_ptr<BulletWrapper>& dynamicsWorld, 
 		UINT netID);
 
+	void BuildMissileObject(const XMFLOAT3& position, int idx);
+
 	void CreateVelocityMapViews();
 	void CreateVelocityMapDescriptorHeaps();
 
-	void CreateNewMissileObject(ID3D12GraphicsCommandList* cmdList);
-
-	void AppendMissileObject(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics);
 	void UpdateMissileObject();
-
-	void UpdatePlayerObjects(float elapsed);
+	void UpdatePlayerObjects();
 
 	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path);
 
@@ -130,16 +128,10 @@ private:
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
 
 	Player* mPlayer = nullptr;
-	std::vector<std::shared_ptr<MissileObject>> mMissileObjects;
+	std::array<std::shared_ptr<MissileObject>, MAX_ROOM_CAPACITY> mMissileObjects;
 	std::array<std::shared_ptr<PhysicsPlayer>, MAX_ROOM_CAPACITY> mPlayerObjects;
 
-	std::shared_ptr<Billboard> mFlameBillboard;
-	std::shared_ptr<Billboard> mDustBillboard;
 	btDiscreteDynamicsWorld* mDynamicsWorld;
-
-	std::chrono::high_resolution_clock::time_point mPrevTime;
-
-	const XMFLOAT3 mRoomCenter = { -1024, 0, 1024 };
 
 	bool mLODSet = false;
 	bool mOutside = false;

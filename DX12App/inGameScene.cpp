@@ -173,7 +173,7 @@ void InGameScene::BuildComputeRootSignature()
 
 void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 {
-	//auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
+	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
 	auto instancingShader = make_unique<DefaultShader>(L"Shaders\\Instancing.hlsl");
 	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
@@ -182,8 +182,8 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
 	mPipelines[Layer::SkyBox]->BuildPipeline(mDevice.Get(), mRootSignature.Get());
 
-	//mPipelines[Layer::Default] = make_unique<Pipeline>();
-	//mPipelines[Layer::Default]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), defaultShader.get());
+	mPipelines[Layer::Default] = make_unique<Pipeline>();
+	mPipelines[Layer::Default]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), defaultShader.get());
 
 	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 	mPipelines[Layer::Terrain]->SetWiredFrame(true);
@@ -274,10 +274,6 @@ void InGameScene::CreateVelocityMapDescriptorHeaps()
 		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
 }
 
-void InGameScene::CreateNewMissileObject(ID3D12GraphicsCommandList* cmdList)
-{
-}
-
 void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mDynamicsWorld = physics->GetDynamicsWorld();
@@ -308,7 +304,8 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-			BuildCarObjects(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
+			BuildCarObject(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
+			BuildMissileObject(info.StartPosition, i);
 		}
 		i++;
 	}
@@ -319,7 +316,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mCurrentCamera = mMainCamera.get();
 }
 
-void InGameScene::BuildCarObjects(
+void InGameScene::BuildCarObject(
 	const XMFLOAT3& position,
 	char color,
 	bool isPlayer,
@@ -333,7 +330,7 @@ void InGameScene::BuildCarObjects(
 	if (mMeshList["Car_Body.obj"].empty())
 		mMeshList["Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
 	else
-		carObj->SetMeshes(mMeshList["Car_Body.obj"]);
+		carObj->CopyMeshes(mMeshList["Car_Body.obj"]);
 
 	carObj->SetDiffuse("Car_Texture", mColorMap[(int)color]);
 	for (int i = 0; i < 4; ++i)
@@ -345,14 +342,14 @@ void InGameScene::BuildCarObjects(
 			if (mMeshList["Car_Wheel_L.obj"].empty())
 				mMeshList["Car_Wheel_L.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
 			else
-				wheelObj->SetMeshes(mMeshList["Car_Wheel_L.obj"]);
+				wheelObj->CopyMeshes(mMeshList["Car_Wheel_L.obj"]);
 		}
 		else
 		{
 			if (mMeshList["Car_Wheel_R.obj"].empty())
 				mMeshList["Car_Wheel_R.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
 			else
-				wheelObj->SetMeshes(mMeshList["Car_Wheel_R.obj"]);
+				wheelObj->CopyMeshes(mMeshList["Car_Wheel_R.obj"]);
 		}
 
 		carObj->SetWheel(wheelObj, i);
@@ -363,7 +360,13 @@ void InGameScene::BuildCarObjects(
 
 	if (isPlayer) mPlayer = carObj.get();
 	mPipelines[Layer::Color]->AppendObject(carObj);
-	mPlayerObjects[netID] = std::move(carObj);
+	mPlayerObjects[netID] = std::move(carObj);	
+}
+
+void InGameScene::BuildMissileObject(const XMFLOAT3& position, int idx)
+{
+	mMissileObjects[idx] = std::make_shared<MissileObject>(position);
+	mMissileObjects[idx]->SetMeshes(mMeshList["Missile"]);
 }
 
 void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
@@ -427,7 +430,20 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 			if (player.get() == mPlayer) mNetPtr->SetUpdateRate();
 			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
-			player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
+			//player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
+		}
+		break;
+	}
+	case SC::MISSILE_TRANSFORM:
+	{
+		SC::packet_missile_transform* pck = reinterpret_cast<SC::packet_missile_transform*>(packet);
+		auto& missile = mMissileObjects[pck->missile_idx];
+		
+		if (missile)
+		{
+			if (missile->IsActive() == false)
+				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
+			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
 		}
 		break;
 	}
@@ -511,8 +527,8 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 	{
 		if (GetAsyncKeyState('X') & 0x8000)
 		{
-			mMissileInterval = 1.0f;
-			AppendMissileObject(cmdList, physics);
+			//mMissileInterval = 1.0f;
+			//AppendMissileObject(cmdList, physics);
 		}
 	}
 	else
@@ -548,7 +564,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
 
-	UpdatePlayerObjects(elapsed);
+	UpdateMissileObject();
+	UpdatePlayerObjects();
 	OnPreciseKeyInput(cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
@@ -714,103 +731,61 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* ca
 	}
 }
 
-void InGameScene::AppendMissileObject(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
-{
-	std::shared_ptr<MissileObject> missile = std::make_shared<MissileObject>();
-	missile->SetMesh(mMeshList["Missile"][0], mPlayer->GetVehicle()->getForwardVector(), mPlayer->GetPosition(), physics);
-	missile->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
-
-	mMissileObjects.push_back(missile);
-	mPipelines[Layer::Default]->AppendObject(missile);
-	mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
-}
-
 void InGameScene::UpdateMissileObject()
 {
 	bool flag = false;
-	for (auto i = mMissileObjects.begin(); i < mMissileObjects.end();)
+	for (int i = 0; i < mMissileObjects.size(); i++)
 	{
-		if (i->get()->GetDuration() < 0.0f)
+		auto missile = mMissileObjects[i].get();
+
+		if (missile == nullptr) continue;
+
+		switch (missile->GetUpdateFlag())
+		{
+		case UPDATE_FLAG::CREATE:
+		{
+			missile->SetActive(true);
+			mPipelines[Layer::Default]->AppendObject(mMissileObjects[i]);
+			missile->SetUpdateFlag(UPDATE_FLAG::NONE);
+
+			flag = true;
+			OutputDebugStringA("Hello.\n");
+			break;
+		}
+		case UPDATE_FLAG::REMOVE:
 		{
 			flag = true;
-			btRigidBody* rigidBody = i->get()->GetRigidBody();
-			delete rigidBody->getMotionState();
-			mDynamicsWorld->removeRigidBody(rigidBody);
-			delete rigidBody;
-			auto& defaultObjects = mPipelines[Layer::Default]->GetRenderObjects();
-			for (int j = 0; j < defaultObjects.size(); ++j)
-			{
-				if (*i == defaultObjects[j])
-				{
-					mPipelines[Layer::Default]->DeleteObject(j);
-				}
-			}
-
-			i = mMissileObjects.erase(i);
+			missile->SetActive(false);
+			missile->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Default]);
+			//mMissileObjects[i].reset();
+			break;
 		}
-		else
-			++i;
+		case UPDATE_FLAG::NONE:
+			continue;
+		}
 	}
 	if (flag) mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
 }
 
-void InGameScene::UpdatePlayerObjects(float elapsed)
+void InGameScene::UpdatePlayerObjects()
 {
 	bool removed_flag = false;
-	for (auto p = mPlayerObjects.begin(); p != mPlayerObjects.end();p++)
+	for (auto& player : mPlayerObjects)
 	{
-		if (*p == nullptr) continue;
-
-		auto player = p->get();
+		if (player == nullptr) continue;
 
 		switch(player->GetUpdateFlag())
 		{
+		case UPDATE_FLAG::CREATE:
+		{
+			player->SetUpdateFlag(UPDATE_FLAG::NONE);
+			break;
+		}
 		case UPDATE_FLAG::REMOVE:
 		{
-			auto& colorObjects = mPipelines[Layer::Color]->GetRenderObjects();
-			for (int j = 0; j < colorObjects.size(); ++j)
-			{
-				if (*p == colorObjects[j])
-				{
-					mPipelines[Layer::Color]->DeleteObject(j);
-					break;
-				}
-			}
-
-			std::shared_ptr<WheelObject> wheel[4];
-			for (int i = 0; i < 4; ++i)
-				wheel[i] = player->GetWheel(i);
-
-			int remove_count = 0;
-			for (auto j = colorObjects.begin(); j < colorObjects.end();)
-			{
-				bool wheel_removed = false;
-				for (int k = 0; k < 4; ++k)
-				{
-					if (wheel[k] == *j)
-					{
-						j = mPipelines[Layer::Color]->DeleteObject(j);
-						remove_count++;
-						wheel_removed = true;
-						break;
-					}
-				}
-				if (remove_count == 4)
-					break;
-
-				if (!wheel_removed)
-					j++;
-			}
-
-			btRigidBody* rigidBody = player->GetRigidBody();
-			delete rigidBody->getMotionState();
-			mDynamicsWorld->removeRigidBody(rigidBody);
-			mDynamicsWorld->removeVehicle(player->GetVehicle().get());
-			delete rigidBody;
-
-			p->reset();
 			removed_flag = true;
-			player->SetUpdateFlag(UPDATE_FLAG::NONE);
+			player->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Color]);
+			player.reset();
 			break;
 		}
 		case UPDATE_FLAG::NONE:
