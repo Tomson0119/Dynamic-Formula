@@ -11,7 +11,7 @@ class GameWorld
 {
 	using PlayerList = std::array<Player*, MAX_ROOM_CAPACITY>;
 public:
-	GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantsPtr);
+	GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantsPtr);
 	~GameWorld();
 	
 	void InitPhysics(float gravity);
@@ -33,7 +33,8 @@ public:
 	void SendGameStartSuccess();
 	void SendStartSignal();
 
-	void PushTransformPacket(int target, int receiver);
+	void PushVehicleTransformPacket(int target, int receiver);
+	void PushMissileTransformPacket(int target, int receiver);
 	void BroadcastAllTransform();
 
 	bool CheckIfAllLoaded(int idx);
@@ -55,7 +56,7 @@ private:
 	std::atomic_int mPlayerCount;
 	std::atomic_bool mActive;
 
-	std::atomic_int mUpdateTick;
+	int mUpdateTick;
 	
 	MapRigidBody mMapRigidBody;
 	PlayerList mPlayerList;
@@ -63,5 +64,5 @@ private:
 	BPHandler mPhysics;
 	class Timer mTimer;
 
-	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
+	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };

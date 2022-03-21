@@ -8,7 +8,7 @@
 #include "Timer.h"
 
 
-GameWorld::GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantPtr)
+GameWorld::GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
 	  mPlayerCount{ 0 }, mUpdateTick{ 0 },
 	  mPhysicsOverlapped{ OP::PHYSICS }
@@ -65,20 +65,18 @@ void GameWorld::UpdatePhysicsWorld()
 	mTimer.Tick();
 	float elapsed = mTimer.GetElapsed();
 
-	for (Player* player : GetPlayerList())
-	{
-		if(player->Empty == false)
-			player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
-	}
-	mMapRigidBody.UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
+	if(elapsed > 0.0f)
+		mPhysics.StepSimulation(elapsed);
 
-	mPhysics.StepSimulation(elapsed);
-	
 	for (Player* player : GetPlayerList())
 	{
 		if (player->Empty == false)
-			player->UpdateWorldTransform();
+		{
+			player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
+		}
 	}
+
+	mMapRigidBody.UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
 
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
@@ -159,7 +157,7 @@ void GameWorld::SendStartSignal()
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
-void GameWorld::PushTransformPacket(int target, int receiver)
+void GameWorld::PushVehicleTransformPacket(int target, int receiver)
 {
 	SC::packet_player_transform pck{};
 	pck.size = sizeof(SC::packet_player_transform);
@@ -193,6 +191,39 @@ void GameWorld::PushTransformPacket(int target, int receiver)
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
 
+void GameWorld::PushMissileTransformPacket(int target, int receiver)
+{
+	if (mPlayerList[target]->CheckMissileExist() == false) return;
+
+	//std::cout << "Broadcasting Missile transform.\n";
+
+	SC::packet_missile_transform pck{};
+	pck.size = sizeof(SC::packet_missile_transform);
+	pck.type = SC::MISSILE_TRANSFORM;
+	pck.missile_idx = target;
+
+	const auto& missile = mPlayerList[target]->GetMissileRigidBody();
+	const btVector3& pos = missile.GetPosition();
+	const btQuaternion& quat = missile.GetQuaternion();
+	const btVector3& lvel = missile.GetLinearVelocity();
+
+	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
+	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
+	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+
+	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
+
+	pck.linear_vel[0] = (int)(lvel.x() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[1] = (int)(lvel.y() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[2] = (int)(lvel.z() * FIXED_FLOAT_LIMIT);
+
+	int hostID = mPlayerList[receiver]->ID;
+	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
+}
+
 void GameWorld::BroadcastAllTransform()
 {
 #ifdef DEBUG_PACKET_TRANSFER
@@ -210,7 +241,8 @@ void GameWorld::BroadcastAllTransform()
 		{
 			if(mPlayerList[target]->Empty == false)
 			{
-				PushTransformPacket(target, receiver);
+				PushVehicleTransformPacket(target, receiver);
+				PushMissileTransformPacket(target, receiver);
 			}
 		}
 		gClients[id]->SendMsg(true);
