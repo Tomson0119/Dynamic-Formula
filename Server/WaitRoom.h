@@ -66,5 +66,5 @@ private:
 	std::atomic<ROOM_STAT> mState;
 
 	static PlayerList msPlayers;
-	static const int MIN_PLAYER_TO_START = 1;
+	static const int MIN_PLAYER_TO_START = 2;
 };
