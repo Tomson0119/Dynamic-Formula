@@ -12,33 +12,34 @@ public:
 	~Player() = default;
 
 	void SetVehicleConstant(std::shared_ptr<InGameServer::VehicleConstant> constantPtr);
+	void SetPosition(float x, float y, float z);
 
 	void CreateVehicleRigidBody(
 		btScalar mass,
 		btDiscreteDynamicsWorld* physicsWorld, 
 		BtCarShape* shape);
 
-	void UpdatePlayerRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
-	void SetDeletionFlag() { mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION); }
+	void CreateMissileRigidBody(btScalar mass, BtBoxShape* shape);
+
+	void UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
+	void SetDeletionFlag();
 
 	void ResetPlayer(btDiscreteDynamicsWorld* physicsWorld);
-	void UpdateTransformVectors();
-	void SetVelocities();
+	void UpdateWorldTransform();
 
 	void ClearVehicleComponent();
 
+	void UpdateDiftGauge(float elapsed);
 	void UpdateVehicleComponent(float elapsed);
 	void UpdateSteering(float elapsed);
 	void UpdateEngineForce();
 
+	bool CheckDriftGauge();
 	void ToggleKeyValue(uint8_t key, bool pressed);
 
 public:
-	void SetPosition(float x, float y, float z);
-	const btVector3& GetPosition() const { return mPosition; }
-	const btVector4& GetQuaternion() const { return mQuaternion; }
-	const btVector3& GetLinearVelocity() const { return mLinearVelocity; }
-	const btVector3& GetAngularVelocity() const { return mAngularVelocity; }
+	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
+	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
 
 public:
 	std::atomic_bool Empty;
@@ -52,12 +53,9 @@ public:
 private:
 	std::map<int, std::atomic_bool> mKeyMap;
 
-	btVector4 mQuaternion;
-	btVector3 mPosition;
-
-	btVector3 mLinearVelocity;
-	btVector3 mAngularVelocity;
-
 	VehicleRigidBody mVehicleRigidBody;
+	RigidBody mMissileRigidBody;
 	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
+
+	inline static const float msForwardOffset = 15.0f;
 };
