@@ -51,9 +51,12 @@ void GameWorld::SetPlayerPosition(int idx, const btVector3& pos)
 	mPlayerList[idx]->SetPosition(pos.x(), pos.y(), pos.z());
 }
 
-void GameWorld::CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape)
+void GameWorld::CreateRigidbodies(int idx,
+	btScalar carMass, BtCarShape* carShape,
+	btScalar missileMass, BtBoxShape* missileShape)
 {
-	mPlayerList[idx]->CreateVehicleRigidBody(mass, mPhysics.GetDynamicsWorld(), shape);
+	mPlayerList[idx]->CreateVehicleRigidBody(carMass, mPhysics.GetDynamicsWorld(), carShape);
+	mPlayerList[idx]->CreateMissileRigidBody(missileMass, missileShape);
 	mPlayerCount += 1;
 }
 
@@ -65,16 +68,16 @@ void GameWorld::UpdatePhysicsWorld()
 	for (Player* player : GetPlayerList())
 	{
 		if(player->Empty == false)
-			player->UpdatePlayerRigidBody(elapsed, mPhysics.GetDynamicsWorld());
+			player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
 	}
-	mMapRigidBody.UpdateAllRigidBody(elapsed, mPhysics.GetDynamicsWorld());
+	mMapRigidBody.UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
 
 	mPhysics.StepSimulation(elapsed);
 	
 	for (Player* player : GetPlayerList())
 	{
 		if (player->Empty == false)
-			player->UpdateTransformVectors();
+			player->UpdateWorldTransform();
 	}
 
 	mUpdateTick += 1;
@@ -112,13 +115,9 @@ void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 	case VK_LEFT:
 	case VK_RIGHT:
 	case VK_LSHIFT:
-		mPlayerList[idx]->ToggleKeyValue(key, pressed);
-		break;
-
 	case 'Z': // boost
-		break;
-
 	case 'X': // missile.
+		mPlayerList[idx]->ToggleKeyValue(key, pressed);
 		break;
 
 	default:
@@ -139,7 +138,7 @@ void GameWorld::SendGameStartSuccess()
 
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
-		const btVector3 pos = mPlayerList[i]->GetPosition();
+		const btVector3& pos = mPlayerList[i]->GetVehicleRigidBody().GetPosition();
 		info_pck.x[i] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 		info_pck.y[i] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 		info_pck.z[i] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
@@ -167,10 +166,11 @@ void GameWorld::PushTransformPacket(int target, int receiver)
 	pck.type = SC::PLAYER_TRANSFORM;
 	pck.player_idx = target;
 
-	const btVector3& pos = mPlayerList[target]->GetPosition();
-	const btVector4& quat = mPlayerList[target]->GetQuaternion();
-	const btVector3& lvel = mPlayerList[target]->GetLinearVelocity();
-	const btVector3& avel = mPlayerList[target]->GetAngularVelocity();
+	const auto& vehicle = mPlayerList[target]->GetVehicleRigidBody();
+	const btVector3& pos = vehicle.GetPosition();
+	const btQuaternion& quat = vehicle.GetQuaternion();
+	const btVector3& lvel = vehicle.GetLinearVelocity();
+	const btVector3& avel = vehicle.GetAngularVelocity();
 
 	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);

@@ -20,7 +20,9 @@ public:
 
 	void SetPlayerPosition(int idx, const btVector3& pos);
 
-	void CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape);
+	void CreateRigidbodies(int idx,
+		btScalar carMass, BtCarShape* carShape,
+		btScalar missileMass, BtBoxShape* missileShape);
 	void UpdatePhysicsWorld();
 	void FlushPhysicsWorld();
 
@@ -54,11 +56,11 @@ private:
 	std::atomic_bool mActive;
 
 	std::atomic_int mUpdateTick;
-
-	BPHandler mPhysics;
+	
 	MapRigidBody mMapRigidBody;
 	PlayerList mPlayerList;
 
+	BPHandler mPhysics;
 	class Timer mTimer;
 
 	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
