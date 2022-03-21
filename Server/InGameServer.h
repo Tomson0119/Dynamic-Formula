@@ -13,7 +13,7 @@ class InGameServer
 	using WorldList = std::array<std::unique_ptr<GameWorld>, MAX_ROOM_SIZE>;
 
 public:
-	struct VehicleConstant
+	struct BulletConstant
 	{
 		const float MaxBoosterTime = 5.0f;
 		const float MaxEngineForce = 8000.f;
@@ -23,6 +23,9 @@ public:
 		const float	WheelDriftFriction = 4.0f;
 		const float WheelDefaultFriction = 25.0f;
 		const float DefaultMaxSpeed = 1000.0f;
+		const float MissileForwardOffset = 15.0f;
+		const float MissileSpeed = 1000.0f;
+		const btVector3 MissileGravity = { 0.0f, 0.0f, 0.0f };
 	};
 
 public:
@@ -54,7 +57,7 @@ private:
 	std::array<std::unique_ptr<BtTerrainShape>, 2> mTerrainShapes;
 	std::vector<std::unique_ptr<BtBoxShape>> mObjRigidBodies;
 
-	std::shared_ptr<VehicleConstant> mVehicleConstants;
+	std::shared_ptr<BulletConstant> mBulletConstants;
 
 	const btVector3 mStartPosition = { 500.0f, 10.0f, 500.0f };
 	const btVector3 mOffset = { 20.0f, 0.0f, 0.0f };

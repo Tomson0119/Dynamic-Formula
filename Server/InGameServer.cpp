@@ -12,7 +12,7 @@ InGameServer::WorldList InGameServer::msWorlds;
 InGameServer::InGameServer()
 	: mLoginPtr{ nullptr }
 {
-	mVehicleConstants = std::make_shared<VehicleConstant>();
+	mBulletConstants = std::make_shared<BulletConstant>();
 
 	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin");
 	mBtCarShape->LoadConvexHullShape("Resource\\Car_Body_Convex_Hull.obj");
@@ -27,7 +27,7 @@ void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
-		msWorlds[i] = std::make_unique<GameWorld>(mVehicleConstants);
+		msWorlds[i] = std::make_unique<GameWorld>(mBulletConstants);
 		msWorlds[i]->InitPhysics(-10.0f);	
 		msWorlds[i]->InitPlayerList(roomList[i].get());
 	}
