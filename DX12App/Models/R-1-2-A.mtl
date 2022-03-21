@@ -1,7 +1,7 @@
 # Blender MTL File: 'None'
 # Material Count: 6
 
-newmtl Grass-01.003
+newmtl Grass-01.006
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -11,15 +11,17 @@ Ni 1.450000
 d 1.000000
 illum 2
 
-newmtl None
-Ns 500
-Ka 0.8 0.8 0.8
-Kd 0.8 0.8 0.8
-Ks 0.8 0.8 0.8
-d 1
+newmtl None.002
+Ns 500.000001
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.800000 0.800000 0.800000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
 
-newmtl Road-01.003
+newmtl Road-01.006
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -29,7 +31,7 @@ Ni 1.450000
 d 1.000000
 illum 2
 
-newmtl TrackSide-A.003
+newmtl TrackSide-A.006
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -41,7 +43,7 @@ illum 2
 map_Kd C:\\Users\\kcjse\\Desktop\\track\\TrackSide-A.psd
 map_d C:\\Users\\kcjse\\Desktop\\track\\TrackSide-A.psd
 
-newmtl Trackside.003
+newmtl Trackside.006
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -52,7 +54,7 @@ d 1.000000
 illum 2
 map_Kd C:\\Users\\kcjse\\Desktop\\track\\Trackside.psd
 
-newmtl Trees-01.003
+newmtl Trees-01.004
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 1.000000 1.000000 1.000000

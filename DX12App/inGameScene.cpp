@@ -58,7 +58,7 @@ void InGameScene::BuildObjects(
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
 
 	mDirectorCamera = make_unique<Camera>();
-	mDirectorCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mDirectorCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 20000.0f);
 	mDirectorCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
 	mDirectorCamera->SetPosition(500.0f, 50.0f, 500.0f);
 
@@ -180,7 +180,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
 
-	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
+	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
@@ -199,12 +199,13 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	//mPipelines[Layer::Default] = make_unique<Pipeline>();
 	//mPipelines[Layer::Default]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), defaultShader.get());
 
-	mPipelines[Layer::Terrain]->SetWiredFrame(true);
-	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
-	mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
+	//mPipelines[Layer::Terrain]->SetWiredFrame(true);
+	//mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
+	//mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
 
 	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());
-
+	
+	mPipelines[Layer::Instancing]->SetAlphaBlending();
 	mPipelines[Layer::Instancing]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), instancingShader.get());
 
 	mPipelines[Layer::SkyBox]->BuildPipeline(mDevice.Get(), mRootSignature.Get());
@@ -214,7 +215,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 
 	//mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
-	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
+	//mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Instancing, mPipelines[Layer::Instancing].get());
 	mShadowMapRenderer->BuildPipeline(mDevice.Get(), mRootSignature.Get());
 
@@ -334,7 +335,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
 
 	// 지형 스케일에는 정수를 넣는 것을 권장
-	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
+	/*auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
 	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 129, 129);
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
@@ -342,14 +343,14 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\road.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
-	mPipelines[Layer::Terrain]->AppendObject(terrain);
+	mPipelines[Layer::Terrain]->AppendObject(terrain);*/
 
-	physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
+	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
-	BuildCarObjects({ 480.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObjects({ -3200.0f, 10.0f, 1500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -538,7 +539,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 	if (mCurrentCamera == mDirectorCamera.get())
 	{
-		const float dist = 60.0f;
+		const float dist = 500.0f;
 		if (GetAsyncKeyState('A') & 0x8000)
 			mDirectorCamera->Strafe(-dist * elapsed);
 		if (GetAsyncKeyState('D') & 0x8000)
@@ -611,7 +612,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	UpdateConstants(timer);
 
 	mpUI.get()->Update(timer.TotalTime(), mPlayer);
-	UpdateDynamicsWorld();
+	//UpdateDynamicsWorld();
 }
 
 void InGameScene::UpdateLight(float elapsed)
@@ -951,10 +952,10 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
 		convexObjPath.assign(tmpstr.begin(), tmpstr.end());
 
-		obj->Scale(scale);
 		obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", physics);
-		obj->SetPosition(pos);
 		obj->RotateQuaternion(quaternion);
+		obj->SetPosition(pos);
+		obj->Scale(scale);
 		obj->BuildRigidBody(0.0f, physics);
 		obj->SetName(objName);
 

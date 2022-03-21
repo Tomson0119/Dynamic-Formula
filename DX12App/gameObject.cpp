@@ -59,9 +59,15 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			LoadMaterial(device, cmdList, mats, mtl_path);
 		}
-		/*else if (type.find("Collider"))
+		else if (type == "o")
 		{
-		}*/
+			std::string objName;
+
+			ss >> objName;
+
+			if(objName.find("Collider") != std::string::npos)
+				collider = true;
+		}
 		else if (type == "v")
 		{
 			XMFLOAT3 pos;
@@ -420,7 +426,7 @@ void GameObject::UpdateTransform()
 {
 	mOldWorld = mWorld;
 
-	mWorld(0, 0) = mScaling.x * mRight.x;
+	/*mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;	
 	mWorld(0, 2) = mRight.z;
 
@@ -434,7 +440,15 @@ void GameObject::UpdateTransform()
 
 	mWorld(3, 0) = mPosition.x;
 	mWorld(3, 1) = mPosition.y;
+	mWorld(3, 2) = mPosition.z;*/
+
+	mWorld = Matrix4x4::Identity4x4();
+
+	mWorld(3, 0) = mPosition.x;
+	mWorld(3, 1) = mPosition.y;
 	mWorld(3, 2) = mPosition.z;
+
+	mWorld = Matrix4x4::Multiply(mQuaternion, mWorld);
 }
 
 void GameObject::UpdateBoundingBox()
