@@ -895,6 +895,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	std::ifstream in_file{ path };
 	std::string info;
 
+	btCompoundShape* compound = new btCompoundShape();
+
 	while (std::getline(in_file, info))
 	{
 		std::stringstream ss(info);
@@ -919,33 +921,19 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		auto obj = make_shared<GameObject>();
 
 		if (mMeshList[objName].empty())
-			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath);
+			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
 		
 		auto& meshes = obj->GetMesh();
-
-		btCompoundShape* compound = NULL;
 
 		for (int i = 0; i < obj->GetMeshCount(); ++i)
 		{
 			if (meshes[i]->GetMeshShape())
 			{
-				if (compound == NULL)
-					compound = new btCompoundShape();
-
 				btTransform btLocalTransform;
 				btLocalTransform.setIdentity();
 
 				compound->addChildShape(btLocalTransform, meshes[i]->GetMeshShape().get());
 			}
-		}
-
-		if (compound)
-		{
-			btTransform btObjectTransform;
-			btObjectTransform.setIdentity();
-			btObjectTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
-
-			obj->SetRigidBody(physics->CreateRigidBody(0.0f, btObjectTransform, compound));
 		}
 
 		wstring convexObjPath;
@@ -961,6 +949,11 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
-
 	}
+
+	btTransform btObjectTransform;
+	btObjectTransform.setIdentity();
+	btObjectTransform.setOrigin(btVector3(0, 0, 0));
+
+	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
 }

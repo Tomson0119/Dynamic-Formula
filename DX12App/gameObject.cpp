@@ -24,7 +24,8 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
-	const std::wstring& path)
+	const std::wstring& path,
+	bool collider)
 {
 	std::ifstream in_file{ path, std::ios::binary };
 	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
@@ -37,7 +38,6 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 	std::string info;
 
-	bool collider = false;
 	while (std::getline(in_file, info))
 	{
 		std::stringstream ss(info);
@@ -58,15 +58,6 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 			mtl_path += std::wstring(mtlname.begin(), mtlname.end());
 
 			LoadMaterial(device, cmdList, mats, mtl_path);
-		}
-		else if (type == "o")
-		{
-			std::string objName;
-
-			ss >> objName;
-
-			if(objName.find("Collider") != std::string::npos)
-				collider = true;
 		}
 		else if (type == "v")
 		{
