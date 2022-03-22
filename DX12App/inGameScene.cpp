@@ -733,12 +733,12 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		mMsaaTarget.Get(), D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, mVelocityMap.Get(), 0);
-	mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, backBuffer, 1);
+	//mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, mVelocityMap.Get(), 0);
+	//mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, backBuffer, 1);
 
-	mPostProcessingPipelines[Layer::MotionBlur]->Dispatch(cmdList);
+	//mPostProcessingPipelines[Layer::MotionBlur]->Dispatch(cmdList);
 
-	mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
+	//mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
 
 	mpUI.get()->Draw(nFrame);
 }
@@ -931,6 +931,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			{
 				btTransform btLocalTransform;
 				btLocalTransform.setIdentity();
+				btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+				btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));
 
 				compound->addChildShape(btLocalTransform, meshes[i]->GetMeshShape().get());
 			}
