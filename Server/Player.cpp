@@ -26,9 +26,10 @@ void Player::SetRotation(const btQuaternion& quat)
 	mMissileRigidBody.SetRotation(quat);
 }
 
-void Player::SetVehicleConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
+void Player::SetBulletConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
 {
 	mConstantPtr = constantPtr;
+	mMissileRigidBody.SetVehicleAndConstantPtr(&mVehicleRigidBody, constantPtr);
 }
 
 void Player::CreateVehicleRigidBody(
@@ -174,26 +175,13 @@ void Player::ToggleKeyValue(uint8_t key, bool pressed)
 	{
 		if (key == 'X')
 		{
-			InitMissileRigidBody();
+			mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 		}
 	}
 	else
 	{
 		mKeyMap[key] = pressed;
 	}
-}
-
-void Player::InitMissileRigidBody()
-{
-	const btVector3& pos = mVehicleRigidBody.GetPosition();
-	const btVector3& forward = mVehicleRigidBody.GetVehicle()->getForwardVector();
-	const btQuaternion& quat = mVehicleRigidBody.GetQuaternion();
-	mMissileRigidBody.SetMissileComponents(
-		pos, forward, quat,
-		mConstantPtr->MissileGravity,
-		mConstantPtr->MissileForwardOffset,
-		mConstantPtr->MissileSpeed);
-	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 }
 
 bool Player::CheckMissileExist() const

@@ -11,7 +11,7 @@ public:
 	Player();
 	~Player() = default;
 
-	void SetVehicleConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr);
+	void SetBulletConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr);
 	
 	void SetPosition(const btVector3& pos);
 	void SetRotation(const btQuaternion& quat);
