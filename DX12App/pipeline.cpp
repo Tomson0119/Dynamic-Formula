@@ -91,6 +91,10 @@ void Pipeline::BuildConstantBuffer(ID3D12Device* device)
 
 void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex)
 {
+	mRootParamMatIndex = matIndex;
+	mRootParamCBVIndex = cbvIndex;
+	mRootParamSRVIndex = srvIndex;
+
 	UINT numDescriptors = (UINT)mRenderObjects.size();
 	if (numDescriptors <= 0) return;
 
@@ -105,10 +109,6 @@ void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbv
 			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
 		IID_PPV_ARGS(&mCbvSrvDescriptorHeap)));
-
-	mRootParamMatIndex = matIndex;
-	mRootParamCBVIndex = cbvIndex;
-	mRootParamSRVIndex = srvIndex;
 
 	BuildCBV(device);
 	BuildSRV(device);
