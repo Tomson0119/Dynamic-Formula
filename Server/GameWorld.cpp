@@ -41,7 +41,7 @@ void GameWorld::InitPlayerList(WaitRoom* room)
 	for (int i = 0; auto& player : mPlayerList)
 	{
 		player = room->GetPlayerPtr(i);
-		player->SetVehicleConstant(mConstantPtr);
+		player->SetBulletConstant(mConstantPtr);
 		i++;
 	}
 }
@@ -201,8 +201,6 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 {
 	if (mPlayerList[target]->CheckMissileExist() == false) return;
 
-	//std::cout << "Broadcasting Missile transform.\n";
-
 	SC::packet_missile_transform pck{};
 	pck.size = sizeof(SC::packet_missile_transform);
 	pck.type = SC::MISSILE_TRANSFORM;
@@ -233,16 +231,9 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 
 void GameWorld::BroadcastAllTransform()
 {
-#ifdef DEBUG_PACKET_TRANSFER
-	//std::cout << "[room id: " << mID << "] Send all transform packet to all.\n";
-#endif
-
 	for (int receiver = 0; receiver < mPlayerList.size(); receiver++)
 	{
-		if (mPlayerList[receiver]->Empty) continue;
-	
-		int id = mPlayerList[receiver]->ID;
-		//gClients[id]->SendTransferTime();
+		if (mPlayerList[receiver]->Empty) continue;	
 
 		for (int target = 0; target < mPlayerList.size(); target++)
 		{
@@ -252,6 +243,9 @@ void GameWorld::BroadcastAllTransform()
 				PushMissileTransformPacket(target, receiver);
 			}
 		}
+
+		int id = mPlayerList[receiver]->ID;
+		if (id < 0) continue;
 		gClients[id]->SendMsg(true);
 	}
 }
