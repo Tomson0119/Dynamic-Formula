@@ -200,7 +200,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get());
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera);
-	//mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
+	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Instancing, mPipelines[Layer::Instancing].get());
@@ -305,7 +305,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
 			BuildCarObject(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
-			BuildMissileObject(info.StartPosition, i);
+			BuildMissileObject(cmdList, info.StartPosition, i);
 		}
 		i++;
 	}
@@ -363,10 +363,13 @@ void InGameScene::BuildCarObject(
 	mPlayerObjects[netID] = std::move(carObj);	
 }
 
-void InGameScene::BuildMissileObject(const XMFLOAT3& position, int idx)
+void InGameScene::BuildMissileObject(
+	ID3D12GraphicsCommandList* cmdList, 
+	const XMFLOAT3& position, int idx)
 {
 	mMissileObjects[idx] = std::make_shared<MissileObject>(position);
 	mMissileObjects[idx]->SetMeshes(mMeshList["Missile"]);
+	mMissileObjects[idx]->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
 }
 
 void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
@@ -441,6 +444,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		
 		if (missile)
 		{
+			OutputDebugStringA("Getting missile transform.\n");
 			if (missile->IsActive() == false)
 				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
 			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
@@ -737,7 +741,6 @@ void InGameScene::UpdateMissileObject()
 	for (int i = 0; i < mMissileObjects.size(); i++)
 	{
 		auto missile = mMissileObjects[i].get();
-
 		if (missile == nullptr) continue;
 
 		switch (missile->GetUpdateFlag())
@@ -770,8 +773,9 @@ void InGameScene::UpdateMissileObject()
 void InGameScene::UpdatePlayerObjects()
 {
 	bool removed_flag = false;
-	for (auto& player : mPlayerObjects)
+	for (int i = 0; i < mPlayerObjects.size(); i++)
 	{
+		auto player = mPlayerObjects[i].get();
 		if (player == nullptr) continue;
 
 		switch(player->GetUpdateFlag())
@@ -784,8 +788,9 @@ void InGameScene::UpdatePlayerObjects()
 		case UPDATE_FLAG::REMOVE:
 		{
 			removed_flag = true;
+			mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			player->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Color]);
-			player.reset();
+			mPlayerObjects[i].reset();
 			break;
 		}
 		case UPDATE_FLAG::NONE:

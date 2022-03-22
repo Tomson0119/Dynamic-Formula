@@ -85,7 +85,9 @@ private:
 		const std::shared_ptr<BulletWrapper>& dynamicsWorld, 
 		UINT netID);
 
-	void BuildMissileObject(const XMFLOAT3& position, int idx);
+	void BuildMissileObject( 
+		ID3D12GraphicsCommandList* cmdList, 
+		const XMFLOAT3& position, int idx);
 
 	void CreateVelocityMapViews();
 	void CreateVelocityMapDescriptorHeaps();
