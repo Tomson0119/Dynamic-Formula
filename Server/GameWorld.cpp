@@ -48,7 +48,12 @@ void GameWorld::InitPlayerList(WaitRoom* room)
 
 void GameWorld::SetPlayerPosition(int idx, const btVector3& pos)
 {
-	mPlayerList[idx]->SetPosition(pos.x(), pos.y(), pos.z());
+	mPlayerList[idx]->SetPosition(pos);
+}
+
+void GameWorld::SetPlayerRotation(int idx, const btQuaternion& quat)
+{
+	mPlayerList[idx]->SetRotation(quat);
 }
 
 void GameWorld::CreateRigidbodies(int idx,
@@ -188,6 +193,7 @@ void GameWorld::PushVehicleTransformPacket(int target, int receiver)
 	pck.angular_vel[2] = (int)(avel.z() * FIXED_FLOAT_LIMIT);
 
 	int hostID = mPlayerList[receiver]->ID;
+	if (hostID < 0) return;
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
 
@@ -221,6 +227,7 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 	pck.linear_vel[2] = (int)(lvel.z() * FIXED_FLOAT_LIMIT);
 
 	int hostID = mPlayerList[receiver]->ID;
+	if (hostID < 0) return;
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
 

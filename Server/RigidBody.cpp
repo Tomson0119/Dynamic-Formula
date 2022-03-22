@@ -23,6 +23,7 @@ void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape* shape)
 
 	btTransform originTransform = btTransform::getIdentity();
 	originTransform.setOrigin(mPosition);
+	originTransform.setRotation(mQuaternion);
 
 	btDefaultMotionState* motionState = new btDefaultMotionState(originTransform);
 	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, motionState, shape, inertia);
@@ -44,7 +45,8 @@ void RigidBody::Update(btDiscreteDynamicsWorld* physicsWorld)
 
 	case RigidBody::UPDATE_FLAG::DELETION:
 		RemoveRigidBody(physicsWorld);
-		break;
+		SetUpdateFlag(UPDATE_FLAG::NONE);
+		return;
 
 	case RigidBody::UPDATE_FLAG::NONE:
 		return;

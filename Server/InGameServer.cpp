@@ -47,7 +47,22 @@ void InGameServer::PrepareToStartGame(int roomID)
 			continue;
 		}
 
-		msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * (btScalar)i);
+		// Test
+		if (i == 1)
+		{
+			btVector3 pos = mStartPosition;
+			pos.setZ(pos.z() + 100.0f);
+
+			btQuaternion quat = btQuaternion::getIdentity();
+			quat.setRotation({ 0.0f,1.0f,0.0f }, 3.141592);
+
+			msWorlds[roomID]->SetPlayerPosition(i, pos);
+			msWorlds[roomID]->SetPlayerRotation(i, quat);
+		}
+		else
+			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * (btScalar)i);
+		// Test
+
 		msWorlds[roomID]->CreateRigidbodies(i, 1000.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
 	}
 	msWorlds[roomID]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);

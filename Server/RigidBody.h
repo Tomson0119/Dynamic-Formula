@@ -19,8 +19,9 @@ public:
 
 	virtual void CreateRigidBody(btScalar mass, btCollisionShape* shape);
 
-	void SetPosition(const btVector3& position) { mPosition = position; }
-	
+	void SetPosition(const btVector3& pos) { mPosition = pos; }
+	void SetRotation(const btQuaternion& quat) { mQuaternion = quat; }
+
 	void Update(btDiscreteDynamicsWorld* physicsWorld);
 	void UpdateTransformVectors();
 

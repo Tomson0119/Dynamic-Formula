@@ -19,6 +19,7 @@ public:
 	void InitPlayerList(WaitRoom* room);
 
 	void SetPlayerPosition(int idx, const btVector3& pos);
+	void SetPlayerRotation(int idx, const btQuaternion& quat);
 
 	void CreateRigidbodies(int idx,
 		btScalar carMass, BtCarShape* carShape,

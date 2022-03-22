@@ -14,10 +14,16 @@ Player::Player()
 	mKeyMap[VK_LSHIFT] = false;
 }
 
-void Player::SetPosition(float x, float y, float z)
+void Player::SetPosition(const btVector3& pos)
 {
-	mVehicleRigidBody.SetPosition({ x, y, z });
-	mMissileRigidBody.SetPosition({ x, y, z });
+	mVehicleRigidBody.SetPosition(pos);
+	mMissileRigidBody.SetPosition(pos);
+}
+
+void Player::SetRotation(const btQuaternion& quat)
+{
+	mVehicleRigidBody.SetRotation(quat);
+	mMissileRigidBody.SetRotation(quat);
 }
 
 void Player::SetVehicleConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
