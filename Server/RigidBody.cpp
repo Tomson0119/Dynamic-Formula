@@ -117,6 +117,12 @@ MissileRigidBody::MissileRigidBody()
 {
 }
 
+void MissileRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	RigidBody::AppendRigidBody(physicsWorld);
+	// TODO: set transform based on missile constants and player vehicle transform.	
+}
+
 void MissileRigidBody::SetMissileComponents(
 	const btVector3& position,
 	const btVector3& forward,

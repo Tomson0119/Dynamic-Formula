@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BtShape.h"
+#include "InGameServer.h"
 
 class RigidBody
 {
@@ -60,12 +61,22 @@ public:
 	virtual ~MissileRigidBody() = default;
 
 public:
+	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+
+	void SetVehicleAndConstantPtr(
+		VehicleRigidBody* vehiclePtr, 
+		std::shared_ptr<InGameServer::BulletConstant> constantPtr);
+
 	void SetMissileComponents(
 		const btVector3& position, 
 		const btVector3& forward,
 		const btQuaternion& rotation,
 		const btVector3& gravity,
 		float forwardOffset, float speed);
+
+private:
+	VehicleRigidBody* mVehiclePtr;
+	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };
 
 class VehicleRigidBody : public RigidBody
