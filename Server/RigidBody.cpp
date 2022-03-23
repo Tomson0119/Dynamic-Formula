@@ -113,14 +113,31 @@ bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 // MissileRigidBody
 //
 MissileRigidBody::MissileRigidBody()
-	: RigidBody()
+	: RigidBody(), mVehiclePtr{ nullptr }
 {
 }
 
 void MissileRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
-	RigidBody::AppendRigidBody(physicsWorld);
-	// TODO: set transform based on missile constants and player vehicle transform.	
+	if (mRigidBody)
+	{
+		SetMissileComponents(
+			mVehiclePtr->GetPosition(),
+			mVehiclePtr->GetVehicle()->getForwardVector(),
+			mVehiclePtr->GetQuaternion(),
+			mConstantPtr->MissileGravity,
+			mConstantPtr->MissileForwardOffset,
+			mConstantPtr->MissileSpeed);
+		physicsWorld->addRigidBody(mRigidBody);
+	}
+}
+
+void MissileRigidBody::SetVehicleAndConstantPtr(
+	VehicleRigidBody* vehiclePtr,
+	std::shared_ptr<InGameServer::BulletConstant> constantPtr)
+{
+	mVehiclePtr = vehiclePtr;
+	mConstantPtr = constantPtr;
 }
 
 void MissileRigidBody::SetMissileComponents(
@@ -130,12 +147,17 @@ void MissileRigidBody::SetMissileComponents(
 	const btVector3& gravity,
 	float forwardOffset, float speed)
 {
-	btTransform newTransform{};
+	btTransform newTransform = btTransform::getIdentity();
 	newTransform.setOrigin(position + forward * forwardOffset);
 	newTransform.setRotation(rotation);
 	mRigidBody->setWorldTransform(newTransform);
 	mRigidBody->setGravity(gravity);
 	mRigidBody->setLinearVelocity(forward * speed);
+
+	// -2.24 -9.8 -1
+	std::cout << "Position: " << position.x() << " " << position.y() << " " << position.z() << "\n";
+	std::cout <<"Forward: " << forward.x() << " " << forward.y() << " " << forward.z() << "\n";
+	std::cout << "Speed: " << speed << "\n";
 }
 
 
