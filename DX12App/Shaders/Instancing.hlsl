@@ -81,7 +81,9 @@ PixelOut PS(VertexOut pin)
         directLight = ComputeLighting(gLights, gMat, normalize(pin.NormalW), view, shadowFactor);
     }
     float4 result = ambient + directLight;
+
     result.a = diffuse.a;
+
 
     pout.f4Color = result;
     pout.f4Direction = float4((pin.newPosWVP.xyz / pin.newPosWVP.z) - (pin.oldPosWVP.xyz / pin.oldPosWVP.z), 1.0f);

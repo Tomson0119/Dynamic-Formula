@@ -1,7 +1,7 @@
 # Blender MTL File: 'None'
-# Material Count: 5
+# Material Count: 3
 
-newmtl Grass-01.006
+newmtl Grass-01.002
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -12,7 +12,7 @@ d 1.000000
 illum 2
 map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Ground\\Grass-01.tga
 
-newmtl Road-01.006
+newmtl Road-01.002
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -23,19 +23,7 @@ d 1.000000
 illum 2
 map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Ground\\Road-01.tga
 
-newmtl TrackSide-A.006
-Ns 225.000000
-Ka 1.000000 1.000000 1.000000
-Kd 0.800000 0.800000 0.800000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\TrackSide-A.psd
-map_d C:\\Users\\kcjse\\Desktop\\track\\TrackSide-A.psd
-
-newmtl Trackside.006
+newmtl Trackside.002
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -45,14 +33,3 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Trackside.psd
-
-newmtl Trees-01.006
-Ns 225.000000
-Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 1.000000 1.000000 1.000000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Trees-01.psd

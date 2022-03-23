@@ -29,7 +29,7 @@ class Mesh
 {
 public:
 	Mesh();
-	Mesh(const std::string& name);
+	Mesh(const std::string& name, const std::string& mtlName);
 	virtual ~Mesh();
 
 	void CreateResourceInfo(
@@ -68,6 +68,7 @@ public:
 	MaterialConstants GetMaterialConstant() const;
 	UINT GetSrvIndex() const { return mMaterial.SrvIndex; }
 
+	const std::string& GetMaterialName() const { return mMaterialName; }
 	const std::string& GetName() const { return mName; }
 
 protected:
@@ -88,6 +89,7 @@ protected:
 
 	MatInfo mMaterial = {};
 
+	std::string mMaterialName;
 	std::string mName;
 
 	std::shared_ptr<btBvhTriangleMeshShape> mMeshShape = NULL;

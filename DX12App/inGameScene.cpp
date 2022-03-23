@@ -184,6 +184,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
+	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera);
 
@@ -205,10 +206,12 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 
 	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());
 	
-	mPipelines[Layer::Instancing]->SetAlphaBlending();
 	mPipelines[Layer::Instancing]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), instancingShader.get());
 
 	mPipelines[Layer::SkyBox]->BuildPipeline(mDevice.Get(), mRootSignature.Get());
+
+	mPipelines[Layer::Transparent]->SetAlphaBlending();
+	mPipelines[Layer::Transparent]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), instancingShader.get());
 
 	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(mDevice.Get());
 	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get());
@@ -217,6 +220,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	//mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Instancing, mPipelines[Layer::Instancing].get());
+	mShadowMapRenderer->AppendTargetPipeline(Layer::Transparent, mPipelines[Layer::Transparent].get());
 	mShadowMapRenderer->BuildPipeline(mDevice.Get(), mRootSignature.Get());
 
 }
@@ -914,27 +918,40 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		ss >> scale.x >> scale.y >> scale.z;
 
 		auto tmpstr = std::string("Models\\") + objName;
+		auto transparentpath = tmpstr.replace(tmpstr.find(".obj"), 4, "_Transparent.obj");
 
 		wstring objPath;
 		objPath.assign(tmpstr.begin(), tmpstr.end());
 
+		wstring transparentObjPath;
+		transparentObjPath.assign(transparentpath.begin(), transparentpath.end());
+
 		auto obj = make_shared<GameObject>();
+		obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
 
-		if (mMeshList[objName].empty())
-			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+		auto transparentObj = make_shared<GameObject>();
+		transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
 		
+		btTransform btLocalTransform;
+		btLocalTransform.setIdentity();
+		btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+		btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));
+
 		auto& meshes = obj->GetMesh();
-
-		for (int i = 0; i < obj->GetMeshCount(); ++i)
+		for (auto i = meshes.begin(); i < meshes.end(); ++i)
 		{
-			if (meshes[i]->GetMeshShape())
+			if (i->get()->GetMeshShape())
 			{
-				btTransform btLocalTransform;
-				btLocalTransform.setIdentity();
-				btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
-				btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));
+				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+			}
+		}
 
-				compound->addChildShape(btLocalTransform, meshes[i]->GetMeshShape().get());
+		auto& transparentMeshes = transparentObj->GetMesh();
+		for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
+		{
+			if (i->get()->GetMeshShape())
+			{
+				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
 
@@ -946,11 +963,18 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		obj->RotateQuaternion(quaternion);
 		obj->SetPosition(pos);
 		obj->Scale(scale);
-		obj->BuildRigidBody(0.0f, physics);
 		obj->SetName(objName);
+
+		transparentObj->RotateQuaternion(quaternion);
+		transparentObj->SetPosition(pos);
+		transparentObj->Scale(scale);
+		transparentObj->SetName(objName);
 
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
+
+		mPipelines[Layer::Transparent]->AppendObject(transparentObj);
+		static_cast<InstancingPipeline*>(mPipelines[Layer::Transparent].get())->mInstancingCount[objName]++;
 	}
 
 	btTransform btObjectTransform;

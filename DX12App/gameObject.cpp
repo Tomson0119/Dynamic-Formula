@@ -37,6 +37,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	std::shared_ptr<Mesh> new_mesh;
 
 	std::string info;
+	std::string objName;
 
 	while (std::getline(in_file, info))
 	{
@@ -59,6 +60,11 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			LoadMaterial(device, cmdList, mats, mtl_path);
 		}
+		else if (type == "o")
+		{
+			ss >> objName;
+		}
+
 		else if (type == "v")
 		{
 			XMFLOAT3 pos;
@@ -85,7 +91,10 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 			std::string mtl_name;
 			ss >> mtl_name;
 
-			new_mesh = std::make_shared<Mesh>(mtl_name);
+			new_mesh = std::make_shared<Mesh>(objName, mtl_name);
+
+			objName.clear();
+
 			new_mesh->LoadMesh(
 				device, cmdList, in_file,
 				positions, normals, texcoords, mats[mtl_name], collider);
@@ -477,7 +486,7 @@ void GameObject::SetPosition(const XMFLOAT3& pos)
 void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
 {
 	auto p = std::find_if(mMeshes.begin(), mMeshes.end(),
-		[&name](const auto& mesh) { return (mesh->GetName() == name); });
+		[&name](const auto& mesh) { return (mesh->GetMaterialName() == name); });
 
 	if (p != mMeshes.end())
 		(*p)->SetMatDiffuse(color);

@@ -13,10 +13,11 @@ Mesh::Mesh()
 	mMaterial.SrvIndex = 0;
 }
 
-Mesh::Mesh(const std::string& name)
+Mesh::Mesh(const std::string& name, const std::string& mtlName)
 	: Mesh()
 {
 	mName = name;
+	mMaterialName = mtlName;
 }
 
 Mesh::~Mesh()

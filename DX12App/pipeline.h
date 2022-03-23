@@ -14,11 +14,11 @@ enum class Layer : int
 	Reflected,
 	Billboard,
 	Particle,
-	Transparent,
 	ShadowDebug,
 	DynamicCubeMap,
 	MotionBlur,
-	Instancing
+	Instancing,
+	Transparent
 };
 
 class Pipeline
