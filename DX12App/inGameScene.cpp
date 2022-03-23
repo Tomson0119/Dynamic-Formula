@@ -918,7 +918,9 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		ss >> scale.x >> scale.y >> scale.z;
 
 		auto tmpstr = std::string("Models\\") + objName;
-		auto transparentpath = tmpstr.replace(tmpstr.find(".obj"), 4, "_Transparent.obj");
+
+		auto transparentpath = tmpstr;
+		transparentpath = transparentpath.replace(tmpstr.find(".obj"), 4, "_Transparent.obj");
 
 		wstring objPath;
 		objPath.assign(tmpstr.begin(), tmpstr.end());
