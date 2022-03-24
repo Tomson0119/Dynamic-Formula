@@ -88,16 +88,21 @@ void Pipeline::BuildPipeline(
 
 void Pipeline::BuildConstantBuffer(ID3D12Device* device)
 {
-	mObjectCB = std::make_unique<ConstantBuffer<ObjectConstants>>(device, (UINT)mRenderObjects.size());
+	if (mRenderObjects.size() > 0)
+	{
+		mObjectCB = std::make_unique<ConstantBuffer<ObjectConstants>>(device, (UINT)mRenderObjects.size());
 
-	UINT matCount = 0;
-	for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
-	mMaterialCB = std::make_unique<ConstantBuffer<MaterialConstants>>(device, matCount);
+		UINT matCount = 0;
+		for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
+		mMaterialCB = std::make_unique<ConstantBuffer<MaterialConstants>>(device, matCount);
+	}
 }
 
 void Pipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex)
 {
 	UINT numDescriptors = (UINT)mRenderObjects.size();
+	if (numDescriptors <= 0) return;
+
 	for (const auto& obj : mRenderObjects)
 	{
 		numDescriptors += obj->GetTextureCount();
@@ -183,10 +188,13 @@ void Pipeline::ResetPipeline(ID3D12Device* device)
 
 void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline, bool msaaOff)
 {
+	if (mCbvSrvDescriptorHeap.Get() == nullptr)
+		return;
+
 	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
 	cmdList->OMSetStencilRef(mStencilRef);
-	
+
 	if (setPipeline) {
 		if (mIsWiredFrame && drawWiredFrame)
 			cmdList->SetPipelineState(mPSO[1].Get());
@@ -195,7 +203,11 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 		else
 			cmdList->SetPipelineState(mPSO[0].Get());
 	}
+}
 
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
+{	
+	PreparePipeline(cmdList, drawWiredFrame, setPipeline);
 	Draw(cmdList);
 }
 
@@ -293,10 +305,10 @@ void Pipeline::SetStencilOp(
 	mStencilRef = stencilRef;
 }
 
-void Pipeline::Update(const float elapsed, Camera* camera)
+void Pipeline::Update(float elapsed, float updateRate, Camera* camera)
 {
 	for (const auto& obj : mRenderObjects)
-		obj->Update(elapsed);
+		obj->Update(elapsed, updateRate);
 }
 
 void Pipeline::UpdateConstants()
@@ -667,6 +679,8 @@ InstancingPipeline::~InstancingPipeline()
 
 void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 {
+	if (mRenderObjects.size() <= 0) return;
+
 	UINT matOffset = 0;
 	UINT instancingOffset = 0;
 
@@ -693,6 +707,8 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 
 void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
 {
+	if (mRenderObjects.size() <= 0) return;
+
 	UINT matOffset = 0;
 	UINT instancingOffset = 0;
 
@@ -717,45 +733,48 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const Bounding
 	}
 }
 
-void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
-{
-	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
-	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-	cmdList->OMSetStencilRef(mStencilRef);
-
-	if (setPipeline) {
-		if (mIsWiredFrame && drawWiredFrame)
-			cmdList->SetPipelineState(mPSO[1].Get());
-		else
-			cmdList->SetPipelineState(mPSO[0].Get());
-	}
-
-	Draw(cmdList);
-}
-
-void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
-{
-	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
-	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-	cmdList->OMSetStencilRef(mStencilRef);
-
-	if (setPipeline) {
-		if (mIsWiredFrame && drawWiredFrame)
-			cmdList->SetPipelineState(mPSO[1].Get());
-		else
-			cmdList->SetPipelineState(mPSO[0].Get());
-	}
-
-	Draw(cmdList, viewFrustum, objectOOBB);
-}
+//void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
+//{
+//	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+//	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+//	cmdList->OMSetStencilRef(mStencilRef);
+//
+//	if (setPipeline) {
+//		if (mIsWiredFrame && drawWiredFrame)
+//			cmdList->SetPipelineState(mPSO[1].Get());
+//		else
+//			cmdList->SetPipelineState(mPSO[0].Get());
+//	}
+//
+//	Draw(cmdList);
+//}
+//
+//void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
+//{
+//	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+//	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+//	cmdList->OMSetStencilRef(mStencilRef);
+//
+//	if (setPipeline) {
+//		if (mIsWiredFrame && drawWiredFrame)
+//			cmdList->SetPipelineState(mPSO[1].Get());
+//		else
+//			cmdList->SetPipelineState(mPSO[0].Get());
+//	}
+//
+//	Draw(cmdList, viewFrustum, objectOOBB);
+//}
 
 void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
 {
-	UINT matCount = 0;
-	for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
-	mMaterialCB = std::make_unique<ConstantBuffer<MaterialConstants>>(device, matCount);
+	if (mRenderObjects.size() > 0)
+	{
+		mObjectSB = std::make_unique<StructuredBuffer<InstancingInfo>>(device, (UINT)mRenderObjects.size());
 
-	mObjectSB = std::make_unique<StructuredBuffer<InstancingInfo>>(device, (UINT)mRenderObjects.size());
+		UINT matCount = 0;
+		for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
+		mMaterialCB = std::make_unique<ConstantBuffer<MaterialConstants>>(device, matCount);
+	}
 }
 
 void InstancingPipeline::UpdateConstants()

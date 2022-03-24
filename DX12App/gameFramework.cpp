@@ -17,7 +17,6 @@
 GameFramework::GameFramework()
 	: D3DFramework()
 {
-
 }
 
 GameFramework::~GameFramework()
@@ -30,7 +29,8 @@ bool GameFramework::InitFramework()
 {
 	if (!D3DFramework::InitFramework())
 		return false;
-	InitScene(SCENE_STAT::IN_GAME); 
+
+	InitScene(SCENE_STAT::LOGIN);
 	
 	return true;
 }
@@ -102,45 +102,27 @@ void GameFramework::InitScene(SCENE_STAT state)
 	ThrowIfFailed(mCommandAllocator->Reset());
 	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
 
+	if (!mScenes.empty())
+	{
+		mScenes.top()->GetUI()->Flush();
+		mScenes.top()->GetUI()->Reset();
+	}
+
 	switch (state)
 	{
 	case SCENE_STAT::LOGIN:
-		if (!mScenes.empty())
-		{
-			mScenes.top()->GetUI()->Flush();
-			mScenes.top()->GetUI()->Reset();
-
-		}
 		mScenes.push(std::make_unique<LoginScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::LOBBY:
-		if (!mScenes.empty())
-		{
-			mScenes.top()->GetUI()->Flush();
-			mScenes.top()->GetUI()->Reset();
-
-		}
 		mScenes.push(std::make_unique<LobbyScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::ROOM:
-		if (!mScenes.empty())
-		{
-			mScenes.top()->GetUI()->Flush();
-			mScenes.top()->GetUI()->Reset();
-
-		}
 		mScenes.push(std::make_unique<RoomScene>(m_hwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::IN_GAME:
-		if (!mScenes.empty())
-		{
-			mScenes.top()->GetUI()->Flush();
-			mScenes.top()->GetUI()->Reset();
-
-		}
 		mScenes.push(std::make_unique<InGameScene>(m_hwnd, mNetwork.get(), mMsaa4xEnable, mMsaa4xQualityLevels));
 		break;
 
@@ -173,7 +155,6 @@ void GameFramework::CheckAndChangeScene()
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
 		InitScene(static_cast<SCENE_STAT>(nextScene));
-		// TODO: If scene is in_game scene then let server know loading has done.
 		break;
 	}
 	case SCENE_CHANGE_FLAG::POP:

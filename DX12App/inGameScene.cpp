@@ -301,6 +301,10 @@ void InGameScene::CreateVelocityMapDescriptorHeaps()
 		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
 }
 
+void InGameScene::CreateNewMissileObject(ID3D12GraphicsCommandList* cmdList)
+{
+}
+
 void InGameScene::CreateMsaaDescriptorHeaps()
 {
 	ThrowIfFailed(mDevice->CreateDescriptorHeap(
@@ -351,7 +355,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 
-	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
+	//LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
 	BuildCarObjects({ -3200.0f, 10.0f, 1500.0f }, 4, true, cmdList, physics, 0);
@@ -468,17 +472,20 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::TRANSFER_TIME:
 	{
 		SC::packet_transfer_time* pck = reinterpret_cast<SC::packet_transfer_time*>(packet);
-		mNetPtr->SetLatency(pck->send_time);
+		mNetPtr->SetLatency(pck->c_send_time);
+		mNetPtr->Client()->ReturnSendTimeBack(pck->s_send_time);
 		break;
 	}
 	case SC::PLAYER_TRANSFORM:
 	{
 		SC::packet_player_transform* pck = reinterpret_cast<SC::packet_player_transform*>(packet);
 		auto player = mPlayerObjects[pck->player_idx];
+		
 		if (player)
 		{
+			if (player.get() == mPlayer) mNetPtr->SetUpdateRate();
 			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
-			//player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
+			player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
 		}
 		break;
 	}
@@ -609,7 +616,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	mShadowMapRenderer->UpdateDepthCamera(cmdList, mMainLight);
 
 	for (const auto& [_, pso] : mPipelines)
-		pso->Update(elapsed, mCurrentCamera);
+		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
 
 	UpdateMissileObject();
 	
@@ -831,10 +838,6 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 
 		auto player = p->get();
 
-		std::shared_ptr<WheelObject> wheel[4];
-		for(int i = 0; i < 4; ++i)
-			wheel[i] = player->GetWheel(i);
-
 		switch(player->GetUpdateFlag())
 		{
 		case UPDATE_FLAG::REMOVE:
@@ -848,6 +851,10 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 					break;
 				}
 			}
+
+			std::shared_ptr<WheelObject> wheel[4];
+			for (int i = 0; i < 4; ++i)
+				wheel[i] = player->GetWheel(i);
 
 			int remove_count = 0;
 			for (auto j = colorObjects.begin(); j < colorObjects.end();)
@@ -879,12 +886,6 @@ void InGameScene::UpdatePlayerObjects(float elapsed)
 			p->reset();
 			removed_flag = true;
 			player->SetUpdateFlag(UPDATE_FLAG::NONE);
-			break;
-		}
-		case UPDATE_FLAG::UPDATE:
-		{
-			player->InterpolateTransform(elapsed, mNetPtr->GetLatency());
-			//player->CorrectWorldTransform();
 			break;
 		}
 		case UPDATE_FLAG::NONE:

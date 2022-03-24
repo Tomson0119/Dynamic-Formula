@@ -88,6 +88,8 @@ private:
 	void CreateVelocityMapViews();
 	void CreateVelocityMapDescriptorHeaps();
 
+	void CreateNewMissileObject(ID3D12GraphicsCommandList* cmdList);
+
 	void CreateMsaaDescriptorHeaps();
 	void CreateMsaaViews();
 

@@ -5,9 +5,10 @@
 
 Player::Player()
 	: mPosition{ 0.0f, 0.0f, 0.0f },
+	  mLinearVelocity{ 0.0f, 0.0f, 0.0f },
+	  mAngularVelocity{ 0.0f, 0.0f, 0.0f },
 	  Empty{ true }, Color{ -1 }, Ready{ false }, 
-	  ID{ -1 }, Name{ }, LoadDone{ false },
-	  mPrevVelocity{ }, mCurrVelocity{ }, mAcceleration{ }
+	  ID{ -1 }, Name{ }, LoadDone{ false }
 {
 	mKeyMap[VK_UP]	   = false;
 	mKeyMap[VK_DOWN]   = false;
@@ -53,8 +54,9 @@ void Player::UpdatePlayerRigidBody(float elapsed, btDiscreteDynamicsWorld* physi
 	mVehicleRigidBody.Update(physicsWorld);
 }
 
-void Player::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+void Player::ResetPlayer(btDiscreteDynamicsWorld* physicsWorld)
 {
+	LoadDone = false;
 	mVehicleRigidBody.RemoveRigidBody(physicsWorld);
 }
 
@@ -66,6 +68,15 @@ void Player::UpdateTransformVectors()
 	mPosition = transform.getOrigin();
 	auto quat = transform.getRotation();
 	mQuaternion.setValue(quat.x(), quat.y(), quat.z(), quat.w());
+
+	SetVelocities();
+}
+
+void Player::SetVelocities()
+{
+	auto rigid = mVehicleRigidBody.GetRigidBody();
+	mLinearVelocity = rigid->getInterpolationLinearVelocity();
+	mAngularVelocity = rigid->getInterpolationAngularVelocity();
 }
 
 void Player::ClearVehicleComponent()
@@ -83,7 +94,6 @@ void Player::ClearVehicleComponent()
 
 void Player::UpdateVehicleComponent(float elapsed)
 {
-	CalculateAcceleration(elapsed);
 	UpdateSteering(elapsed);
 	UpdateEngineForce();
 }
@@ -139,16 +149,6 @@ void Player::UpdateEngineForce()
 		else
 			component.EngineForce = 0.0f;
 	}
-}
-
-void Player::CalculateAcceleration(float elapsed)
-{
-	const float mps = 0.277778f;
-	mCurrVelocity = mVehicleRigidBody.GetVehicle()->getForwardVector()
-		* mVehicleRigidBody.GetComponent().CurrentSpeed * mps;
-	
-	mAcceleration = (mCurrVelocity - mPrevVelocity) / elapsed;
-	mPrevVelocity = mCurrVelocity;
 }
 
 void Player::ToggleKeyValue(uint8_t key, bool pressed)

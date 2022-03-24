@@ -12,24 +12,27 @@ enum class CLIENT_STAT : char
 class Client
 {
 public:
-	Client(int id);
+	Client(int id, Socket* udpSck);
 	virtual ~Client();
 
 	void Disconnect();
-	void AssignAcceptedID(int id, SOCKET sck);
+	void AssignAcceptedID(int id, SOCKET sck, sockaddr_in* addr);
 	
-	void PushPacket(std::byte* pck, int bytes);
+	void PushPacket(std::byte* pck, int bytes, bool udp=false);
 
-	void SendMsg();
+	void SendMsg(bool udp=false);
 	void RecvMsg();
 
 public:
-	void SetTransferTime(uint64_t sendTime);
-	uint64_t GetTransferTime() const { return mTransferTime; }
+	void SetLatency(uint64_t sendTime);
+	float GetLatency() const { return (float)mLatency / 1000.0f; }
 
 	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
 	void SetState(const CLIENT_STAT& stat) { mState = stat; }
 	CLIENT_STAT GetCurrentState() const { return mState; }
+
+	void SetHostEp(const EndPoint& ep) { mHostEp = ep; }
+	const EndPoint& GetHostEp() const { return mHostEp; }
 
 public:
 	void SendLoginResult(LOGIN_STAT result, bool instSend=true);
@@ -37,7 +40,8 @@ public:
 	void SendAccessRoomAccept(int roomID, bool instSend=true);
 	void SendAccessRoomDeny(ROOM_STAT reason, bool instSend=true);
 	void SendForceLogout();
-	void SendTransferTime(bool instSend=true);
+
+	void ReturnSendTimeBack(uint64_t sendTime);
 	
 public:
 	int ID;
@@ -46,12 +50,16 @@ public:
 	std::atomic_char PlayerIndex;
 
 private:
-	WSAOVERLAPPEDEX mRecvOverlapped;
-	WSAOVERLAPPEDEX* mSendOverlapped;
+	WSAOVERLAPPEDEX mTCPRecvOverlapped;
+
+	WSAOVERLAPPEDEX* mTCPSendOverlapped;
+	WSAOVERLAPPEDEX* mUDPSendOverlapped;
 
 	std::atomic<CLIENT_STAT> mState;
 
-	uint64_t mTransferTime;
+	std::atomic_uint64_t mLatency;
 
-	Socket mSocket;
+	Socket mTCPSocket;
+	Socket* mUDPSocketPtr;
+	EndPoint mHostEp;
 };

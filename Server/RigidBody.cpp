@@ -66,10 +66,15 @@ void RigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 	if (mRigidBody)
 	{
 		auto motionState = mRigidBody->getMotionState();
-		if (motionState) delete motionState;
+		if (motionState)
+		{
+			delete motionState;
+			motionState = nullptr;
+		}
 
 		physicsWorld->removeRigidBody(mRigidBody);
 		delete mRigidBody;
+		mRigidBody = nullptr;
 	}
 }
 
@@ -165,10 +170,8 @@ void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 
 void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
 {
-	auto rigid = mVehicle->getRigidBody();
-	if(rigid)
-		rigid->getMotionState()->getWorldTransform(transform);
-	//if (rigid) transform = rigid->getWorldTransform();
+	auto motionState = mVehicle->getRigidBody()->getMotionState();
+	if(motionState) motionState->getWorldTransform(transform);
 }
 
 void VehicleRigidBody::UpdateRigidBody()

@@ -21,10 +21,14 @@ LoginServer::LoginServer(const EndPoint& ep)
 
 	mLobby.Init(this);
 	
-	for (int i = 0; i < gClients.size(); i++)
-		gClients[i] = std::make_unique<Client>(i);	
+	mUDPSck = std::make_unique<Socket>();
+	mUDPSck->Init(SocketType::UDP);
+	mUDPSck->Bind(ep);
 
-	mListenSck.Init();
+	for (int i = 0; i < gClients.size(); i++)
+		gClients[i] = std::make_unique<Client>(i, mUDPSck.get());
+
+	mListenSck.Init(SocketType::TCP);
 	mListenSck.Bind(ep);
 }
 
@@ -44,6 +48,7 @@ void LoginServer::Run()
 {
 	mListenSck.Listen();
 	msIOCP.RegisterDevice(mListenSck.GetSocket(), 0);
+	msIOCP.RegisterDevice(mUDPSck->GetSocket(), MAX_PLAYER_SIZE);
 	std::cout << "Listening to clients...\n";
 
 	WSAOVERLAPPEDEX acceptEx;
@@ -77,7 +82,8 @@ void LoginServer::NetworkThreadFunc(LoginServer& server)
 			}
 			if (info.success == FALSE)
 			{
-				server.Disconnect(client_id);
+				if(client_id < MAX_PLAYER_SIZE)
+					server.Disconnect(client_id);
 				if (over_ex && over_ex->Operation == OP::SEND)
 					delete over_ex;
 				continue;
@@ -120,12 +126,15 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	case OP::ACCEPT:
 	{
 		SOCKET clientSck = *reinterpret_cast<SOCKET*>(over->NetBuffer.BufStartPtr());
-		
+
+		sockaddr_in* remote = reinterpret_cast<sockaddr_in*>(
+			over->NetBuffer.BufStartPtr() + sizeof(SOCKET) + sizeof(sockaddr_in) + 16);
+
 		int i = GetAvailableID();
 		if (i == -1) 
 			std::cout << "Session's full\n";
 		else {
-			AcceptNewClient(i, clientSck);
+			AcceptNewClient(i, clientSck, remote);
 		}
 		mListenSck.AsyncAccept(over);
 		break;
@@ -171,12 +180,12 @@ void LoginServer::Disconnect(int id)
 	gClients[id]->Disconnect();
 }
 
-void LoginServer::AcceptNewClient(int id, SOCKET sck)
+void LoginServer::AcceptNewClient(int id, SOCKET sck, sockaddr_in* remote)
 {
 #ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "[" << id << "] Accepted client.\n";
 #endif
-	gClients[id]->AssignAcceptedID(id, sck);
+	gClients[id]->AssignAcceptedID(id, sck, remote);
 	msIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
 }

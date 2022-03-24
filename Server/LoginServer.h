@@ -20,7 +20,7 @@ public:
 	void Logout(int id);
 
 	void Disconnect(int id);
-	void AcceptNewClient(int id, SOCKET sck);
+	void AcceptNewClient(int id, SOCKET sck, sockaddr_in* remote);
 	int GetAvailableID();
 
 	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes);
@@ -36,6 +36,7 @@ public:
 
 private:
 	Socket mListenSck;
+	std::unique_ptr<Socket> mUDPSck;
 
 	std::map<std::thread::id, int> mThreadIDs;
 	std::array<DBHandler, MAX_THREADS> mDBHandlers;

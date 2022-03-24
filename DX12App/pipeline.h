@@ -57,6 +57,8 @@ public:
 	std::vector<std::shared_ptr<GameObject>>::iterator DeleteObject(std::vector<std::shared_ptr<GameObject>>::iterator iter);
 	void ResetPipeline(ID3D12Device* device);
 
+	void PreparePipeline(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame = false, bool setPipeline = true);
+
 	void SetMsaa(bool msaaEnable, UINT msaaQuality) { mMsaa4xQualityLevels = msaaQuality; mMsaaEnable = msaaEnable; }
 
 	virtual void Update(const float elapsed, Camera* camera=nullptr);
@@ -158,8 +160,8 @@ public:
 	virtual ~InstancingPipeline();
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
-	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame = false, bool setPipeline = true);
-	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame = false, bool setPipeline = true);
+	/*virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame = false, bool setPipeline = true);
+	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame = false, bool setPipeline = true);*/
 	virtual void BuildConstantBuffer(ID3D12Device* device);
 	virtual void UpdateConstants();
 

@@ -21,8 +21,9 @@ public:
 	void UpdatePlayerRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
 	void SetDeletionFlag() { mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION); }
 
-	void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	void ResetPlayer(btDiscreteDynamicsWorld* physicsWorld);
 	void UpdateTransformVectors();
+	void SetVelocities();
 
 	void ClearVehicleComponent();
 
@@ -30,16 +31,14 @@ public:
 	void UpdateSteering(float elapsed);
 	void UpdateEngineForce();
 
-	void CalculateAcceleration(float elapsed);
-
 	void ToggleKeyValue(uint8_t key, bool pressed);
 
 public:
 	void SetPosition(float x, float y, float z);
 	const btVector3& GetPosition() const { return mPosition; }
 	const btVector4& GetQuaternion() const { return mQuaternion; }
-	const btVector3& GetVelocity() const { return mCurrVelocity; }
-	const btVector3& GetAcceleration() const { return mAcceleration; }
+	const btVector3& GetLinearVelocity() const { return mLinearVelocity; }
+	const btVector3& GetAngularVelocity() const { return mAngularVelocity; }
 
 public:
 	std::atomic_bool Empty;
@@ -56,9 +55,8 @@ private:
 	btVector4 mQuaternion;
 	btVector3 mPosition;
 
-	btVector3 mPrevVelocity;
-	btVector3 mCurrVelocity;
-	btVector3 mAcceleration;
+	btVector3 mLinearVelocity;
+	btVector3 mAngularVelocity;
 
 	VehicleRigidBody mVehicleRigidBody;
 	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;

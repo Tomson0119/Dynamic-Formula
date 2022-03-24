@@ -378,7 +378,8 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int 
 
 void ShadowMapRenderer::AppendTargetPipeline(Layer layer, Pipeline* pso)
 {
-	mShadowTargetPSOs.insert(std::make_pair(layer, pso));
+	if(pso != nullptr)
+		mShadowTargetPSOs.insert(std::make_pair(layer, pso));
 }
 
 void ShadowMapRenderer::SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
