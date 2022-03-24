@@ -1,5 +1,5 @@
 # Blender MTL File: 'None'
-# Material Count: 2
+# Material Count: 1
 
 newmtl TrackSide-A.002
 Ns 225.000000
@@ -12,14 +12,3 @@ d 1.000000
 illum 2
 map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\TrackSide-A.psd
 map_d C:\\Users\\kcjse\\Desktop\\track\\TrackSide-A.psd
-
-newmtl Trees-01.003
-Ns 225.000000
-Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 1.000000 1.000000 1.000000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Trees-01.psd

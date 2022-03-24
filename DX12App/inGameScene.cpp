@@ -920,7 +920,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		auto tmpstr = std::string("Models\\") + objName;
 
 		auto transparentpath = tmpstr;
-		transparentpath = transparentpath.replace(tmpstr.find(".obj"), 4, "_Transparent.obj");
+		transparentpath.replace(tmpstr.find(".obj"), 4, "_Transparent.obj");
 
 		wstring objPath;
 		objPath.assign(tmpstr.begin(), tmpstr.end());
