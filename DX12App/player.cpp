@@ -365,7 +365,7 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityY = 40.0f;
 
 		mCamera->SetOffset(0.0f, 20.0f, -50.0f);
-		mCamera->SetTimeLag(0.25f);
+		mCamera->SetTimeLag(0.1f);
 		break;
 
 	case CameraMode::TOP_DOWN_CAMERA:
@@ -731,7 +731,7 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 	cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[cubemapIndex + (mCurrentRenderTarget * 6)], TRUE, &mDsvCPUDescriptorHandle);
 
 	scene->UpdateCameraConstant(cubemapIndex + 4, mCameras[cubemapIndex].get());
-	scene->RenderPipelines(cmdList, mCameras[cubemapIndex].get(), cubemapIndex + 4);
+	scene->RenderPipelines(cmdList, mCameras[cubemapIndex].get(), cubemapIndex + 4, true);
 
 	// resource barrier
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(

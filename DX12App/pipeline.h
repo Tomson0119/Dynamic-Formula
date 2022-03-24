@@ -60,8 +60,8 @@ public:
 	void SetMsaa(bool msaaEnable, UINT msaaQuality) { mMsaa4xQualityLevels = msaaQuality; mMsaaEnable = msaaEnable; }
 
 	virtual void Update(const float elapsed, Camera* camera=nullptr);
-	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true);
-	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true);
+	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);
+	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
 
@@ -70,7 +70,10 @@ public:
 	std::vector<std::shared_ptr<GameObject>>& GetRenderObjects() { return mRenderObjects; }
 
 protected:
-	ComPtr<ID3D12PipelineState> mPSO[2];
+	// 0번 : MSAA 렌더
+	// 1번 : MSAA 와이어프레임 렌더
+	// 2번 : MSAA 사용하지 않고 렌더
+	ComPtr<ID3D12PipelineState> mPSO[3];
 	ComPtr<ID3D12DescriptorHeap> mCbvSrvDescriptorHeap;
 
 	D3D12_RASTERIZER_DESC	  mRasterizerDesc   = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -130,7 +133,7 @@ public:
 	virtual void SetAndDraw(
 		ID3D12GraphicsCommandList* cmdList,
 		bool drawWiredFrame = false,
-		bool setPipeline = true) override;
+		bool setPipeline = true, bool msaaOff = false) override;
 
 private:
 	void BuildSOPipeline(

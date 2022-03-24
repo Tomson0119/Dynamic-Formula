@@ -79,6 +79,11 @@ void Pipeline::BuildPipeline(
 		ThrowIfFailed(device->CreateGraphicsPipelineState(
 			&psoDesc, IID_PPV_ARGS(&mPSO[1])));
 	}
+
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.SampleDesc.Quality = 0;
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mPSO[2])));
 }
 
 void Pipeline::BuildConstantBuffer(ID3D12Device* device)
@@ -176,7 +181,7 @@ void Pipeline::ResetPipeline(ID3D12Device* device)
 	BuildDescriptorHeap(device, mRootParamMatIndex, mRootParamCBVIndex, mRootParamSRVIndex);
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline, bool msaaOff)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
@@ -185,6 +190,8 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 	if (setPipeline) {
 		if (mIsWiredFrame && drawWiredFrame)
 			cmdList->SetPipelineState(mPSO[1].Get());
+		else if (msaaOff)
+			cmdList->SetPipelineState(mPSO[2].Get());
 		else
 			cmdList->SetPipelineState(mPSO[0].Get());
 	}
@@ -192,7 +199,7 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 	Draw(cmdList);
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline, bool msaaOff)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
@@ -201,6 +208,8 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrus
 	if (setPipeline) {
 		if (mIsWiredFrame && drawWiredFrame)
 			cmdList->SetPipelineState(mPSO[1].Get());
+		else if(msaaOff)
+			cmdList->SetPipelineState(mPSO[2].Get());
 		else
 			cmdList->SetPipelineState(mPSO[0].Get());
 	}
@@ -362,6 +371,11 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 
 	ThrowIfFailed(device->CreateGraphicsPipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSO[0])));
+
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.SampleDesc.Quality = 0;
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mPSO[2])));
 }
 
 
@@ -392,7 +406,8 @@ void StreamOutputPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignatu
 void StreamOutputPipeline::SetAndDraw(
 	ID3D12GraphicsCommandList* cmdList, 
 	bool drawWiredFrame, 
-	bool setPipeline)
+	bool setPipeline,
+	bool msaaOff)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);

@@ -18,7 +18,7 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 	mZSplits.resize(mMapCount + 1);
 
 	mZSplits[0] = mainCamera->GetNearZ();
-	mZSplits[mMapCount] = 2000;
+	mZSplits[mMapCount] = 4000;
 	for (UINT i = 1; i < mMapCount; ++i)
 	{
 		float index = (i / (float)mMapCount);

@@ -428,7 +428,7 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 	if (mCubemapInterval < 0.0f)
 	{
 		mCubemapInterval = 0.03f;
-		//mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
+		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
 		if (mCubemapDrawIndex < 5)
 			mCubemapDrawIndex++;
@@ -747,7 +747,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	mpUI.get()->Draw(nFrame);
 }
 
-void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
+void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex, bool cubeMapping)
 {	
 	SetCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
@@ -759,11 +759,11 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 		else if (layer != Layer::SkyBox)
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
-			pso->SetAndDraw(cmdList, (bool)mLODSet);
+			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
 	}
 }
 
-void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera ,int cameraCBIndex)
+void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex, bool cubeMapping)
 {
 	SetCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
@@ -774,11 +774,11 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* ca
 			continue;
 
 		if (layer != Layer::Terrain && layer != Layer::SkyBox)
-			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), true, (bool)mLODSet);
+			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), true, (bool)mLODSet, true, cubeMapping);
 		else if(layer != Layer::SkyBox)
-			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), false, (bool)mLODSet);
+			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), false, (bool)mLODSet, true, cubeMapping);
 		else
-			pso->SetAndDraw(cmdList, (bool)mLODSet);
+			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
 	}
 }
 
