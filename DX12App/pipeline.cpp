@@ -186,7 +186,7 @@ void Pipeline::ResetPipeline(ID3D12Device* device)
 	BuildDescriptorHeap(device, mRootParamMatIndex, mRootParamCBVIndex, mRootParamSRVIndex);
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline, bool msaaOff)
+void Pipeline::PreparePipeline(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline, bool msaaOff)
 {
 	if (mCbvSrvDescriptorHeap.Get() == nullptr)
 		return;
@@ -205,27 +205,15 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 	}
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline, bool msaaOff)
 {	
-	PreparePipeline(cmdList, drawWiredFrame, setPipeline);
+	PreparePipeline(cmdList, drawWiredFrame, setPipeline, msaaOff);
 	Draw(cmdList);
 }
 
 void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline, bool msaaOff)
 {
-	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
-	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-	cmdList->OMSetStencilRef(mStencilRef);
-
-	if (setPipeline) {
-		if (mIsWiredFrame && drawWiredFrame)
-			cmdList->SetPipelineState(mPSO[1].Get());
-		else if(msaaOff)
-			cmdList->SetPipelineState(mPSO[2].Get());
-		else
-			cmdList->SetPipelineState(mPSO[0].Get());
-	}
-
+	PreparePipeline(cmdList, drawWiredFrame, setPipeline, msaaOff);
 	Draw(cmdList, viewFrustum, objectOOBB);
 }
 

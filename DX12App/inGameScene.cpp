@@ -355,7 +355,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 
-	//LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
+	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
 	BuildCarObjects({ -3200.0f, 10.0f, 1500.0f }, 4, true, cmdList, physics, 0);
