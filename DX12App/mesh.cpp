@@ -22,6 +22,15 @@ Mesh::Mesh(const std::string& name, const std::string& mtlName)
 
 Mesh::~Mesh()
 {
+	if (mTriangleVertexArray)
+	{
+		btIndexedMesh& mesh = mTriangleVertexArray->getIndexedMeshArray()[0];
+
+		delete[] mesh.m_vertexBase;
+		delete[] mesh.m_triangleIndexBase;
+
+		delete mTriangleVertexArray;
+	}
 }
 
 void Mesh::CreateResourceInfo(
