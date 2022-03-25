@@ -120,13 +120,6 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mMsaaVelocityMapRtvDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mMsaaVelocityMapSrvDescriptorHeap;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityResolveTargetRtvHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityResolveTargetSrvHandle;
-	ComPtr<ID3D12Resource> mVelocityResolveTarget;
-
-	ComPtr<ID3D12DescriptorHeap> mVelocityResolveTargetRtvDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mVelocityResolveTargetSrvDescriptorHeap;
-
 	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaRtvHandle;
 	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaSrvHandle;
 	ComPtr<ID3D12Resource> mMsaaTarget;

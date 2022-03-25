@@ -185,7 +185,7 @@ public:
 		ID3D12RootSignature* rootSig,
 		ComputeShader* shader = nullptr);
 
-	void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx);
+	void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn=false);
 
 	void CreateTextures(ID3D12Device* device);
 	void BuildDescriptorHeap(ID3D12Device* device);
@@ -195,6 +195,11 @@ public:
 	void CopyRTToMap(
 		ID3D12GraphicsCommandList* cmdList,
 		ID3D12Resource* source, 
+		ID3D12Resource* dest);
+
+	void ResolveRTToMap(
+		ID3D12GraphicsCommandList* cmdList,
+		ID3D12Resource* source,
 		ID3D12Resource* dest);
 
 	void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer);

@@ -512,9 +512,12 @@ void ComputePipeline::BuildPipeline(
 	BuildDescriptorHeap(device);
 }
 
-void ComputePipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx)
+void ComputePipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn)
 {
-	CopyRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
+	if(msaaOn)
+		ResolveRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
+	else
+		CopyRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
 }
 
 void ComputePipeline::CopyRTToMap(
@@ -535,6 +538,23 @@ void ComputePipeline::CopyRTToMap(
 
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		source, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
+}
+
+void ComputePipeline::ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest)
+{
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST));
+
+	cmdList->ResolveSubresource(dest, 0, source, 0, DXGI_FORMAT_R32G32B32A32_FLOAT);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_COMMON));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
 }
 
 void ComputePipeline::CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer)
