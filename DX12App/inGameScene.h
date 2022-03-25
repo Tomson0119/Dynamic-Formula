@@ -113,12 +113,19 @@ private:
 
 	LightConstants mMainLight;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityMapRtvHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityMapSrvHandle;
-	ComPtr<ID3D12Resource> mVelocityMap;
+	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaVelocityMapRtvHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaVelocityMapSrvHandle;
+	ComPtr<ID3D12Resource> mMsaaVelocityMap;
 
-	ComPtr<ID3D12DescriptorHeap> mVelocityMapRtvDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mVelocityMapSrvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mMsaaVelocityMapRtvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mMsaaVelocityMapSrvDescriptorHeap;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityResolveTargetRtvHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityResolveTargetSrvHandle;
+	ComPtr<ID3D12Resource> mVelocityResolveTarget;
+
+	ComPtr<ID3D12DescriptorHeap> mVelocityResolveTargetRtvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mVelocityResolveTargetSrvDescriptorHeap;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaRtvHandle;
 	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaSrvHandle;

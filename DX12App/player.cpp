@@ -355,7 +355,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 			mVehicle->getWheelInfo(i).m_frictionSlip = 4.0f;
 		}
 
-		float Epsilon = 60.0f / 180.0f;
+		float Epsilon = 50.0f / 180.0f;
 
 		auto camLook = mCamera->GetLook();
 		camLook.y = 0.0f;

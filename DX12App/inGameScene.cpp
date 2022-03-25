@@ -52,7 +52,7 @@ void InGameScene::BuildObjects(
 	mDevice = device;
 
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.4f * Math::PI, aspect, 1.0f, 4000.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -255,20 +255,20 @@ void InGameScene::CreateVelocityMapViews()
 {
 	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R32G32B32A32_FLOAT, {0.0f,0.0f,0.0f,0.0f} };
 
-	mVelocityMap = CreateTexture2DResource(
+	mMsaaVelocityMap = CreateTexture2DResource(
 		mDevice.Get(), gFrameWidth, gFrameHeight, 1, 1,
 		DXGI_FORMAT_R32G32B32A32_FLOAT,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, 4, mMsaa4xQualityLevels - 1);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mVelocityMapRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mMsaaVelocityMapRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
 	rtvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
-	mDevice->CreateRenderTargetView(mVelocityMap.Get(), &rtvDesc, rtvHandle);
-	mVelocityMapRtvHandle = rtvHandle;
+	mDevice->CreateRenderTargetView(mMsaaVelocityMap.Get(), &rtvDesc, rtvHandle);
+	mMsaaVelocityMapRtvHandle = rtvHandle;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -279,9 +279,9 @@ void InGameScene::CreateVelocityMapViews()
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	srvDesc.Texture2D.PlaneSlice = 0;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = mVelocityMapSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	mDevice->CreateShaderResourceView(mVelocityMap.Get(), &srvDesc, srvHandle);
-	mVelocityMapSrvHandle = srvHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = mMsaaVelocityMapSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	mDevice->CreateShaderResourceView(mMsaaVelocityMap.Get(), &srvDesc, srvHandle);
+	mMsaaVelocityMapSrvHandle = srvHandle;
 }
 
 void InGameScene::CreateVelocityMapDescriptorHeaps()
@@ -291,14 +291,14 @@ void InGameScene::CreateVelocityMapDescriptorHeaps()
 			1,
 			D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
-		IID_PPV_ARGS(&mVelocityMapRtvDescriptorHeap)));
+		IID_PPV_ARGS(&mMsaaVelocityMapRtvDescriptorHeap)));
 
 	ThrowIfFailed(mDevice->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
 			1,
 			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
-		IID_PPV_ARGS(&mVelocityMapSrvDescriptorHeap)));
+		IID_PPV_ARGS(&mMsaaVelocityMapSrvDescriptorHeap)));
 }
 
 void InGameScene::CreateNewMissileObject(ID3D12GraphicsCommandList* cmdList)
@@ -373,7 +373,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.4f * Math::PI, aspect, 1.0f, 4000.0f);
 	mCurrentCamera = mMainCamera.get();
 }
 
@@ -718,12 +718,12 @@ void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
 {
 	const XMFLOAT4& velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
-	cmdList->ClearRenderTargetView(mVelocityMapRtvHandle, (FLOAT*)&velocity, 0, nullptr);
+	cmdList->ClearRenderTargetView(mMsaaVelocityMapRtvHandle, (FLOAT*)&velocity, 0, nullptr);
 
 	const XMFLOAT4& color = { 0.0f, 0.0f, 0.0f, 0.0f };
 	cmdList->ClearRenderTargetView(mMsaaRtvHandle, (FLOAT*)&color, 0, nullptr);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { mMsaaRtvHandle, mVelocityMapRtvHandle };
+	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { mMsaaRtvHandle, mMsaaVelocityMapRtvHandle };
 
 	cmdList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &depthStencilView);
 
