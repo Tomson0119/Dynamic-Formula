@@ -160,8 +160,6 @@ public:
 	virtual ~InstancingPipeline();
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
-	/*virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame = false, bool setPipeline = true);
-	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame = false, bool setPipeline = true);*/
 	virtual void BuildConstantBuffer(ID3D12Device* device);
 	virtual void UpdateConstants();
 

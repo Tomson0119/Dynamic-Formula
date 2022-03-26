@@ -8,6 +8,12 @@ Texture2D RenderTarget : register(t1);
 
 RWTexture2D<float4> RWOutput : register(u0);
 
+cbuffer CommonCB : register(b0)
+{
+    int gFrameWidth : packoffset(c0.x);
+    int gFrameHeight : packoffset(c0.y);
+}
+
 [numthreads(32, 30, 1)]
 void CS(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
 {
@@ -27,8 +33,8 @@ void CS(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_Di
     {
         for (int i = 0; i < numSample; ++i)
         {
-            if (n3DispatchThreadID.x + round(Velocity.x * i) >= 0 && n3DispatchThreadID.x + round(Velocity.x * i) < FRAME_WIDTH - 1 &&
-                n3DispatchThreadID.y + round(Velocity.y * i) >= 0 && n3DispatchThreadID.y + round(Velocity.y * i) < FRAME_HEIGHT - 1)
+            if (n3DispatchThreadID.x + round(Velocity.x * i) >= 0 && n3DispatchThreadID.x + round(Velocity.x * i) < gFrameWidth - 1 &&
+                n3DispatchThreadID.y + round(Velocity.y * i) >= 0 && n3DispatchThreadID.y + round(Velocity.y * i) < gFrameHeight - 1)
             {
                 cColor += RenderTarget[int2(n3DispatchThreadID.x + 1 + round(Velocity.x * i), n3DispatchThreadID.y + 1 + round(Velocity.y * i))];
                 cnt++;

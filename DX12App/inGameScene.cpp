@@ -152,10 +152,10 @@ void InGameScene::BuildComputeRootSignature()
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
-	D3D12_ROOT_PARAMETER parameters[2];
+	D3D12_ROOT_PARAMETER parameters[3];
 	parameters[0] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);    // Inputs
 	parameters[1] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);    // Output																   
-
+	parameters[2] = Extension::Constants(2, 0, D3D12_SHADER_VISIBILITY_ALL);					   // 32bit Constant
 	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = Extension::RootSignatureDesc(_countof(parameters), parameters,
 		0, nullptr , D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 

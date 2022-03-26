@@ -480,7 +480,6 @@ void StreamOutputPipeline::CreateStreamOutputDesc()
 //
 ComputePipeline::ComputePipeline(ID3D12Device* device)
 {
-	CreateTextures(device);
 }
 
 ComputePipeline::~ComputePipeline()
@@ -651,6 +650,9 @@ void ComputePipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	ID3D12DescriptorHeap* descHeap[] = { mSrvUavDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 
+	cmdList->SetComputeRoot32BitConstant(2, gFrameWidth, 0);
+	cmdList->SetComputeRoot32BitConstant(2, gFrameHeight, 1);
+
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	cmdList->SetComputeRootDescriptorTable(0, gpuHandle);
 
@@ -740,38 +742,6 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const Bounding
 		}
 	}
 }
-
-//void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
-//{
-//	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
-//	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-//	cmdList->OMSetStencilRef(mStencilRef);
-//
-//	if (setPipeline) {
-//		if (mIsWiredFrame && drawWiredFrame)
-//			cmdList->SetPipelineState(mPSO[1].Get());
-//		else
-//			cmdList->SetPipelineState(mPSO[0].Get());
-//	}
-//
-//	Draw(cmdList);
-//}
-//
-//void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
-//{
-//	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
-//	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-//	cmdList->OMSetStencilRef(mStencilRef);
-//
-//	if (setPipeline) {
-//		if (mIsWiredFrame && drawWiredFrame)
-//			cmdList->SetPipelineState(mPSO[1].Get());
-//		else
-//			cmdList->SetPipelineState(mPSO[0].Get());
-//	}
-//
-//	Draw(cmdList, viewFrustum, objectOOBB);
-//}
 
 void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
 {
