@@ -277,7 +277,9 @@ void ThirdPersonCamera::Update(float elapsedTime)
 		if (distance > 0.0f)
 		{
 			mPosition = Vector3::Add(mPosition, direction, distance);
-			ThirdPersonCamera::LookAt(GetPosition(), mPlayer->GetPosition(), XMFLOAT3(0.0f,1.0f,0.0f));
+			XMFLOAT3 camLook = mPlayer->GetPosition();
+			camLook.y = mPosition.y;
+			ThirdPersonCamera::LookAt(GetPosition(), camLook, XMFLOAT3(0.0f,1.0f,0.0f));
 		}
 	}
 	Camera::Update(elapsedTime);
