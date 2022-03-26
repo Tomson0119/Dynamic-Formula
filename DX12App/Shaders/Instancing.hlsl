@@ -38,7 +38,7 @@ VertexOut VS(VertexIn vin, uint InstanceID : SV_InstanceID)
     vout.oldPosWVP = mul(mul(float4(vin.PosL, 1.0f), gInstancingInfo[InstanceID + gInstancingOffset].OldWorld), gOldViewProj);
     vout.newPosWVP = vout.PosH;
 
-    float4x4 tWorld = transpose(gWorld);
+    float4x4 tWorld = transpose(gInstancingInfo[InstanceID + gInstancingOffset].World);
     vout.NormalW = mul((float3x3) tWorld, vin.NormalL);
     vout.TangentW = mul((float3x3) tWorld, vin.TangentL);
     
