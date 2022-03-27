@@ -21,6 +21,9 @@ bool NetClient::Connect(const char* ip, short port)
 
 void NetClient::Disconnect()
 {
+	if (mTCPSendOverlapped)
+		delete mTCPSendOverlapped;
+
 	mTCPSocket.Close();
 	mUDPSocket.Close();
 }
@@ -33,6 +36,7 @@ void NetClient::BindUDPSocket(short port)
 
 void NetClient::PushPacket(std::byte* pck, int bytes)
 {
+	// Maybe memory leak spot. I shouldn't allocate overlapped object when connection is closed.
 	if (mTCPSendOverlapped == nullptr)
 		mTCPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
 	else

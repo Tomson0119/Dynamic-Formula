@@ -23,6 +23,12 @@ Client::~Client()
 
 void Client::Disconnect()
 {	
+	if (mTCPSendOverlapped)
+		delete mTCPSendOverlapped;
+
+	if (mUDPSendOverlapped)
+		delete mUDPSendOverlapped;
+
 	mState = CLIENT_STAT::EMPTY;
 	mTCPSocket.Close();
 }
