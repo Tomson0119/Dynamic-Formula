@@ -269,6 +269,7 @@ struct AtomicInt3
 		z = z_;
 	}
 
+	// Set values from btVector3
 	void SetValue(const btVector3& vec)
 	{
 		SetValue(
@@ -277,10 +278,29 @@ struct AtomicInt3
 			(int)(vec.z() * FIXED_FLOAT_LIMIT));
 	}
 
+	// Set values from XMFLOAT3
+	void SetValue(const XMFLOAT3& xmf3)
+	{
+		SetValue(
+			(int)(xmf3.x * FIXED_FLOAT_LIMIT),
+			(int)(xmf3.y * FIXED_FLOAT_LIMIT),
+			(int)(xmf3.z * FIXED_FLOAT_LIMIT));
+	}
+
 	btVector3 GetBtVector3() const
 	{
-		btVector3 ret{ x / FIXED_FLOAT_LIMIT, y / FIXED_FLOAT_LIMIT, z / FIXED_FLOAT_LIMIT };
-		return ret;
+		return btVector3{ 
+			x / FIXED_FLOAT_LIMIT, 
+			y / FIXED_FLOAT_LIMIT, 
+			z / FIXED_FLOAT_LIMIT };
+	}
+
+	XMFLOAT3 GetXMFloat3() const
+	{
+		return XMFLOAT3{ 
+			x / FIXED_FLOAT_LIMIT, 
+			y / FIXED_FLOAT_LIMIT, 
+			z / FIXED_FLOAT_LIMIT };
 	}
 
 	std::atomic_int x;
@@ -291,7 +311,7 @@ struct AtomicInt3
 struct AtomicInt4
 {
 	AtomicInt4()
-		: x{ 0 }, y{ 0 }, z{ 0 }, w{ 0 }
+		: x{ 0 }, y{ 0 }, z{ 0 }, w{ (int)FIXED_FLOAT_LIMIT }
 	{
 	}
 
@@ -326,6 +346,15 @@ struct AtomicInt4
 			(int)(quat.w() * FIXED_FLOAT_LIMIT));
 	}
 
+	void SetValue(const XMFLOAT4& quat)
+	{
+		SetValue(
+			(int)(quat.x * FIXED_FLOAT_LIMIT),
+			(int)(quat.y * FIXED_FLOAT_LIMIT),
+			(int)(quat.z * FIXED_FLOAT_LIMIT),
+			(int)(quat.w * FIXED_FLOAT_LIMIT));
+	}
+
 	bool IsZero() const
 	{
 		return (x == 0.0f && y == 0.0f && z == 0.0f && w == 0.0f);
@@ -333,13 +362,20 @@ struct AtomicInt4
 
 	btQuaternion GetBtQuaternion() const
 	{
-		btQuaternion ret{
+		return btQuaternion{
 			x / FIXED_FLOAT_LIMIT,
 			y / FIXED_FLOAT_LIMIT,
 			z / FIXED_FLOAT_LIMIT,
 			w / FIXED_FLOAT_LIMIT };
+	}
 
-		return ret;
+	XMFLOAT4 GetXMFloat4() const
+	{
+		return XMFLOAT4{
+			x / FIXED_FLOAT_LIMIT,
+			y / FIXED_FLOAT_LIMIT,
+			z / FIXED_FLOAT_LIMIT,
+			w / FIXED_FLOAT_LIMIT };
 	}
 
 	std::atomic_int x;
@@ -438,7 +474,6 @@ namespace Vector3
 		return ret;
 	}
 
-
 	inline XMFLOAT3 MultiplyAdd(float delta, XMFLOAT3& src, XMFLOAT3& dst)
 	{		
 		XMVECTOR v1 = XMLoadFloat3(&Replicate(delta));
@@ -531,6 +566,11 @@ namespace Vector3
 	{
 		return XMVector3Less(XMLoadFloat3(&v), XMVectorReplicate(x));
 	}
+
+	inline XMFLOAT3 Lerp(const XMFLOAT3& from, const XMFLOAT3& to, float t)
+	{
+		return VectorToFloat3(XMVectorLerp(XMLoadFloat3(&from), XMLoadFloat3(&to), t));
+	}
 }
 
 namespace Vector4
@@ -556,6 +596,20 @@ namespace Vector4
 	{
 		XMFLOAT4 ret;
 		XMStoreFloat4(&ret, scalar * XMLoadFloat4(&v));
+		return ret;
+	}
+
+	inline XMFLOAT4 RotateQuaternionAxis(const XMFLOAT3& axis, float angle)
+	{
+		XMFLOAT4 ret;
+		XMStoreFloat4(&ret, XMQuaternionRotationAxis(XMLoadFloat3(&axis), angle));
+		return ret;
+	}
+
+	inline XMFLOAT4 Slerp(const XMFLOAT4& from, const XMFLOAT4& to, float t)
+	{
+		XMFLOAT4 ret;
+		XMStoreFloat4(&ret, XMQuaternionSlerp(XMLoadFloat4(&from), XMLoadFloat4(&to), t));
 		return ret;
 	}
 }
@@ -597,25 +651,39 @@ namespace Matrix4x4
 		return ret;
 	}
 
+	inline XMFLOAT4X4 CalulateWorldTransform(const XMFLOAT3& position, const XMFLOAT4& quaternion, const XMFLOAT3& scale)
+	{
+		XMMATRIX translation = XMMatrixTranslationFromVector(XMLoadFloat3(&position));
+		XMMATRIX rotation = XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion));
+		XMMATRIX scaling = XMMatrixScalingFromVector(XMLoadFloat3(&scale));
+		
+		XMFLOAT4X4 world{};
+		XMStoreFloat4x4(&world, translation* rotation* scaling);
+		return world;
+	}
+
 	inline XMFLOAT4X4 glMatrixToD3DMatrix(btScalar* btMat)
 	{
 		XMFLOAT4X4 xmf4x4Result;
 
-		xmf4x4Result._21 = btMat[4];
+		xmf4x4Result._11 = btMat[0];
 		xmf4x4Result._12 = btMat[1];
 		xmf4x4Result._13 = btMat[2];
-		xmf4x4Result._31 = btMat[8];
 		xmf4x4Result._14 = btMat[3];
-		xmf4x4Result._41 = btMat[12];
-		xmf4x4Result._23 = btMat[6];
-		xmf4x4Result._32 = btMat[9];
-		xmf4x4Result._24 = btMat[7];
-		xmf4x4Result._42 = btMat[13];
-		xmf4x4Result._34 = btMat[11];
-		xmf4x4Result._43 = btMat[14];
-		xmf4x4Result._11 = btMat[0];
+
+		xmf4x4Result._21 = btMat[4];
 		xmf4x4Result._22 = btMat[5];
+		xmf4x4Result._23 = btMat[6];
+		xmf4x4Result._24 = btMat[7];
+		
+		xmf4x4Result._31 = btMat[8];
+		xmf4x4Result._32 = btMat[9];
 		xmf4x4Result._33 = btMat[10];
+		xmf4x4Result._34 = btMat[11];
+		
+		xmf4x4Result._41 = btMat[12];
+		xmf4x4Result._42 = btMat[13];
+		xmf4x4Result._43 = btMat[14];
 		xmf4x4Result._44 = btMat[15];
 
 		return xmf4x4Result;
