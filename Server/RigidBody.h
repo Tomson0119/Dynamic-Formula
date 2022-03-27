@@ -132,7 +132,8 @@ public:
 	void CreateTerrainRigidBody(BtTerrainShape* shape);
 	void CreateStaticRigidBodies(std::string_view filename,	btCollisionShape* shape);
 
-	void UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
+	void UpdateRigidBodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
+	void RemoveRigidBodies(btDiscreteDynamicsWorld* physicsWorld);
 
 private:
 	std::deque<RigidBody> mStaticRigidBodies;
