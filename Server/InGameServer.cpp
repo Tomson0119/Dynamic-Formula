@@ -60,7 +60,10 @@ void InGameServer::PrepareToStartGame(int roomID)
 			msWorlds[roomID]->SetPlayerRotation(i, quat);
 		}
 		else
+		{
 			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * (btScalar)i);
+			msWorlds[roomID]->SetPlayerRotation(i, { 0.0f,0.0f,0.0f,1.0f });
+		}
 		// Test
 
 		msWorlds[roomID]->CreateRigidbodies(i, 1000.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
