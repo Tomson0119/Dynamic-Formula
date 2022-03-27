@@ -404,8 +404,7 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 		}
 		else
 		{
-			mWheel[i]->UpdatePosition();
-			if(i < 2) mWheel[i]->UpdateRotation(mVehicleSteering);
+			if(i < 2) mWheel[i]->SetSteeringAngle(mVehicleSteering);
 		}
 	}
 
@@ -699,23 +698,13 @@ void PhysicsPlayer::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipelin
 }
 
 WheelObject::WheelObject(GameObject& parent) 
-	: GameObject(), mParent{ parent }, mLocalOffset{}
+	: GameObject(), mParent{ parent }, mLocalOffset{}, mSteeringAngle{}
 {
 	mMotionBlurOn = false;
 }
 
 WheelObject::~WheelObject()
 {
-}
-
-void WheelObject::UpdatePosition()
-{
-	mPosition = mParent.GetPosition();
-	mQuaternion = mParent.GetQuaternion();
-	
-	Move(mRight, mLocalOffset.x);
-	Move(mUp, mLocalOffset.y);
-	Move(mLook, mLocalOffset.z);
 }
 
 void WheelObject::UpdatePosition(float Elapsed, const btTransform& wheelTransform)
@@ -732,16 +721,18 @@ void WheelObject::UpdatePosition(float Elapsed, const btTransform& wheelTransfor
 	mLook = XMFLOAT3(mWorld._31, mWorld._32, mWorld._33);
 }
 
-void WheelObject::UpdateRotation(float angle)
+void WheelObject::SetSteeringAngle(float angle)
 {
-	XMVECTOR quat = XMLoadFloat4(&mQuaternion) *
-		XMQuaternionRotationAxis(XMLoadFloat3(&mUp), -angle);
-	XMStoreFloat4(&mQuaternion, quat);
+	mSteeringAngle = angle;
 }
 
 void WheelObject::Update(float elapsedTime, float updateRate)
 {
+	mPosition = mLocalOffset;
+	mQuaternion = Vector4::RotateQuaternionAxis(mUp, mSteeringAngle);
+
 	RotateDirectionVectors();
 	UpdateTransform();
-	//mWorld = Matrix4x4::Multiply(mWorld, mParent.GetWorld());
+
+	mWorld = Matrix4x4::Multiply(mWorld, mParent.GetWorld());
 }

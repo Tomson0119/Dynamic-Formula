@@ -74,13 +74,14 @@ public:
 
 	void UpdatePosition(float Elapsed, const btTransform& wheelTransform);
 	void UpdatePosition();
-	void UpdateRotation(float angle);
+	void SetSteeringAngle(float angle);
 
 	virtual void Update(float elapsedTime, float updateRate) override;
 
 private:
 	GameObject& mParent;
 	XMFLOAT3 mLocalOffset;
+	float mSteeringAngle;
 };
 
 class PhysicsPlayer : public Player
