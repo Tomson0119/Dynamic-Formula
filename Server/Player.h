@@ -39,8 +39,6 @@ public:
 	bool CheckDriftGauge();
 	void ToggleKeyValue(uint8_t key, bool pressed);
 
-	void InitMissileRigidBody();
-
 public:
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
 	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }

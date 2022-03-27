@@ -175,7 +175,9 @@ void Player::ToggleKeyValue(uint8_t key, bool pressed)
 	{
 		if (key == 'X')
 		{
-			mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
+			mMissileRigidBody.ChangeUpdateFlag(
+				RigidBody::UPDATE_FLAG::NONE,
+				RigidBody::UPDATE_FLAG::CREATION);
 		}
 	}
 	else
