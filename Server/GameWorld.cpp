@@ -81,7 +81,7 @@ void GameWorld::UpdatePhysicsWorld()
 		}
 	}
 
-	mMapRigidBody.UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
+	mMapRigidBody.UpdateRigidBodies(elapsed, mPhysics.GetDynamicsWorld());
 
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
@@ -97,6 +97,7 @@ void GameWorld::FlushPhysicsWorld()
 	{
 		player->ResetPlayer(mPhysics.GetDynamicsWorld());
 	}
+	mMapRigidBody.RemoveRigidBodies(mPhysics.GetDynamicsWorld());
 	mPhysics.Flush();
 }
 
@@ -179,6 +180,8 @@ void GameWorld::PushVehicleTransformPacket(int target, int receiver)
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
 
+	//std::cout << pos.x() << " " << pos.y() << " " << pos.z() << "\n";
+
 	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
@@ -214,6 +217,8 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+
+	//std::cout << pck.position[0] << " " << pck.position[1] << " " << pck.position[2] << "\n";
 
 	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
