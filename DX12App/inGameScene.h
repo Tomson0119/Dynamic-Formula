@@ -54,6 +54,8 @@ public:
 	void UpdateConstants(const GameTimer& timer);
 	void UpdateDynamicsWorld();
 
+	void UpdateTestObject(float elapsed);
+
 	void SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
 
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0);
@@ -128,6 +130,9 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
+
+	// for test
+	std::shared_ptr<GameObject> mTestObj;
 
 	Player* mPlayer = nullptr;
 	std::array<std::shared_ptr<MissileObject>, MAX_ROOM_CAPACITY> mMissileObjects;

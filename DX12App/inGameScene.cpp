@@ -45,7 +45,7 @@ void InGameScene::BuildObjects(
 	ID3D12GraphicsCommandList* cmdList, 
 	ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, 
-	float Width, float Height,  float aspect,
+	float Width, float Height, float aspect,
 	const shared_ptr<BulletWrapper>& physics)
 {
 	mDevice = device;
@@ -58,8 +58,8 @@ void InGameScene::BuildObjects(
 
 	mDirectorCamera = make_unique<Camera>();
 	mDirectorCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
-	mDirectorCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
-	mDirectorCamera->SetPosition(500.0f, 50.0f, 500.0f);
+	mDirectorCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, 1.0f, 2.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
+	mDirectorCamera->SetPosition(480.0f, 100.0f, 450.0f);
 
 	mCurrentCamera = mDirectorCamera.get();
 
@@ -295,8 +295,18 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 	//LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
+	// TEST
+	mTestObj = std::make_shared<GameObject>();
+	mTestObj->SetPosition({ 480.0f, 50.0f, 500.0f });
+
+	auto boxMesh = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 10.0f, 10.0f, 10.0f);
+	mTestObj->SetMesh(boxMesh);
+	mTestObj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
+	mPipelines[Layer::Default]->AppendObject(mTestObj);
+	// TEST
+
 #ifdef STANDALONE
-	BuildCarObjects({ 480.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObject({ 480.0f, 30.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -335,7 +345,19 @@ void InGameScene::BuildCarObject(
 	carObj->SetDiffuse("Car_Texture", mColorMap[(int)color]);
 	for (int i = 0; i < 4; ++i)
 	{
-		auto wheelObj = make_shared<WheelObject>();
+		auto wheelObj = make_shared<WheelObject>(*carObj.get());
+
+		float x = 7.6f, y = -1.2f, z = 11.0f;
+		if (i >= 2)
+		{
+			z *= -1.0f;
+		}
+		if (i % 2 == 0)
+		{
+			x *= -1.0f;
+		}
+		wheelObj->SetLocalOffset({ x, y, z });
+
 
 		if (i % 2 == 0)
 		{
@@ -355,7 +377,7 @@ void InGameScene::BuildCarObject(
 		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
-	carObj->BuildRigidBody(physics);
+	//carObj->BuildRigidBody(physics);
 	carObj->BuildDsvRtvView(mDevice.Get());
 
 	if (isPlayer) mPlayer = carObj.get();
@@ -444,7 +466,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		
 		if (missile)
 		{
-			OutputDebugStringA("Getting missile transform.\n");
+			//OutputDebugStringA("Getting missile transform.\n");
 			if (missile->IsActive() == false)
 				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
 			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
@@ -568,6 +590,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
 
+	//UpdateTestObject(elapsed); // TEST
 	UpdateMissileObject();
 	UpdatePlayerObjects();
 	OnPreciseKeyInput(cmdList, physics, elapsed);
@@ -671,6 +694,26 @@ void InGameScene::UpdateDynamicsWorld()
 	}
 }
 
+void InGameScene::UpdateTestObject(float elapsed)
+{
+	//mTestObj->Walk(elapsed);
+
+	static float angle = 0.0f;
+	angle += elapsed;
+	if (angle > 2 * Math::PI) angle -= 2 * Math::PI;
+
+	mTestObj->RotateY(angle);
+
+	static float scale = 1.0f;
+	static float temp = 1.0f;
+	scale += temp * elapsed * 1.0f;
+
+	if (scale > 5.0f)
+		temp = -1.0f;
+	else if (scale <= 1.0f)
+		temp = 1.0f;
+}
+
 void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 {
 	cmdList->SetGraphicsRootConstantBufferView(0, mCameraCB->GetGPUVirtualAddress(cameraCBIndex));
@@ -752,7 +795,6 @@ void InGameScene::UpdateMissileObject()
 			missile->SetUpdateFlag(UPDATE_FLAG::NONE);
 
 			flag = true;
-			OutputDebugStringA("Hello.\n");
 			break;
 		}
 		case UPDATE_FLAG::REMOVE:
@@ -836,7 +878,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		obj->Scale(1.0f, 1.0f, 1.0f);
 		obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", physics);
 		obj->SetPosition(pos);
-		obj->RotateQuaternion(quaternion);
+		obj->SetQuaternion(quaternion);
 		obj->BuildRigidBody(0.0f, physics);
 		obj->SetName(objName);
 
