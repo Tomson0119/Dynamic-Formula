@@ -179,7 +179,6 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 
 PhysicsPlayer::~PhysicsPlayer()
 {
-
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
@@ -193,17 +192,6 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& Mesh)
 {
 	GameObject::SetMesh(Mesh);
 }
-
-//void PhysicsPlayer::UpdateTransform()
-//{
-//	mWorld = Matrix4x4::Identity4x4();
-//
-//	mWorld(3, 0) = mPosition.x;
-//	mWorld(3, 1) = mPosition.y;
-//	mWorld(3, 2) = mPosition.z;
-//
-//	mWorld = Matrix4x4::Multiply(mQuaternion, mWorld);
-//}
 
 Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 {
@@ -260,7 +248,8 @@ void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
-	mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
+	if (mVehicle)
+		mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
 
 	mEngineForce = 0.0f;
 	mBreakingForce = 10.0f;
@@ -344,10 +333,10 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	//
 	//}
 	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
-	{
+	{		
 		for (int i = 2; i < 4; ++i)
 		{
-			mVehicle->getWheelInfo(i).m_frictionSlip = 4.0f;
+			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 4.0f;
 		}
 
 		float Epsilon = 60.0f / 180.0f;
@@ -377,7 +366,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	{
 		for (int i = 2; i < 4; ++i)
 		{
-			mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
+			if(mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
 		}
 	}
 
@@ -386,24 +375,38 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 	for (int i = 0; i < 2; ++i)
 	{
-		mVehicle->applyEngineForce(mEngineForce, i);
-		mVehicle->setBrake(mBreakingForce, i);
+		if (mVehicle)
+		{
+			mVehicle->applyEngineForce(mEngineForce, i);
+			mVehicle->setBrake(mBreakingForce, i);
+		}
 	}
 
-	int wheelIndex = 0;
-	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
-	wheelIndex = 1;
-	mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
+	if (mVehicle)
+	{
+		int wheelIndex = 0;
+		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
+		wheelIndex = 1;
+		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
+	}
 }
 
 void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 {
-	GameObject::Update(elapsedTime, updateRate);	
-
+	GameObject::Update(elapsedTime, updateRate);
+	
 	for (int i = 0; i < 4; ++i)
 	{
-		btTransform wheelTransform = mVehicle->getWheelTransformWS(i);
-		mWheel[i]->UpdatePosition(elapsedTime, wheelTransform);
+		if (mVehicle)
+		{
+			btTransform wheelTransform = mVehicle->getWheelTransformWS(i);
+			mWheel[i]->UpdatePosition(elapsedTime, wheelTransform);
+		}
+		else
+		{
+			mWheel[i]->UpdatePosition();
+			if(i < 2) mWheel[i]->UpdateRotation(mVehicleSteering);
+		}
 	}
 
 	if (mBoosterLeft > 0.0f)
@@ -627,11 +630,14 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 		(int)(pck->position[1] + pck->linear_vel[1] * latency),
 		(int)(pck->position[2] + pck->linear_vel[2] * latency));
 
+	// Convert to left-handed
 	mCorrectionQuat.SetValue(
 		pck->quaternion[0],
 		(int)(pck->quaternion[1] * (1 + 0.5f * latency * pck->angular_vel[0])),
 		(int)(pck->quaternion[2] * (1 + 0.5f * latency * pck->angular_vel[1])),
 		(int)(pck->quaternion[3] * (1 + 0.5f * latency * pck->angular_vel[2])));
+	
+	mLinearVelocity.SetValue(pck->linear_vel[0], pck->linear_vel[1], pck->linear_vel[2]);
 }
 
 void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex)
@@ -692,7 +698,8 @@ void PhysicsPlayer::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipelin
 	}
 }
 
-WheelObject::WheelObject() : GameObject()
+WheelObject::WheelObject(GameObject& parent) 
+	: GameObject(), mParent{ parent }, mLocalOffset{}
 {
 	mMotionBlurOn = false;
 }
@@ -701,7 +708,17 @@ WheelObject::~WheelObject()
 {
 }
 
-void WheelObject::UpdatePosition(const float& Elapsed, const btTransform& wheelTransform)
+void WheelObject::UpdatePosition()
+{
+	mPosition = mParent.GetPosition();
+	mQuaternion = mParent.GetQuaternion();
+	
+	Move(mRight, mLocalOffset.x);
+	Move(mUp, mLocalOffset.y);
+	Move(mLook, mLocalOffset.z);
+}
+
+void WheelObject::UpdatePosition(float Elapsed, const btTransform& wheelTransform)
 {
 	btScalar m[16];
 	wheelTransform.getOpenGLMatrix(m);
@@ -713,4 +730,18 @@ void WheelObject::UpdatePosition(const float& Elapsed, const btTransform& wheelT
 	mPosition.z = mWorld(3, 2);
 
 	mLook = XMFLOAT3(mWorld._31, mWorld._32, mWorld._33);
+}
+
+void WheelObject::UpdateRotation(float angle)
+{
+	XMVECTOR quat = XMLoadFloat4(&mQuaternion) *
+		XMQuaternionRotationAxis(XMLoadFloat3(&mUp), -angle);
+	XMStoreFloat4(&mQuaternion, quat);
+}
+
+void WheelObject::Update(float elapsedTime, float updateRate)
+{
+	RotateDirectionVectors();
+	UpdateTransform();
+	//mWorld = Matrix4x4::Multiply(mWorld, mParent.GetWorld());
 }

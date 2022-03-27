@@ -67,10 +67,20 @@ protected:
 class WheelObject : public GameObject
 {
 public:
-	WheelObject();
+	WheelObject(GameObject& parent);
 	virtual ~WheelObject();
 
-	void UpdatePosition(const float& Elapsed, const btTransform& wheelTransform);
+	void SetLocalOffset(const XMFLOAT3& offset) { mLocalOffset = offset; }
+
+	void UpdatePosition(float Elapsed, const btTransform& wheelTransform);
+	void UpdatePosition();
+	void UpdateRotation(float angle);
+
+	virtual void Update(float elapsedTime, float updateRate) override;
+
+private:
+	GameObject& mParent;
+	XMFLOAT3 mLocalOffset;
 };
 
 class PhysicsPlayer : public Player
