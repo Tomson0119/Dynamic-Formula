@@ -73,7 +73,6 @@ public:
 	void SetLocalOffset(const XMFLOAT3& offset) { mLocalOffset = offset; }
 
 	void UpdatePosition(float Elapsed, const btTransform& wheelTransform);
-	void UpdatePosition();
 	void SetSteeringAngle(float angle);
 
 	virtual void Update(float elapsedTime, float updateRate) override;
@@ -82,6 +81,7 @@ private:
 	GameObject& mParent;
 	XMFLOAT3 mLocalOffset;
 	float mSteeringAngle;
+	bool mIsStandAlone;
 };
 
 class PhysicsPlayer : public Player

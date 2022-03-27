@@ -377,7 +377,10 @@ void InGameScene::BuildCarObject(
 		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
-	//carObj->BuildRigidBody(physics);
+
+#ifdef STANDALONE
+	carObj->BuildRigidBody(physics);
+#endif
 	carObj->BuildDsvRtvView(mDevice.Get());
 
 	if (isPlayer) mPlayer = carObj.get();

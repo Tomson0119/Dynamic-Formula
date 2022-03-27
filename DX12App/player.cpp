@@ -698,7 +698,8 @@ void PhysicsPlayer::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipelin
 }
 
 WheelObject::WheelObject(GameObject& parent) 
-	: GameObject(), mParent{ parent }, mLocalOffset{}, mSteeringAngle{}
+	: GameObject(), mParent{ parent }, 
+	  mLocalOffset{}, mSteeringAngle{}, mIsStandAlone{ false }
 {
 	mMotionBlurOn = false;
 }
@@ -709,6 +710,8 @@ WheelObject::~WheelObject()
 
 void WheelObject::UpdatePosition(float Elapsed, const btTransform& wheelTransform)
 {
+	mIsStandAlone = true;
+
 	btScalar m[16];
 	wheelTransform.getOpenGLMatrix(m);
 	mOldWorld = mWorld;
@@ -728,11 +731,14 @@ void WheelObject::SetSteeringAngle(float angle)
 
 void WheelObject::Update(float elapsedTime, float updateRate)
 {
-	mPosition = mLocalOffset;
-	mQuaternion = Vector4::RotateQuaternionAxis(mUp, mSteeringAngle);
+	if (mIsStandAlone == false)
+	{
+		mPosition = mLocalOffset;
+		mQuaternion = Vector4::RotateQuaternionAxis(mUp, mSteeringAngle);
 
-	RotateDirectionVectors();
-	UpdateTransform();
+		RotateDirectionVectors();
+		UpdateTransform();
 
-	mWorld = Matrix4x4::Multiply(mWorld, mParent.GetWorld());
+		mWorld = Matrix4x4::Multiply(mWorld, mParent.GetWorld());
+	}
 }
