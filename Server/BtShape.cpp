@@ -63,7 +63,8 @@ BtBoxShape::BtBoxShape(std::string_view filename)
 void BtBoxShape::LoadShapeData(std::string_view filename)
 {
 	std::ifstream file{ filename.data(), std::ios::binary };
-	
+	assert(file.is_open());
+
 	btScalar x{}, y{}, z{};
 	file >> x >> y >> z;
 
@@ -72,7 +73,7 @@ void BtBoxShape::LoadShapeData(std::string_view filename)
 
 void BtBoxShape::BuildCollisionShape()
 {
-	//mCollisionShape = std::make_unique<btBoxShape>(mExtents);
+	mCollisionShape = std::make_unique<btBoxShape>(mExtents);
 }
 
 
