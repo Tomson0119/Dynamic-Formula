@@ -24,7 +24,6 @@ public:
 	void BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
 
 	virtual void Update(float elapsedTime, float updateRate);
-	virtual void UpdateTransform();
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
@@ -47,16 +46,20 @@ public:
 
 	virtual void ChangeCurrentRenderTarget() {}
 
+	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
+
+protected:
+	virtual void UpdateTransform();
+
+	void RotateDirectionVectors();
 	void SetWorldByMotionState();
 	void ResetTransformVectors();
 
 	void UpdateBoundingBox();
 	void Animate(float elapsedTime);
 
-	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
-
-	void InterpolateTransform(float elapsed, float updateRate);
-	
+	void InterpolateRigidBody(float elapsed, float updateRate);
+	void InterpolateWorldTransform(float elapsed, float updateRate);
 
 public:
 	virtual std::vector<std::shared_ptr<Mesh>> LoadModel(
@@ -121,9 +124,8 @@ public:
 	void Rotate(float pitch, float yaw, float roll);
 	void Rotate(const XMFLOAT3& axis, float angle);
 
-	void RotateQuaternion(XMFLOAT4 quaternion);
-
-	void RotateQuaternion(float x, float y, float z, float w);
+	void SetQuaternion(const XMFLOAT4& quaternion);
+	void SetQuaternion(float x, float y, float z, float w);
 
 	void Scale(float xScale, float yScale, float zScale);
 	void Scale(const XMFLOAT3& scale);
@@ -134,6 +136,7 @@ public:
 	XMFLOAT3 GetRight() const { return mRight; }
 	XMFLOAT3 GetLook() const { return mLook; }
 	XMFLOAT3 GetUp() const { return mUp; }
+	XMFLOAT4 GetQuaternion() const { return mQuaternion; }
 
 	XMFLOAT4X4 GetWorld() const { return mWorld; }
 
@@ -158,10 +161,11 @@ protected:
 	XMFLOAT3 mUp = { 0.0f, 1.0f, 0.0f };
 	XMFLOAT3 mLook = { 0.0f, 0.0f, 1.0f };
 	XMFLOAT3 mScaling = { 1.0f, 1.0f, 1.0f };
+	XMFLOAT4 mQuaternion = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
-	XMFLOAT4X4 mQuaternion = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mRotation = Matrix4x4::Identity4x4();
 
 	// Members for interpolation.
 	std::atomic_int mProgress = 0;
@@ -171,6 +175,7 @@ protected:
 
 	AtomicInt3 mCorrectionOrigin{};
 	AtomicInt4 mCorrectionQuat{};
+	AtomicInt3 mLinearVelocity{};
 	// Members for interpolation.
 
 	std::atomic<UPDATE_FLAG> mUpdateFlag;

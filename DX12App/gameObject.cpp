@@ -315,20 +315,18 @@ void GameObject::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& 
 
 void GameObject::Update(float elapsedTime, float updateRate)
 {
-	mLook = Vector3::Normalize(mLook);
-	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
-	mRight = Vector3::Cross(mUp, mLook);
+	RotateDirectionVectors();
 
 	mOldWorld = mWorld;
 
 	if (mBtRigidBody)
 	{
-		InterpolateTransform(elapsedTime, updateRate);
+		InterpolateRigidBody(elapsedTime, updateRate);
 		SetWorldByMotionState();
-
 	}
 	else
 	{
+		InterpolateWorldTransform(elapsedTime, updateRate);
 		UpdateTransform();
 	}
 
@@ -450,20 +448,33 @@ void GameObject::Draw(
 void GameObject::UpdateTransform()
 {
 	mWorld(0, 0) = mScaling.x * mRight.x;
-	mWorld(0, 1) = mRight.y;	
+	mWorld(0, 1) = mRight.y;
 	mWorld(0, 2) = mRight.z;
 
-	mWorld(1, 0) = mUp.x;		
-	mWorld(1, 1) = mScaling.y * mUp.y;		
+	mWorld(1, 0) = mUp.x;
+	mWorld(1, 1) = mScaling.y * mUp.y;
 	mWorld(1, 2) = mUp.z;
 
-	mWorld(2, 0) = mLook.x;		
-	mWorld(2, 1) = mLook.y;		
+	mWorld(2, 0) = mLook.x;
+	mWorld(2, 1) = mLook.y;
 	mWorld(2, 2) = mScaling.z * mLook.z;
 
 	mWorld(3, 0) = mPosition.x;
 	mWorld(3, 1) = mPosition.y;
 	mWorld(3, 2) = mPosition.z;
+}
+
+void GameObject::RotateDirectionVectors()
+{
+	XMMATRIX R = XMMatrixRotationQuaternion(XMLoadFloat4(&mQuaternion));
+
+	mRight = Vector3::TransformNormal(XMFLOAT3(1.0f,0.0f,0.0f), R);
+	mUp = Vector3::TransformNormal(XMFLOAT3(0.0f,1.0f,0.0f), R);
+	mLook = Vector3::TransformNormal(XMFLOAT3(0.0f,0.0f,1.0f), R);
+
+	mRight = Vector3::Normalize(mRight);
+	mUp = Vector3::Normalize(mUp);
+	mLook = Vector3::Normalize(mLook);
 }
 
 void GameObject::SetWorldByMotionState()
@@ -518,7 +529,7 @@ void GameObject::UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, 
 		matCnst->CopyData(offset + i, mMeshes[i]->GetMaterialConstant());
 }
 
-void GameObject::InterpolateTransform(float elapsed, float updateRate)
+void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
 {
 	auto rigid = mBtRigidBody;
 	if (rigid == nullptr) return;
@@ -560,6 +571,31 @@ void GameObject::InterpolateTransform(float elapsed, float updateRate)
 
 	// manually set rigidbody tranform.
 	rigid->setWorldTransform(nextTransform);
+}
+
+void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
+{
+	if (mPrevOrigin.IsZero())
+	{
+		mPrevOrigin.SetValue(mPosition);
+		mPrevQuat.SetValue(mQuaternion);
+	}
+
+	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
+	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
+
+	// Get correction state of extrapolated server postion/rotation.
+	const XMFLOAT3& correctOrigin = mCorrectionOrigin.GetXMFloat3();
+	const XMFLOAT4& correctQuat = mCorrectionQuat.GetXMFloat4();
+
+	if (updateRate <= 0.0f) return;
+
+	float progress = mProgress / FIXED_FLOAT_LIMIT;
+	progress = std::min(1.0f, progress + elapsed / updateRate);
+	mProgress = (int)(progress * FIXED_FLOAT_LIMIT);
+
+	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
+	mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
 }
 
 void GameObject::SetPosition(float x, float y, float z)
@@ -684,56 +720,44 @@ void GameObject::Rotate(float pitch, float yaw, float roll)
 {
 	if (pitch != 0.0f)
 	{
-		XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mRight), XMConvertToRadians(pitch));
-		mUp = Vector3::TransformNormal(mUp, R);
-		mLook = Vector3::TransformNormal(mLook, R);
+		Rotate(mRight, pitch);
 	}
 	if (yaw != 0.0f)
 	{
-		XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mUp), XMConvertToRadians(yaw));
-		mLook = Vector3::TransformNormal(mLook, R);
-		mRight = Vector3::TransformNormal(mRight, R);
+		Rotate(mUp, yaw);
 	}
 	if (roll != 0.0f)
 	{
-		XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mLook), XMConvertToRadians(roll));
-		mUp = Vector3::TransformNormal(mUp, R);
-		mRight = Vector3::TransformNormal(mRight, R);
+		Rotate(mLook, roll);
 	}
 }
 
 void GameObject::Rotate(const XMFLOAT3& axis, float angle)
 {
-	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&axis), XMConvertToRadians(angle));
-	mRight = Vector3::TransformNormal(mRight, R);
-	mUp = Vector3::TransformNormal(mUp, R);
-	mLook = Vector3::TransformNormal(mLook, R);
+	XMStoreFloat4(&mQuaternion, 
+		XMQuaternionRotationAxis(
+			XMLoadFloat3(&axis), 
+			XMConvertToRadians(angle)));
 }
 
-void GameObject::RotateQuaternion(XMFLOAT4 quaternion)
+void GameObject::SetQuaternion(const XMFLOAT4& quaternion)
 {
-	RotateQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+	mQuaternion = quaternion;
 }
 
-void GameObject::RotateQuaternion(float x, float y, float z, float w)
+void GameObject::SetQuaternion(float x, float y, float z, float w)
 {
-	XMMATRIX R = XMMatrixRotationQuaternion(XMVECTOR{ x,y,z,w });
-	XMStoreFloat4x4(&mQuaternion, R);
+	SetQuaternion({ x,y,z,w });
 }
 
 void GameObject::RotateY(float angle)
 {
-	XMMATRIX R = XMMatrixRotationY(XMConvertToRadians(angle));
-	mRight = Vector3::TransformNormal(mRight, R);
-	mUp = Vector3::TransformNormal(mUp, R);
-	mLook = Vector3::TransformNormal(mLook, R);
+	Rotate(mUp, angle);
 }
 
 void GameObject::Pitch(float angle)
 {
-	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mRight), XMConvertToRadians(angle));
-	mUp = Vector3::TransformNormal(mUp, R);
-	mLook = Vector3::TransformNormal(mLook, R);
+	Rotate(mRight, angle);
 }
 
 void GameObject::Scale(float xScale, float yScale, float zScale)
@@ -924,6 +948,13 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 		(int)(pck->position[0] + pck->linear_vel[0] * latency),
 		(int)(pck->position[1] + pck->linear_vel[1] * latency),
 		(int)(pck->position[2] + pck->linear_vel[2] * latency));
+
+	// Convert to left-handed
+	mCorrectionQuat.SetValue(
+		+pck->quaternion[0],
+		-(int)(pck->quaternion[1]),
+		-(int)(pck->quaternion[3]),
+		-(int)(pck->quaternion[2]));
 }
 
 void MissileObject::Update(float elapsedTime, float updateRate)
