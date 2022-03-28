@@ -18,7 +18,7 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 	mZSplits.resize(mMapCount + 1);
 
 	mZSplits[0] = mainCamera->GetNearZ();
-	mZSplits[mMapCount] = 1500;
+	mZSplits[mMapCount] = 4000;
 	for (UINT i = 1; i < mMapCount; ++i)
 	{
 		float index = (i / (float)mMapCount);
@@ -361,7 +361,7 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int 
 			pso->SetAndDraw(cmdList, false, false);
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
-		else if (layer == Layer::Instancing)
+		else if (layer == Layer::Instancing || layer == Layer::Transparent)
 		{
 			cmdList->SetPipelineState(mInstancingPSO.Get());
 

@@ -1,21 +1,7 @@
-street_lamp1.obj 500 33.7 500 0 0 0 1
-street_lamp1.obj 520 33.7 500 0 0 0 1
-street_lamp1.obj 540 33.7 500 0 0 0 1
-street_lamp1.obj 560 33.7 500 0 0 0 1
-street_lamp1.obj 600 33.7 500 0 0 0 1
-street_lamp1.obj 580 33.7 500 0 0 0 1
-street_lamp1.obj 620 33.7 500 0 0 0 1
-street_lamp1.obj 640 33.7 500 0 0 0 1
-road_sign2.obj 458.167 43.6 554.6 0 1 0 0
-Guard_Rail.obj 500 4.3 580 0 0 0 1
-Guard_Rail.obj 556.79 4.3 580 0 0 0 1
-Guard_Rail.obj 606.89 4.3 580 0 0 0 1
-Guard_Rail.obj 661.11 4.3 580 0 0 0 1
-Guard_Rail.obj 717.9 4.3 580 0 0 0 1
-Guard_Rail.obj 768.0001 4.3 580 0 0 0 1
-Guard_Rail.obj 500 4.3 704.2 0 0 0 1
-Guard_Rail.obj 556.79 4.3 704.2 0 0 0 1
-Guard_Rail.obj 606.89 4.3 704.2 0 0 0 1
-Guard_Rail.obj 661.11 4.3 704.2 0 0 0 1
-Guard_Rail.obj 717.9 4.3 704.2 0 0 0 1
-Guard_Rail.obj 768.0001 4.3 704.2 0 0 0 1
+C-1-3-A.obj -4500 0 -750 0 0.7071068 0 -0.7071068 1 1 1
+C-3-3-B.obj -4500 0 2250 0 0 0 1 1 1 1
+GRID-R-A.obj -1500 0 1500 0 0.7071068 0 0.7071068 1 1 1
+R-1-2-A.obj 1500 0 750 0 0.7071068 0 0.7071068 1 1 1
+R-1-2-B.obj -1500 0 -2250 0 0.7071068 0 0.7071068 1 1 1
+R-2-2-A.obj 1500 0 -2250 0 -0.7071068 0 0.7071068 1 1 1
+DC-2-2-Q.obj 4500 0 750 0 1 0 0 1 1 1

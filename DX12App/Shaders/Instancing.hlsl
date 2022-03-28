@@ -38,7 +38,7 @@ VertexOut VS(VertexIn vin, uint InstanceID : SV_InstanceID)
     vout.oldPosWVP = mul(mul(float4(vin.PosL, 1.0f), gInstancingInfo[InstanceID + gInstancingOffset].OldWorld), gOldViewProj);
     vout.newPosWVP = vout.PosH;
 
-    float4x4 tWorld = transpose(gWorld);
+    float4x4 tWorld = transpose(gInstancingInfo[InstanceID + gInstancingOffset].World);
     vout.NormalW = mul((float3x3) tWorld, vin.NormalL);
     vout.TangentW = mul((float3x3) tWorld, vin.TangentL);
     
@@ -81,7 +81,9 @@ PixelOut PS(VertexOut pin)
         directLight = ComputeLighting(gLights, gMat, normalize(pin.NormalW), view, shadowFactor);
     }
     float4 result = ambient + directLight;
+
     result.a = diffuse.a;
+
 
     pout.f4Color = result;
     pout.f4Direction = float4((pin.newPosWVP.xyz / pin.newPosWVP.z) - (pin.oldPosWVP.xyz / pin.oldPosWVP.z), 1.0f);

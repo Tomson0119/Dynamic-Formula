@@ -218,8 +218,8 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityXZ = 25.5f;
 		mMaxVelocityY = 40.0f;
 
-		mCamera->SetOffset(0.0f, 20.0f, -50.0f);
-		mCamera->SetTimeLag(0.25f);
+		mCamera->SetOffset(0.0f, 10.0f, -30.0f);
+		mCamera->SetTimeLag(0.1f);
 		break;
 
 	case CameraMode::TOP_DOWN_CAMERA:
@@ -242,8 +242,11 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 
 void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 {
+	XMFLOAT3 look = GetPosition();
+	look.y = 0;
+
 	if (mCamera->GetMode() == CameraMode::THIRD_PERSON_CAMERA)
-		mCamera->LookAt(mCamera->GetPosition(), GetPosition(), XMFLOAT3(0.0f, 1.0f, 0.0f));
+		mCamera->LookAt(mCamera->GetPosition(), look, XMFLOAT3(0.0f, 1.0f, 0.0f));
 }
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
@@ -339,7 +342,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 4.0f;
 		}
 
-		float Epsilon = 60.0f / 180.0f;
+		float Epsilon = 50.0f / 180.0f;
 
 		auto camLook = mCamera->GetLook();
 		camLook.y = 0.0f;
@@ -657,7 +660,7 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 	cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[cubemapIndex + (mCurrentRenderTarget * 6)], TRUE, &mDsvCPUDescriptorHandle);
 
 	scene->UpdateCameraConstant(cubemapIndex + 4, mCameras[cubemapIndex].get());
-	scene->RenderPipelines(cmdList, mCameras[cubemapIndex].get(), cubemapIndex + 4);
+	scene->RenderPipelines(cmdList, mCameras[cubemapIndex].get(), cubemapIndex + 4, true);
 
 	// resource barrier
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(

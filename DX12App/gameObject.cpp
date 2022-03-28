@@ -24,10 +24,11 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
-	const std::wstring& path)
+	const std::wstring& path,
+	bool collider)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
@@ -36,6 +37,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	std::shared_ptr<Mesh> new_mesh;
 
 	std::string info;
+	std::string objName;
 
 	while (std::getline(in_file, info))
 	{
@@ -58,10 +60,11 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			LoadMaterial(device, cmdList, mats, mtl_path);
 		}
-		/*else if (type.find("Collider"))
+		else if (type == "o")
 		{
-			collider = true;
-		}*/
+			ss >> objName;
+		}
+
 		else if (type == "v")
 		{
 			XMFLOAT3 pos;
@@ -88,10 +91,13 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 			std::string mtl_name;
 			ss >> mtl_name;
 
-			new_mesh = std::make_shared<Mesh>(mtl_name);
+			new_mesh = std::make_shared<Mesh>(objName, mtl_name);
+
+			objName.clear();
+
 			new_mesh->LoadMesh(
 				device, cmdList, in_file,
-				positions, normals, texcoords, mats[mtl_name]);
+				positions, normals, texcoords, mats[mtl_name], collider);
 
 			mMeshes.push_back(new_mesh);
 		}
@@ -611,7 +617,7 @@ void GameObject::SetPosition(const XMFLOAT3& pos)
 void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
 {
 	auto p = std::find_if(mMeshes.begin(), mMeshes.end(),
-		[&name](const auto& mesh) { return (mesh->GetName() == name); });
+		[&name](const auto& mesh) { return (mesh->GetMaterialName() == name); });
 
 	if (p != mMeshes.end())
 		(*p)->SetMatDiffuse(color);

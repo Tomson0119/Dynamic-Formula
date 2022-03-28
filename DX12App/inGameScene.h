@@ -20,7 +20,7 @@ class PhysicsPlayer;
 class InGameScene : public Scene
 {
 public:
-	InGameScene(HWND hwnd, NetModule* netPtr);
+	InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msaaQuality);
 	virtual ~InGameScene();
 
 public:
@@ -42,7 +42,7 @@ public:
 		const GameTimer& timer,
 		const std::shared_ptr<BulletWrapper>& physics) override;
 	
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame);
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame) override;
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
@@ -54,12 +54,10 @@ public:
 	void UpdateConstants(const GameTimer& timer);
 	void UpdateDynamicsWorld();
 
-	void UpdateTestObject(float elapsed);
-
 	void SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
 
-	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0);
-	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0);
+	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0, bool cubeMapping=false);
+	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0, bool cubeMapping = false);
 
 	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed);
 
@@ -94,10 +92,15 @@ private:
 	void CreateVelocityMapViews();
 	void CreateVelocityMapDescriptorHeaps();
 
+	void CreateMsaaDescriptorHeaps();
+	void CreateMsaaViews();
+
 	void UpdateMissileObject();
 	void UpdatePlayerObjects();
 
 	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path);
+
+	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
 
 private:
 	std::unique_ptr<Camera> mMainCamera;
@@ -110,12 +113,18 @@ private:
 
 	LightConstants mMainLight;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityMapRtvHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE mVelocityMapSrvHandle;
-	ComPtr<ID3D12Resource> mVelocityMap;
+	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaVelocityMapRtvHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaVelocityMapSrvHandle;
+	ComPtr<ID3D12Resource> mMsaaVelocityMap;
 
-	ComPtr<ID3D12DescriptorHeap> mVelocityMapRtvDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mVelocityMapSrvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mMsaaVelocityMapRtvDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mMsaaVelocityMapSrvDescriptorHeap;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaRtvHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mMsaaSrvHandle;
+	ComPtr<ID3D12Resource> mMsaaTarget;
+
+	ComPtr<ID3D12DescriptorHeap> mMsaaRtvDescriptorHeap;
 
 	std::unique_ptr<ConstantBuffer<CameraConstants>> mCameraCB;
 	std::unique_ptr<ConstantBuffer<LightConstants>> mLightCB;
@@ -130,9 +139,6 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
 
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
-
-	// for test
-	std::shared_ptr<GameObject> mTestObj;
 
 	Player* mPlayer = nullptr;
 	std::array<std::shared_ptr<MissileObject>, MAX_ROOM_CAPACITY> mMissileObjects;
@@ -163,4 +169,9 @@ private:
 		(XMFLOAT4)Colors::Black, (XMFLOAT4)Colors::White,
 		(XMFLOAT4)Colors::Orange, (XMFLOAT4)Colors::Yellow
 	};
+
+	UINT mMsaa4xQualityLevels = 0;
+	bool mMsaa4xEnable = false;
+
+	btRigidBody* mTrackRigidBody = NULL;
 };

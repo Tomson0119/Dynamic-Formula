@@ -55,7 +55,13 @@ void Pipeline::BuildPipeline(
 			shader->GetPS()->GetBufferSize()
 		};
 	}
+
+	mRasterizerDesc.AntialiasedLineEnable = mMsaaEnable;
 	psoDesc.RasterizerState = mRasterizerDesc;
+
+	psoDesc.SampleDesc.Count = mMsaaEnable ? 4 : 1;
+	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels - 1 : 0;
+
 	psoDesc.BlendState = mBlendDesc;
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
@@ -64,8 +70,6 @@ void Pipeline::BuildPipeline(
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
 	psoDesc.RTVFormats[1] = mVelocityMapFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
-	psoDesc.SampleDesc.Count = 1;
-	//psoDesc.SampleDesc.Quality = gMsaaStateDesc.Quality;
 
 	ThrowIfFailed(device->CreateGraphicsPipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSO[0])));
@@ -75,6 +79,11 @@ void Pipeline::BuildPipeline(
 		ThrowIfFailed(device->CreateGraphicsPipelineState(
 			&psoDesc, IID_PPV_ARGS(&mPSO[1])));
 	}
+
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.SampleDesc.Quality = 0;
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mPSO[2])));
 }
 
 void Pipeline::BuildConstantBuffer(ID3D12Device* device)
@@ -177,7 +186,7 @@ void Pipeline::ResetPipeline(ID3D12Device* device)
 	BuildDescriptorHeap(device, mRootParamMatIndex, mRootParamCBVIndex, mRootParamSRVIndex);
 }
 
-void Pipeline::PreparePipeline(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
+void Pipeline::PreparePipeline(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline, bool msaaOff)
 {
 	if (mCbvSrvDescriptorHeap.Get() == nullptr)
 		return;
@@ -189,20 +198,22 @@ void Pipeline::PreparePipeline(ID3D12GraphicsCommandList* cmdList, bool drawWire
 	if (setPipeline) {
 		if (mIsWiredFrame && drawWiredFrame)
 			cmdList->SetPipelineState(mPSO[1].Get());
+		else if (msaaOff)
+			cmdList->SetPipelineState(mPSO[2].Get());
 		else
 			cmdList->SetPipelineState(mPSO[0].Get());
 	}
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline, bool msaaOff)
 {	
-	PreparePipeline(cmdList, drawWiredFrame, setPipeline);
+	PreparePipeline(cmdList, drawWiredFrame, setPipeline, msaaOff);
 	Draw(cmdList);
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline, bool msaaOff)
 {
-	PreparePipeline(cmdList, drawWiredFrame, setPipeline);
+	PreparePipeline(cmdList, drawWiredFrame, setPipeline, msaaOff);
 	Draw(cmdList, viewFrustum, objectOOBB);
 }
 
@@ -336,7 +347,13 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 		reinterpret_cast<BYTE*>(skyboxShader->GetPS()->GetBufferPointer()),
 		skyboxShader->GetPS()->GetBufferSize()
 	};
+
+	mRasterizerDesc.AntialiasedLineEnable = mMsaaEnable;
 	psoDesc.RasterizerState = mRasterizerDesc;
+
+	psoDesc.SampleDesc.Count = mMsaaEnable ? 4 : 1;
+	psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels - 1 : 0;
+
 	psoDesc.BlendState = mBlendDesc;
 	psoDesc.DepthStencilState = mDepthStencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
@@ -345,7 +362,6 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
 	psoDesc.RTVFormats[1] = mVelocityMapFormat;
 	psoDesc.DSVFormat = mDepthStencilFormat;
-	psoDesc.SampleDesc.Count = 1;
 
 	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
 	
@@ -355,6 +371,11 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 
 	ThrowIfFailed(device->CreateGraphicsPipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSO[0])));
+
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.SampleDesc.Quality = 0;
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mPSO[2])));
 }
 
 
@@ -385,7 +406,8 @@ void StreamOutputPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignatu
 void StreamOutputPipeline::SetAndDraw(
 	ID3D12GraphicsCommandList* cmdList, 
 	bool drawWiredFrame, 
-	bool setPipeline)
+	bool setPipeline,
+	bool msaaOff)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
@@ -458,7 +480,6 @@ void StreamOutputPipeline::CreateStreamOutputDesc()
 //
 ComputePipeline::ComputePipeline(ID3D12Device* device)
 {
-	CreateTextures(device);
 }
 
 ComputePipeline::~ComputePipeline()
@@ -490,9 +511,12 @@ void ComputePipeline::BuildPipeline(
 	BuildDescriptorHeap(device);
 }
 
-void ComputePipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx)
+void ComputePipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn)
 {
-	CopyRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
+	if(msaaOn)
+		ResolveRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
+	else
+		CopyRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
 }
 
 void ComputePipeline::CopyRTToMap(
@@ -513,6 +537,23 @@ void ComputePipeline::CopyRTToMap(
 
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		source, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
+}
+
+void ComputePipeline::ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest)
+{
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST));
+
+	cmdList->ResolveSubresource(dest, 0, source, 0, DXGI_FORMAT_R32G32B32A32_FLOAT);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_COMMON));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
 }
 
 void ComputePipeline::CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer)
@@ -582,7 +623,7 @@ void ComputePipeline::BuildSRVAndUAV(ID3D12Device* device)
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
 
@@ -608,6 +649,9 @@ void ComputePipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetComputeRootSignature(mComputeRootSig);
 	ID3D12DescriptorHeap* descHeap[] = { mSrvUavDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
+
+	cmdList->SetComputeRoot32BitConstant(2, gFrameWidth, 0);
+	cmdList->SetComputeRoot32BitConstant(2, gFrameHeight, 1);
 
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	cmdList->SetComputeRootDescriptorTable(0, gpuHandle);
@@ -698,38 +742,6 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const Bounding
 		}
 	}
 }
-
-//void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline)
-//{
-//	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
-//	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-//	cmdList->OMSetStencilRef(mStencilRef);
-//
-//	if (setPipeline) {
-//		if (mIsWiredFrame && drawWiredFrame)
-//			cmdList->SetPipelineState(mPSO[1].Get());
-//		else
-//			cmdList->SetPipelineState(mPSO[0].Get());
-//	}
-//
-//	Draw(cmdList);
-//}
-//
-//void InstancingPipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline)
-//{
-//	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
-//	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
-//	cmdList->OMSetStencilRef(mStencilRef);
-//
-//	if (setPipeline) {
-//		if (mIsWiredFrame && drawWiredFrame)
-//			cmdList->SetPipelineState(mPSO[1].Get());
-//		else
-//			cmdList->SetPipelineState(mPSO[0].Get());
-//	}
-//
-//	Draw(cmdList, viewFrustum, objectOOBB);
-//}
 
 void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
 {

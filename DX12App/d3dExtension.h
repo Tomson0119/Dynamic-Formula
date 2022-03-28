@@ -34,7 +34,7 @@ namespace Extension
 		UINT height=1, UINT depthOrArraySize=1, UINT mipLevels=1, 
 		DXGI_FORMAT format=DXGI_FORMAT_UNKNOWN,
 		D3D12_TEXTURE_LAYOUT layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-		D3D12_RESOURCE_FLAGS flag=D3D12_RESOURCE_FLAG_NONE)
+		D3D12_RESOURCE_FLAGS flag=D3D12_RESOURCE_FLAG_NONE, UINT sampleCount = 1, UINT sampleQuality = 0)
 	{
 		D3D12_RESOURCE_DESC resourceDesc{};
 		resourceDesc.Dimension = dimension;
@@ -44,8 +44,8 @@ namespace Extension
 		resourceDesc.DepthOrArraySize = depthOrArraySize;
 		resourceDesc.MipLevels = mipLevels;
 		resourceDesc.Format = format;
-		resourceDesc.SampleDesc.Count = 1;
-		resourceDesc.SampleDesc.Quality = 0;
+		resourceDesc.SampleDesc.Count = sampleCount;
+		resourceDesc.SampleDesc.Quality = sampleQuality;
 		resourceDesc.Layout = layout;
 		resourceDesc.Flags = flag;
 		return resourceDesc;
