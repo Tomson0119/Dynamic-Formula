@@ -142,6 +142,8 @@ public:
 
 	XMFLOAT4X4 GetWorld() const { return mWorld; }
 
+	const AtomicInt3& GetLinearVelocity() { return mLinearVelocity; }
+
 	//UINT GetSRVIndex() const { return mSrvIndex; }
 	UINT GetMeshCount() const { return (UINT)mMeshes.size(); }
 	UINT GetTextureCount() const { return (UINT)mTextures.size(); }
