@@ -606,6 +606,13 @@ namespace Vector4
 		return ret;
 	}
 
+	inline XMFLOAT4 RotateQuaternionRollPitchYaw(const XMFLOAT3& rotation)
+	{
+		XMFLOAT4 ret;
+		XMStoreFloat4(&ret, XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z));
+		return ret;
+	}
+
 	inline XMFLOAT4 Slerp(const XMFLOAT4& from, const XMFLOAT4& to, float t)
 	{
 		XMFLOAT4 ret;
