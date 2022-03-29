@@ -11,6 +11,7 @@ Client::Client(int id, Socket* udpSck)
 	  mUDPSendOverlapped{},
 	  mState{ CLIENT_STAT::EMPTY },
 	  RoomID(-1), PlayerIndex(-1),
+	  mIsConnected{ false },
 	  mLatency{ 0 }
 {
 	mTCPSocket.Init(SocketType::TCP);
@@ -24,19 +25,26 @@ Client::~Client()
 void Client::Disconnect()
 {	
 	if (mTCPSendOverlapped)
+	{
 		delete mTCPSendOverlapped;
-
+		mTCPSendOverlapped = nullptr;
+	}
 	if (mUDPSendOverlapped)
+	{
 		delete mUDPSendOverlapped;
+		mUDPSendOverlapped = nullptr;
+	}
 
 	mState = CLIENT_STAT::EMPTY;
 	mTCPSocket.Close();
+	mIsConnected = false;
 }
 
 void Client::AssignAcceptedID(int id, SOCKET sck, sockaddr_in* addr)
 {
 	ID = id;
 	mTCPSocket.SetSocket(sck);
+	mIsConnected = true;
 	
 	// TOOD: Shouldn't assing port by server..
 	addr->sin_port = htons(CLIENT_PORT + (short)id); // test	
@@ -45,6 +53,7 @@ void Client::AssignAcceptedID(int id, SOCKET sck, sockaddr_in* addr)
 
 void Client::PushPacket(std::byte* pck, int bytes, bool udp)
 {
+	if (mIsConnected == false) return;
 	if (udp == false)
 	{
 		if (mTCPSendOverlapped == nullptr)
@@ -63,14 +72,17 @@ void Client::PushPacket(std::byte* pck, int bytes, bool udp)
 
 void Client::SendMsg(bool udp)
 {
+	if (mIsConnected == false) return;
 	if (udp == false && mTCPSendOverlapped)
 	{
-		mTCPSocket.Send(mTCPSendOverlapped);
+		if (mTCPSocket.Send(mTCPSendOverlapped) < 0)
+			delete mTCPSendOverlapped;
 		mTCPSendOverlapped = nullptr;
 	}
 	else if (udp == true && mUDPSendOverlapped)
 	{
-		mUDPSocketPtr->SendTo(mUDPSendOverlapped, mHostEp);
+		if (mUDPSocketPtr->SendTo(mUDPSendOverlapped, mHostEp) < 0)
+			delete mUDPSendOverlapped;
 		mUDPSendOverlapped = nullptr;
 	}
 }

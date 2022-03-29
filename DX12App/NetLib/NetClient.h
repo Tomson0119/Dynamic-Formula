@@ -47,4 +47,6 @@ private:
 
 	WSAOVERLAPPEDEX mTCPRecvOverlapped;
 	WSAOVERLAPPEDEX mUDPRecvOverlapped;
+
+	std::atomic_bool mIsConnected;
 };

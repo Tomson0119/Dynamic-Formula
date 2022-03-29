@@ -5,6 +5,7 @@ NetClient::NetClient()
 	: mTCPSendOverlapped{},
 	  mUDPRecvOverlapped{},
 	  mTCPRecvOverlapped{},
+	  mIsConnected{ false },
 	  mServerEp{}
 {
 	mTCPSocket.Init(SocketType::TCP);
@@ -16,16 +17,24 @@ NetClient::NetClient()
 bool NetClient::Connect(const char* ip, short port)
 {
 	mServerEp = EndPoint(ip, port);
-	return mTCPSocket.Connect(mServerEp);
+	mIsConnected = mTCPSocket.Connect(mServerEp);
+	return mIsConnected;
 }
 
 void NetClient::Disconnect()
 {
+	OutputDebugStringA("Disconnecting...\n");
+
 	if (mTCPSendOverlapped)
+	{
 		delete mTCPSendOverlapped;
+		mTCPSendOverlapped = nullptr;
+	}
 
 	mTCPSocket.Close();
 	mUDPSocket.Close();
+
+	mIsConnected = false;
 }
 
 void NetClient::BindUDPSocket(short port)
@@ -45,15 +54,21 @@ void NetClient::PushPacket(std::byte* pck, int bytes)
 
 void NetClient::SendMsg(std::byte* pck, int bytes)
 {
-	PushPacket(pck, bytes);
-	SendMsg();
+	if (mIsConnected)
+	{
+		PushPacket(pck, bytes);
+		SendMsg();
+	}
 }
 
 void NetClient::SendMsg()
 {
 	if (mTCPSendOverlapped)
 	{
-		mTCPSocket.Send(mTCPSendOverlapped);
+		if (mTCPSocket.Send(mTCPSendOverlapped) < 0)
+		{
+			delete mTCPSendOverlapped;
+		}
 		mTCPSendOverlapped = nullptr;
 	}
 }
