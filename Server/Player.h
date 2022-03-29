@@ -29,22 +29,24 @@ public:
 	void ResetPlayer(btDiscreteDynamicsWorld* physicsWorld);
 	void UpdateWorldTransform();
 
+	void ToggleKeyValue(uint8_t key, bool pressed);
+	bool CheckMissileExist() const;
+
+private:
 	void ClearVehicleComponent();
 
-	void UpdateDiftGauge(float elapsed);
 	void UpdateVehicleComponent(float elapsed);
+	void UpdateDiftGauge(float elapsed);
+	void UpdateBooster(float elapsed);
 	void UpdateSteering(float elapsed);
 	void UpdateEngineForce();
 
 	bool CheckDriftGauge();
-	void ToggleKeyValue(uint8_t key, bool pressed);
 
 public:
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
 	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
 	
-	bool CheckMissileExist() const;
-
 public:
 	std::atomic_bool Empty;
 	std::atomic_bool Ready;
@@ -59,6 +61,8 @@ private:
 
 	VehicleRigidBody mVehicleRigidBody;
 	MissileRigidBody mMissileRigidBody;
+
+	std::atomic_bool mBoosterToggle;
 
 	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };

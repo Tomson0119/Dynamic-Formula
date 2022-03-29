@@ -57,6 +57,7 @@ private:
 
 	std::atomic<CLIENT_STAT> mState;
 
+	std::atomic_bool mIsConnected;
 	std::atomic_uint64_t mLatency;
 
 	Socket mTCPSocket;

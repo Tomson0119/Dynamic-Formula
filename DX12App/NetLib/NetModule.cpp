@@ -62,13 +62,6 @@ void NetModule::NetworkFunc(NetModule& net)
 			}
 			if (info.success == FALSE)
 			{
-				if (id == 1 && over_ex && over_ex->Operation == OP::RECV)
-				{
-					OutputDebugStringA("This shouldn't be called.\n");
-					over_ex->NetBuffer.Clear();
-					net.mNetClient->RecvMsg(true);
-					continue;
-				}
 				if (id == 0) net.PostDisconnect();
 				if (over_ex && over_ex->Operation == OP::SEND)
 					delete over_ex;
