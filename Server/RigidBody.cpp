@@ -259,6 +259,8 @@ void VehicleRigidBody::UpdateRigidBody()
 
 	mVehicle->applyEngineForce(mComponent.EngineForce, 0);
 	mVehicle->applyEngineForce(mComponent.EngineForce, 1);
+	mVehicle->setBrake(mComponent.BreakingForce, 0);
+	mVehicle->setBrake(mComponent.BreakingForce, 1);
 	mVehicle->setSteeringValue(mComponent.VehicleSteering, 0);
 	mVehicle->setSteeringValue(mComponent.VehicleSteering, 1);
 

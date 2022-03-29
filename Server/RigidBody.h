@@ -86,8 +86,9 @@ class VehicleRigidBody : public RigidBody
 public:
 	struct VehicleComponent
 	{
-		float BoosterLeft{};
+		float BoosterTimeLeft{};
 		float EngineForce{};
+		float BreakingForce{};
 		float VehicleSteering{};
 		float CurrentSpeed{};
 		float FrictionSlip{};
