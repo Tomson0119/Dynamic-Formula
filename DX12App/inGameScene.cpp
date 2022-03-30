@@ -924,12 +924,14 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		wstring transparentObjPath;
 		transparentObjPath.assign(transparentpath.begin(), transparentpath.end());
 
-		auto obj = make_shared<GameObject>();
-		obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
-
-		auto transparentObj = make_shared<GameObject>();
-		transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
 		
+		auto obj = make_shared<GameObject>();
+
+		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
+		{
+			obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+		}
+
 		btTransform btLocalTransform;
 		btLocalTransform.setIdentity();
 		btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
@@ -944,14 +946,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			}
 		}
 
-		auto& transparentMeshes = transparentObj->GetMesh();
-		for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
-		{
-			if (i->get()->GetMeshShape())
-			{
-				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
-			}
-		}
+		mMeshList[objName] = obj->GetMesh();
 
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
@@ -963,16 +958,31 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		obj->Scale(scale);
 		obj->SetName(objName);
 
-		transparentObj->SetQuaternion(quaternion);
-		transparentObj->SetPosition(pos);
-		transparentObj->Scale(scale);
-		transparentObj->SetName(objName);
-
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
 
-		mPipelines[Layer::Transparent]->AppendObject(transparentObj);
-		static_cast<InstancingPipeline*>(mPipelines[Layer::Transparent].get())->mInstancingCount[objName]++;
+		if (_access(transparentpath.c_str(), 0) != -1)
+		{
+			auto transparentObj = make_shared<GameObject>();
+			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
+
+			auto& transparentMeshes = transparentObj->GetMesh();
+			for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
+			{
+				if (i->get()->GetMeshShape())
+				{
+					compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+				}
+			}
+
+			transparentObj->SetQuaternion(quaternion);
+			transparentObj->SetPosition(pos);
+			transparentObj->Scale(scale);
+			transparentObj->SetName(objName);
+
+			mPipelines[Layer::Transparent]->AppendObject(transparentObj);
+			static_cast<InstancingPipeline*>(mPipelines[Layer::Transparent].get())->mInstancingCount[objName]++;
+		}
 	}
 
 	btTransform btObjectTransform;
