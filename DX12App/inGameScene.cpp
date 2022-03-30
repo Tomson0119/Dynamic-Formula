@@ -583,6 +583,11 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 {
 	if (mHwnd != GetFocus()) return;
 
+	if (GetAsyncKeyState('M') & 0x8000)
+	{
+		mMotionBlurEnable = 1 - mMotionBlurEnable;
+	}
+
 	if (mCurrentCamera == mDirectorCamera.get())
 	{
 		const float dist = 500.0f;
@@ -781,12 +786,15 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		mMsaaTarget.Get(), D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, mMsaaVelocityMap.Get(), 0, true);
-	mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, backBuffer, 1);
+	if (mMotionBlurEnable)
+	{
+		mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, mMsaaVelocityMap.Get(), 0, true);
+		mPostProcessingPipelines[Layer::MotionBlur]->SetInput(cmdList, backBuffer, 1);
 
-	mPostProcessingPipelines[Layer::MotionBlur]->Dispatch(cmdList);
+		mPostProcessingPipelines[Layer::MotionBlur]->Dispatch(cmdList);
 
-	mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
+		mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
+	}
 
 	mpUI.get()->Draw(nFrame);
 }

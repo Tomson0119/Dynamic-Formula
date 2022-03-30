@@ -173,5 +173,7 @@ private:
 	UINT mMsaa4xQualityLevels = 0;
 	bool mMsaa4xEnable = false;
 
+	bool mMotionBlurEnable = true;
+
 	btRigidBody* mTrackRigidBody = NULL;
 };
