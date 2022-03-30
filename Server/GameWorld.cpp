@@ -8,14 +8,19 @@
 #include "Timer.h"
 
 
-GameWorld::GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantPtr)
+GameWorld::GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
-	  mPlayerCount{ 0 },
+	  mPlayerCount{ 0 }, mUpdateTick{ 0 },
 	  mPhysicsOverlapped{ OP::PHYSICS }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
 		mPlayerList[i] = nullptr;
 	mConstantPtr = constantPtr;
+}
+
+GameWorld::~GameWorld()
+{
+	mPhysics.Flush();
 }
 
 void GameWorld::InitPhysics(float gravity)
@@ -36,19 +41,27 @@ void GameWorld::InitPlayerList(WaitRoom* room)
 	for (int i = 0; auto& player : mPlayerList)
 	{
 		player = room->GetPlayerPtr(i);
-		player->SetVehicleConstant(mConstantPtr);
+		player->SetBulletConstant(mConstantPtr);
 		i++;
 	}
 }
 
 void GameWorld::SetPlayerPosition(int idx, const btVector3& pos)
 {
-	mPlayerList[idx]->SetPosition(pos.x(), pos.y(), pos.z());
+	mPlayerList[idx]->SetPosition(pos);
 }
 
-void GameWorld::CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape)
+void GameWorld::SetPlayerRotation(int idx, const btQuaternion& quat)
 {
-	mPlayerList[idx]->CreateVehicleRigidBody(mass, mPhysics.GetDynamicsWorld(), shape);
+	mPlayerList[idx]->SetRotation(quat);
+}
+
+void GameWorld::CreateRigidbodies(int idx,
+	btScalar carMass, BtCarShape* carShape,
+	btScalar missileMass, BtBoxShape* missileShape)
+{
+	mPlayerList[idx]->CreateVehicleRigidBody(carMass, mPhysics.GetDynamicsWorld(), carShape);
+	mPlayerList[idx]->CreateMissileRigidBody(missileMass, missileShape);
 	mPlayerCount += 1;
 }
 
@@ -57,19 +70,24 @@ void GameWorld::UpdatePhysicsWorld()
 	mTimer.Tick();
 	float elapsed = mTimer.GetElapsed();
 
-	for (Player* player : GetPlayerList())
-	{
-		if(player->Empty == false)
-			player->UpdatePlayerRigidBody(elapsed, mPhysics.GetDynamicsWorld());
-	}
-	mMapRigidBody.UpdateAllRigidBody(elapsed, mPhysics.GetDynamicsWorld());
+	if(elapsed > 0.0f)
+		mPhysics.StepSimulation(elapsed);
 
-	mPhysics.StepSimulation(elapsed);
-	
 	for (Player* player : GetPlayerList())
 	{
 		if (player->Empty == false)
-			player->UpdateTransformVectors();
+		{
+			player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
+		}
+	}
+
+	mMapRigidBody.UpdateRigidBodies(elapsed, mPhysics.GetDynamicsWorld());
+
+	mUpdateTick += 1;
+	if (mUpdateTick == 2)
+	{
+		BroadcastAllTransform();
+		mUpdateTick = 0;
 	}
 }
 
@@ -77,8 +95,9 @@ void GameWorld::FlushPhysicsWorld()
 {
 	for (Player* player : GetPlayerList())
 	{
-		player->RemoveRigidBody(mPhysics.GetDynamicsWorld());
+		player->ResetPlayer(mPhysics.GetDynamicsWorld());
 	}
+	mMapRigidBody.RemoveRigidBodies(mPhysics.GetDynamicsWorld());
 	mPhysics.Flush();
 }
 
@@ -100,13 +119,9 @@ void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 	case VK_LEFT:
 	case VK_RIGHT:
 	case VK_LSHIFT:
-		mPlayerList[idx]->ToggleKeyValue(key, pressed);
-		break;
-
 	case 'Z': // boost
-		break;
-
 	case 'X': // missile.
+		mPlayerList[idx]->ToggleKeyValue(key, pressed);
 		break;
 
 	default:
@@ -127,7 +142,7 @@ void GameWorld::SendGameStartSuccess()
 
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
-		const btVector3 pos = mPlayerList[i]->GetPosition();
+		const btVector3& pos = mPlayerList[i]->GetVehicleRigidBody().GetPosition();
 		info_pck.x[i] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 		info_pck.y[i] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 		info_pck.z[i] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
@@ -148,60 +163,95 @@ void GameWorld::SendStartSignal()
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
-void GameWorld::PushTransformPacket(int target, int receiver)
+void GameWorld::PushVehicleTransformPacket(int target, int receiver)
 {
 	SC::packet_player_transform pck{};
 	pck.size = sizeof(SC::packet_player_transform);
 	pck.type = SC::PLAYER_TRANSFORM;
 	pck.player_idx = target;
 
-	const btVector3& pos = mPlayerList[target]->GetPosition();
-	const btVector4& quat = mPlayerList[target]->GetQuaternion();
-	/*const btVector3& vel = mPlayerList[target]->GetVelocity();
-	const btVector3& accel = mPlayerList[target]->GetAcceleration();*/
+	const auto& vehicle = mPlayerList[target]->GetVehicleRigidBody();
+	const btVector3& pos = vehicle.GetPosition();
+	const btQuaternion& quat = vehicle.GetQuaternion();
+	const btVector3& lvel = vehicle.GetLinearVelocity();
+	const btVector3& avel = vehicle.GetAngularVelocity();
 
 	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+
+	//std::cout << pos.x() << " " << pos.y() << " " << pos.z() << "\n";
 
 	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
 
-	/*pck.velocity[0] = (int)(vel.x() * FIXED_FLOAT_LIMIT);
-	pck.velocity[1] = (int)(vel.y() * FIXED_FLOAT_LIMIT);
-	pck.velocity[2] = (int)(vel.z() * FIXED_FLOAT_LIMIT);
-	
-	pck.acceleration[0] = (int)(accel.x() * FIXED_FLOAT_LIMIT);
-	pck.acceleration[1] = (int)(accel.y() * FIXED_FLOAT_LIMIT);
-	pck.acceleration[2] = (int)(accel.z() * FIXED_FLOAT_LIMIT);*/
+	pck.linear_vel[0] = (int)(lvel.x() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[1] = (int)(lvel.y() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[2] = (int)(lvel.z() * FIXED_FLOAT_LIMIT);
+
+	pck.angular_vel[0] = (int)(avel.x() * FIXED_FLOAT_LIMIT);
+	pck.angular_vel[1] = (int)(avel.y() * FIXED_FLOAT_LIMIT);
+	pck.angular_vel[2] = (int)(avel.z() * FIXED_FLOAT_LIMIT);
 
 	int hostID = mPlayerList[receiver]->ID;
-	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if (hostID < 0) return;
+	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
+}
+
+void GameWorld::PushMissileTransformPacket(int target, int receiver)
+{
+	if (mPlayerList[target]->CheckMissileExist() == false) return;
+
+	SC::packet_missile_transform pck{};
+	pck.size = sizeof(SC::packet_missile_transform);
+	pck.type = SC::MISSILE_TRANSFORM;
+	pck.missile_idx = target;
+
+	const auto& missile = mPlayerList[target]->GetMissileRigidBody();
+	const btVector3& pos = missile.GetPosition();
+	const btQuaternion& quat = missile.GetQuaternion();
+	const btVector3& lvel = missile.GetLinearVelocity();
+
+	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
+	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
+	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+
+	//std::cout << pck.position[0] << " " << pck.position[1] << " " << pck.position[2] << "\n";
+
+	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
+
+	pck.linear_vel[0] = (int)(lvel.x() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[1] = (int)(lvel.y() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[2] = (int)(lvel.z() * FIXED_FLOAT_LIMIT);
+
+	int hostID = mPlayerList[receiver]->ID;
+	if (hostID < 0) return;
+	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
 
 void GameWorld::BroadcastAllTransform()
 {
-#ifdef DEBUG_PACKET_TRANSFER
-	//std::cout << "[room id: " << mID << "] Send all transform packet to all.\n";
-#endif
-
-	for (int i = 0; i < mPlayerList.size(); i++)
+	for (int receiver = 0; receiver < mPlayerList.size(); receiver++)
 	{
-		if (mPlayerList[i]->Empty) continue;
-	
-		int id = mPlayerList[i]->ID;
-		gClients[id]->SendTransferTime(false);
+		if (mPlayerList[receiver]->Empty) continue;	
 
-		for (int j = 0; j < mPlayerList.size(); j++)
+		for (int target = 0; target < mPlayerList.size(); target++)
 		{
-			if(mPlayerList[j]->Empty == false)
+			if(mPlayerList[target]->Empty == false)
 			{
-				PushTransformPacket(i, j);
+				PushVehicleTransformPacket(target, receiver);
+				PushMissileTransformPacket(target, receiver);
 			}
-		}		
-		gClients[id]->SendMsg();
+		}
+
+		int id = mPlayerList[receiver]->ID;
+		if (id < 0) continue;
+		gClients[id]->SendMsg(true);
 	}
 }
 

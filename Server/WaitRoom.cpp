@@ -133,7 +133,7 @@ bool WaitRoom::TryGameStart()
 			if (msPlayers[i]->Empty == false && msPlayers[i]->Ready == false)
 				return false;
 		}
-		return (mPlayerCount > 1);
+		return (mPlayerCount >= MIN_PLAYER_TO_START);
 	}();
 	return allReady;	
 }

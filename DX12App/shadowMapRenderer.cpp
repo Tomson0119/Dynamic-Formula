@@ -18,7 +18,7 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 	mZSplits.resize(mMapCount + 1);
 
 	mZSplits[0] = mainCamera->GetNearZ();
-	mZSplits[mMapCount] = 1000;
+	mZSplits[mMapCount] = 4000;
 	for (UINT i = 1; i < mMapCount; ++i)
 	{
 		float index = (i / (float)mMapCount);
@@ -36,8 +36,9 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 {
 	auto shadowMapShader = std::make_unique<ShadowShader>(L"Shaders\\shadow.hlsl");
 	auto shadowMapTerrainShader = std::make_unique<ShadowTerrainShader>(L"Shaders\\shadowTerrain.hlsl");
+	auto shadowMapInstancingShader = std::make_unique<ShadowShader>(L"Shaders\\shadowInstancing.hlsl");
 
-	mRasterizerDesc.DepthBias = 100000;
+	mRasterizerDesc.DepthBias = 20000;
 	mRasterizerDesc.DepthBiasClamp = 0.0f;
 	mRasterizerDesc.SlopeScaledDepthBias = 1.0f;
 	mBackBufferFormat = DXGI_FORMAT_R32_FLOAT;
@@ -94,12 +95,48 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 		ThrowIfFailed(device->CreateGraphicsPipelineState(
 			&psoDesc, IID_PPV_ARGS(&mPSO[1])));
 	}
+
+	auto Instancinglayout = shadowMapInstancingShader->GetInputLayout();
+
+	psoDesc.pRootSignature = rootSig;
+	psoDesc.InputLayout = {
+		Instancinglayout.data(),
+		(UINT)Instancinglayout.size()
+	};
+	psoDesc.VS = {
+		reinterpret_cast<BYTE*>(shadowMapInstancingShader->GetVS()->GetBufferPointer()),
+		shadowMapInstancingShader->GetVS()->GetBufferSize()
+	};
+	if (shadowMapInstancingShader->GetGS() != nullptr)
+	{
+		psoDesc.GS = {
+			reinterpret_cast<BYTE*>(shadowMapInstancingShader->GetGS()->GetBufferPointer()),
+			shadowMapInstancingShader->GetGS()->GetBufferSize()
+		};
+	}
+	if (shadowMapInstancingShader->GetDS() != nullptr)
+	{
+		psoDesc.DS = {
+			reinterpret_cast<BYTE*>(shadowMapInstancingShader->GetDS()->GetBufferPointer()),
+			shadowMapInstancingShader->GetDS()->GetBufferSize()
+		};
+	}
+	if (shadowMapInstancingShader->GetHS() != nullptr)
+	{
+		psoDesc.HS = {
+			reinterpret_cast<BYTE*>(shadowMapInstancingShader->GetHS()->GetBufferPointer()),
+			shadowMapInstancingShader->GetHS()->GetBufferSize()
+		};
+	}
+
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&mInstancingPSO)));
 	
 	auto TerrainLayout = shadowMapTerrainShader->GetInputLayout();
 
 	psoDesc.InputLayout = {
-	TerrainLayout.data(),
-	(UINT)TerrainLayout.size()
+		TerrainLayout.data(),
+		(UINT)TerrainLayout.size()
 	};
 	psoDesc.VS = {
 		reinterpret_cast<BYTE*>(shadowMapTerrainShader->GetVS()->GetBufferPointer()),
@@ -180,7 +217,6 @@ void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
 
 		mSunRange[i] = sunRange;
 	}
-	mSunRange[0] *= 1.5f;
 }
 
 XMFLOAT4X4 ShadowMapRenderer::GetShadowTransform(int idx) const
@@ -321,18 +357,29 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int 
 		{
 			cmdList->SetPipelineState(mTerrainPSO.Get());
 
-			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false, false);
+			//pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false, false);
+			pso->SetAndDraw(cmdList, false, false);
+			cmdList->SetPipelineState(mPSO[0].Get());
+		}
+		else if (layer == Layer::Instancing || layer == Layer::Transparent)
+		{
+			cmdList->SetPipelineState(mInstancingPSO.Get());
 
+			pso->SetAndDraw(cmdList, false, false);
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
 		else
-			pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), true, false, false);
+		{
+			//pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), true, false, false);
+			pso->SetAndDraw(cmdList, false, false);
+		}
 	}
 }
 
 void ShadowMapRenderer::AppendTargetPipeline(Layer layer, Pipeline* pso)
 {
-	mShadowTargetPSOs.insert(std::make_pair(layer, pso));
+	if(pso != nullptr)
+		mShadowTargetPSOs.insert(std::make_pair(layer, pso));
 }
 
 void ShadowMapRenderer::SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)

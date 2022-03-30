@@ -13,16 +13,30 @@ class InGameServer
 	using WorldList = std::array<std::unique_ptr<GameWorld>, MAX_ROOM_SIZE>;
 
 public:
-	struct VehicleConstant
+	struct BulletConstant
 	{
 		const float MaxBoosterTime = 5.0f;
+
 		const float MaxEngineForce = 8000.f;
+		const float MaxBackwardEngineForce = 10000.0f;
 		const float BoosterEngineForce = 300000.f;
+
 		const float SteeringIncrement = 8.0f;
 		const float SteeringClamp = 0.5f;
+
 		const float	WheelDriftFriction = 4.0f;
 		const float WheelDefaultFriction = 25.0f;
+
 		const float DefaultMaxSpeed = 1000.0f;
+		const float BoostedMaxSpeed = 1500.0f;
+
+		const float DefaultBreakingForce = 10.0f;
+		const float MaxBreakingForce = 150.0f;
+		const float SubBreakingForce = 100.0f;
+
+		const float MissileForwardOffset = 15.0f;
+		const float MissileSpeed = 1000.0f;
+		const btVector3 MissileGravity = { 0.0f, 0.0f, 0.0f };
 	};
 
 public:
@@ -37,8 +51,7 @@ public:
 	void StartMatch(int roomID);
 	void RemovePlayer(int roomID, int hostID);
 
-	void AddTimerEvent(int roomID, EVENT_TYPE type, int duration);	
-	void BroadcastTransforms(int roomID);	
+	void AddTimerEvent(int roomID, EVENT_TYPE type, int duration);
 	void RunPhysicsSimulation(int roomID);
 
 	void PostPhysicsOperation(int roomID);
@@ -55,11 +68,10 @@ private:
 	std::array<std::unique_ptr<BtTerrainShape>, 2> mTerrainShapes;
 	std::vector<std::unique_ptr<BtBoxShape>> mObjRigidBodies;
 
-	std::shared_ptr<VehicleConstant> mVehicleConstants;
+	std::shared_ptr<BulletConstant> mBulletConstants;
 
 	const btVector3 mStartPosition = { 500.0f, 10.0f, 500.0f };
 	const btVector3 mOffset = { 20.0f, 0.0f, 0.0f };
 
 	const int mPhysicsDuration = 16;
-	const int mBroadcastDuration = 1000;
 };

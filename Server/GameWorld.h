@@ -11,16 +11,19 @@ class GameWorld
 {
 	using PlayerList = std::array<Player*, MAX_ROOM_CAPACITY>;
 public:
-	GameWorld(std::shared_ptr<InGameServer::VehicleConstant> constantsPtr);
-	~GameWorld() = default;
+	GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantsPtr);
+	~GameWorld();
 	
 	void InitPhysics(float gravity);
 	void InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes);
 	void InitPlayerList(WaitRoom* room);
 
 	void SetPlayerPosition(int idx, const btVector3& pos);
+	void SetPlayerRotation(int idx, const btQuaternion& quat);
 
-	void CreatePlayerRigidBody(int idx, btScalar mass, BtCarShape* shape);
+	void CreateRigidbodies(int idx,
+		btScalar carMass, BtCarShape* carShape,
+		btScalar missileMass, BtBoxShape* missileShape);
 	void UpdatePhysicsWorld();
 	void FlushPhysicsWorld();
 
@@ -31,7 +34,8 @@ public:
 	void SendGameStartSuccess();
 	void SendStartSignal();
 
-	void PushTransformPacket(int target, int receiver);
+	void PushVehicleTransformPacket(int target, int receiver);
+	void PushMissileTransformPacket(int target, int receiver);
 	void BroadcastAllTransform();
 
 	bool CheckIfAllLoaded(int idx);
@@ -53,11 +57,13 @@ private:
 	std::atomic_int mPlayerCount;
 	std::atomic_bool mActive;
 
-	BPHandler mPhysics;
+	int mUpdateTick;
+	
 	MapRigidBody mMapRigidBody;
 	PlayerList mPlayerList;
 
+	BPHandler mPhysics;
 	class Timer mTimer;
 
-	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
+	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };

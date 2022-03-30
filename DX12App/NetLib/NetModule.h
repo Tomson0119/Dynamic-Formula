@@ -23,7 +23,7 @@ public:
 	bool Connect(const char* ip, short port);
 	void PostDisconnect();
 
-	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes);
+	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id);
 	void ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes);
 
 	static void NetworkFunc(NetModule& net);
@@ -50,7 +50,10 @@ public:
 	const PlayerList& GetPlayersInfo() const { return mPlayerList; }
 
 	void SetLatency(uint64_t sendTime);
+	void SetUpdateRate();
+
 	float GetLatency() const { return (float)mLatency / 1000.0f; }
+	float GetUpdateRate() const { return (float)mUpdateRate / 1000.0f; }
 
 private:
 	void Init();
@@ -68,7 +71,9 @@ private:
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;
 
-	uint64_t mLatency;
+	Clock::duration mTimeStamp;
+	std::atomic_uint64_t mLatency;
+	std::atomic_uint64_t mUpdateRate;
 
 	IOCP mIOCP;
 	Scene* mScenePtr;

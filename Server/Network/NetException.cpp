@@ -4,12 +4,14 @@
 NetException::NetException(const std::string& info)
 {
 	LPSTR msgBuffer{};
+	int errorCode = WSAGetLastError();
 	size_t size = FormatMessageA(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, WSAGetLastError(),
+		NULL, errorCode,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPSTR)&msgBuffer, 0, NULL);
-	mErrorString = info + ": " + msgBuffer;
+	mErrorString = "[" + std::to_string(errorCode) +
+		"] " + info + ": " + msgBuffer;
 	LocalFree(msgBuffer);
 }
 

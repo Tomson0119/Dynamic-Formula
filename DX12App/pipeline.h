@@ -14,10 +14,11 @@ enum class Layer : int
 	Reflected,
 	Billboard,
 	Particle,
-	Transparent,
 	ShadowDebug,
 	DynamicCubeMap,
-	MotionBlur
+	MotionBlur,
+	Instancing,
+	Transparent
 };
 
 class Pipeline
@@ -35,7 +36,7 @@ public:
 
 	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex);
 
-	void BuildConstantBuffer(ID3D12Device* device);
+	virtual void BuildConstantBuffer(ID3D12Device* device);
 	void BuildCBV(ID3D12Device* device);
 	void BuildSRV(ID3D12Device* device);
 
@@ -56,18 +57,25 @@ public:
 	std::vector<std::shared_ptr<GameObject>>::iterator DeleteObject(std::vector<std::shared_ptr<GameObject>>::iterator iter);
 	void ResetPipeline(ID3D12Device* device);
 
-	virtual void Update(const float elapsed, Camera* camera=nullptr);
-	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true);
-	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true);
+	void PreparePipeline(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame = false, bool setPipeline = true, bool msaaOff = false);
+
+	void SetMsaa(bool msaaEnable, UINT msaaQuality) { mMsaa4xQualityLevels = msaaQuality; mMsaaEnable = msaaEnable; }
+
+	void Pipeline::Update(float elapsed, float updateRate, Camera* camera);
+	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);
+	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
 
-	void UpdateConstants();
+	virtual void UpdateConstants();
 
 	std::vector<std::shared_ptr<GameObject>>& GetRenderObjects() { return mRenderObjects; }
 
 protected:
-	ComPtr<ID3D12PipelineState> mPSO[2];
+	// 0번 : MSAA 렌더
+	// 1번 : MSAA 와이어프레임 렌더
+	// 2번 : MSAA 사용하지 않고 렌더
+	ComPtr<ID3D12PipelineState> mPSO[3];
 	ComPtr<ID3D12DescriptorHeap> mCbvSrvDescriptorHeap;
 
 	D3D12_RASTERIZER_DESC	  mRasterizerDesc   = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -91,6 +99,9 @@ protected:
 
 	UINT mStencilRef = 0;
 	bool mIsWiredFrame = false;
+
+	UINT mMsaa4xQualityLevels = 0;
+	bool mMsaaEnable = false;
 };
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +135,7 @@ public:
 	virtual void SetAndDraw(
 		ID3D12GraphicsCommandList* cmdList,
 		bool drawWiredFrame = false,
-		bool setPipeline = true) override;
+		bool setPipeline = true, bool msaaOff = false) override;
 
 private:
 	void BuildSOPipeline(
@@ -138,6 +149,24 @@ private:
 	D3D12_STREAM_OUTPUT_DESC mStreamOutputDesc;
 	std::vector<D3D12_SO_DECLARATION_ENTRY> mSODeclarations;
 	std::vector<UINT> mStrides;
+};
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+class InstancingPipeline : public Pipeline
+{
+public:
+	InstancingPipeline();
+	virtual ~InstancingPipeline();
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
+	virtual void BuildConstantBuffer(ID3D12Device* device);
+	virtual void UpdateConstants();
+
+	std::map<std::string, int> mInstancingCount;
+private:
+	std::unique_ptr<StructuredBuffer<InstancingInfo>> mObjectSB;
+	UINT mRootParamSBIndex = 9;
 };
 
 
@@ -154,7 +183,7 @@ public:
 		ID3D12RootSignature* rootSig,
 		ComputeShader* shader = nullptr);
 
-	void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx);
+	void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn=false);
 
 	void CreateTextures(ID3D12Device* device);
 	void BuildDescriptorHeap(ID3D12Device* device);
@@ -164,6 +193,11 @@ public:
 	void CopyRTToMap(
 		ID3D12GraphicsCommandList* cmdList,
 		ID3D12Resource* source, 
+		ID3D12Resource* dest);
+
+	void ResolveRTToMap(
+		ID3D12GraphicsCommandList* cmdList,
+		ID3D12Resource* source,
 		ID3D12Resource* dest);
 
 	void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer);

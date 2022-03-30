@@ -2,49 +2,90 @@
 #include "NetClient.h"
 
 NetClient::NetClient()
-	: mSendOverlapped{ nullptr }
+	: mTCPSendOverlapped{},
+	  mUDPRecvOverlapped{},
+	  mTCPRecvOverlapped{},
+	  mIsConnected{ false },
+	  mServerEp{}
 {
-	mSocket.Init();
-	mSocket.SetNagleOption(1);
+	mTCPSocket.Init(SocketType::TCP);
+	mTCPSocket.SetNagleOption(1);
+
+	mUDPSocket.Init(SocketType::UDP);
 }
 
 bool NetClient::Connect(const char* ip, short port)
 {
-	return mSocket.Connect(EndPoint(ip, port));
+	mServerEp = EndPoint(ip, port);
+	mIsConnected = mTCPSocket.Connect(mServerEp);
+	return mIsConnected;
 }
 
 void NetClient::Disconnect()
 {
-	mSocket.Close();
+	OutputDebugStringA("Disconnecting...\n");
+
+	if (mTCPSendOverlapped)
+	{
+		delete mTCPSendOverlapped;
+		mTCPSendOverlapped = nullptr;
+	}
+
+	mTCPSocket.Close();
+	mUDPSocket.Close();
+
+	mIsConnected = false;
+}
+
+void NetClient::BindUDPSocket(short port)
+{
+	mUDPSocket.Bind(EndPoint::Any(port));
+	RecvMsg(true);
 }
 
 void NetClient::PushPacket(std::byte* pck, int bytes)
 {
-	if (mSendOverlapped == nullptr)
-		mSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
+	// Maybe memory leak spot. I shouldn't allocate overlapped object when connection is closed.
+	if (mTCPSendOverlapped == nullptr)
+		mTCPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
 	else
-		mSendOverlapped->PushMsg(pck, bytes);
+		mTCPSendOverlapped->PushMsg(pck, bytes);
 }
 
 void NetClient::SendMsg(std::byte* pck, int bytes)
 {
-	PushPacket(pck, bytes);
-	SendMsg();
+	if (mIsConnected)
+	{
+		PushPacket(pck, bytes);
+		SendMsg();
+	}
 }
 
 void NetClient::SendMsg()
 {
-	if (mSendOverlapped)
+	if (mTCPSendOverlapped)
 	{
-		mSocket.Send(mSendOverlapped);
-		mSendOverlapped = nullptr;
+		if (mTCPSocket.Send(mTCPSendOverlapped) < 0)
+		{
+			delete mTCPSendOverlapped;
+		}
+		mTCPSendOverlapped = nullptr;
 	}
 }
 
-void NetClient::RecvMsg()
+void NetClient::RecvMsg(bool udp)
 {
-	mRecvOverlapped.Reset(OP::RECV);
-	mSocket.Recv(&mRecvOverlapped);
+	if (udp == false)
+	{
+		mTCPRecvOverlapped.Reset(OP::RECV);
+		mTCPSocket.Recv(&mTCPRecvOverlapped);
+	}
+	else
+	{
+		mUDPRecvOverlapped.NetBuffer.Clear(); // always clear buffer for udp.
+		mUDPRecvOverlapped.Reset(OP::RECV);		
+		mUDPSocket.RecvFrom(&mUDPRecvOverlapped, mServerEp);
+	}
 }
 
 void NetClient::RequestLogin(const std::string& name, const std::string& pwd)
@@ -139,6 +180,10 @@ void NetClient::SendLoadSequenceDone(int roomID)
 	pck.size = sizeof(CS::packet_load_done);
 	pck.type = CS::LOAD_DONE;
 	pck.room_id = roomID;
+
+	auto duration = Clock::now().time_since_epoch();
+	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -154,5 +199,14 @@ void NetClient::SendKeyInput(int roomID, int key, bool pressed)
 	auto duration = Clock::now().time_since_epoch();
 	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 	
+	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void NetClient::ReturnSendTimeBack(uint64_t sendTime)
+{
+	CS::packet_transfer_time pck{};
+	pck.size = sizeof(CS::packet_transfer_time);
+	pck.type = CS::TRANSFER_TIME;
+	pck.send_time = sendTime;
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }

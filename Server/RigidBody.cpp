@@ -2,15 +2,16 @@
 #include "RigidBody.h"
 
 RigidBody::RigidBody()
-	: mRigidBody{ nullptr }, mFlag{ UPDATE_FLAG::NONE }
+	: mRigidBody{ nullptr }, 
+	  mPosition{ 0.0f, 0.0f, 0.0f },
+	  mQuaternion{ 0.0f, 0.0f, 0.0f, 1.0f },
+	  mLinearVelocity{ 0.0f, 0.0f, 0.0f },
+	  mAngularVelocity{ 0.0f, 0.0f, 0.0f },
+	  mFlag{ UPDATE_FLAG::NONE }
 {
 }
 
-void RigidBody::CreateRigidBody(
-	btScalar mass, 
-	btCollisionShape* shape, 
-	const btVector3& position, 
-	const btVector3& offset)
+void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape* shape)
 {
 	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
 
@@ -21,7 +22,8 @@ void RigidBody::CreateRigidBody(
 	}
 
 	btTransform originTransform = btTransform::getIdentity();
-	originTransform.setOrigin(position + offset);
+	originTransform.setOrigin(mPosition);
+	originTransform.setRotation(mQuaternion);
 
 	btDefaultMotionState* motionState = new btDefaultMotionState(originTransform);
 	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, motionState, shape, inertia);
@@ -38,12 +40,13 @@ void RigidBody::Update(btDiscreteDynamicsWorld* physicsWorld)
 		break;
 
 	case RigidBody::UPDATE_FLAG::UPDATE:
-		UpdateRigidBody();
+		UpdateRigidBody();		
 		return;
 
 	case RigidBody::UPDATE_FLAG::DELETION:
 		RemoveRigidBody(physicsWorld);
-		break;
+		SetUpdateFlag(UPDATE_FLAG::NONE);
+		return;
 
 	case RigidBody::UPDATE_FLAG::NONE:
 		return;
@@ -51,14 +54,30 @@ void RigidBody::Update(btDiscreteDynamicsWorld* physicsWorld)
 	SetUpdateFlag(UPDATE_FLAG::UPDATE);
 }
 
+void RigidBody::UpdateTransformVectors()
+{
+	if (mRigidBody)
+	{
+		btTransform transform{};
+		mRigidBody->getMotionState()->getWorldTransform(transform);
+
+		mPosition = transform.getOrigin();
+		//std::cout << mPosition.x() << " " << mPosition.y() << " " << mPosition.z() << "\n";
+		mQuaternion = transform.getRotation();
+		mLinearVelocity = mRigidBody->getInterpolationLinearVelocity();
+		mAngularVelocity = mRigidBody->getInterpolationAngularVelocity();
+	}
+}
+
 void RigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
-	if(mRigidBody)
+	if (mRigidBody)
 		physicsWorld->addRigidBody(mRigidBody);
 }
 
 void RigidBody::UpdateRigidBody()
 {
+	UpdateTransformVectors();
 }
 
 void RigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
@@ -66,10 +85,15 @@ void RigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 	if (mRigidBody)
 	{
 		auto motionState = mRigidBody->getMotionState();
-		if (motionState) delete motionState;
+		if (motionState)
+		{
+			delete motionState;
+			motionState = nullptr;
+		}
 
 		physicsWorld->removeRigidBody(mRigidBody);
 		delete mRigidBody;
+		mRigidBody = nullptr;
 	}
 }
 
@@ -87,8 +111,63 @@ bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 
 
 //
+// MissileRigidBody
+//
+MissileRigidBody::MissileRigidBody()
+	: RigidBody(), mVehiclePtr{ nullptr }
+{
+}
+
+void MissileRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+{
+	if (mRigidBody)
+	{
+		SetMissileComponents(
+			mVehiclePtr->GetPosition(),
+			mVehiclePtr->GetVehicle()->getForwardVector(),
+			mVehiclePtr->GetQuaternion(),
+			mConstantPtr->MissileGravity,
+			mConstantPtr->MissileForwardOffset,
+			mConstantPtr->MissileSpeed);
+
+		RigidBody::AppendRigidBody(physicsWorld);
+	}
+}
+
+void MissileRigidBody::SetVehicleAndConstantPtr(
+	VehicleRigidBody* vehiclePtr,
+	std::shared_ptr<InGameServer::BulletConstant> constantPtr)
+{
+	mVehiclePtr = vehiclePtr;
+	mConstantPtr = constantPtr;
+}
+
+void MissileRigidBody::SetMissileComponents(
+	const btVector3& position,
+	const btVector3& forward,
+	const btQuaternion& rotation,
+	const btVector3& gravity,
+	float forwardOffset, float speed)
+{
+	btTransform newTransform = btTransform::getIdentity();
+	newTransform.setOrigin(position + forward * forwardOffset);
+	newTransform.setRotation(rotation);
+
+	mRigidBody->getMotionState()->setWorldTransform(newTransform);
+	mRigidBody->setWorldTransform(newTransform);
+	mRigidBody->setGravity(gravity);
+	mRigidBody->setLinearVelocity(forward * speed);
+}
+
+
+//
 // VehicleRigidBody
 //
+VehicleRigidBody::VehicleRigidBody()
+	: RigidBody()
+{
+}
+
 void VehicleRigidBody::CreateRaycastVehicle(
 	btDiscreteDynamicsWorld* physicsWorld,
 	const btVector3& bodyExtents, 
@@ -165,14 +244,14 @@ void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 
 void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
 {
-	auto rigid = mVehicle->getRigidBody();
-	if(rigid)
-		rigid->getMotionState()->getWorldTransform(transform);
-	//if (rigid) transform = rigid->getWorldTransform();
+	auto motionState = mVehicle->getRigidBody()->getMotionState();
+	if(motionState) motionState->getWorldTransform(transform);
 }
 
 void VehicleRigidBody::UpdateRigidBody()
 {
+	RigidBody::UpdateRigidBody();
+
 	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrictionSlip;
 	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrictionSlip;
 	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.FrictionSlip;
@@ -180,6 +259,8 @@ void VehicleRigidBody::UpdateRigidBody()
 
 	mVehicle->applyEngineForce(mComponent.EngineForce, 0);
 	mVehicle->applyEngineForce(mComponent.EngineForce, 1);
+	mVehicle->setBrake(mComponent.BreakingForce, 0);
+	mVehicle->setBrake(mComponent.BreakingForce, 1);
 	mVehicle->setSteeringValue(mComponent.VehicleSteering, 0);
 	mVehicle->setSteeringValue(mComponent.VehicleSteering, 1);
 
@@ -195,11 +276,8 @@ void MapRigidBody::CreateTerrainRigidBody(BtTerrainShape* shape)
 	mStaticRigidBodies.emplace_back();
 
 	RigidBody& terrainRigidBody = mStaticRigidBodies.back();
-	terrainRigidBody.CreateRigidBody(
-		0.0f,
-		shape->GetCollisionShape(),
-		shape->GetOriginPosition());
-
+	terrainRigidBody.SetPosition(shape->GetOriginPosition());
+	terrainRigidBody.CreateRigidBody(0.0f, shape->GetCollisionShape());
 	terrainRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 }
 
@@ -209,7 +287,15 @@ void MapRigidBody::CreateStaticRigidBodies(std::string_view filename, btCollisio
 	//		 and create all rigidboies
 }
 
-void MapRigidBody::UpdateAllRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
+void MapRigidBody::RemoveRigidBodies(btDiscreteDynamicsWorld* physicsWorld)
+{
+	for (RigidBody& rigid : mStaticRigidBodies)
+	{
+		rigid.RemoveRigidBody(physicsWorld);
+	}
+}
+
+void MapRigidBody::UpdateRigidBodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
 {
 	for (RigidBody& rigid : mStaticRigidBodies)
 	{

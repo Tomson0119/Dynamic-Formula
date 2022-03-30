@@ -48,7 +48,7 @@ void Camera::SetLens(float fovY, float aspect, float zn, float zf)
 	mFarWindow.y = 2.0f * tanf(fovY * 0.5f) * zf;
 	mFarWindow.x = aspect * mFarWindow.y;
 
-	mFov.x = 2.0f * atan(mNearWindow.x * 0.5f / mNearZ);
+	mFov.x = 2.0f * atan(tanf(fovY * 0.5f) * aspect);
 	mFov.y = fovY;
 
 	mAspect = aspect;
@@ -277,7 +277,9 @@ void ThirdPersonCamera::Update(float elapsedTime)
 		if (distance > 0.0f)
 		{
 			mPosition = Vector3::Add(mPosition, direction, distance);
-			ThirdPersonCamera::LookAt(GetPosition(), mPlayer->GetPosition(), XMFLOAT3(0.0f,1.0f,0.0f));
+			XMFLOAT3 camLook = mPlayer->GetPosition();
+			camLook.y = mPosition.y;
+			ThirdPersonCamera::LookAt(GetPosition(), camLook, XMFLOAT3(0.0f,1.0f,0.0f));
 		}
 	}
 	Camera::Update(elapsedTime);

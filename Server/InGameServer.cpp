@@ -12,10 +12,11 @@ InGameServer::WorldList InGameServer::msWorlds;
 InGameServer::InGameServer()
 	: mLoginPtr{ nullptr }
 {
-	mVehicleConstants = std::make_shared<VehicleConstant>();
+	mBulletConstants = std::make_shared<BulletConstant>();
 
 	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin");
 	mBtCarShape->LoadConvexHullShape("Resource\\Car_Body_Convex_Hull.obj");
+	mMissileShape = std::make_unique<BtBoxShape>("Resource\\Missile_Data.bin");
 	mTerrainShapes[0] = std::make_unique<BtTerrainShape>("Resource\\PlaneMap_Data.bin");
 }
 
@@ -26,7 +27,7 @@ void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
-		msWorlds[i] = std::make_unique<GameWorld>(mVehicleConstants);
+		msWorlds[i] = std::make_unique<GameWorld>(mBulletConstants);
 		msWorlds[i]->InitPhysics(-10.0f);	
 		msWorlds[i]->InitPlayerList(roomList[i].get());
 	}
@@ -46,8 +47,26 @@ void InGameServer::PrepareToStartGame(int roomID)
 			continue;
 		}
 
-		msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * (btScalar)i);
-		msWorlds[roomID]->CreatePlayerRigidBody(i, 1000.0f, mBtCarShape.get());
+		// Test
+		if (i == 1)
+		{
+			btVector3 pos = mStartPosition;
+			pos.setZ(pos.z() + 100.0f);
+
+			btQuaternion quat = btQuaternion::getIdentity();
+			quat.setRotation({ 0.0f,1.0f,0.0f }, 3.141592);
+
+			msWorlds[roomID]->SetPlayerPosition(i, pos);
+			msWorlds[roomID]->SetPlayerRotation(i, quat);
+		}
+		else
+		{
+			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * (btScalar)i);
+			msWorlds[roomID]->SetPlayerRotation(i, { 0.0f,0.0f,0.0f,1.0f });
+		}
+		// Test
+
+		msWorlds[roomID]->CreateRigidbodies(i, 1000.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
 	}
 	msWorlds[roomID]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);
 	msWorlds[roomID]->SendGameStartSuccess();
@@ -57,6 +76,12 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 {
 	switch (type)
 	{
+	case CS::TRANSFER_TIME:
+	{
+		CS::packet_transfer_time* pck = reinterpret_cast<CS::packet_transfer_time*>(packet);
+		gClients[id]->SetLatency(pck->send_time);
+		break;
+	}
 	case CS::LOAD_DONE:
 	{
 		CS::packet_load_done* pck = reinterpret_cast<CS::packet_load_done*>(packet);
@@ -65,6 +90,9 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 			mLoginPtr->Disconnect(id);
 			break;
 		}
+		
+		gClients[id]->ReturnSendTimeBack(pck->send_time);
+
 		bool res = msWorlds[pck->room_id]->CheckIfAllLoaded(gClients[id]->PlayerIndex);
 		if (res) StartMatch(pck->room_id);
 		break;
@@ -80,7 +108,7 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 			mLoginPtr->Disconnect(id);
 			break;
 		}
-		gClients[id]->SetTransferTime(pck->send_time);
+		gClients[id]->ReturnSendTimeBack(pck->send_time);
 		msWorlds[roomID]->HandleKeyInput(idx, pck->key, pck->pressed);
 		break;
 	}
@@ -96,7 +124,6 @@ void InGameServer::StartMatch(int roomID)
 	msWorlds[roomID]->SetActive(true);
 	msWorlds[roomID]->SendStartSignal();
 	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
-	AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
 }
 
 void InGameServer::RemovePlayer(int roomID, int hostID)
@@ -110,14 +137,6 @@ void InGameServer::AddTimerEvent(int roomID, EVENT_TYPE type, int duration)
 	TimerQueue::TimerEvent ev{ 
 		std::chrono::milliseconds(duration), type, roomID };
 	mTimerQueue.AddTimerEvent(ev);
-}
-
-void InGameServer::BroadcastTransforms(int roomID)
-{
-	msWorlds[roomID]->BroadcastAllTransform();
-	
-	if (msWorlds[roomID]->IsActive())
-		AddTimerEvent(roomID, EVENT_TYPE::BROADCAST, mBroadcastDuration);
 }
 
 void InGameServer::RunPhysicsSimulation(int roomID)

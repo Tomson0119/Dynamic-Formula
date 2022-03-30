@@ -2,10 +2,15 @@
 
 #include "WSAInit.h"
 #include "WSAOverlappedEx.h"
+#include "EndPoint.h"
 
 extern WSAInit gWSAInstance;
 
-class EndPoint;
+enum class SocketType : char
+{
+	TCP=0,
+	UDP
+};
 
 class Socket
 {
@@ -17,7 +22,7 @@ public:
 	void Close();
 	void SetNagleOption(char val);
 
-	void Init();
+	void Init(const SocketType& type);
 	void Bind(const EndPoint& ep);
 	void Listen();
 	
@@ -27,6 +32,10 @@ public:
 	int Send(WSAOVERLAPPEDEX* overlapped);
 	int Recv(WSAOVERLAPPEDEX* overlapped);
 
+	int SendTo(WSAOVERLAPPEDEX* overlapped, const EndPoint& hostEp);
+	int RecvFrom(WSAOVERLAPPEDEX* overlapped, EndPoint& hostEp);
+
+public:
 	void SetSocket(SOCKET sck) { mSckHandle = sck; }
 	SOCKET GetSocket() const { return mSckHandle; }
 

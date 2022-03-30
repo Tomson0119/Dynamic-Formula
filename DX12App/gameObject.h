@@ -6,6 +6,14 @@
 #include "texture.h"
 
 class InGameScene;
+class Pipeline;
+
+enum class UPDATE_FLAG : char
+{
+	NONE = 0,
+	CREATE,
+	REMOVE
+};
 
 class GameObject
 {
@@ -15,8 +23,7 @@ public:
 
 	void BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
 
-	virtual void Update(float elapsedTime);
-	virtual void UpdateTransform();
+	virtual void Update(float elapsedTime, float updateRate);
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
@@ -28,18 +35,38 @@ public:
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffse, bool isSO=false);
 
+	void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset, int InstanceCount, bool isSO = false);
+
+	virtual void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset,
+		const BoundingFrustum& viewFrustum, bool objectOOBB, int InstanceCount, bool isSO = false);
+
 	virtual void ChangeCurrentRenderTarget() {}
+
+	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
+
+protected:
+	virtual void UpdateTransform();
+
+	void RotateDirectionVectors();
+	void SetWorldByMotionState();
+	void ResetTransformVectors();
 
 	void UpdateBoundingBox();
 	void Animate(float elapsedTime);
 
-	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
+	void InterpolateRigidBody(float elapsed, float updateRate);
+	void InterpolateWorldTransform(float elapsed, float updateRate);
 
 public:
 	virtual std::vector<std::shared_ptr<Mesh>> LoadModel(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
-		const std::wstring& path);
+		const std::wstring& path,
+		bool collider = false);
 	void LoadMaterial(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList,
@@ -50,8 +77,10 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		const std::wstring& path,
 		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D);
-	virtual void LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics);
+	virtual bool LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics);
 	virtual void BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>& physics);
+
+	virtual void RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& pipeline);
 
 public:
 	virtual void SetPosition(float x, float y, float z);
@@ -61,7 +90,8 @@ public:
 
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
-	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
+	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes = meshes; }
+	void CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
 
 	void SetBoudingBoxFromMeshes();
 
@@ -70,12 +100,16 @@ public:
 
 	void SetWorld(XMFLOAT4X4 world) { mWorld = world; }
 
+	void SetName(std::string name) { mName = name; }
+	std::string GetName() { return mName; }
+
 	void SetCBVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mCbvGPUAddress = gpuHandle; }
 	void SetSRVAddress(D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) { mSrvGPUAddress = gpuHandle; }
 
+	void SetRigidBody(btRigidBody* rigidbody) { mBtRigidBody = rigidbody; }
+
 public:
-	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) { }
-	
+	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) { }	
 	virtual void BuildDsvRtvView(ID3D12Device* device) { }
 
 public:
@@ -92,9 +126,8 @@ public:
 	void Rotate(float pitch, float yaw, float roll);
 	void Rotate(const XMFLOAT3& axis, float angle);
 
-	void RotateQuaternion(XMFLOAT4 quaternion);
-
-	void RotateQuaternion(float x, float y, float z, float w);
+	void SetQuaternion(const XMFLOAT4& quaternion);
+	void SetQuaternion(float x, float y, float z, float w);
 
 	void Scale(float xScale, float yScale, float zScale);
 	void Scale(const XMFLOAT3& scale);
@@ -105,19 +138,28 @@ public:
 	XMFLOAT3 GetRight() const { return mRight; }
 	XMFLOAT3 GetLook() const { return mLook; }
 	XMFLOAT3 GetUp() const { return mUp; }
+	XMFLOAT4 GetQuaternion() const { return mQuaternion; }
 
 	XMFLOAT4X4 GetWorld() const { return mWorld; }
+
+	const AtomicInt3& GetLinearVelocity() { return mLinearVelocity; }
 
 	//UINT GetSRVIndex() const { return mSrvIndex; }
 	UINT GetMeshCount() const { return (UINT)mMeshes.size(); }
 	UINT GetTextureCount() const { return (UINT)mTextures.size(); }
 
+	std::vector<std::shared_ptr<Mesh>>& GetMesh() { return mMeshes; }
+
 	virtual ULONG GetCubeMapSize() const { return 0; }	
 	virtual ObjectConstants GetObjectConstants();
-
+	virtual InstancingInfo GetInstancingInfo();
 	BoundingOrientedBox GetBoundingBox() const { return mOOBB; }	
 	
 	btRigidBody* GetRigidBody() { return mBtRigidBody; }
+
+	void ChangeUpdateFlag(UPDATE_FLAG expected, const UPDATE_FLAG& desired);
+	void SetUpdateFlag(const UPDATE_FLAG& flag) { mUpdateFlag = flag; }
+	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
 
 protected:
 	XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
@@ -125,10 +167,24 @@ protected:
 	XMFLOAT3 mUp = { 0.0f, 1.0f, 0.0f };
 	XMFLOAT3 mLook = { 0.0f, 0.0f, 1.0f };
 	XMFLOAT3 mScaling = { 1.0f, 1.0f, 1.0f };
+	XMFLOAT4 mQuaternion = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
-	XMFLOAT4X4 mQuaternion = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mRotation = Matrix4x4::Identity4x4();
+
+	// Members for interpolation.
+	std::atomic_int mProgress = 0;
+
+	AtomicInt3 mPrevOrigin;
+	AtomicInt4 mPrevQuat;
+
+	AtomicInt3 mCorrectionOrigin{};
+	AtomicInt4 mCorrectionQuat{};
+	AtomicInt3 mLinearVelocity{};
+	// Members for interpolation.
+
+	std::atomic<UPDATE_FLAG> mUpdateFlag;
 
 	btRigidBody* mBtRigidBody = NULL;
 	btCompoundShape* mBtCollisionShape = NULL;
@@ -151,6 +207,8 @@ protected:
 
 	bool mCubemapOn = false;
 	bool mMotionBlurOn = true;
+
+	std::string mName;
 };
 
 
@@ -230,11 +288,21 @@ private:
 class MissileObject : public GameObject
 {
 public:
-	MissileObject();
+	MissileObject(const XMFLOAT3& position);
 	virtual ~MissileObject();
-	virtual void Update(float elapsedTime);
+
+	virtual void Update(float elapsedTime, float updateRate) override;
+
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
+
+	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
+
+public:
+	void SetActive(bool state) { mActive = state; }
+	bool IsActive() const { return mActive; }
+
 private:
 	float mDuration = 3.0f;
+	std::atomic_bool mActive;
 };

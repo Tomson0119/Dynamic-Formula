@@ -68,6 +68,7 @@
 #include <algorithm>
 #include <tchar.h>
 #include <conio.h>
+#include <io.h>
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
@@ -104,7 +105,7 @@ extern ComPtr<ID3D12Resource> CreateTexture2DResource(
 	ID3D12Device* device,
 	UINT width, UINT height, UINT elements, UINT miplevels,
 	DXGI_FORMAT format, D3D12_RESOURCE_FLAGS resourceFlags,
-	D3D12_RESOURCE_STATES resourceStates, D3D12_CLEAR_VALUE* clearValue);
+	D3D12_RESOURCE_STATES resourceStates, D3D12_CLEAR_VALUE* clearValue, UINT sampleCount = 1, UINT sampleQuality = 0);
 
 
 inline UINT GetConstantBufferSize(UINT bytes)
@@ -221,6 +222,12 @@ struct GameInfoConstants
 	float ElapsedTime;
 };
 
+struct InstancingInfo
+{
+	XMFLOAT4X4 World;
+	XMFLOAT4X4 oldWorld;
+};
+
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -234,6 +241,14 @@ struct AtomicInt3
 	AtomicInt3(int x_, int y_, int z_)
 		: x{ x_ }, y{ y_ }, z{ z_ }
 	{
+	}
+
+	AtomicInt3& operator=(const AtomicInt3& other)
+	{
+		x.store(other.x);
+		y.store(other.y);
+		z.store(other.z);
+		return *this;
 	}
 
 	void SetZero()
@@ -255,10 +270,38 @@ struct AtomicInt3
 		z = z_;
 	}
 
+	// Set values from btVector3
+	void SetValue(const btVector3& vec)
+	{
+		SetValue(
+			(int)(vec.x() * FIXED_FLOAT_LIMIT),
+			(int)(vec.y() * FIXED_FLOAT_LIMIT),
+			(int)(vec.z() * FIXED_FLOAT_LIMIT));
+	}
+
+	// Set values from XMFLOAT3
+	void SetValue(const XMFLOAT3& xmf3)
+	{
+		SetValue(
+			(int)(xmf3.x * FIXED_FLOAT_LIMIT),
+			(int)(xmf3.y * FIXED_FLOAT_LIMIT),
+			(int)(xmf3.z * FIXED_FLOAT_LIMIT));
+	}
+
 	btVector3 GetBtVector3() const
 	{
-		btVector3 ret{ x / FIXED_FLOAT_LIMIT, y / FIXED_FLOAT_LIMIT, z / FIXED_FLOAT_LIMIT };
-		return ret;
+		return btVector3{ 
+			x / FIXED_FLOAT_LIMIT, 
+			y / FIXED_FLOAT_LIMIT, 
+			z / FIXED_FLOAT_LIMIT };
+	}
+
+	XMFLOAT3 GetXMFloat3() const
+	{
+		return XMFLOAT3{ 
+			x / FIXED_FLOAT_LIMIT, 
+			y / FIXED_FLOAT_LIMIT, 
+			z / FIXED_FLOAT_LIMIT };
 	}
 
 	std::atomic_int x;
@@ -269,13 +312,22 @@ struct AtomicInt3
 struct AtomicInt4
 {
 	AtomicInt4()
-		: x{ 0 }, y{ 0 }, z{ 0 }, w{ 0 }
+		: x{ 0 }, y{ 0 }, z{ 0 }, w{ (int)FIXED_FLOAT_LIMIT }
 	{
 	}
 
 	AtomicInt4(int x_, int y_, int z_, int w_)
 		: x{ x_ }, y{ y_ }, z{ z_ }, w{ w_ }
 	{
+	}
+
+	AtomicInt4& operator=(const AtomicInt4& other)
+	{
+		x.store(other.x);
+		y.store(other.y);
+		z.store(other.z);
+		w.store(other.w);
+		return *this;
 	}
 
 	void SetValue(int x_, int y_, int z_, int w_)
@@ -286,15 +338,45 @@ struct AtomicInt4
 		w = w_;
 	}
 
+	void SetValue(const btQuaternion& quat)
+	{
+		SetValue(
+			(int)(quat.x() * FIXED_FLOAT_LIMIT),
+			(int)(quat.y() * FIXED_FLOAT_LIMIT),
+			(int)(quat.z() * FIXED_FLOAT_LIMIT),
+			(int)(quat.w() * FIXED_FLOAT_LIMIT));
+	}
+
+	void SetValue(const XMFLOAT4& quat)
+	{
+		SetValue(
+			(int)(quat.x * FIXED_FLOAT_LIMIT),
+			(int)(quat.y * FIXED_FLOAT_LIMIT),
+			(int)(quat.z * FIXED_FLOAT_LIMIT),
+			(int)(quat.w * FIXED_FLOAT_LIMIT));
+	}
+
+	bool IsZero() const
+	{
+		return (x == 0.0f && y == 0.0f && z == 0.0f && w == 0.0f);
+	}
+
 	btQuaternion GetBtQuaternion() const
 	{
-		btQuaternion ret{
+		return btQuaternion{
 			x / FIXED_FLOAT_LIMIT,
 			y / FIXED_FLOAT_LIMIT,
 			z / FIXED_FLOAT_LIMIT,
 			w / FIXED_FLOAT_LIMIT };
+	}
 
-		return ret;
+	XMFLOAT4 GetXMFloat4() const
+	{
+		return XMFLOAT4{
+			x / FIXED_FLOAT_LIMIT,
+			y / FIXED_FLOAT_LIMIT,
+			z / FIXED_FLOAT_LIMIT,
+			w / FIXED_FLOAT_LIMIT };
 	}
 
 	std::atomic_int x;
@@ -306,7 +388,7 @@ struct AtomicInt4
 
 ////////////////////////////////////////////////////////////////////////////
 //
-namespace BulletVector
+namespace BulletMath
 {
 	inline bool Equals(const btVector3& a, const btVector3& b, btScalar epsilon)
 	{
@@ -321,6 +403,11 @@ namespace BulletVector
 	{
 		btScalar len = (a - b).length2();
 		return (len < (epsilon* epsilon));
+	}
+
+	inline bool IsZero(const btQuaternion& quat)
+	{
+		return (quat.x() == 0.0f && quat.y() == 0.0f && quat.z() == 0.0f && quat.w() == 0.0f);
 	}
 }
 
@@ -387,7 +474,6 @@ namespace Vector3
 		XMStoreFloat3(&ret, XMLoadFloat3(&v) / scalar);
 		return ret;
 	}
-
 
 	inline XMFLOAT3 MultiplyAdd(float delta, XMFLOAT3& src, XMFLOAT3& dst)
 	{		
@@ -481,6 +567,11 @@ namespace Vector3
 	{
 		return XMVector3Less(XMLoadFloat3(&v), XMVectorReplicate(x));
 	}
+
+	inline XMFLOAT3 Lerp(const XMFLOAT3& from, const XMFLOAT3& to, float t)
+	{
+		return VectorToFloat3(XMVectorLerp(XMLoadFloat3(&from), XMLoadFloat3(&to), t));
+	}
 }
 
 namespace Vector4
@@ -506,6 +597,27 @@ namespace Vector4
 	{
 		XMFLOAT4 ret;
 		XMStoreFloat4(&ret, scalar * XMLoadFloat4(&v));
+		return ret;
+	}
+
+	inline XMFLOAT4 RotateQuaternionAxis(const XMFLOAT3& axis, float angle)
+	{
+		XMFLOAT4 ret;
+		XMStoreFloat4(&ret, XMQuaternionRotationAxis(XMLoadFloat3(&axis), angle));
+		return ret;
+	}
+
+	inline XMFLOAT4 RotateQuaternionRollPitchYaw(const XMFLOAT3& rotation)
+	{
+		XMFLOAT4 ret;
+		XMStoreFloat4(&ret, XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z));
+		return ret;
+	}
+
+	inline XMFLOAT4 Slerp(const XMFLOAT4& from, const XMFLOAT4& to, float t)
+	{
+		XMFLOAT4 ret;
+		XMStoreFloat4(&ret, XMQuaternionSlerp(XMLoadFloat4(&from), XMLoadFloat4(&to), t));
 		return ret;
 	}
 }
@@ -547,25 +659,39 @@ namespace Matrix4x4
 		return ret;
 	}
 
+	inline XMFLOAT4X4 CalulateWorldTransform(const XMFLOAT3& position, const XMFLOAT4& quaternion, const XMFLOAT3& scale)
+	{
+		XMMATRIX translation = XMMatrixTranslationFromVector(XMLoadFloat3(&position));
+		XMMATRIX rotation = XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion));
+		XMMATRIX scaling = XMMatrixScalingFromVector(XMLoadFloat3(&scale));
+		
+		XMFLOAT4X4 world{};
+		XMStoreFloat4x4(&world, scaling * rotation * translation);
+		return world;
+	}
+
 	inline XMFLOAT4X4 glMatrixToD3DMatrix(btScalar* btMat)
 	{
 		XMFLOAT4X4 xmf4x4Result;
 
-		xmf4x4Result._21 = btMat[4];
+		xmf4x4Result._11 = btMat[0];
 		xmf4x4Result._12 = btMat[1];
 		xmf4x4Result._13 = btMat[2];
-		xmf4x4Result._31 = btMat[8];
 		xmf4x4Result._14 = btMat[3];
-		xmf4x4Result._41 = btMat[12];
-		xmf4x4Result._23 = btMat[6];
-		xmf4x4Result._32 = btMat[9];
-		xmf4x4Result._24 = btMat[7];
-		xmf4x4Result._42 = btMat[13];
-		xmf4x4Result._34 = btMat[11];
-		xmf4x4Result._43 = btMat[14];
-		xmf4x4Result._11 = btMat[0];
+
+		xmf4x4Result._21 = btMat[4];
 		xmf4x4Result._22 = btMat[5];
+		xmf4x4Result._23 = btMat[6];
+		xmf4x4Result._24 = btMat[7];
+		
+		xmf4x4Result._31 = btMat[8];
+		xmf4x4Result._32 = btMat[9];
 		xmf4x4Result._33 = btMat[10];
+		xmf4x4Result._34 = btMat[11];
+		
+		xmf4x4Result._41 = btMat[12];
+		xmf4x4Result._42 = btMat[13];
+		xmf4x4Result._43 = btMat[14];
 		xmf4x4Result._44 = btMat[15];
 
 		return xmf4x4Result;

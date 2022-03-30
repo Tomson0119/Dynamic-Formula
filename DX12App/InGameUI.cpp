@@ -91,7 +91,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	float LapTime = GTime - CountdownTime;
 	int Min = 0;
 	float Sec = 0.0;
-	Min = LapTime / 60.0f;
+	Min = (int)(LapTime / 60.0f);
 	Sec = LapTime - (Min * 60.0f);
 
 	if (Min < 10)

@@ -4,10 +4,8 @@
 #include "RigidBody.h"
 
 Player::Player()
-	: mPosition{ 0.0f, 0.0f, 0.0f },
-	  Empty{ true }, Color{ -1 }, Ready{ false }, 
-	  ID{ -1 }, Name{ }, LoadDone{ false },
-	  mPrevVelocity{ }, mCurrVelocity{ }, mAcceleration{ }
+	: Empty{ true }, Color{ -1 }, Ready{ false }, 
+	  ID{ -1 }, Name{ }, LoadDone{ false }, mBoosterToggle{ false }
 {
 	mKeyMap[VK_UP]	   = false;
 	mKeyMap[VK_DOWN]   = false;
@@ -16,14 +14,22 @@ Player::Player()
 	mKeyMap[VK_LSHIFT] = false;
 }
 
-void Player::SetPosition(float x, float y, float z)
+void Player::SetPosition(const btVector3& pos)
 {
-	mPosition = { x, y, z };
+	mVehicleRigidBody.SetPosition(pos);
+	mMissileRigidBody.SetPosition(pos);
 }
 
-void Player::SetVehicleConstant(std::shared_ptr<InGameServer::VehicleConstant> constantPtr)
+void Player::SetRotation(const btQuaternion& quat)
+{
+	mVehicleRigidBody.SetRotation(quat);
+	mMissileRigidBody.SetRotation(quat);
+}
+
+void Player::SetBulletConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
 {
 	mConstantPtr = constantPtr;
+	mMissileRigidBody.SetVehicleAndConstantPtr(&mVehicleRigidBody, constantPtr);
 }
 
 void Player::CreateVehicleRigidBody(
@@ -35,7 +41,7 @@ void Player::CreateVehicleRigidBody(
 	{
 		mVehicleRigidBody.CreateRigidBody(
 			mass,
-			shape->GetCompoundShape(), mPosition);
+			shape->GetCompoundShape());
 
 		mVehicleRigidBody.CreateRaycastVehicle(
 			physicsWorld, shape->GetExtents(),
@@ -47,112 +53,197 @@ void Player::CreateVehicleRigidBody(
 	}
 }
 
-void Player::UpdatePlayerRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
+void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape* shape)
+{
+	if (shape)
+	{
+		mMissileRigidBody.CreateRigidBody(mass, shape->GetCollisionShape());
+	}
+}
+
+void Player::UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
 {
 	UpdateVehicleComponent(elapsed);
 	mVehicleRigidBody.Update(physicsWorld);
+	mMissileRigidBody.Update(physicsWorld);
 }
 
-void Player::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
+void Player::SetDeletionFlag()
 {
+	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+}
+
+void Player::ResetPlayer(btDiscreteDynamicsWorld* physicsWorld)
+{
+	LoadDone = false;
+	mMissileRigidBody.RemoveRigidBody(physicsWorld);
 	mVehicleRigidBody.RemoveRigidBody(physicsWorld);
 }
 
-void Player::UpdateTransformVectors()
+void Player::UpdateWorldTransform()
 {
-	btTransform transform{};
-	mVehicleRigidBody.StoreWorldTransform(transform);
-
-	mPosition = transform.getOrigin();
-	auto quat = transform.getRotation();
-	mQuaternion.setValue(quat.x(), quat.y(), quat.z(), quat.w());
+	mVehicleRigidBody.UpdateTransformVectors();
+	mMissileRigidBody.UpdateTransformVectors();
 }
 
 void Player::ClearVehicleComponent()
 {
 	auto& comp = mVehicleRigidBody.GetComponent();
-	comp.BoosterLeft	 = 0.0f;
+	comp.BoosterTimeLeft	 = 0.0f;
 	comp.CurrentSpeed	 = 0.0f;
 	comp.EngineForce	 = 0.0f;
 	comp.VehicleSteering = 0.0f;
 	comp.FrictionSlip	 = mConstantPtr->WheelDefaultFriction;
 	comp.MaxSpeed		 = mConstantPtr->DefaultMaxSpeed;
+	comp.BreakingForce	 = 0.0f;
 
 	for (auto& [key, val] : mKeyMap) val = false;
 }
 
 void Player::UpdateVehicleComponent(float elapsed)
 {
-	CalculateAcceleration(elapsed);
+	UpdateDiftGauge(elapsed);
+	UpdateBooster(elapsed);
 	UpdateSteering(elapsed);
 	UpdateEngineForce();
 }
 
+void Player::UpdateDiftGauge(float elapsed)
+{
+}
+
+void Player::UpdateBooster(float elapsed)
+{
+	auto& comp = mVehicleRigidBody.GetComponent();
+	if (mBoosterToggle && comp.BoosterTimeLeft == 0.0f)
+	{
+		comp.BoosterTimeLeft = mConstantPtr->MaxBoosterTime;
+		mBoosterToggle = false;
+	}
+
+	if (comp.BoosterTimeLeft > 0.0f)
+	{
+		comp.MaxSpeed = mConstantPtr->BoostedMaxSpeed;
+		comp.BoosterTimeLeft -= elapsed;
+	}
+	else if (comp.BoosterTimeLeft < 0.0f)
+	{
+		comp.MaxSpeed = mConstantPtr->DefaultMaxSpeed;
+		comp.BoosterTimeLeft = 0.0f;
+	}
+}
+
 void Player::UpdateSteering(float elapsed)
 {
-	auto& component = mVehicleRigidBody.GetComponent();
-	if (component.VehicleSteering > 0)
+	auto& comp = mVehicleRigidBody.GetComponent();
+	float scale = std::max(2.0f - comp.CurrentSpeed * 0.01f, 0.1f);
+
+	if (comp.VehicleSteering > 0)
 	{
-		component.VehicleSteering = std::max(
-			component.VehicleSteering - mConstantPtr->SteeringIncrement * elapsed,
+		comp.VehicleSteering = std::max(
+			comp.VehicleSteering - mConstantPtr->SteeringIncrement * elapsed,
 			0.0f);
 	}
-	else if (component.VehicleSteering < 0)
+	else if (comp.VehicleSteering < 0)
 	{
-		component.VehicleSteering = std::min(
-			component.VehicleSteering + mConstantPtr->SteeringIncrement * elapsed,
+		comp.VehicleSteering = std::min(
+			comp.VehicleSteering + mConstantPtr->SteeringIncrement * elapsed,
 			0.0f);
 	}
 	if (mKeyMap[VK_LEFT])
-	{
-		component.VehicleSteering = std::max(
-			component.VehicleSteering - mConstantPtr->SteeringIncrement * 2 * elapsed,
+	{		
+		comp.VehicleSteering = std::max(
+			comp.VehicleSteering - mConstantPtr->SteeringIncrement * scale * elapsed,
 			-mConstantPtr->SteeringClamp);
 	}
 	if (mKeyMap[VK_RIGHT])
 	{
-		component.VehicleSteering = std::min(
-			component.VehicleSteering + mConstantPtr->SteeringIncrement * 2 * elapsed,
+		comp.VehicleSteering = std::min(
+			comp.VehicleSteering + mConstantPtr->SteeringIncrement * scale * elapsed,
 			mConstantPtr->SteeringClamp);
 	}
 }
 
 void Player::UpdateEngineForce()
 {
-	auto& component = mVehicleRigidBody.GetComponent();
-	component.EngineForce = 0.0f;
+	auto& comp = mVehicleRigidBody.GetComponent();
+
+	if (comp.BoosterTimeLeft > 0.0f && comp.MaxSpeed > comp.CurrentSpeed)
+	{
+		comp.EngineForce = mConstantPtr->BoosterEngineForce;
+		return;
+	}
+
+	comp.EngineForce = 0.0f;
+	comp.BreakingForce = mConstantPtr->DefaultBreakingForce;
+
 	if (mKeyMap[VK_UP])
 	{
-		if (component.CurrentSpeed < 0.0f)
-			component.EngineForce = mConstantPtr->MaxEngineForce * 1.5f;
-		else if (component.MaxSpeed > component.CurrentSpeed)
-			component.EngineForce = mConstantPtr->MaxEngineForce;
+		if (comp.CurrentSpeed < 0.0f)
+		{
+			comp.BreakingForce = mConstantPtr->MaxBreakingForce;
+		}
+		else if (comp.MaxSpeed > comp.CurrentSpeed)
+		{
+			comp.EngineForce = mConstantPtr->MaxEngineForce;
+		}
 		else
-			component.EngineForce = 0.0f;
+		{
+			comp.BreakingForce = mConstantPtr->SubBreakingForce;
+			comp.EngineForce = 0.0f;
+		}
 	}
 	if (mKeyMap[VK_DOWN])
 	{
-		if (component.CurrentSpeed > 0.0f)
-			component.EngineForce = -mConstantPtr->MaxEngineForce * 1.5f;
-		else if (component.CurrentSpeed > -component.MaxSpeed)
-			component.EngineForce = -mConstantPtr->MaxEngineForce;
+		if (comp.CurrentSpeed > 0.0f)
+		{
+			comp.BreakingForce = mConstantPtr->MaxBreakingForce;
+		}
+		else if (comp.CurrentSpeed > -comp.MaxSpeed)
+		{
+			comp.EngineForce = -mConstantPtr->MaxBackwardEngineForce;
+		}
 		else
-			component.EngineForce = 0.0f;
+		{
+			comp.BreakingForce = mConstantPtr->SubBreakingForce;
+			comp.EngineForce = 0.0f;
+		}
 	}
 }
 
-void Player::CalculateAcceleration(float elapsed)
+bool Player::CheckDriftGauge()
 {
-	const float mps = 0.277778f;
-	mCurrVelocity = mVehicleRigidBody.GetVehicle()->getForwardVector()
-		* mVehicleRigidBody.GetComponent().CurrentSpeed * mps;
-	
-	mAcceleration = (mCurrVelocity - mPrevVelocity) / elapsed;
-	mPrevVelocity = mCurrVelocity;
+	return true;
 }
 
 void Player::ToggleKeyValue(uint8_t key, bool pressed)
 {
-	if (mKeyMap.find(key) != mKeyMap.end())
+	if ((key == 'Z' || key == 'X') && pressed && CheckDriftGauge())
+	{
+		switch(key)
+		{
+		case 'Z':
+		{
+			bool b = false;
+			mBoosterToggle.compare_exchange_strong(b, true);
+			break;
+		}
+		case 'X':
+		{
+			mMissileRigidBody.ChangeUpdateFlag(
+				RigidBody::UPDATE_FLAG::NONE,
+				RigidBody::UPDATE_FLAG::CREATION);
+			break;
+		}}
+	}
+	else
+	{
 		mKeyMap[key] = pressed;
+	}
+}
+
+bool Player::CheckMissileExist() const
+{
+	return (mMissileRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::UPDATE);
 }

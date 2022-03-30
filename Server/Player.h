@@ -11,36 +11,42 @@ public:
 	Player();
 	~Player() = default;
 
-	void SetVehicleConstant(std::shared_ptr<InGameServer::VehicleConstant> constantPtr);
+	void SetBulletConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr);
+	
+	void SetPosition(const btVector3& pos);
+	void SetRotation(const btQuaternion& quat);
 
 	void CreateVehicleRigidBody(
 		btScalar mass,
 		btDiscreteDynamicsWorld* physicsWorld, 
 		BtCarShape* shape);
 
-	void UpdatePlayerRigidBody(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
-	void SetDeletionFlag() { mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION); }
+	void CreateMissileRigidBody(btScalar mass, BtBoxShape* shape);
 
-	void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld);
-	void UpdateTransformVectors();
+	void UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
+	void SetDeletionFlag();
 
+	void ResetPlayer(btDiscreteDynamicsWorld* physicsWorld);
+	void UpdateWorldTransform();
+
+	void ToggleKeyValue(uint8_t key, bool pressed);
+	bool CheckMissileExist() const;
+
+private:
 	void ClearVehicleComponent();
 
 	void UpdateVehicleComponent(float elapsed);
+	void UpdateDiftGauge(float elapsed);
+	void UpdateBooster(float elapsed);
 	void UpdateSteering(float elapsed);
 	void UpdateEngineForce();
 
-	void CalculateAcceleration(float elapsed);
-
-	void ToggleKeyValue(uint8_t key, bool pressed);
+	bool CheckDriftGauge();
 
 public:
-	void SetPosition(float x, float y, float z);
-	const btVector3& GetPosition() const { return mPosition; }
-	const btVector4& GetQuaternion() const { return mQuaternion; }
-	const btVector3& GetVelocity() const { return mCurrVelocity; }
-	const btVector3& GetAcceleration() const { return mAcceleration; }
-
+	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
+	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
+	
 public:
 	std::atomic_bool Empty;
 	std::atomic_bool Ready;
@@ -53,13 +59,10 @@ public:
 private:
 	std::map<int, std::atomic_bool> mKeyMap;
 
-	btVector4 mQuaternion;
-	btVector3 mPosition;
-
-	btVector3 mPrevVelocity;
-	btVector3 mCurrVelocity;
-	btVector3 mAcceleration;
-
 	VehicleRigidBody mVehicleRigidBody;
-	std::shared_ptr<InGameServer::VehicleConstant> mConstantPtr;
+	MissileRigidBody mMissileRigidBody;
+
+	std::atomic_bool mBoosterToggle;
+
+	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };

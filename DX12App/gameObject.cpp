@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "gameObject.h"
 #include "inGameScene.h"
-
+#include "pipeline.h"
 
 GameObject::GameObject()
 {
@@ -24,10 +24,11 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
-	const std::wstring& path)
+	const std::wstring& path,
+	bool collider)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
@@ -36,6 +37,7 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 	std::shared_ptr<Mesh> new_mesh;
 
 	std::string info;
+	std::string objName;
 
 	while (std::getline(in_file, info))
 	{
@@ -58,6 +60,11 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 			LoadMaterial(device, cmdList, mats, mtl_path);
 		}
+		else if (type == "o")
+		{
+			ss >> objName;
+		}
+
 		else if (type == "v")
 		{
 			XMFLOAT3 pos;
@@ -84,10 +91,13 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 			std::string mtl_name;
 			ss >> mtl_name;
 
-			new_mesh = std::make_shared<Mesh>(mtl_name);
+			new_mesh = std::make_shared<Mesh>(objName, mtl_name);
+
+			objName.clear();
+
 			new_mesh->LoadMesh(
 				device, cmdList, in_file,
-				positions, normals, texcoords, mats[mtl_name]);
+				positions, normals, texcoords, mats[mtl_name], collider);
 
 			mMeshes.push_back(new_mesh);
 		}
@@ -227,10 +237,12 @@ void GameObject::LoadTexture(
 }
 
 // Scale을 설정한 뒤 호출할 것!
-void GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics)
+bool GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	//assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+
+	if (!in_file.is_open())
+		return false;
 
 	std::vector<XMFLOAT3> positions;
 
@@ -270,6 +282,8 @@ void GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared
 			mBtCollisionShape->addChildShape(localTransform, convexHull);
 		}
 	}
+
+	return true;
 }
 
 //오브젝트 생성 시 마지막으로 호출할 것
@@ -284,15 +298,44 @@ void GameObject::BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>
 	}
 }
 
-void GameObject::Update(float elapsedTime)
+void GameObject::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& pipeline)
 {
-	mLook = Vector3::Normalize(mLook);
-	mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
-	mRight = Vector3::Cross(mUp, mLook);
+	if (mBtRigidBody)
+	{
+		delete mBtRigidBody->getMotionState();
+		dynamicsWorld.removeRigidBody(mBtRigidBody);
+		delete mBtRigidBody;
+		mBtRigidBody = nullptr;
+	}
 
-	Animate(elapsedTime);
+	for (int idx = 0; const auto& obj : pipeline.GetRenderObjects())
+	{
+		if (this == obj.get())
+		{
+			pipeline.DeleteObject(idx);
+			break;
+		}
+		idx += 1;
+	}
+}
 
-	UpdateTransform();
+void GameObject::Update(float elapsedTime, float updateRate)
+{
+	RotateDirectionVectors();
+
+	mOldWorld = mWorld;
+
+	if (mBtRigidBody)
+	{
+		InterpolateRigidBody(elapsedTime, updateRate);
+		SetWorldByMotionState();
+	}
+	else
+	{
+		InterpolateWorldTransform(elapsedTime, updateRate);
+		UpdateTransform();
+	}
+
 	UpdateBoundingBox();
 }
 
@@ -318,6 +361,60 @@ void GameObject::Draw(
 		}
 		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
 		mMeshes[i]->Draw(cmdList, isSO);
+
+		matGPUAddress += byteOffset;
+	}
+}
+void GameObject::DrawInstanced(ID3D12GraphicsCommandList* cmdList,
+	UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
+	UINT64 matGPUAddress, UINT64 byteOffset, int InstanceCount, bool isSO)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	for (int i = 0; i < mMeshes.size(); i++)
+	{
+		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
+
+		int srvIndex = mMeshes[i]->GetSrvIndex();
+
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
+		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
+
+		mMeshes[i]->DrawInstanced(cmdList, InstanceCount, isSO);
+
+		matGPUAddress += byteOffset;
+	}
+}
+
+
+void GameObject::DrawInstanced(ID3D12GraphicsCommandList* cmdList, 
+	UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
+	UINT64 matGPUAddress, UINT64 byteOffset, const BoundingFrustum& viewFrustum,
+	bool objectOOBB, int InstanceCount, bool isSO)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	for (int i = 0; i < mMeshes.size(); i++)
+	{
+		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
+
+		int srvIndex = mMeshes[i]->GetSrvIndex();
+
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
+		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
+
+		if (objectOOBB && viewFrustum.Intersects(mOOBB))
+			mMeshes[i]->DrawInstanced(cmdList, InstanceCount, isSO);
+		else if (!objectOOBB)
+			mMeshes[i]->DrawInstanced(cmdList, viewFrustum, InstanceCount, isSO);
 
 		matGPUAddress += byteOffset;
 	}
@@ -356,23 +453,65 @@ void GameObject::Draw(
 
 void GameObject::UpdateTransform()
 {
-	mOldWorld = mWorld;
-
-	mWorld(0, 0) = mScaling.x * mRight.x;
-	mWorld(0, 1) = mRight.y;	
+	mWorld = Matrix4x4::CalulateWorldTransform(mPosition, mQuaternion, mScaling);
+	/*mWorld(0, 0) = mScaling.x * mRight.x;
+	mWorld(0, 1) = mRight.y;
 	mWorld(0, 2) = mRight.z;
 
-	mWorld(1, 0) = mUp.x;		
-	mWorld(1, 1) = mScaling.y * mUp.y;		
+	mWorld(1, 0) = mUp.x;
+	mWorld(1, 1) = mScaling.y * mUp.y;
 	mWorld(1, 2) = mUp.z;
 
-	mWorld(2, 0) = mLook.x;		
-	mWorld(2, 1) = mLook.y;		
+	mWorld(2, 0) = mLook.x;
+	mWorld(2, 1) = mLook.y;
 	mWorld(2, 2) = mScaling.z * mLook.z;
 
 	mWorld(3, 0) = mPosition.x;
 	mWorld(3, 1) = mPosition.y;
-	mWorld(3, 2) = mPosition.z;
+	mWorld(3, 2) = mPosition.z;*/
+}
+
+void GameObject::RotateDirectionVectors()
+{
+	XMMATRIX R = XMMatrixRotationQuaternion(XMLoadFloat4(&mQuaternion));
+
+	mRight = Vector3::TransformNormal(XMFLOAT3(1.0f,0.0f,0.0f), R);
+	mUp = Vector3::TransformNormal(XMFLOAT3(0.0f,1.0f,0.0f), R);
+	mLook = Vector3::TransformNormal(XMFLOAT3(0.0f,0.0f,1.0f), R);
+
+	mRight = Vector3::Normalize(mRight);
+	mUp = Vector3::Normalize(mUp);
+	mLook = Vector3::Normalize(mLook);
+}
+
+void GameObject::SetWorldByMotionState()
+{
+	btScalar m[16];
+	btTransform btMat{};
+	mBtRigidBody->getMotionState()->getWorldTransform(btMat);
+	btMat.getOpenGLMatrix(m);
+
+	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
+	ResetTransformVectors();
+}
+
+void GameObject::ResetTransformVectors()
+{
+	mPosition.x = mWorld(3, 0);
+	mPosition.y = mWorld(3, 1);
+	mPosition.z = mWorld(3, 2);
+
+	mLook.x = mWorld(2, 0);
+	mLook.y = mWorld(2, 1);
+	mLook.z = mWorld(2, 2);
+
+	mUp.x = mWorld(1, 0);
+	mUp.y = mWorld(1, 1);
+	mUp.z = mWorld(1, 2);
+
+	mRight.x = mWorld(0, 0);
+	mRight.y = mWorld(0, 1);
+	mRight.z = mWorld(0, 2);
 }
 
 void GameObject::UpdateBoundingBox()
@@ -397,6 +536,75 @@ void GameObject::UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, 
 		matCnst->CopyData(offset + i, mMeshes[i]->GetMaterialConstant());
 }
 
+void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
+{
+	auto rigid = mBtRigidBody;
+	if (rigid == nullptr) return;
+
+	if (mPrevOrigin.IsZero())
+	{
+		auto motionState = rigid->getMotionState();
+
+		btTransform transform{};
+		motionState->getWorldTransform(transform);
+
+		// Get current state of position/rotation.
+		auto& currentOrigin = transform.getOrigin();
+		auto& currentQuat = transform.getRotation();
+
+		mPrevOrigin.SetValue(currentOrigin);
+		mPrevQuat.SetValue(currentQuat);
+	}
+
+	const btVector3& prevOrigin = mPrevOrigin.GetBtVector3();
+	const btQuaternion& prevQuat = mPrevQuat.GetBtQuaternion();
+
+	// Get correction state of extrapolated server postion/rotation.
+	const btVector3& correctOrigin = mCorrectionOrigin.GetBtVector3();
+	const btQuaternion& correctQuat = mCorrectionQuat.GetBtQuaternion();
+
+	if (BulletMath::IsZero(correctQuat) || updateRate <= 0.0f) return;
+
+	float progress = mProgress / FIXED_FLOAT_LIMIT;
+	progress = std::min(1.0f, progress + elapsed / updateRate);
+	mProgress = (int)(progress * FIXED_FLOAT_LIMIT);
+
+	btVector3 nextOrigin = prevOrigin.lerp(correctOrigin, progress);
+	btQuaternion nextQuat = prevQuat.slerp(correctQuat, progress);
+
+	btTransform nextTransform{};
+	nextTransform.setOrigin(nextOrigin);
+	nextTransform.setRotation(nextQuat);
+
+	// manually set rigidbody tranform.
+	rigid->setWorldTransform(nextTransform);
+}
+
+void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
+{
+	if (mPrevOrigin.IsZero())
+	{
+		mPrevOrigin.SetValue(mPosition);
+		mPrevQuat.SetValue(mQuaternion);
+	}
+
+	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
+	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
+
+	// Get correction state of extrapolated server postion/rotation.
+	const XMFLOAT3& correctOrigin = mCorrectionOrigin.GetXMFloat3();
+	const XMFLOAT4& correctQuat = mCorrectionQuat.GetXMFloat4();
+
+	if (updateRate <= 0.0f) return;
+
+	float progress = mProgress / FIXED_FLOAT_LIMIT;
+	progress = std::min(1.0f, progress + elapsed / updateRate);
+	mProgress = (int)(progress * FIXED_FLOAT_LIMIT);
+
+	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
+	mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
+}
+
 void GameObject::SetPosition(float x, float y, float z)
 {
 	mPosition = { x,y,z };
@@ -410,7 +618,7 @@ void GameObject::SetPosition(const XMFLOAT3& pos)
 void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
 {
 	auto p = std::find_if(mMeshes.begin(), mMeshes.end(),
-		[&name](const auto& mesh) { return (mesh->GetName() == name); });
+		[&name](const auto& mesh) { return (mesh->GetMaterialName() == name); });
 
 	if (p != mMeshes.end())
 		(*p)->SetMatDiffuse(color);
@@ -419,11 +627,11 @@ void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
 void GameObject::SetLook(XMFLOAT3& look)
 {
 	mLook = look;
-	GameObject::Update(1.0f);
+	//GameObject::Update(1.0f);
 }
 
-void GameObject::SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
-{ 
+void GameObject::CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
+{
 	for (int i = 0; i < meshes.size(); ++i)
 	{
 		mMeshes.push_back(std::make_shared<Mesh>(*meshes[i]));
@@ -478,6 +686,11 @@ void GameObject::SetMovement(XMFLOAT3& dir, float speed)
 	mMoveSpeed = speed;
 }
 
+void GameObject::ChangeUpdateFlag(UPDATE_FLAG expected, const UPDATE_FLAG& desired)
+{
+	mUpdateFlag.compare_exchange_strong(expected, desired);
+}
+
 void GameObject::Move(float dx, float dy, float dz)
 {
 	mPosition.x += dx;
@@ -514,56 +727,44 @@ void GameObject::Rotate(float pitch, float yaw, float roll)
 {
 	if (pitch != 0.0f)
 	{
-		XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mRight), XMConvertToRadians(pitch));
-		mUp = Vector3::TransformNormal(mUp, R);
-		mLook = Vector3::TransformNormal(mLook, R);
+		Rotate(mRight, pitch);
 	}
 	if (yaw != 0.0f)
 	{
-		XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mUp), XMConvertToRadians(yaw));
-		mLook = Vector3::TransformNormal(mLook, R);
-		mRight = Vector3::TransformNormal(mRight, R);
+		Rotate(mUp, yaw);
 	}
 	if (roll != 0.0f)
 	{
-		XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mLook), XMConvertToRadians(roll));
-		mUp = Vector3::TransformNormal(mUp, R);
-		mRight = Vector3::TransformNormal(mRight, R);
+		Rotate(mLook, roll);
 	}
 }
 
 void GameObject::Rotate(const XMFLOAT3& axis, float angle)
 {
-	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&axis), XMConvertToRadians(angle));
-	mRight = Vector3::TransformNormal(mRight, R);
-	mUp = Vector3::TransformNormal(mUp, R);
-	mLook = Vector3::TransformNormal(mLook, R);
+	XMStoreFloat4(&mQuaternion, 
+		XMQuaternionRotationAxis(
+			XMLoadFloat3(&axis), 
+			XMConvertToRadians(angle)));
 }
 
-void GameObject::RotateQuaternion(XMFLOAT4 quaternion)
+void GameObject::SetQuaternion(const XMFLOAT4& quaternion)
 {
-	RotateQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+	mQuaternion = quaternion;
 }
 
-void GameObject::RotateQuaternion(float x, float y, float z, float w)
+void GameObject::SetQuaternion(float x, float y, float z, float w)
 {
-	XMMATRIX R = XMMatrixRotationQuaternion(XMVECTOR{ x,y,z,w });
-	XMStoreFloat4x4(&mQuaternion, R);
+	SetQuaternion({ x,y,z,w });
 }
 
 void GameObject::RotateY(float angle)
 {
-	XMMATRIX R = XMMatrixRotationY(XMConvertToRadians(angle));
-	mRight = Vector3::TransformNormal(mRight, R);
-	mUp = Vector3::TransformNormal(mUp, R);
-	mLook = Vector3::TransformNormal(mLook, R);
+	Rotate(mUp, angle);
 }
 
 void GameObject::Pitch(float angle)
 {
-	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mRight), XMConvertToRadians(angle));
-	mUp = Vector3::TransformNormal(mUp, R);
-	mLook = Vector3::TransformNormal(mLook, R);
+	Rotate(mRight, angle);
 }
 
 void GameObject::Scale(float xScale, float yScale, float zScale)
@@ -600,6 +801,14 @@ ObjectConstants GameObject::GetObjectConstants()
 	return objCnst;
 }
 
+InstancingInfo GameObject::GetInstancingInfo()
+{
+	InstancingInfo instInfo = {};
+	instInfo.World = Matrix4x4::Transpose(mWorld);
+	instInfo.oldWorld = Matrix4x4::Transpose(mOldWorld);
+
+	return instInfo;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -705,8 +914,10 @@ bool Billboard::IsTimeOver(std::chrono::steady_clock::time_point& currentTime)
 	return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - mCreationTime) > mDurationTime;
 }
 
-MissileObject::MissileObject()
+MissileObject::MissileObject(const XMFLOAT3& position)
+	: GameObject(), mActive{ false } 
 {
+	SetPosition(position);
 }
 
 MissileObject::~MissileObject()
@@ -734,31 +945,30 @@ void MissileObject::SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward
 	mBtRigidBody->setLinearVelocity(forward * 1000.0f);
 }
 
-void MissileObject::Update(float elapsedTime)
+void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, float latency)
 {
-	btScalar m[16];
-	btTransform btMat;
-	mBtRigidBody->getMotionState()->getWorldTransform(btMat);
-	btMat.getOpenGLMatrix(m);
+	mProgress = 0;
+	mPrevOrigin = mCorrectionOrigin;
+	mPrevQuat = mCorrectionQuat;
 
-	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
-	UpdateBoundingBox();
+	mCorrectionOrigin.SetValue(
+		(int)(pck->position[0] + pck->linear_vel[0] * latency),
+		(int)(pck->position[1] + pck->linear_vel[1] * latency),
+		(int)(pck->position[2] + pck->linear_vel[2] * latency));
 
-	mPosition.x = mWorld(3, 0);
-	mPosition.y = mWorld(3, 1);
-	mPosition.z = mWorld(3, 2);
+	// Convert to left-handed
+	mCorrectionQuat.SetValue(
+		+pck->quaternion[0],
+		-(int)(pck->quaternion[1]),
+		-(int)(pck->quaternion[3]),
+		-(int)(pck->quaternion[2]));
+}
 
-	mLook.x = mWorld(2, 0);
-	mLook.y = mWorld(2, 1);
-	mLook.z = mWorld(2, 2);
-
-	mUp.x = mWorld(1, 0);
-	mUp.y = mWorld(1, 1);
-	mUp.z = mWorld(1, 2);
-
-	mRight.x = mWorld(0, 0);
-	mRight.y = mWorld(0, 1);
-	mRight.z = mWorld(0, 2);
-
-	mDuration -= elapsedTime;
+void MissileObject::Update(float elapsedTime, float updateRate)
+{
+	if (mActive)
+	{
+		GameObject::Update(elapsedTime, updateRate);
+		mDuration -= elapsedTime;
+	}
 }
