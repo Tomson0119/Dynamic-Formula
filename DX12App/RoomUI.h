@@ -17,6 +17,8 @@ public:
 	void Reset();
 	void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
+	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y) { return 0; }
+
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 

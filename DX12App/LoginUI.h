@@ -20,7 +20,8 @@ public:
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y);
-	virtual char OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y);
+	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y);
+	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y);
 	
 	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
 	virtual void ChangeTextAlignment(UINT uNum, UINT uState  );
@@ -30,12 +31,15 @@ public:
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
+	bool IsSignup = false;
+	bool IsLoginFail = false;
+
 	float mfWidth = 0.0f;
 	float mfHeight = 0.0f;
 
 	float fFontSize = 0.0f; 
 	std::vector<std::wstring> Fonts;
-	DWRITE_TEXT_ALIGNMENT TextAlignments[6];
+	DWRITE_TEXT_ALIGNMENT TextAlignments[7];
 	UINT TextCnt;
 	UINT UICnt;
 	std::vector<D2D1::ColorF> mvColors;

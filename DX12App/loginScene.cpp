@@ -19,7 +19,7 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	}
 	else OutputDebugStringW(L"Failed to connect to server.\n");
 #else
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #endif
 }
 
@@ -43,13 +43,38 @@ void LoginScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 	mpUI.get()->OnProcessMouseMove(btnState, x, y);
 }
 
-void LoginScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+void LoginScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
-	if (buttonState) 
+	if (buttonState&MK_LBUTTON) 
 	{
+		if (mpUI.get()->OnProcessMouseClick(buttonState, x, y) == 1) //LoginFail
+		{
+#ifndef STADNALONE
+			mNetPtr->Client()->RequestLogin(mID, mPWD);
+#else
+#endif
+
+		}
+		else if (mpUI.get()->OnProcessMouseClick(buttonState, x, y) == 2) // Sign-up
+		{
+#ifndef STADNALONE
+			mNetPtr->Client()->RequestRegister(mID, mPWD);
+#else
+#endif
+		}
+		else if (mpUI.get()->OnProcessMouseClick(buttonState, x, y) == 0) //LoginSuccess
+		{
+
+		}
+
+		//mpUI.get()->OnProcessMouseDown(buttonState, x, y);
 		//LoginCheck
-		if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		//if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y) == 1)
+		//{
+			////SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+			//mNetPtr->Client()->RequestLogin(mID, mPWD);
+			//// 로그인 성공? 실패? 를 어떻게 판단하지??
+		//}
 	}
 }
 
@@ -71,6 +96,7 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			mID.assign(Texts[0].begin(), Texts[0].end());
 			mPWD.assign(Texts[1].begin(), Texts[1].end());
 			//Login Check -> mID와 mPWD로 Login Check
+			mNetPtr->Client()->RequestLogin(Texts[0], Texts[1]);
 			break;
 		case 0x08:  // backspace
 			if(!Texts[IsPwd].empty() && (Texts[0].compare("ID") != 0||Texts[1].compare("Password") != 0))

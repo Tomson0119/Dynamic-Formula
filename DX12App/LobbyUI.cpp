@@ -33,6 +33,11 @@ void LobbyUI::SetVectorSize(UINT nFrame, UINT TextCnt)
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
 
+int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
+{
+    return 0;
+}
+
 void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
@@ -53,7 +58,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
 }
 
-char LobbyUI::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+void LobbyUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
@@ -63,12 +68,12 @@ char LobbyUI::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
         {
            
             mvColors[(i+1)/2].a = 0.1f;
-            if (buttonState)
-                return i;
+           /* if (buttonState)
+                return i;*/
         }
         else mvColors[i].a = 0.9f;
     }
-    return 66;
+    //return 66;
 }
 
 void LobbyUI::Update(float GTime)

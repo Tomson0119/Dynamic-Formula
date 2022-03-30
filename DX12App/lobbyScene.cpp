@@ -8,7 +8,7 @@ LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
 #ifdef STANDALONE
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #else
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
@@ -54,8 +54,8 @@ void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 	if (buttonState)
 	{
 		//LoginCheck
-		if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		//if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
+			//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 	}
 }
 

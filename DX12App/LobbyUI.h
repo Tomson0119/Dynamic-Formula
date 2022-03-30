@@ -18,7 +18,9 @@ public:
 	void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y);
-	virtual char OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y);
+	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y);
+	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y);
+
 	bool LobbyUI::MouseCollisionCheck(float x, float y, const TextBlock& TB);
 
 private:
