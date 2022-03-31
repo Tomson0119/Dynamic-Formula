@@ -396,6 +396,7 @@ MigrationBackup/
 # 리소스 파일 제외
 !/DX12App/Models/*
 !/DX12App/Resources/*
+!/Server/Resource/*
 
 #물리엔진 추적하지 않음
 DX12App/bullet3-master
