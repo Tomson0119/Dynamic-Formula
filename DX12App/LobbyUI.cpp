@@ -258,8 +258,9 @@ void LobbyUI::Draw(UINT nFrame)
         mfHeight / 36 * 27
         }
     };
+    bool IsOutlined[14] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true };
     UI::BeginDraw(nFrame);
-    UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt + 1, 0, 0);
+    UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt + 1, 0, 0, IsOutlined);
     UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     UI::EndDraw(nFrame);
 }

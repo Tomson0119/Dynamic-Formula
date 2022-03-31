@@ -44,16 +44,52 @@ int LoginUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
+    
+    if (IsLoginFail && MouseCollisionCheck(dx, dy, mvTextBlocks[6]))
+    {
+        IsLoginFail = false;
+        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    }
+    
     if (MouseCollisionCheck(dx, dy, mvTextBlocks[1])) //Log-in
     {
         mvColors[1].a = 0.5f;
         if (buttonState & MK_LBUTTON)
         {
-            // 로그인 실패하면?
-            IsLoginFail = true;
-            UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+            
+            if (!IsSignup)
+            {
+                // 로그인 실패하면?
+                IsLoginFail = true;
+                UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
                 return 1;
+            }
+            else
+            {
+                //회원가입 실패하면?
+                IsLoginFail = true;
+                UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+                return 2;
+            }
         }
+    }
+    else if (MouseCollisionCheck(dx, dy, mvTextBlocks[4]))
+    {
+        if (!IsSignup)
+        {
+            if (buttonState & MK_LBUTTON)
+                IsSignup = true;
+            return 0;
+        }
+        else
+        {
+            if (buttonState & MK_LBUTTON)
+                IsSignup = false;
+            return 0;
+        }
+               
+        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+        return 2;
     }
     else 
     { 
@@ -62,11 +98,7 @@ int LoginUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
         return 0;
     }
 
-    if (MouseCollisionCheck(dx, dy, mvTextBlocks[4]) && buttonState)
-    {
-        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
-        return 2;
-    }
+    
 }
 
 
@@ -74,6 +106,15 @@ void LoginUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
+    
+    if (IsLoginFail && MouseCollisionCheck(dx, dy, mvTextBlocks[6]))
+    {
+        mvColors[6].a = 0.5f;
+        mvColors[12].a = 0.5f;
+
+        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    }
+    
     if (MouseCollisionCheck(dx, dy, mvTextBlocks[1])) //Log-in
     {
         mvColors[1].a = 0.5f;
@@ -89,13 +130,13 @@ void LoginUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
     /*if (MouseCollisionCheck(dx, dy, mvTextBlocks[5]) && buttonState)
         exit(0);*/
 
-    if (MouseCollisionCheck(dx, dy, mvTextBlocks[4]) && buttonState) // Sign-up
+    if (MouseCollisionCheck(dx, dy, mvTextBlocks[4]))  // Sign-up
     {
         // UI에서 MouseDown됐을 때 반환 값을 주도록 처리
         // 그 반환 값을 통해서 Netptr처리.
         // 여기서 반환 값 줘야 함
         //새로운 UI처리
-        IsSignup = true;
+       
     }
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
     //return 0;
@@ -150,7 +191,40 @@ void LoginUI::Update(float GTime, std::vector <std::wstring>& Texts)
         mvColors[12].a = 0.9f;
         UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
     }
+    else
+    {
+        mvColors[6].a = 0.0f;
+        mvColors[12].a = 0.0f;
+        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    }
+    if (IsSignup)
+    {
+        mvTextBlocks[1].strText.clear();
+        mvTextBlocks[4].strText.clear();
+        mvTextBlocks[6].strText.clear();
 
+        for (auto wc : std::string{ "Log-in" })
+            mvTextBlocks[4].strText.push_back(wc);
+        for (auto wc : std::string{ "Sign-Up" })
+            mvTextBlocks[1].strText.push_back(wc);
+        for (auto wc : std::string{ "Sign-Up Fail" })
+            mvTextBlocks[6].strText.push_back(wc);
+        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    }
+    else
+    {
+        mvTextBlocks[1].strText.clear();
+        mvTextBlocks[4].strText.clear();
+        mvTextBlocks[6].strText.clear();
+
+        for (auto wc : std::string{ "Log-in" })
+            mvTextBlocks[1].strText.push_back(wc);
+        for (auto wc : std::string{ "Sign-Up" })
+            mvTextBlocks[4].strText.push_back(wc);
+        for (auto wc : std::string{ "Login Fail" })
+            mvTextBlocks[6].strText.push_back(wc);
+        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    }
 }
 
 void LoginUI::Update(std::vector<std::wstring>& Texts) 
@@ -306,8 +380,9 @@ void LoginUI::Draw(UINT nFrame)
             mfHeight / 128 * 68
         }
     };
+    bool IsOutlined[9] = {true,true, true, true, true,false,false, false,false};
     UI::BeginDraw(nFrame);
-    UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0);
+    UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0, IsOutlined);
     UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     UI::EndDraw(nFrame);
 }
@@ -340,7 +415,7 @@ void LoginUI::CreateFontFormat()
 }
 
 void LoginUI::SetTextRect()
-{//Text: GameName, Login, ID, Password, sign, close, LoginFail
+{//Text: GameName, Login, ID, Password, sign, close, LoginFail, SignID, SignPWD
     mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth/128 * 63, mfHeight/8 * 2,mfWidth  / 128 * 83, mfHeight / 8 * 3);
     mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth / 40 * 25, mfHeight / 64 * 28, mfWidth / 40 * 29, mfHeight / 128 * 71);
     mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth / 200 * 81, mfHeight / 64 * 28,  mfWidth / 200 * 119,  mfHeight / 128 * 63);

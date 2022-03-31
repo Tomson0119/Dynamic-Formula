@@ -276,7 +276,8 @@ void InGameUI::Draw(UINT nFrame)
 			mfHeight * (8.0f / 9.0f)
         }//Item2 UI
     };
-	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 2-uItemCnt, 1);
+	bool IsOutlined[3] = { true, true, true };
+	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 2-uItemCnt, 1, IsOutlined);
 	UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 	UI::EndDraw(nFrame);

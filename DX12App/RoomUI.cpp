@@ -223,8 +223,9 @@ void RoomUI::Draw(UINT nFrame)
         mvTextBlocks[10].d2dLayoutRect.bottom
         }
     };
+    bool IsOutlined[13] = { true, true, true, true, true, true, true, true, true, true, true, true, true };
     UI::BeginDraw(nFrame); 
-    UI::RectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0);
+    UI::RectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0, IsOutlined);
     UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     UI::EndDraw(nFrame);
 }

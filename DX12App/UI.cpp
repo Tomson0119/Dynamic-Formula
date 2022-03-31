@@ -87,17 +87,19 @@ void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTex
     }
 }
 
-void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT noFill, UINT GradientCnt)
+void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT noFill, UINT GradientCnt, bool IsOutlined[])
 {
     if (md2dLinearGradientBrush.Get())
     {
         for (int i = 0; i < static_cast<int>(GradientCnt); ++i)
         {
             mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), md2dLinearGradientBrush.Get());
-            mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
+            if(IsOutlined[i])
+                mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
         }
     }
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt; ++i)
+        if(IsOutlined[i])
             mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
     
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt-noFill; ++i)
@@ -105,17 +107,19 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT n
     
 }
 
-void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt)
+void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt, bool IsOutlined[])
 {
     if (md2dLinearGradientBrush.Get())
     {
         for (int i = 0; i < static_cast<int>(GradientCnt); ++i)
         {
             mpd2dDeviceContext.Get()->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), md2dLinearGradientBrush.Get());
+            if(IsOutlined[i])
             mpd2dDeviceContext.Get()->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[0].Get());
         }
     }
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt; ++i)
+        if(IsOutlined[i])
         mpd2dDeviceContext.Get()->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[0].Get());
 
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt - bias; ++i)
