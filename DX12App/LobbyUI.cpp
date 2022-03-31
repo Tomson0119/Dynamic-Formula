@@ -338,31 +338,31 @@ void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
 
     SetTextRect();
-    for (auto wc : std::wstring{ L"MakeRoom" })
+    for (auto wc : std::string{ "MakeRoom" })
         mvTextBlocks[0].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Room No.1" })
+    for (auto wc : std::string{ "Room No.1" })
         mvTextBlocks[1].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"1" })
+    for (auto wc : std::string{ "1" })
         mvTextBlocks[2].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Room Title 2" })
+    for (auto wc : std::string{ "Room Title 2" })
         mvTextBlocks[3].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"2" })
+    for (auto wc : std::string{ "2" })
         mvTextBlocks[4].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"0/03" })
+    for (auto wc : std::string{ "0/03" })
         mvTextBlocks[5].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"3" })
+    for (auto wc : std::string{ "3" })
         mvTextBlocks[6].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Room No. 4" })
+    for (auto wc : std::string{ "Room No. 4" })
         mvTextBlocks[7].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"4" })
+    for (auto wc : std::string{"4" })
         mvTextBlocks[8].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Room Title 5" })
+    for (auto wc : std::string{ "Room Title 5" })
         mvTextBlocks[9].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"5" })
+    for (auto wc : std::string{ "5" })
         mvTextBlocks[10].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"0 / 0 6" })
+    for (auto wc : std::string{ "0 / 0 6" })
         mvTextBlocks[11].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"6" })
+    for (auto wc : std::string{ "6" })
         mvTextBlocks[12].strText.push_back(wc);
 }
 

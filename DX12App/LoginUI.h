@@ -8,9 +8,9 @@ public:
 		pd3dCommandQueue);
 	~LoginUI();
 	void SetVectorSize(UINT nFrame, UINT TextCnt);
-	virtual void Update(float GTime, std::vector<std::wstring>& Texts);
+	virtual void Update(float GTime, std::vector<std::string>& Texts);
 	virtual void Update(float GTime) {}
-	virtual void Update(std::vector<std::wstring>& Texts);
+	virtual void Update(std::vector<std::string>& Texts);
 	virtual void Draw(UINT nFrame);
 	void CreateFontFormat();
 	void SetTextRect();

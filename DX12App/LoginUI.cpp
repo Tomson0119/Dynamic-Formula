@@ -168,7 +168,7 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
 }
 
-void LoginUI::Update(float GTime, std::vector <std::wstring>& Texts)
+void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
 {
     //mvTextBlocks[3].strText.clear();
     //mvTextBlocks[5].strText.clear();
@@ -227,7 +227,7 @@ void LoginUI::Update(float GTime, std::vector <std::wstring>& Texts)
     }
 }
 
-void LoginUI::Update(std::vector<std::wstring>& Texts) 
+void LoginUI::Update(std::vector<std::string>& Texts) 
 {
     mvTextBlocks[2].strText.assign(Texts[0].begin(), Texts[0].end());
     mvTextBlocks[3].strText.assign(Texts[1].begin(), Texts[1].end());
