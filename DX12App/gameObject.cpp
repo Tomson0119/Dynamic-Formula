@@ -972,3 +972,22 @@ void MissileObject::Update(float elapsedTime, float updateRate)
 		mDuration -= elapsedTime;
 	}
 }
+
+StaticObject::StaticObject()
+{
+}
+
+StaticObject::~StaticObject()
+{
+}
+
+void StaticObject::Update(float elapsedTime, float updateRate)
+{
+	RotateDirectionVectors();
+
+	mOldWorld = mWorld;
+
+	UpdateTransform();
+
+	UpdateBoundingBox();
+}

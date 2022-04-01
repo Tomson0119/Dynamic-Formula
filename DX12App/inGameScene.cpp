@@ -933,7 +933,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		transparentObjPath.assign(transparentpath.begin(), transparentpath.end());
 
 		
-		auto obj = make_shared<GameObject>();
+		auto obj = make_shared<StaticObject>();
 
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
@@ -971,7 +971,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 		if (_access(transparentpath.c_str(), 0) != -1)
 		{
-			auto transparentObj = make_shared<GameObject>();
+			auto transparentObj = make_shared<StaticObject>();
 			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
 
 			auto& transparentMeshes = transparentObj->GetMesh();
