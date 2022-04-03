@@ -252,10 +252,10 @@ void VehicleRigidBody::UpdateRigidBody()
 {
 	RigidBody::UpdateRigidBody();
 
-	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrictionSlip;
-	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrictionSlip;
-	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.FrictionSlip;
-	mVehicle->getWheelInfo(3).m_frictionSlip = mComponent.FrictionSlip;
+	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrontFrictionSlip;
+	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrontFrictionSlip;
+	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.BackFrictionSlip;
+	mVehicle->getWheelInfo(3).m_frictionSlip = mComponent.BackFrictionSlip;
 
 	mVehicle->applyEngineForce(mComponent.EngineForce, 0);
 	mVehicle->applyEngineForce(mComponent.EngineForce, 1);
