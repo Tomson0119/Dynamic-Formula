@@ -658,7 +658,7 @@ namespace Matrix4x4
 		XMMATRIX scaling = XMMatrixScalingFromVector(XMLoadFloat3(&scale));
 		
 		XMFLOAT4X4 world{};
-		XMStoreFloat4x4(&world, translation* rotation* scaling);
+		XMStoreFloat4x4(&world, scaling * rotation * translation);
 		return world;
 	}
 

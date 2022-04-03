@@ -453,7 +453,8 @@ void GameObject::Draw(
 
 void GameObject::UpdateTransform()
 {
-	mWorld(0, 0) = mScaling.x * mRight.x;
+	mWorld = Matrix4x4::CalulateWorldTransform(mPosition, mQuaternion, mScaling);
+	/*mWorld(0, 0) = mScaling.x * mRight.x;
 	mWorld(0, 1) = mRight.y;
 	mWorld(0, 2) = mRight.z;
 
@@ -467,7 +468,7 @@ void GameObject::UpdateTransform()
 
 	mWorld(3, 0) = mPosition.x;
 	mWorld(3, 1) = mPosition.y;
-	mWorld(3, 2) = mPosition.z;
+	mWorld(3, 2) = mPosition.z;*/
 }
 
 void GameObject::RotateDirectionVectors()
