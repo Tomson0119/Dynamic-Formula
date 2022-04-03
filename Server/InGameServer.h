@@ -26,6 +26,7 @@ public:
 
 		const float	WheelDriftFriction = 4.0f;
 		const float WheelDefaultFriction = 25.0f;
+		const float MinSpeedForDrift = 100.0f;
 
 		const float DefaultMaxSpeed = 1000.0f;
 		const float BoostedMaxSpeed = 1500.0f;
