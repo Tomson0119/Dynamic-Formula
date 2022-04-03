@@ -36,6 +36,7 @@ public:
 public:
 	SOCKET GetTCPSocket() const { return mTCPSocket.GetSocket(); }
 	SOCKET GetUDPSocket() const { return mUDPSocket.GetSocket(); }
+	bool IsConnected() const { return mIsConnected; }
 
 private:
 	Socket mTCPSocket;
