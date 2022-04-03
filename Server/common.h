@@ -30,3 +30,17 @@
 
 #define USE_DATABASE
 #define DEBUG_PACKET_TRANSFER
+
+namespace Math
+{
+	const double PI = 3.14159265359;
+}
+
+inline void Assert(bool expr, const std::string& message)
+{
+	if (expr == false)
+	{
+		std::cout << message << "\n";
+		std::abort();
+	}
+}
