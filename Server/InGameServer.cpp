@@ -54,7 +54,7 @@ void InGameServer::PrepareToStartGame(int roomID)
 			pos.setZ(pos.z() + 100.0f);
 
 			btQuaternion quat = btQuaternion::getIdentity();
-			quat.setRotation({ 0.0f,1.0f,0.0f }, 3.141592);
+			quat.setRotation({ 0.0f,1.0f,0.0f }, (btScalar)Math::PI);
 
 			msWorlds[roomID]->SetPlayerPosition(i, pos);
 			msWorlds[roomID]->SetPlayerRotation(i, quat);
