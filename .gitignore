@@ -397,6 +397,7 @@ MigrationBackup/
 !/DX12App/Models/*
 !/DX12App/Resources/*
 !/Server/Resource/*
+!/Server/Resource/Models/*
 
 #물리엔진 추적하지 않음
 DX12App/bullet3-master
