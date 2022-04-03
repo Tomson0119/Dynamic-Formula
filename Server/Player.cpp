@@ -1,6 +1,6 @@
 #include "common.h"
 #include "Player.h"
-#include "BtShape.h"
+#include "BtCompoundShape.h"
 #include "RigidBody.h"
 
 Player::Player()
