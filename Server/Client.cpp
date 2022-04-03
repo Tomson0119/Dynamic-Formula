@@ -77,13 +77,13 @@ void Client::SendMsg(bool udp)
 	{
 		if (mTCPSocket.Send(mTCPSendOverlapped) < 0)
 		{
-			delete mTCPSendOverlapped;
+			//delete mTCPSendOverlapped;
 		}
 		mTCPSendOverlapped = nullptr;
 	}
 	else if (udp == true && mUDPSendOverlapped)
 	{
-		if (mUDPSocketPtr->SendTo(mUDPSendOverlapped, mHostEp) < 0);
+		if (mUDPSocketPtr->SendTo(mUDPSendOverlapped, mHostEp) < 0)
 		{
 			// delete mUDPSendOverlapped;
 		}

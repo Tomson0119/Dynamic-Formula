@@ -65,7 +65,7 @@ void NetClient::SendMsg()
 	{
 		if (mTCPSocket.Send(mTCPSendOverlapped) < 0)
 		{
-			delete mTCPSendOverlapped;
+			//delete mTCPSendOverlapped;
 		}
 		mTCPSendOverlapped = nullptr;
 	}
