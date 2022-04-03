@@ -12,6 +12,7 @@
 #include <IOCP.h>
 #include <MemoryPool.h>
 
+#include <fstream>
 #include <csignal>
 #include <deque>
 #include <chrono>
@@ -36,11 +37,21 @@ namespace Math
 	const double PI = 3.14159265359;
 }
 
-inline void Assert(bool expr, const std::string& message)
+namespace Helper
 {
-	if (expr == false)
+	inline void Assert(bool expr, const std::string& message)
 	{
-		std::cout << message << "\n";
-		std::abort();
+		if (expr == false)
+		{
+			std::cout << message << "\n";
+			std::abort();
+		}
+	}
+
+	inline std::ifstream OpenFile(std::string_view filename)
+	{
+		std::ifstream file{ filename.data(), std::ios::binary };
+		Assert(file.is_open(), "Cannot find file name: \"" + std::string(filename) + "\".");
+		return file;
 	}
 }

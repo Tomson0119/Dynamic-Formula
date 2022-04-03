@@ -2,15 +2,13 @@
 #include "BtShape.h"
 #include "RigidBody.h"
 
-#include <fstream>
-
 
 //
 //	BtBoxShape
 //
 void BtShapeBase::LoadConvexHullShape(std::string_view filename)
 {
-	std::ifstream in_file = OpenFile(filename);
+	std::ifstream in_file = Helper::OpenFile(filename);
 
 	mCompoundShape = std::make_unique<btCompoundShape>();
 	
@@ -50,13 +48,6 @@ void BtShapeBase::LoadConvexHullShape(std::string_view filename)
 	}
 }
 
-std::ifstream BtShapeBase::OpenFile(std::string_view filename)
-{
-	std::ifstream file{ filename.data(), std::ios::binary };
-	Assert(file.is_open(), "Cannot find file name: \"" + std::string(filename) + "\".");
-	return file;
-}
-
 
 //
 //	BtBoxShape
@@ -69,7 +60,7 @@ BtBoxShape::BtBoxShape(std::string_view filename)
 
 void BtBoxShape::LoadShapeData(std::string_view filename)
 {
-	std::ifstream file = OpenFile(filename);
+	std::ifstream file = Helper::OpenFile(filename);
 
 	btScalar x{}, y{}, z{};
 	file >> x >> y >> z;
@@ -98,7 +89,7 @@ BtCarShape::BtCarShape(std::string_view filename)
 
 void BtCarShape::LoadShapeData(std::string_view filename)
 {
-	std::ifstream file = OpenFile(filename);
+	std::ifstream file = Helper::OpenFile(filename);
 
 	btScalar x, y, z;
 	std::string type;
@@ -184,7 +175,7 @@ BtTerrainShape::~BtTerrainShape()
 
 void BtTerrainShape::LoadShapeData(std::string_view filename)
 {
-	std::ifstream file = OpenFile(filename);
+	std::ifstream file = Helper::OpenFile(filename);
 
 	btScalar scale_x{}, scale_y{}, scale_z{};
 	file >> mMapRow >> mMapCol;
