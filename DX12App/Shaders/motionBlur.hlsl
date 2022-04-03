@@ -21,7 +21,7 @@ void CS(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_Di
 
     float Depth = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].b;
 
-    int BlurConst = 100;
+    int BlurConst = 50;
 
     float Blur = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].a;
     float2 Velocity = -VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].rg * BlurConst;
@@ -29,7 +29,7 @@ void CS(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_Di
     float4 cColor = RenderTarget[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)];
 
     int cnt = 0;
-    if (Blur)
+    if (Blur && (abs(length(Velocity)) > 0.01f))
     {
         for (int i = 0; i < numSample; ++i)
         {

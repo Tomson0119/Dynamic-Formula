@@ -583,7 +583,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 {
 	if (mHwnd != GetFocus()) return;
 
-	if (GetAsyncKeyState('M') & 0x8000)
+	if (GetAsyncKeyState('M') & 1)
 	{
 		mMotionBlurEnable = 1 - mMotionBlurEnable;
 	}
@@ -950,6 +950,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		{
 			if (i->get()->GetMeshShape())
 			{
+				i->get()->GetMeshShape()->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
 				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
