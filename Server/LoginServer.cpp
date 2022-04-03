@@ -143,8 +143,7 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	{
 		mLobby.GetInGameServer().RunPhysicsSimulation(id);
 		break;
-	}
-	}
+	}}
 }
 
 void LoginServer::AcceptLogin(const char* name, int id)
