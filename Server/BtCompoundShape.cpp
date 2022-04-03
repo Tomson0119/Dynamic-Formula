@@ -128,20 +128,146 @@ void BtCarShape::BuildCompoundShape(std::string_view filename)
 //
 // BtMeshShape
 // 
-BtMeshShape::BtMeshShape(std::string_view)
+BtMeshShape::BtMeshShape(std::string_view filename)
 {
+	LoadModel(filename);
+}
+
+BtMeshShape::BtMeshShape(BtMeshShape&& other) noexcept
+{
+	if (other.mMeshShape)
+	{
+		mMeshShape = std::move(other.mMeshShape);
+	}
 }
 
 BtMeshShape::~BtMeshShape()
 {
+	if (mTriangleVertexArray)
+	{
+		btIndexedMesh& mesh = mTriangleVertexArray->getIndexedMeshArray()[0];
+
+		delete[] mesh.m_vertexBase;
+		delete[] mesh.m_triangleIndexBase;
+	}
 }
 
-void BtMeshShape::LoadMesh(std::string_view filename)
+void BtMeshShape::LoadModel(std::string_view filename)
 {
+	std::ifstream file = Helper::OpenFile(filename);
+	std::vector<btVector3> positions;
+
+	std::string info;
+	while (file >> info)
+	{
+		if (info == "v")
+		{
+			float x, y, z;
+			file >> x >> y >> z;
+			positions.push_back({ x,y,z });
+		}
+		else if (info == "usemtl")
+		{
+			LoadMesh(file, positions);
+		}
+	}
 }
 
-void BtMeshShape::BuildMeshShape(const std::vector<btVector3> position, const std::vector<uint16_t> indices)
+void BtMeshShape::LoadMesh(std::ifstream& file, const std::vector<btVector3>& positions)
 {
+	std::vector<std::vector<int>> temp;
+
+	std::string info;
+	while (file >> info)
+	{
+		if (info == "f")
+		{
+			char ignore[2];
+			int v, vt, vn;
+
+			temp.emplace_back();
+			while (file >> v >> ignore[0] >> vt >> ignore[1] >> vn)
+			{
+				temp.back().push_back(v);
+			}
+		}
+		else if (info == "usemtl") break;
+	}
+
+	std::vector<btVector3> vertices;
+	std::vector<uint16_t> indices;
+	uint16_t k = 0;
+	for (const std::vector<int>& face : temp)
+	{
+		for (int i = 0; i < face.size(); i++)
+		{
+			vertices.push_back(positions[face[i]]);
+			if (i > 0 && indices.size() % 3 == 0)
+			{
+				indices.push_back(*(indices.end() - 3));
+				indices.push_back(*(indices.end() - 2));
+			}
+			indices.push_back(k++);
+		}
+	}
+
+	BuildMeshShape(vertices, indices);
+}
+
+void BtMeshShape::BuildMeshShape(const std::vector<btVector3> vertices, const std::vector<uint16_t> indices)
+{
+	mTriangleVertexArray = std::make_unique<btTriangleIndexVertexArray>();
+
+	btIndexedMesh tempMesh;
+	mTriangleVertexArray->addIndexedMesh(tempMesh, PHY_FLOAT);
+
+	btIndexedMesh& mesh = mTriangleVertexArray->getIndexedMeshArray()[0];
+
+	const int32_t VERTICES_PER_TRIANGLE = 3;
+	size_t numIndices = indices.size();
+	mesh.m_numTriangles = (int)numIndices / VERTICES_PER_TRIANGLE;
+	if (numIndices < std::numeric_limits<int16_t>::max())
+	{
+		mesh.m_triangleIndexBase = new unsigned char[sizeof(int16_t) * (size_t)numIndices];
+		mesh.m_indexType = PHY_SHORT;
+		mesh.m_triangleIndexStride = VERTICES_PER_TRIANGLE * sizeof(int16_t);
+	}
+	else
+	{
+		mesh.m_triangleIndexBase = new unsigned char[sizeof(int32_t) * (size_t)numIndices];
+		mesh.m_indexType = PHY_INTEGER;
+		mesh.m_triangleIndexStride = VERTICES_PER_TRIANGLE * sizeof(int32_t);
+	}
+	mesh.m_numVertices = (int)vertices.size();
+	mesh.m_vertexBase = new unsigned char[VERTICES_PER_TRIANGLE * sizeof(btScalar) * (size_t)mesh.m_numVertices];
+	mesh.m_vertexStride = VERTICES_PER_TRIANGLE * sizeof(btScalar);
+	btScalar* vertexData = static_cast<btScalar*>((void*)(mesh.m_vertexBase));
+	for (int32_t i = 0; i < mesh.m_numVertices; ++i)
+	{
+		int32_t j = i * VERTICES_PER_TRIANGLE;
+		const btVector3& point = vertices[i];
+		vertexData[j] = point.x();
+		vertexData[j + 1] = point.y();
+		vertexData[j + 2] = point.z();
+	}
+	if (numIndices < std::numeric_limits<int16_t>::max())
+	{
+		int16_t* indexBase = static_cast<int16_t*>((void*)(mesh.m_triangleIndexBase));
+		for (int32_t i = 0; i < numIndices; ++i) {
+			indexBase[i] = (int16_t)indices[i];
+		}
+	}
+	else
+	{
+		int32_t* indexBase = static_cast<int32_t*>((void*)(mesh.m_triangleIndexBase));
+		for (int32_t i = 0; i < numIndices; ++i)
+		{
+			indexBase[i] = indices[i];
+		}
+	}
+
+	const bool USE_QUANTIZED_AABB_COMPRESSION = true;
+	mMeshShape = std::make_unique<btBvhTriangleMeshShape>(mTriangleVertexArray.get(), USE_QUANTIZED_AABB_COMPRESSION);
 }
 
 
@@ -157,27 +283,32 @@ void BtMapShape::BuildCompoundShape(std::string_view filename)
 {
 	std::ifstream file = Helper::OpenFile(filename);
 
-	std::string info, objName;
-	btVector3 pos;
-	btVector4 quat;
-	btVector3 scale;
-	float x, y, z, w;
+	std::string info;	
 	while (std::getline(file, info))
 	{
 		std::stringstream ss(info);
 
+		std::string objName;
 		ss >> objName;
 
+		float x, y, z, w;
+
+		btVector3 pos;
 		ss >> x >> y >> z;
 		pos.setValue(x, y, z);
 
+		btVector4 quat;
 		ss >> x >> y >> z >> w;
 		quat.setValue(x, y, z, w);
 
+		btVector3 scale;
 		ss >> x >> y >> z;
 		scale.setValue(x, y, z);
 
-		std::string objPath1 = "Models\\" + objName + ".obj";
-		std::string objPath2 = "Models\\" + objName + "_Transparent.obj";
+		std::string objPath1 = "Resource\\Models\\" + objName + ".obj";
+		std::string objPath2 = "Resource\\Models\\" + objName + "_Transparent.obj";
+
+		mMeshShapes.emplace_back(objPath1);
+		mMeshShapes.emplace_back(objPath2);
 	}
 }

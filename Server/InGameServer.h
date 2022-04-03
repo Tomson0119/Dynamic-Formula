@@ -1,6 +1,7 @@
 #pragma once
 
-#include "BtShape.h"
+#include "BtCollisionShape.h"
+#include "BtCompoundShape.h"
 #include "Timer.h"
 
 class LoginServer;
@@ -66,8 +67,8 @@ private:
 	std::unique_ptr<BtCarShape> mBtCarShape;
 	std::unique_ptr<BtBoxShape> mMissileShape;
 
-	std::array<std::unique_ptr<BtTerrainShape>, 2> mTerrainShapes;
-	std::vector<std::unique_ptr<BtBoxShape>> mObjRigidBodies;
+	//std::array<std::unique_ptr<BtTerrainShape>, 2> mTerrainShapes;
+	std::unique_ptr<BtMapShape> mMapShape;
 
 	std::shared_ptr<BulletConstant> mBulletConstants;
 
