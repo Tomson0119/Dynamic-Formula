@@ -16,6 +16,8 @@ public:
 	btCollisionShape* GetCollisionShape() const { return mCollisionShape.get(); }
 	btCollisionShape* GetCompoundShape() const { return mCompoundShape.get(); }
 
+	static std::ifstream OpenFile(std::string_view filename);
+
 protected:
 	btVector3 mExtents;
 	std::unique_ptr<btCollisionShape> mCollisionShape;
