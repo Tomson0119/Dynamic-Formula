@@ -335,13 +335,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(ProjectDir)\..\BulletWrap;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(ProjectDir)\..\BulletWrap;$(ProjectDir)\..\FMOD\src;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(ProjectDir)\..\FMOD\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(ProjectDir)\..\BulletWrap;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(ProjectDir)\..\FMOD\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(ProjectDir)\..\BulletWrap;$(ProjectDir)\..\FMOD\src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

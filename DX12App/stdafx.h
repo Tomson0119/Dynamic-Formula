@@ -69,6 +69,7 @@
 #include <tchar.h>
 #include <conio.h>
 #include <io.h>
+#include "fmod.h"
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
