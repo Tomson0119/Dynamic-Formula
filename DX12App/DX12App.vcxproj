@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AudioSystem.cpp" />
     <ClCompile Include="bulletWrap.cpp" />
     <ClCompile Include="camera.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
@@ -150,6 +151,7 @@
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioSystem.h" />
     <ClInclude Include="basewin.h" />
     <ClInclude Include="bulletWrap.h" />
     <ClInclude Include="camera.h" />
