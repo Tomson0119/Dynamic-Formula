@@ -306,3 +306,15 @@ private:
 	float mDuration = 3.0f;
 	std::atomic_bool mActive;
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class StaticObject : public GameObject
+{
+public:
+	StaticObject();
+	virtual ~StaticObject();
+
+	virtual void Update(float elapsedTime, float updateRate) override;
+};
