@@ -43,6 +43,11 @@ float CalcAttenuation(float d, float falloffStart, float falloffEnd)
     return saturate((falloffEnd - d) / (falloffEnd - falloffStart));
 }
 
+float CalcRimLight(float rimWidth, float3 normal, float3 view)
+{
+    return smoothstep(1.0f - rimWidth, 1.0f, 1 - max(0, dot(normal, view)));
+}
+
 float3 BlinnPhongModelLighting(float3 lightDiff, float3 lightVec, float3 normal, float3 view, Material mat)
 {
     const float m = mat.Exponent;
@@ -56,7 +61,11 @@ float3 BlinnPhongModelLighting(float3 lightDiff, float3 lightVec, float3 normal,
     float3 specular = fresnel * roughness;
     specular = specular / (specular + 1.0f);
     
-    return (mat.Diffuse.rgb + specular * mat.Specular) * lightDiff;
+    float rimLight = 0.0f;
+    rimLight = CalcRimLight(0.5f, normal, view);
+    float3 diffuse = float3(mat.Diffuse.r + rimLight, mat.Diffuse.g + rimLight, mat.Diffuse.b + rimLight);
+    
+    return (diffuse + specular * mat.Specular) * lightDiff;
 }
 
 float3 ComputeDirectLight(Light light, Material mat, float3 normal, float3 view)
@@ -147,6 +156,7 @@ float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat, float3 pos, float
         else if(lights[i].Type == POINT_LIGHT)
             result += shadowFactor * ComputePointLight(lights[i], mat, pos, normal, view);;
     }
+    
     
     return float4(result + mat.Emission, 0.0f);
 }
