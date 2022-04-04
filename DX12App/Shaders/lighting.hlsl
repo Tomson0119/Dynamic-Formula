@@ -18,11 +18,11 @@ struct Material
 struct Light
 {
     float3 Diffuse;
-    float FalloffStart;
+    float  FalloffStart;
     float3 Position;
-    float SpotPower;
+    float  SpotPower;
     float3 Direction;
-    float FalloffEnd;
+    float  FalloffEnd;
     float  Range;
     int    Type;
 };
@@ -61,11 +61,7 @@ float3 BlinnPhongModelLighting(float3 lightDiff, float3 lightVec, float3 normal,
     float3 specular = fresnel * roughness;
     specular = specular / (specular + 1.0f);
     
-    float rimLight = 0.0f;
-    rimLight = CalcRimLight(0.5f, normal, view);
-    float3 diffuse = float3(mat.Diffuse.r + rimLight, mat.Diffuse.g + rimLight, mat.Diffuse.b + rimLight);
-    
-    return (diffuse + specular * mat.Specular) * lightDiff;
+    return (mat.Diffuse.rgb + specular * mat.Specular) * lightDiff;
 }
 
 float3 ComputeDirectLight(Light light, Material mat, float3 normal, float3 view)
