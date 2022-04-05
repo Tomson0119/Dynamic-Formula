@@ -54,13 +54,15 @@ private:
 class BtMeshShape
 {
 public:
-	BtMeshShape(std::string_view filename);
+	BtMeshShape() = default;
 	BtMeshShape(BtMeshShape&& other) noexcept;
 	virtual ~BtMeshShape(); 
 
-	void LoadModel(std::string_view filename);
+public:
+	void SetLocalScale(const btVector3& localScale) { mMeshShape->setLocalScaling(localScale); }
 	void LoadMesh(std::ifstream& file, const std::vector<btVector3>& positions);
 	void BuildMeshShape(const std::vector<btVector3> vertices, const std::vector<uint16_t> indices);
+	btBvhTriangleMeshShape* GetMeshShape() const { return mMeshShape.get(); }
 
 private:
 	std::unique_ptr<btTriangleIndexVertexArray> mTriangleVertexArray;
@@ -76,6 +78,12 @@ public:
 
 	virtual void LoadShapeData(std::string_view filename) override { }
 	virtual void BuildCompoundShape(std::string_view filename) override;
+
+private:
+	void LoadModel(
+		std::string_view filename, 
+		const btTransform& localTransform,
+		const btVector3& localScale);
 
 private:
 	std::vector<BtMeshShape> mMeshShapes;

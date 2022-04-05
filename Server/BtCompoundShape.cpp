@@ -128,11 +128,6 @@ void BtCarShape::BuildCompoundShape(std::string_view filename)
 //
 // BtMeshShape
 // 
-BtMeshShape::BtMeshShape(std::string_view filename)
-{
-	LoadModel(filename);
-}
-
 BtMeshShape::BtMeshShape(BtMeshShape&& other) noexcept
 {
 	if (other.mMeshShape)
@@ -149,27 +144,6 @@ BtMeshShape::~BtMeshShape()
 
 		delete[] mesh.m_vertexBase;
 		delete[] mesh.m_triangleIndexBase;
-	}
-}
-
-void BtMeshShape::LoadModel(std::string_view filename)
-{
-	std::ifstream file = Helper::OpenFile(filename);
-	std::vector<btVector3> positions;
-
-	std::string info;
-	while (file >> info)
-	{
-		if (info == "v")
-		{
-			float x, y, z;
-			file >> x >> y >> z;
-			positions.push_back({ x,y,z });
-		}
-		else if (info == "usemtl")
-		{
-			LoadMesh(file, positions);
-		}
 	}
 }
 
@@ -283,6 +257,8 @@ void BtMapShape::BuildCompoundShape(std::string_view filename)
 {
 	std::ifstream file = Helper::OpenFile(filename);
 
+	mCompoundShape = std::make_unique<btCompoundShape>();
+
 	std::string info;	
 	while (std::getline(file, info))
 	{
@@ -297,7 +273,7 @@ void BtMapShape::BuildCompoundShape(std::string_view filename)
 		ss >> x >> y >> z;
 		pos.setValue(x, y, z);
 
-		btVector4 quat;
+		btQuaternion quat;
 		ss >> x >> y >> z >> w;
 		quat.setValue(x, y, z, w);
 
@@ -305,10 +281,41 @@ void BtMapShape::BuildCompoundShape(std::string_view filename)
 		ss >> x >> y >> z;
 		scale.setValue(x, y, z);
 
+		btTransform localTransform = btTransform::getIdentity();
+		localTransform.setOrigin(pos);
+		localTransform.setRotation(quat);
+
 		std::string objPath1 = "Resource\\Models\\" + objName + ".obj";
 		std::string objPath2 = "Resource\\Models\\" + objName + "_Transparent.obj";
 
-		mMeshShapes.emplace_back(objPath1);
-		mMeshShapes.emplace_back(objPath2);
+		LoadModel(objPath1, localTransform, scale);
+		LoadModel(objPath2, localTransform, scale);
+	}
+}
+
+void BtMapShape::LoadModel(
+	std::string_view filename, 
+	const btTransform& localTransform,
+	const btVector3& localScale)
+{
+	std::ifstream file = Helper::OpenFile(filename);
+	std::vector<btVector3> positions;
+
+	std::string info;
+	while (file >> info)
+	{
+		if (info == "v")
+		{
+			float x, y, z;
+			file >> x >> y >> z;
+			positions.push_back({ x,y,z });
+		}
+		else if (info == "usemtl")
+		{
+			mMeshShapes.emplace_back();
+			mMeshShapes.back().LoadMesh(file, positions);
+			mMeshShapes.back().SetLocalScale(localScale);
+			mCompoundShape->addChildShape(localTransform, mMeshShapes.back().GetMeshShape());
+		}
 	}
 }
