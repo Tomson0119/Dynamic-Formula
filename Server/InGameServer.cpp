@@ -67,7 +67,7 @@ void InGameServer::PrepareToStartGame(int roomID)
 
 		msWorlds[roomID]->CreateRigidbodies(i, 1000.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
 	}
-	//msWorlds[roomID]->InitMapRigidBody();
+	msWorlds[roomID]->InitMapRigidBody(*mMapShape.get());
 	msWorlds[roomID]->SendGameStartSuccess();
 }
 
