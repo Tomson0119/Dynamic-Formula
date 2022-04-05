@@ -286,6 +286,7 @@ bool Player::UseItem(uint8_t key)
 			RigidBody::UPDATE_FLAG::NONE,
 			RigidBody::UPDATE_FLAG::CREATION);
 	}}
+	return false;
 }
 
 bool Player::CheckMissileExist() const
