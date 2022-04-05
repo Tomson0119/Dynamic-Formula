@@ -37,6 +37,7 @@ void GameWorld::InitPhysics(float gravity)
 void GameWorld::InitMapRigidBody(const BtMapShape& mapShape)
 {
 	mMapRigidBody.CreateRigidBody(0.0f, mapShape.GetCompoundShape());
+	mMapRigidBody.ChangeUpdateFlag(RigidBody::UPDATE_FLAG::NONE, RigidBody::UPDATE_FLAG::CREATION);
 }
 
 void GameWorld::InitPlayerList(WaitRoom* room)
@@ -85,7 +86,7 @@ void GameWorld::UpdatePhysicsWorld()
 			player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
 		}
 	}
-	mMapRigidBody.UpdateRigidBody();
+	mMapRigidBody.Update(mPhysics.GetDynamicsWorld());
 
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
