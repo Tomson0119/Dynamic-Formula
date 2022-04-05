@@ -118,7 +118,7 @@ public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }
 	const Tuning& GetTuning() const { return mTuning; }
 	VehicleComponent& GetComponent() { return mComponent; }
-	const btVector3& GetForwardVector() const { return mVehicle->getForwardVector(); }
+	btVector3 GetForwardVector() const { return mVehicle->getForwardVector(); }
 	float GetCurrentSpeed() const { return mComponent.CurrentSpeed; }
 
 private:
