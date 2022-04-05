@@ -61,7 +61,7 @@ public:
 public:
 	void SetLocalScale(const btVector3& localScale) { mMeshShape->setLocalScaling(localScale); }
 	void LoadMesh(std::ifstream& file, const std::vector<btVector3>& positions);
-	void BuildMeshShape(const std::vector<btVector3> vertices, const std::vector<uint16_t> indices);
+	void BuildMeshShape(const std::vector<btVector3>& vertices, const std::vector<uint32_t>& indices);
 	btBvhTriangleMeshShape* GetMeshShape() const { return mMeshShape.get(); }
 
 private:
