@@ -12,7 +12,7 @@ d 1.000000
 illum 2
 map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Ground\\Grass-01.tga
 
-newmtl Metal
+newmtl Metal.004
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -21,6 +21,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
+map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Metal.psd
 
 newmtl Road-01
 Ns 225.000000
@@ -42,6 +43,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
+map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\SideTrack_A.tga
 
 newmtl Trackside
 Ns 225.000000
@@ -63,3 +65,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
+map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Wall-01.tga

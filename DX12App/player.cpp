@@ -737,7 +737,12 @@ void WheelObject::Update(float elapsedTime, float updateRate)
 	if (mIsStandAlone == false)
 	{
 		mPosition = mLocalOffset;
-		mQuaternion = Vector4::RotateQuaternionAxis(mUp, mSteeringAngle);
+
+		auto linearVelocity = mParent.GetLinearVelocity().GetBtVector3();
+
+		XMFLOAT3 rotation = { linearVelocity.length(), mSteeringAngle, 0 };
+
+		mQuaternion = Vector4::RotateQuaternionRollPitchYaw(rotation);
 
 		RotateDirectionVectors();
 		UpdateTransform();

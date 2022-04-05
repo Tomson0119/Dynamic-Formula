@@ -404,3 +404,7 @@ DX12App/bullet3-master
 bullet3-master
 # End of https://www.toptal.com/developers/gitignore/api/c++,visualstudio
 DX12App.zip
+
+#FMOD 추적하지 않음
+DX12App/FMOD
+FMOD

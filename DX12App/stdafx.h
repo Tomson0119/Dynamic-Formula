@@ -68,6 +68,7 @@
 #include <algorithm>
 #include <tchar.h>
 #include <conio.h>
+#include <io.h>
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
@@ -140,11 +141,11 @@ inline std::wstring AnsiToWString(const std::string& str)
 struct LightInfo
 {
 	XMFLOAT3 Diffuse = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	float    padding0;
+	float    FalloffStart = 0.0f;
 	XMFLOAT3 Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	float	 padding1;
+	float    FalloffEnd = 0.0f;
 	XMFLOAT3 Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	float	 padding2;
+	float    SpotPower = 0.0f;
 	float    Range;
 	int		 Type;
 	
@@ -152,11 +153,17 @@ struct LightInfo
 		const XMFLOAT3& diffuse,
 		const XMFLOAT3& position,
 		const XMFLOAT3& direction,
+		const float& falloffStart,
+		const float& falloffEnd,
+		const float& spotPower,
 		float range, int type)
 	{
 		Diffuse = diffuse;
 		Position = position;
 		Direction = direction;
+		FalloffStart = falloffStart;
+		FalloffEnd = falloffEnd;
+		SpotPower = spotPower;
 		Range = range;
 		Type = type;
 	}
@@ -603,6 +610,13 @@ namespace Vector4
 	{
 		XMFLOAT4 ret;
 		XMStoreFloat4(&ret, XMQuaternionRotationAxis(XMLoadFloat3(&axis), angle));
+		return ret;
+	}
+
+	inline XMFLOAT4 RotateQuaternionRollPitchYaw(const XMFLOAT3& rotation)
+	{
+		XMFLOAT4 ret;
+		XMStoreFloat4(&ret, XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z));
 		return ret;
 	}
 
