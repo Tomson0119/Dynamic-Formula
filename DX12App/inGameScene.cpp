@@ -339,7 +339,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
 
 	// 지형 스케일에는 정수를 넣는 것을 권장
-	auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
+	/*auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
 	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
 	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 129, 129);
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
@@ -347,11 +347,11 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\road.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
-	mPipelines[Layer::Terrain]->AppendObject(terrain);
+	mPipelines[Layer::Terrain]->AppendObject(terrain);*/
 #ifdef STANDALONE
 	physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 #endif
-	//LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
+	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
 	BuildCarObject({ 500.0f, 10.0f, 500.0f }, 4, true, cmdList, physics, 0);
