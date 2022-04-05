@@ -289,7 +289,9 @@ void BtMapShape::BuildCompoundShape(std::string_view filename)
 		std::string objPath2 = "Resource\\Models\\" + objName + "_Transparent.obj";
 
 		LoadModel(objPath1, localTransform, scale);
-		LoadModel(objPath2, localTransform, scale);
+		
+		std::ifstream transFile{ objPath2, std::ios::binary };
+		if(transFile.is_open()) LoadModel(transFile, localTransform, scale);
 	}
 }
 
@@ -299,21 +301,26 @@ void BtMapShape::LoadModel(
 	const btVector3& localScale)
 {
 	std::ifstream file = Helper::OpenFile(filename);
+	LoadModel(file, localTransform, localScale);
+}
+
+void BtMapShape::LoadModel(std::ifstream& fileStream, const btTransform& localTransform, const btVector3& localScale)
+{
 	std::vector<btVector3> positions;
 
 	std::string info;
-	while (file >> info)
+	while (fileStream >> info)
 	{
 		if (info == "v")
 		{
 			float x, y, z;
-			file >> x >> y >> z;
+			fileStream >> x >> y >> z;
 			positions.push_back({ x,y,z });
 		}
 		else if (info == "usemtl")
 		{
 			mMeshShapes.emplace_back();
-			mMeshShapes.back().LoadMesh(file, positions);
+			mMeshShapes.back().LoadMesh(fileStream, positions);
 			mMeshShapes.back().SetLocalScale(localScale);
 			mCompoundShape->addChildShape(localTransform, mMeshShapes.back().GetMeshShape());
 		}

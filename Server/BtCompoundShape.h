@@ -84,6 +84,10 @@ private:
 		std::string_view filename, 
 		const btTransform& localTransform,
 		const btVector3& localScale);
+	void LoadModel(
+		std::ifstream& fileStream,
+		const btTransform& localTransform,
+		const btVector3& localScale);
 
 private:
 	std::vector<BtMeshShape> mMeshShapes;
