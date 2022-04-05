@@ -103,7 +103,10 @@ bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 	{
 		// DELETION flag must be a priority.
 		if (desired == UPDATE_FLAG::DELETION)
+		{
 			mFlag = UPDATE_FLAG::DELETION;
+			return true;
+		}
 		return false;
 	}
 	return true;
