@@ -352,12 +352,12 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
 	mPipelines[Layer::Terrain]->AppendObject(terrain);*/
 #ifdef STANDALONE
-	physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
+	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 #endif
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
-	BuildCarObject({ 500.0f, 10.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObject({ 6000.0f, 10.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -455,7 +455,7 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 
 	if (mCubemapInterval < 0.0f)
 	{
-		mCubemapInterval = 0.03f;
+		mCubemapInterval = 0.001f;
 		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
 		if (mCubemapDrawIndex < 5)
@@ -808,6 +808,12 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 		else if (layer != Layer::SkyBox)
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
+
+		if (cubeMapping && layer == Layer::Color)
+		{
+			continue;
+		}
+		else
 			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
 	}
 }

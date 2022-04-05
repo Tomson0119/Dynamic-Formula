@@ -261,12 +261,16 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	{
 		mMaxSpeed = 1500.0f;
 		mBoosterLeft -= Elapsed;
+
+		mRimLightOn = true;
 	}
 
 	if (mBoosterLeft < 0.0f)
 	{
 		mMaxSpeed = 1000.0f;
 		mBoosterLeft = 0.0f;
+
+		mRimLightOn = false;
 	}
 
 	if (mVehicleSteering > 0)
@@ -660,7 +664,7 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 	cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[cubemapIndex + (mCurrentRenderTarget * 6)], TRUE, &mDsvCPUDescriptorHandle);
 
 	scene->UpdateCameraConstant(cubemapIndex + 4, mCameras[cubemapIndex].get());
-	scene->RenderPipelines(cmdList, mCameras[cubemapIndex].get(), cubemapIndex + 4, true);
+	scene->RenderPipelines(cmdList, cubemapIndex + 4, true);
 
 	// resource barrier
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
