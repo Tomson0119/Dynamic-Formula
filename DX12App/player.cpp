@@ -329,11 +329,13 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState('Z') & 0x8000/*&&mItemNum>0*/)
 	{
-		/*if (mBoosterLeft == 0.0f)
-			mBoosterLeft = mBoosterTime;*/
+		#ifdef STANDALONE
+		if (mBoosterLeft == 0.0f)
+			mBoosterLeft = mBoosterTime;
+		#endif
+
 		//mItemNum-=1;
 		//ItemUsingTime Ã³¸®
-
 	}
 	// if (GetAsyncKeyState('X') & 0x8000/*&&mItemNum>0*/)
 	//{
