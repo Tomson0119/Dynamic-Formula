@@ -351,13 +351,11 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
 	mPipelines[Layer::Terrain]->AppendObject(terrain);*/
-#ifdef STANDALONE
-	physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
-#endif
+	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
-	BuildCarObject({ 500.0f, 10.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObject({ -3200.0f, 10.0f, 1500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
