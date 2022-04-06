@@ -52,7 +52,7 @@ void InGameScene::BuildObjects(
 	mDevice = device;
 
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.4f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -69,16 +69,19 @@ void InGameScene::BuildObjects(
 		XMFLOAT3(0.6f, 0.6f, 0.6f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
+		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
 	mMainLight.Lights[1].SetInfo(
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
+		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
 	mMainLight.Lights[2].SetInfo(
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, 1.0f),
+		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
 
 	BuildRootSignature();
@@ -180,7 +183,8 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
 
-	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
+	mPipelines[Layer::Default] = make_unique<Pipeline>();
+	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
@@ -197,12 +201,11 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 		}
 	}
 
-	//mPipelines[Layer::Default] = make_unique<Pipeline>();
-	//mPipelines[Layer::Default]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), defaultShader.get());
+	mPipelines[Layer::Default]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), defaultShader.get());
 
-	//mPipelines[Layer::Terrain]->SetWiredFrame(true);
-	//mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
-	//mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
+	mPipelines[Layer::Terrain]->SetWiredFrame(true);
+	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
+	mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
 
 	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());
 	
@@ -348,13 +351,13 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
 	mPipelines[Layer::Terrain]->AppendObject(terrain);*/
-
+#ifdef STANDALONE
 	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
-
+#endif
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
-	BuildCarObject({ -3200.0f, 10.0f, 1500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObject({ 6000.0f, 10.0f, 500.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -370,7 +373,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.4f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
 	mCurrentCamera = mMainCamera.get();
 }
 
@@ -452,7 +455,7 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 
 	if (mCubemapInterval < 0.0f)
 	{
-		mCubemapInterval = 0.03f;
+		mCubemapInterval = 0.001f;
 		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
 		if (mCubemapDrawIndex < 5)
@@ -506,7 +509,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 			if (player.get() == mPlayer) mNetPtr->SetUpdateRate();
 			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
-			//player->ChangeUpdateFlag(UPDATE_FLAG::NONE, UPDATE_FLAG::UPDATE);
 		}
 		break;
 	}
@@ -517,7 +519,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		
 		if (missile)
 		{
-			//OutputDebugStringA("Getting missile transform.\n");
 			if (missile->IsActive() == false)
 				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
 			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
@@ -646,7 +647,6 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
 
-	//UpdateTestObject(elapsed); // TEST
 	UpdateMissileObject();
 	UpdatePlayerObjects();
 	OnPreciseKeyInput(cmdList, physics, elapsed);
@@ -659,13 +659,10 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
-
-	UpdateMissileObject();
 	
 	UpdateConstants(timer);
 
 	mpUI.get()->Update(timer.TotalTime(), mPlayer);
-	//UpdateDynamicsWorld();
 }
 
 void InGameScene::UpdateLight(float elapsed)
@@ -811,6 +808,12 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 		else if (layer != Layer::SkyBox)
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
+
+		if (cubeMapping && layer == Layer::Color)
+		{
+			continue;
+		}
+		else
 			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
 	}
 }

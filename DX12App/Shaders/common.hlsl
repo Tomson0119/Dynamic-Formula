@@ -46,6 +46,7 @@ cbuffer ObjectCB : register(b4)
     matrix gOldWorld : packoffset(c4);
     bool gCubemapOn : packoffset(c8.x);
     bool gMotionBlurOn : packoffset(c8.y);
+    bool gRimLightOn : packoffset(c8.z);
 }
 
 cbuffer StandardCB : register(b5)

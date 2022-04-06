@@ -28,10 +28,15 @@ void GameWorld::InitPhysics(float gravity)
 	mPhysics.Init(gravity);
 }
 
-void GameWorld::InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes)
+//void GameWorld::InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes)
+//{
+//	//mMapRigidBody.CreateTerrainRigidBody(terrainShape);
+//	// TODO: CreateStaticObjectRigidBodies;
+//}
+
+void GameWorld::InitMapRigidBody(const BtMapShape& mapShape)
 {
-	mMapRigidBody.CreateTerrainRigidBody(terrainShape);
-	// TODO: CreateStaticObjectRigidBodies;
+	mMapRigidBody.CreateRigidBody(0.0f, mapShape.GetCompoundShape());
 }
 
 void GameWorld::InitPlayerList(WaitRoom* room)
@@ -80,8 +85,7 @@ void GameWorld::UpdatePhysicsWorld()
 			player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
 		}
 	}
-
-	mMapRigidBody.UpdateRigidBodies(elapsed, mPhysics.GetDynamicsWorld());
+	mMapRigidBody.UpdateRigidBody();
 
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
@@ -97,7 +101,7 @@ void GameWorld::FlushPhysicsWorld()
 	{
 		player->ResetPlayer(mPhysics.GetDynamicsWorld());
 	}
-	mMapRigidBody.RemoveRigidBodies(mPhysics.GetDynamicsWorld());
+	mMapRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
 	mPhysics.Flush();
 }
 

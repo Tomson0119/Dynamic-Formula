@@ -75,10 +75,10 @@ PixelOut PS(VertexOut pin)
     float4 directLight;
     float shadowFactorOut = 1.0f;
     if (PosS.x < 0.0f || PosS.x > 1.0f || PosS.z < 0.0f || PosS.z > 1.0f || PosS.y < 0.0f || PosS.y > 1.0f || idx == -1)
-        directLight = ComputeLighting(gLights, gMat, normalize(pin.NormalW), view, shadowFactorOut);
+        directLight = ComputeLighting(gLights, gMat, pin.PosW, normalize(pin.NormalW), view, shadowFactorOut, false);
     else
     {
-        directLight = ComputeLighting(gLights, gMat, normalize(pin.NormalW), view, shadowFactor);
+        directLight = ComputeLighting(gLights, gMat, pin.PosW, normalize(pin.NormalW), view, shadowFactor, false);
     }
     float4 result = ambient + directLight;
 

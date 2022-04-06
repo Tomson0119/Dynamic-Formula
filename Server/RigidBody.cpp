@@ -11,14 +11,14 @@ RigidBody::RigidBody()
 {
 }
 
-void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape* shape)
+void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape)
 {
-	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
+	btAssert(shape.getShapeType() != INVALID_SHAPE_PROXYTYPE);
 
 	btVector3 inertia(0.0f, 0.0f, 0.0f);
-	if (mass != 0.0f && shape)
+	if (mass != 0.0f)
 	{
-		shape->calculateLocalInertia(mass, inertia);
+		shape.calculateLocalInertia(mass, inertia);
 	}
 
 	btTransform originTransform = btTransform::getIdentity();
@@ -26,7 +26,7 @@ void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape* shape)
 	originTransform.setRotation(mQuaternion);
 
 	btDefaultMotionState* motionState = new btDefaultMotionState(originTransform);
-	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, motionState, shape, inertia);
+	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, motionState, &shape, inertia);
 	mRigidBody = new btRigidBody(cInfo);
 }
 
@@ -252,10 +252,10 @@ void VehicleRigidBody::UpdateRigidBody()
 {
 	RigidBody::UpdateRigidBody();
 
-	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrictionSlip;
-	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrictionSlip;
-	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.FrictionSlip;
-	mVehicle->getWheelInfo(3).m_frictionSlip = mComponent.FrictionSlip;
+	mVehicle->getWheelInfo(0).m_frictionSlip = mComponent.FrontFrictionSlip;
+	mVehicle->getWheelInfo(1).m_frictionSlip = mComponent.FrontFrictionSlip;
+	mVehicle->getWheelInfo(2).m_frictionSlip = mComponent.BackFrictionSlip;
+	mVehicle->getWheelInfo(3).m_frictionSlip = mComponent.BackFrictionSlip;
 
 	mVehicle->applyEngineForce(mComponent.EngineForce, 0);
 	mVehicle->applyEngineForce(mComponent.EngineForce, 1);

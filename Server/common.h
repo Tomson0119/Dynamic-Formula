@@ -12,6 +12,7 @@
 #include <IOCP.h>
 #include <MemoryPool.h>
 
+#include <fstream>
 #include <csignal>
 #include <deque>
 #include <chrono>
@@ -30,3 +31,27 @@
 
 #define USE_DATABASE
 #define DEBUG_PACKET_TRANSFER
+
+namespace Math
+{
+	const double PI = 3.14159265359;
+}
+
+namespace Helper
+{
+	inline void Assert(bool expr, const std::string& message)
+	{
+		if (expr == false)
+		{
+			std::cout << message << "\n";
+			std::abort();
+		}
+	}
+
+	inline std::ifstream OpenFile(std::string_view filename)
+	{
+		std::ifstream file{ filename.data(), std::ios::binary };
+		Assert(file.is_open(), "Cannot find file name: \"" + std::string(filename) + "\".");
+		return file;
+	}
+}

@@ -28,6 +28,12 @@
     <Filter Include="소스 파일\Physics">
       <UniqueIdentifier>{c7383141-2358-4f36-862e-c03cd51866e2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Physics\Shapes">
+      <UniqueIdentifier>{f8e3b3b7-1b1f-46cc-a354-5c094872ca24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Physics\Shapes">
+      <UniqueIdentifier>{3da6a9ec-b0ef-4688-9bf8-e56fd743edd5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -60,9 +66,6 @@
     <ClCompile Include="LobbyServer.cpp">
       <Filter>소스 파일\Server</Filter>
     </ClCompile>
-    <ClCompile Include="BtShape.cpp">
-      <Filter>소스 파일\Physics</Filter>
-    </ClCompile>
     <ClCompile Include="BPHandler.cpp">
       <Filter>소스 파일\Physics</Filter>
     </ClCompile>
@@ -71,6 +74,12 @@
     </ClCompile>
     <ClCompile Include="GameWorld.cpp">
       <Filter>소스 파일\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="BtCompoundShape.cpp">
+      <Filter>소스 파일\Physics\Shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="BtCollisionShape.cpp">
+      <Filter>소스 파일\Physics\Shapes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -104,14 +113,20 @@
     <ClInclude Include="BPHandler.h">
       <Filter>헤더 파일\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="BtShape.h">
-      <Filter>헤더 파일\Physics</Filter>
-    </ClInclude>
     <ClInclude Include="RigidBody.h">
       <Filter>헤더 파일\Physics</Filter>
     </ClInclude>
     <ClInclude Include="GameWorld.h">
       <Filter>헤더 파일\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="BtShapeInterface.h">
+      <Filter>헤더 파일\Physics\Shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="BtCollisionShape.h">
+      <Filter>헤더 파일\Physics\Shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="BtCompoundShape.h">
+      <Filter>헤더 파일\Physics\Shapes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

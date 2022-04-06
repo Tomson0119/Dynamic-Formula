@@ -11,7 +11,7 @@
 NetModule::NetModule()
 	: mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
 	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 },
-	  mIsConnected{ false }, mLatency{ 0 }
+	  mLatency{ 0 }, mUpdateRate{ 0 }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
 		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
@@ -26,7 +26,7 @@ NetModule::~NetModule()
 
 bool NetModule::Connect(const char* ip, short port)
 {
-	if (mIsConnected = mNetClient->Connect(ip, port))
+	if (mNetClient->Connect(ip, port))
 	{
 		Init();		
 		return true;
@@ -36,7 +36,7 @@ bool NetModule::Connect(const char* ip, short port)
 
 void NetModule::PostDisconnect()
 {	
-	if (mIsConnected)
+	if (mNetClient->IsConnected())
 	{
 		// Post disconnect operation to get out of the thread loop	
 		WSAOVERLAPPEDEX* over = new WSAOVERLAPPEDEX(OP::DISCONNECT);

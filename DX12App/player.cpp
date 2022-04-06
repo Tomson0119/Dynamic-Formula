@@ -218,7 +218,7 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityXZ = 25.5f;
 		mMaxVelocityY = 40.0f;
 
-		mCamera->SetOffset(0.0f, 10.0f, -30.0f);
+		mCamera->SetOffset(0.0f, 10.0f, -45.0f);
 		mCamera->SetTimeLag(0.1f);
 		break;
 
@@ -261,12 +261,16 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	{
 		mMaxSpeed = 1500.0f;
 		mBoosterLeft -= Elapsed;
+
+		mRimLightOn = true;
 	}
 
 	if (mBoosterLeft < 0.0f)
 	{
 		mMaxSpeed = 1000.0f;
 		mBoosterLeft = 0.0f;
+
+		mRimLightOn = false;
 	}
 
 	if (mVehicleSteering > 0)
@@ -325,11 +329,13 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState('Z') & 0x8000/*&&mItemNum>0*/)
 	{
+		#ifdef STANDALONE
 		if (mBoosterLeft == 0.0f)
 			mBoosterLeft = mBoosterTime;
+		#endif
+
 		//mItemNum-=1;
 		//ItemUsingTime Ã³¸®
-
 	}
 	// if (GetAsyncKeyState('X') & 0x8000/*&&mItemNum>0*/)
 	//{
@@ -660,7 +666,7 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 	cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[cubemapIndex + (mCurrentRenderTarget * 6)], TRUE, &mDsvCPUDescriptorHandle);
 
 	scene->UpdateCameraConstant(cubemapIndex + 4, mCameras[cubemapIndex].get());
-	scene->RenderPipelines(cmdList, mCameras[cubemapIndex].get(), cubemapIndex + 4, true);
+	scene->RenderPipelines(cmdList, cubemapIndex + 4, true);
 
 	// resource barrier
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(

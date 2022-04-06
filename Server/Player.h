@@ -36,12 +36,14 @@ private:
 	void ClearVehicleComponent();
 
 	void UpdateVehicleComponent(float elapsed);
-	void UpdateDiftGauge(float elapsed);
+	void UpdateDriftGauge(float elapsed);
 	void UpdateBooster(float elapsed);
 	void UpdateSteering(float elapsed);
 	void UpdateEngineForce();
 
-	bool CheckDriftGauge();
+	bool UseItem(uint8_t key);
+	bool IsItemAvailable();
+
 
 public:
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
@@ -63,6 +65,9 @@ private:
 	MissileRigidBody mMissileRigidBody;
 
 	std::atomic_bool mBoosterToggle;
+	
+	float mDriftGauge;
+	std::atomic_int mItemCount;
 
 	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };

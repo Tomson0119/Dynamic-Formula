@@ -15,7 +15,8 @@ public:
 	~GameWorld();
 	
 	void InitPhysics(float gravity);
-	void InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes);
+	//void InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes);
+	void InitMapRigidBody(const BtMapShape& mapShape);
 	void InitPlayerList(WaitRoom* room);
 
 	void SetPlayerPosition(int idx, const btVector3& pos);
@@ -59,7 +60,8 @@ private:
 
 	int mUpdateTick;
 	
-	MapRigidBody mMapRigidBody;
+	RigidBody mMapRigidBody;
+	//MapRigidBody mMapRigidBody;
 	PlayerList mPlayerList;
 
 	BPHandler mPhysics;

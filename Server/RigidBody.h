@@ -1,6 +1,7 @@
 #pragma once
 
-#include "BtShape.h"
+#include "BtCollisionShape.h"
+#include "BtCompoundShape.h"
 #include "InGameServer.h"
 
 class RigidBody
@@ -18,7 +19,7 @@ public:
 	RigidBody();
 	virtual ~RigidBody() = default;
 
-	virtual void CreateRigidBody(btScalar mass, btCollisionShape* shape);
+	virtual void CreateRigidBody(btScalar mass, btCollisionShape& shape);
 
 	void SetPosition(const btVector3& pos) { mPosition = pos; }
 	void SetRotation(const btQuaternion& quat) { mQuaternion = quat; }
@@ -64,7 +65,7 @@ public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
 
 	void SetVehicleAndConstantPtr(
-		VehicleRigidBody* vehiclePtr, 
+		class VehicleRigidBody* vehiclePtr, 
 		std::shared_ptr<InGameServer::BulletConstant> constantPtr);
 
 	void SetMissileComponents(
@@ -91,7 +92,8 @@ public:
 		float BreakingForce{};
 		float VehicleSteering{};
 		float CurrentSpeed{};
-		float FrictionSlip{};
+		float FrontFrictionSlip{};
+		float BackFrictionSlip{};
 		float MaxSpeed{};
 	};
 
@@ -116,6 +118,8 @@ public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }
 	const Tuning& GetTuning() const { return mTuning; }
 	VehicleComponent& GetComponent() { return mComponent; }
+	btVector3 GetForwardVector() const { return mVehicle->getForwardVector(); }
+	float GetCurrentSpeed() const { return mComponent.CurrentSpeed; }
 
 private:
 	Tuning mTuning;
