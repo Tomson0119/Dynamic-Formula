@@ -628,16 +628,39 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 	mPrevQuat = mCorrectionQuat;
 
 	mCorrectionOrigin.SetValue(
-		(int)(pck->position[0] + pck->linear_vel[0] * latency),
-		(int)(pck->position[1] + pck->linear_vel[1] * latency),
-		(int)(pck->position[2] + pck->linear_vel[2] * latency));
+		pck->position[0],
+		pck->position[1], 
+		pck->position[2]);
 
-	// Convert to left-handed
+	mCorrectionOrigin.Extrapolate(
+		pck->linear_vel[0],
+		pck->linear_vel[1],
+		pck->linear_vel[2],
+		latency);
+
 	mCorrectionQuat.SetValue(
 		pck->quaternion[0],
-		(int)(pck->quaternion[1] * (1 + 0.5f * latency * pck->angular_vel[0])),
-		(int)(pck->quaternion[2] * (1 + 0.5f * latency * pck->angular_vel[1])),
-		(int)(pck->quaternion[3] * (1 + 0.5f * latency * pck->angular_vel[2])));
+		pck->quaternion[1],
+		pck->quaternion[2],
+		pck->quaternion[3]);
+
+	mCorrectionQuat.Extrapolate(
+		pck->angular_vel[0],
+		pck->angular_vel[1],
+		pck->angular_vel[2],
+		latency);
+
+	if (mNetID == 0)
+	{
+		static unsigned long long counter = 0;
+
+		std::stringstream ss;
+		ss << counter++ << ".\n";
+		ss << "Latency: " << latency << "\n";
+		ss << "Origin: " << mCorrectionOrigin.x << " " << mCorrectionOrigin.y << " " << mCorrectionOrigin.z << "\n";
+		ss << "Quat: " << mCorrectionQuat.x << " " << mCorrectionQuat.y << " " << mCorrectionQuat.z << " " << mCorrectionQuat.w << "\n\n";
+		OutputDebugStringA(ss.str().c_str());
+	}
 	
 	mLinearVelocity.SetValue(pck->linear_vel[0], pck->linear_vel[1], pck->linear_vel[2]);
 }

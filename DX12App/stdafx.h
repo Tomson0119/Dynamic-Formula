@@ -294,6 +294,15 @@ struct AtomicInt3
 			(int)(xmf3.z * FIXED_FLOAT_LIMIT));
 	}
 
+	void Extrapolate(int dx, int dy, int dz, float dt)
+	{
+		XMFLOAT3& val = GetXMFloat3();
+		val.x += dx / FIXED_FLOAT_LIMIT * dt;
+		val.y += dy / FIXED_FLOAT_LIMIT * dt;
+		val.z += dz / FIXED_FLOAT_LIMIT * dt;
+		SetValue(val);
+	}
+
 	btVector3 GetBtVector3() const
 	{
 		return btVector3{ 
@@ -360,6 +369,46 @@ struct AtomicInt4
 			(int)(quat.y * FIXED_FLOAT_LIMIT),
 			(int)(quat.z * FIXED_FLOAT_LIMIT),
 			(int)(quat.w * FIXED_FLOAT_LIMIT));
+	}
+
+	void Extrapolate(int dx, int dy, int dz, float dt)
+	{
+		XMFLOAT3 vec = {
+			dx / FIXED_FLOAT_LIMIT * dt,
+			dy / FIXED_FLOAT_LIMIT * dt,
+			dz / FIXED_FLOAT_LIMIT * dt };
+		
+		XMVECTOR a = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&vec));
+
+		XMFLOAT4 origin = GetXMFloat4();
+		XMVECTOR nextQuat = XMVector4Normalize(XMQuaternionMultiply(a, XMLoadFloat4(&origin)));
+		
+		XMStoreFloat4(&origin, nextQuat);
+		SetValue(origin);
+
+		/*XMFLOAT3 temp{};
+		XMStoreFloat3(&temp, XMVector3Length(XMLoadFloat3(&vec)));
+		
+		float length = temp.x;
+		if (length < 1e-6) return;
+
+		float half = length * 0.5f;
+		float sin = sinf(half);
+		float cos = cosf(half);
+
+		XMFLOAT4 quat = {
+			vec.x * sin,
+			vec.y * sin,
+			vec.z * sin,
+			length * cos
+		};*/
+	
+		/*XMFLOAT4 origin = GetXMFloat4();
+		XMVECTOR nextQuat = XMQuaternionMultiply(XMLoadFloat4(&quat), XMLoadFloat4(&origin));
+		nextQuat = XMVector4Normalize(nextQuat);
+		
+		XMStoreFloat4(&origin, nextQuat);
+		SetValue(origin);*/
 	}
 
 	bool IsZero() const
