@@ -28,16 +28,10 @@ void GameWorld::InitPhysics(float gravity)
 	mPhysics.Init(gravity);
 }
 
-//void GameWorld::InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes)
-//{
-//	//mMapRigidBody.CreateTerrainRigidBody(terrainShape);
-//	// TODO: CreateStaticObjectRigidBodies;
-//}
-
 void GameWorld::InitMapRigidBody(const BtMapShape& mapShape)
 {
 	mMapRigidBody.CreateRigidBody(0.0f, mapShape.GetCompoundShape());
-	mMapRigidBody.ChangeUpdateFlag(RigidBody::UPDATE_FLAG::NONE, RigidBody::UPDATE_FLAG::CREATION);
+	mMapRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 }
 
 void GameWorld::InitPlayerList(WaitRoom* room)
