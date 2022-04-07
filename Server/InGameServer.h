@@ -73,7 +73,7 @@ private:
 	std::shared_ptr<BulletConstant> mBulletConstants;
 
 	const btVector3 mStartPosition = { -3200.0f, 10.0f, 1500.0f };
-	const btQuaternion mStartRotation = { 0.0f, 0.0f, 0.0f, 1.0f };
+	const btQuaternion mStartRotation = { 0.0f, 0.707107f, 0.0f, 0.707107f };
 	const btVector3 mOffset = { 20.0f, 0.0f, 0.0f };
 
 	const int mPhysicsDuration = 16;

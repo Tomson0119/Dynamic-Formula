@@ -46,7 +46,8 @@ void InGameServer::PrepareToStartGame(int roomID)
 			continue;
 		}
 
-		msWorlds[roomID]->SetPlayerPosition(i, mStartPosition);
+		static const float offset = 20.0f;
+		msWorlds[roomID]->SetPlayerPosition(i, { mStartPosition + btVector3{ 0.0f, 0.0f, i * offset} });
 		msWorlds[roomID]->SetPlayerRotation(i, mStartRotation);
 
 		msWorlds[roomID]->CreateRigidbodies(i, 1000.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
