@@ -293,13 +293,13 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 	{
-		mVehicleSteering -= mSteeringIncrement * 2 * Elapsed;
+		mVehicleSteering -= mSteeringIncrement * Elapsed;
 		if (mVehicleSteering < -mSteeringClamp)
 			mVehicleSteering = -mSteeringClamp;
 	}
 	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 	{
-		mVehicleSteering += mSteeringIncrement * 2 * Elapsed;
+		mVehicleSteering += mSteeringIncrement * Elapsed;
 		if (mVehicleSteering > mSteeringClamp)
 			mVehicleSteering = mSteeringClamp;
 	}
@@ -345,7 +345,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	{		
 		for (int i = 2; i < 4; ++i)
 		{
-			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 4.0f;
+			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = mWheelDriftFriction;
 		}
 
 		float Epsilon = 50.0f / 180.0f;
@@ -375,7 +375,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	{
 		for (int i = 2; i < 4; ++i)
 		{
-			if(mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
+			if(mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = mWheelFriction;
 		}
 	}
 
@@ -416,6 +416,9 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 			if(i < 2) mWheel[i]->SetSteeringAngle(mVehicleSteering);
 		}
 	}
+
+	btVector3 linearVel = mBtRigidBody->getLinearVelocity();
+	mBtRigidBody->applyCentralImpulse(btVector3(0, -linearVel.length() / 10, 0));
 
 	if (mBoosterLeft > 0.0f)
 	{
@@ -479,10 +482,10 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 
 	float wheelWidth = wheelExtents.x;
 	float wheelRadius = wheelExtents.z;
-	float wheelFriction = 25.0f;
+	float wheelFriction = mWheelFriction;
 	float suspensionStiffness = 20.f;
 	float suspensionDamping = 2.3f;
-	float suspensionCompression = 4.4f;
+	float suspensionCompression = 0.0f;
 	float rollInfluence = 0.01f;  //1.0f;
 
 	// ¾Õ¹ÙÄû
