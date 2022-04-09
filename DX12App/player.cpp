@@ -218,7 +218,7 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityXZ = 25.5f;
 		mMaxVelocityY = 40.0f;
 
-		mCamera->SetOffset(0.0f, 10.0f, -45.0f);
+		mCamera->SetOffset(0.0f, 1.6f, -7.5f);
 		mCamera->SetTimeLag(0.1f);
 		break;
 
@@ -467,7 +467,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 
 	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", physics);
 
-	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, mBtCollisionShape);
+	mBtRigidBody = physics->CreateRigidBody(500.0f, btCarTransform, mBtCollisionShape);
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld);
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 	mBtRigidBody = mVehicle->getRigidBody();
@@ -484,29 +484,29 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	float wheelWidth = wheelExtents.x;
 	float wheelRadius = wheelExtents.z;
 	float wheelFriction = mWheelFriction;
-	float suspensionStiffness = 20.f;
-	float suspensionDamping = 2.3f;
-	float suspensionCompression = 4.4f;
+	float suspensionStiffness = 20.f / 6.0f;
+	float suspensionDamping = 2.3f / 6.0f;
+	float suspensionCompression = 4.4f / 6.0f;
 	float rollInfluence = 0.01f;  //1.0f;
 
 	// ¾Õ¹ÙÄû
 	bool isFrontWheel = true;
-	float connectionHeight = -0.9f;
+	float connectionHeight = -0.15f;
 
-	btVector3 connectionPointCS0(vehicleExtents.x - 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
+	btVector3 connectionPointCS0(vehicleExtents.x - 0.4f, connectionHeight, vehicleExtents.z - 0.5f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.1f, wheelRadius, mTuning, isFrontWheel);
 
-	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 0.4f, connectionHeight, vehicleExtents.z - 0.5f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.1f, wheelRadius, mTuning, isFrontWheel);
 
 	// µÞ¹ÙÄû
 	isFrontWheel = false;
 
-	connectionPointCS0 = btVector3(vehicleExtents.x - 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
+	connectionPointCS0 = btVector3(vehicleExtents.x - 0.4f, connectionHeight, -vehicleExtents.z + 0.5f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.1f, wheelRadius, mTuning, isFrontWheel);
 
-	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 0.4f, connectionHeight, -vehicleExtents.z + 0.5f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.1f, wheelRadius, mTuning, isFrontWheel);
 
 	for (int i = 0; i < mVehicle->getNumWheels(); i++)
 	{
