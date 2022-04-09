@@ -357,7 +357,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
-	BuildCarObject({ 6000.0f, 10.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObject({ -100.0f, 10.0f, 250.0f }, 4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)

@@ -417,8 +417,8 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 		}
 	}
 
-	btVector3 linearVel = mBtRigidBody->getLinearVelocity();
-	mBtRigidBody->applyCentralImpulse(btVector3(0, -linearVel.length() / 10, 0));
+	//btVector3 linearVel = mBtRigidBody->getLinearVelocity();
+	//mBtRigidBody->applyCentralImpulse(btVector3(0, -linearVel.length() / 10, 0));
 
 	if (mBoosterLeft > 0.0f)
 	{
@@ -456,7 +456,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 {
 	auto dynamicsWorld = physics->GetDynamicsWorld();
 
-	mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
+	mOOBB.Extents = { 10.0f / 6.0f, 4.0f / 6.0f, 14.0f / 6.0f };
 
 	XMFLOAT3 vehicleExtents = mOOBB.Extents;
 	XMFLOAT3 wheelExtents = mWheel[0]->GetBoundingBox().Extents;
@@ -473,6 +473,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	mBtRigidBody = mVehicle->getRigidBody();
 
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
+	//mBtRigidBody->setGravity(btVector3(0, -20, 0));
 	dynamicsWorld->addVehicle(mVehicle.get());
 
 	mVehicle->setCoordinateSystem(0, 1, 2);
@@ -485,7 +486,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	float wheelFriction = mWheelFriction;
 	float suspensionStiffness = 20.f;
 	float suspensionDamping = 2.3f;
-	float suspensionCompression = 0.0f;
+	float suspensionCompression = 4.4f;
 	float rollInfluence = 0.01f;  //1.0f;
 
 	// ¾Õ¹ÙÄû
