@@ -165,13 +165,13 @@ private:
 
 	float mEngineForce = 0.f;
 
-	float mMaxEngineForce = 8000.f;
-	float mMaxBackwardEngineForce = 10000.f;
-	float mBoosterEngineForce = 300000.f;
+	float mMaxEngineForce = 1000.f;
+	float mMaxBackwardEngineForce = 1000.f;
+	float mBoosterEngineForce = 3000.f;
 
 	float mVehicleSteering = 0.f;
 	float mSteeringIncrement = 5.0f;
-	float mSteeringClamp = 0.6f;
+	float mSteeringClamp = 0.3f;
 
 	float mCurrentSpeed = 0.0f;
 	float mMaxSpeed = 1000.0f;

@@ -293,13 +293,13 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 	{
-		mVehicleSteering -= mSteeringIncrement * Elapsed;
+		mVehicleSteering -= mSteeringIncrement * 2 * Elapsed;
 		if (mVehicleSteering < -mSteeringClamp)
 			mVehicleSteering = -mSteeringClamp;
 	}
 	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 	{
-		mVehicleSteering += mSteeringIncrement * Elapsed;
+		mVehicleSteering += mSteeringIncrement * 2  * Elapsed;
 		if (mVehicleSteering > mSteeringClamp)
 			mVehicleSteering = mSteeringClamp;
 	}
@@ -484,14 +484,14 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	float wheelWidth = wheelExtents.x;
 	float wheelRadius = wheelExtents.z;
 	float wheelFriction = mWheelFriction;
-	float suspensionStiffness = 20.f / 6.0f;
-	float suspensionDamping = 2.3f / 6.0f;
-	float suspensionCompression = 4.4f / 6.0f;
+	float suspensionStiffness = 20.0f;
+	float suspensionDamping = 2.5f;
+	float suspensionCompression = 4.4f;
 	float rollInfluence = 0.01f;  //1.0f;
 
 	// ¾Õ¹ÙÄû
 	bool isFrontWheel = true;
-	float connectionHeight = -0.15f;
+	float connectionHeight = -0.4f;
 
 	btVector3 connectionPointCS0(vehicleExtents.x - 0.4f, connectionHeight, vehicleExtents.z - 0.5f);
 	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.1f, wheelRadius, mTuning, isFrontWheel);

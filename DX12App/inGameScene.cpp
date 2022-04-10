@@ -52,7 +52,7 @@ void InGameScene::BuildObjects(
 	mDevice = device;
 
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1000.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -373,7 +373,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1000.0f);
 	mCurrentCamera = mMainCamera.get();
 }
 
