@@ -52,7 +52,7 @@ void InGameScene::BuildObjects(
 	mDevice = device;
 
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1000.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -371,7 +371,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1000.0f);
 	mCurrentCamera = mMainCamera.get();
 }
 
@@ -455,7 +455,7 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 
 	if (mCubemapInterval < 0.0f)
 	{
-		mCubemapInterval = 0.03f;
+		mCubemapInterval = 0.001f;
 		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
 		if (mCubemapDrawIndex < 5)
@@ -813,6 +813,12 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 		else if (layer != Layer::SkyBox)
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
+
+		if (cubeMapping && layer == Layer::Color)
+		{
+			continue;
+		}
+		else
 			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
 	}
 }

@@ -18,23 +18,20 @@ public:
 	{
 		const float MaxBoosterTime = 5.0f;
 
-		const float MaxEngineForce = 8000.f;
-		const float MaxBackwardEngineForce = 10000.0f;
-		const float BoosterEngineForce = 300000.f;
+		const float MaxEngineForce = 1000.f;
+		const float BoosterEngineForce = 3000.f;
 
-		const float SteeringIncrement = 8.0f;
-		const float SteeringClamp = 0.5f;
+		const float SteeringIncrement = 5.0f;
+		const float SteeringClamp = 0.15f;
 
-		const float	WheelDriftFriction = 4.0f;
-		const float WheelDefaultFriction = 25.0f;
+		const float	WheelDriftFriction = 5.0f;
+		const float WheelDefaultFriction = 10.0f;
 		const float MinSpeedForDrift = 100.0f;
 
-		const float DefaultMaxSpeed = 1000.0f;
-		const float BoostedMaxSpeed = 1500.0f;
+		const float DefaultMaxSpeed = 350.0f;
+		const float BoostedMaxSpeed = 400.0f;
 
 		const float DefaultBreakingForce = 10.0f;
-		const float MaxBreakingForce = 150.0f;
-		const float SubBreakingForce = 100.0f;
 
 		const float MissileSpeed = 10.0f;
 		const btVector3 MissileOffset = { 0.0f, 5.0f, 0.0f };

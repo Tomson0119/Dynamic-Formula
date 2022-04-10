@@ -207,6 +207,7 @@ protected:
 
 	bool mCubemapOn = false;
 	bool mMotionBlurOn = true;
+	bool mRimLightOn = false;
 
 	std::string mName;
 };

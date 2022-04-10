@@ -134,7 +134,7 @@ float3 ComputeSpotLight(Light light, Material mat, float3 pos, float3 normal, fl
     return result;
 }
 
-float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat, float3 pos, float3 normal, float3 view, float shadowFactor)
+float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat, float3 pos, float3 normal, float3 view, float shadowFactor, bool rimLightOn)
 {
     float3 result = 0.0f;
     
@@ -153,6 +153,8 @@ float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat, float3 pos, float
             result += shadowFactor * ComputePointLight(lights[i], mat, pos, normal, view);;
     }
     
+    if (rimLightOn)
+        result = result + CalcRimLight(0.5f, normal, view);
     
     return float4(result + mat.Emission, 0.0f);
 }

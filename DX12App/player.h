@@ -130,6 +130,9 @@ public:
 private:
 	static const int RtvCounts = 12;
 
+	const float mWheelFriction = 10.0f;
+	const float mWheelDriftFriction = 5.0f;
+
 	ULONG mCubeMapSize = 500;
 
 	std::array<std::unique_ptr<Camera>, RtvCounts / 2> mCameras;
@@ -162,16 +165,15 @@ private:
 
 	float mEngineForce = 0.f;
 
-	float mMaxEngineForce = 8000.f;
-	float mMaxBackwardEngineForce = 10000.f;
-	float mBoosterEngineForce = 300000.f;
+	float mMaxEngineForce = 1000.f;
+	float mBoosterEngineForce = 3000.f;
 
 	float mVehicleSteering = 0.f;
-	float mSteeringIncrement = 8.0f;
-	float mSteeringClamp = 0.5f;
+	float mSteeringIncrement = 5.0f;
+	float mSteeringClamp = 0.15f;
 
 	float mCurrentSpeed = 0.0f;
-	float mMaxSpeed = 1000.0f;
+	float mMaxSpeed = 350.0f;
 
 	float mBreakingForce = 0.0f;
 

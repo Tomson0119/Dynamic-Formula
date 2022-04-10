@@ -210,8 +210,9 @@ struct ObjectConstants
 {
 	XMFLOAT4X4 World;
 	XMFLOAT4X4 oldWorld;
-	bool cubemapOn;
-	bool motionBlurOn;
+	int32_t cubemapOn;
+	int32_t motionBlurOn;
+	int32_t rimLightOn;
 };
 
 struct MaterialConstants
