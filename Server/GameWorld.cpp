@@ -142,9 +142,16 @@ void GameWorld::SendGameStartSuccess()
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
 		const btVector3& pos = mPlayerList[i]->GetVehicleRigidBody().GetPosition();
-		info_pck.x[i] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
-		info_pck.y[i] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
-		info_pck.z[i] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+		const btQuaternion& quat = mPlayerList[i]->GetVehicleRigidBody().GetQuaternion();
+
+		info_pck.px[i] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
+		info_pck.py[i] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
+		info_pck.pz[i] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+
+		info_pck.rx[i] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
+		info_pck.ry[i] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
+		info_pck.rz[i] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
+		info_pck.rw[i] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
 	}
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&info_pck), info_pck.size);
 }
@@ -178,8 +185,6 @@ void GameWorld::PushVehicleTransformPacket(int target, int receiver)
 	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
-
-	//std::cout << pos.x() << " " << pos.y() << " " << pos.z() << "\n";
 
 	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
@@ -216,8 +221,6 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
-
-	//std::cout << pck.position[0] << " " << pck.position[1] << " " << pck.position[2] << "\n";
 
 	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
