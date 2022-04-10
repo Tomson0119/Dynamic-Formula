@@ -924,7 +924,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		XMFLOAT3 scale;
 		ss >> scale.x >> scale.y >> scale.z;
 
-		auto tmpstr = std::string("Models\\") + objName;
+		auto tmpstr = std::string("Models\\") + objName + std::string(".obj");
 
 		auto transparentpath = tmpstr;
 		transparentpath.replace(tmpstr.find(".obj"), 4, "_Transparent.obj");
