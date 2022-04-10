@@ -257,6 +257,8 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	mEngineForce = 0.0f;
 	mBreakingForce = 10.0f;
 
+	bool accel = false;
+
 	if (mBoosterLeft > 0.0f)
 	{
 		mMaxSpeed = 1500.0f;
@@ -305,25 +307,23 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
-		if (mCurrentSpeed < 0.0f)
-			mBreakingForce = 150.0f;
-		else if (mMaxSpeed > mCurrentSpeed)
+		accel = true;
+
+		if (mMaxSpeed > mCurrentSpeed)
 			mEngineForce = mMaxEngineForce;
 		else
 		{
-			mBreakingForce = 100.0f;
 			mEngineForce = 0.0f;
 		}
 	}
 	if (GetAsyncKeyState(VK_DOWN) & 0x8000)
 	{
-		if (mCurrentSpeed > 0.0f)
-			mBreakingForce = 150.0f;
-		else if (-mMaxSpeed < mCurrentSpeed)
-			mEngineForce = -mMaxBackwardEngineForce;
+		accel = true;
+
+		if (-mMaxSpeed < mCurrentSpeed)
+			mEngineForce = -mMaxEngineForce;
 		else
 		{
-			mBreakingForce = 100.0f;
 			mEngineForce = 0.0f;
 		}
 	}
@@ -382,6 +382,12 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
 
+	if (!accel)
+	{
+		mEngineForce = 0.f;
+		mBreakingForce = 10.f;
+	}
+
 	for (int i = 0; i < 2; ++i)
 	{
 		if (mVehicle)
@@ -397,6 +403,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 		wheelIndex = 1;
 		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
+
 	}
 }
 
