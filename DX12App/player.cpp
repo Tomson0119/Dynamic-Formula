@@ -261,7 +261,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 	if (mBoosterLeft > 0.0f)
 	{
-		mMaxSpeed = 1500.0f;
+		mMaxSpeed = 400.0f;
 		mBoosterLeft -= Elapsed;
 
 		mRimLightOn = true;
@@ -269,7 +269,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 	if (mBoosterLeft < 0.0f)
 	{
-		mMaxSpeed = 1000.0f;
+		mMaxSpeed = 350.0f;
 		mBoosterLeft = 0.0f;
 
 		mRimLightOn = false;

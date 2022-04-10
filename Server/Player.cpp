@@ -208,47 +208,42 @@ void Player::UpdateEngineForce()
 {
 	auto& comp = mVehicleRigidBody.GetComponent();
 
+	bool handled = false;
+	comp.EngineForce = 0.0f;
+
 	if (comp.BoosterTimeLeft > 0.0f && comp.MaxSpeed > comp.CurrentSpeed)
 	{
 		comp.EngineForce = mConstantPtr->BoosterEngineForce;
 		return;
 	}
 
-	comp.EngineForce = 0.0f;
-	comp.BreakingForce = mConstantPtr->DefaultBreakingForce;
-
 	if (mKeyMap[VK_UP])
 	{
-		if (comp.CurrentSpeed < 0.0f)
-		{
-			comp.BreakingForce = mConstantPtr->MaxBreakingForce;
-		}
-		else if (comp.MaxSpeed > comp.CurrentSpeed)
+		handled = true;
+		if (comp.MaxSpeed > comp.CurrentSpeed)
 		{
 			comp.EngineForce = mConstantPtr->MaxEngineForce;
 		}
 		else
 		{
-			comp.BreakingForce = mConstantPtr->SubBreakingForce;
 			comp.EngineForce = 0.0f;
 		}
 	}
 	if (mKeyMap[VK_DOWN])
 	{
-		if (comp.CurrentSpeed > 0.0f)
+		handled = true;
+		if (comp.CurrentSpeed > -comp.MaxSpeed)
 		{
-			comp.BreakingForce = mConstantPtr->MaxBreakingForce;
-		}
-		else if (comp.CurrentSpeed > -comp.MaxSpeed)
-		{
-			comp.EngineForce = -mConstantPtr->MaxBackwardEngineForce;
+			comp.EngineForce = -mConstantPtr->MaxEngineForce;
 		}
 		else
 		{
-			comp.BreakingForce = mConstantPtr->SubBreakingForce;
 			comp.EngineForce = 0.0f;
 		}
 	}
+
+	if (!handled)
+		comp.BreakingForce = mConstantPtr->DefaultBreakingForce;
 }
 
 void Player::ToggleKeyValue(uint8_t key, bool pressed)
