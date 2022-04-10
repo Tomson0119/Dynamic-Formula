@@ -36,8 +36,9 @@ public:
 		const float MaxBreakingForce = 150.0f;
 		const float SubBreakingForce = 100.0f;
 
-		const float MissileForwardOffset = 15.0f;
-		const float MissileSpeed = 1000.0f;
+		const float MissileSpeed = 10.0f;
+		const btVector3 MissileOffset = { 0.0f, 5.0f, 0.0f };
+		const float MissileForwardMag = 50.0f;
 		const btVector3 MissileGravity = { 0.0f, 0.0f, 0.0f };
 	};
 
