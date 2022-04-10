@@ -355,7 +355,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
-	BuildCarObject({ -3200.0f, 10.0f, 1500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObject({ -3200.0f, 10.0f, 1500.0f }, { 0.0f, 0.707107f, 0.0f, 0.707107f },  4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -363,7 +363,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-			BuildCarObject(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
+			BuildCarObject(info.StartPosition, info.StartRotation, info.Color, isPlayer, cmdList, physics, i);
 			BuildMissileObject(cmdList, info.StartPosition, i);
 		}
 		i++;
@@ -377,6 +377,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 void InGameScene::BuildCarObject(
 	const XMFLOAT3& position,
+	const XMFLOAT4& rotation,
 	char color,
 	bool isPlayer,
 	ID3D12GraphicsCommandList* cmdList, 
@@ -385,6 +386,7 @@ void InGameScene::BuildCarObject(
 {
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
+	carObj->SetQuaternion(rotation);
 
 	if (mMeshList["Car_Body.obj"].empty())
 		mMeshList["Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
@@ -518,8 +520,14 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (missile)
 		{
 			if (missile->IsActive() == false)
+			{
 				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
-			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
+				missile->SetCurrentTransform(pck, mNetPtr->GetLatency());
+			}
+			else
+			{
+				missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
+			}
 		}
 		break;
 	}
@@ -571,6 +579,10 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			else
 				mCurrentCamera = mDirectorCamera.get();
 		}
+		if (wParam == 'M')
+		{
+			mMotionBlurEnable = !mMotionBlurEnable;
+		}
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 		break;
@@ -581,11 +593,6 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed)
 {
 	if (mHwnd != GetFocus()) return;
-
-	if (GetAsyncKeyState('M') & 1)
-	{
-		mMotionBlurEnable = 1 - mMotionBlurEnable;
-	}
 
 	if (mCurrentCamera == mDirectorCamera.get())
 	{

@@ -79,6 +79,7 @@ private:
 
 	void BuildCarObject(
 		const XMFLOAT3& position,
+		const XMFLOAT4& rotation,
 		char color,
 		bool isPlayer,
 		ID3D12GraphicsCommandList* cmdList, 
