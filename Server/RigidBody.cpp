@@ -28,6 +28,7 @@ void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape)
 	btDefaultMotionState* motionState = new btDefaultMotionState(originTransform);
 	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, motionState, &shape, inertia);
 	mRigidBody = new btRigidBody(cInfo);
+	//mRigidBody->setMassProps(mass, inertia);	
 }
 
 void RigidBody::Update(btDiscreteDynamicsWorld* physicsWorld)
@@ -126,15 +127,22 @@ void MissileRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 	if (mRigidBody)
 	{
 		SetMissileComponents(
-			mVehiclePtr->GetPosition(),
-			mVehiclePtr->GetVehicle()->getForwardVector(),
+			mVehiclePtr->GetPosition() + mConstantPtr->MissileOffset,
+			mVehiclePtr->GetForwardVector() * mConstantPtr->MissileForwardMag,
 			mVehiclePtr->GetQuaternion(),
 			mConstantPtr->MissileGravity,
-			mConstantPtr->MissileForwardOffset,
 			mConstantPtr->MissileSpeed);
+
+		//mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
 		RigidBody::AppendRigidBody(physicsWorld);
 	}
+}
+
+void MissileRigidBody::UpdateRigidBody()
+{
+	mRigidBody->setLinearVelocity(mLinearVelocity);
+	RigidBody::UpdateRigidBody();
 }
 
 void MissileRigidBody::SetVehicleAndConstantPtr(
@@ -150,16 +158,16 @@ void MissileRigidBody::SetMissileComponents(
 	const btVector3& forward,
 	const btQuaternion& rotation,
 	const btVector3& gravity,
-	float forwardOffset, float speed)
+	float speed)
 {
 	btTransform newTransform = btTransform::getIdentity();
-	newTransform.setOrigin(position + forward * forwardOffset);
+
+	newTransform.setOrigin(position + forward);
 	newTransform.setRotation(rotation);
 
-	mRigidBody->getMotionState()->setWorldTransform(newTransform);
 	mRigidBody->setWorldTransform(newTransform);
 	mRigidBody->setGravity(gravity);
-	mRigidBody->setLinearVelocity(forward * speed);
+	mRigidBody->setLinearVelocity(forward.normalized() * speed);
 }
 
 

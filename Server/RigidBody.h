@@ -63,6 +63,7 @@ public:
 
 public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void UpdateRigidBody() override;
 
 	void SetVehicleAndConstantPtr(
 		class VehicleRigidBody* vehiclePtr, 
@@ -73,7 +74,7 @@ public:
 		const btVector3& forward,
 		const btQuaternion& rotation,
 		const btVector3& gravity,
-		float forwardOffset, float speed);
+		float speed);
 
 private:
 	VehicleRigidBody* mVehiclePtr;
