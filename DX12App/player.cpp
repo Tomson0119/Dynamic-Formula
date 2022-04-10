@@ -487,7 +487,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	float suspensionStiffness = 20.0f;
 	float suspensionDamping = 2.5f;
 	float suspensionCompression = 4.4f;
-	float rollInfluence = 0.01f;  //1.0f;
+	float rollInfluence = 0.001f;  //1.0f;
 
 	// ¾Õ¹ÙÄû
 	bool isFrontWheel = true;

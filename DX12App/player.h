@@ -171,7 +171,7 @@ private:
 
 	float mVehicleSteering = 0.f;
 	float mSteeringIncrement = 5.0f;
-	float mSteeringClamp = 0.3f;
+	float mSteeringClamp = 0.15f;
 
 	float mCurrentSpeed = 0.0f;
 	float mMaxSpeed = 1000.0f;
