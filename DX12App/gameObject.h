@@ -297,9 +297,10 @@ public:
 	float GetDuration() { return mDuration; }
 
 	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
+	void SetCurrentTransform(SC::packet_missile_transform* pck, float latency);
 
 public:
-	void SetActive(bool state) { mActive = state; }
+	void SetActive(bool state);
 	bool IsActive() const { return mActive; }
 
 private:
