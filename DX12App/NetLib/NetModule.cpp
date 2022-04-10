@@ -125,16 +125,22 @@ void NetModule::UpdatePlayerInfo(SC::packet_update_player_info* pck)
 	}
 }
 
-void NetModule::InitPlayersPosition(SC::packet_game_start_success* pck)
+void NetModule::InitPlayerTransform(SC::packet_game_start_success* pck)
 {
 	if (mRoomID == pck->room_id)
 	{
 		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 		{
 			auto& pos = mPlayerList[i].StartPosition;
-			pos.x = pck->x[i] / FIXED_FLOAT_LIMIT;
-			pos.y = pck->y[i] / FIXED_FLOAT_LIMIT;
-			pos.z = pck->z[i] / FIXED_FLOAT_LIMIT;
+			auto& quat = mPlayerList[i].StartRotation;
+
+			pos.x = pck->px[i] / FIXED_FLOAT_LIMIT;
+			pos.y = pck->py[i] / FIXED_FLOAT_LIMIT;
+			pos.z = pck->pz[i] / FIXED_FLOAT_LIMIT;
+			quat.x = pck->rx[i] / FIXED_FLOAT_LIMIT;
+			quat.y = pck->ry[i] / FIXED_FLOAT_LIMIT;
+			quat.z = pck->rz[i] / FIXED_FLOAT_LIMIT;
+			quat.w = pck->rw[i] / FIXED_FLOAT_LIMIT;
 		}
 	}
 }

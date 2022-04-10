@@ -101,7 +101,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_game_start_success* pck = reinterpret_cast<SC::packet_game_start_success*>(packet);
 		if (pck->room_id == mNetPtr->GetRoomID())
 		{
-			mNetPtr->InitPlayersPosition(pck);
+			mNetPtr->InitPlayerTransform(pck);
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		}
 		break;

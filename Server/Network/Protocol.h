@@ -209,9 +209,13 @@ namespace SC
 	struct packet_game_start_success : packet_header
 	{
 		int room_id;
-		int x[MAX_ROOM_CAPACITY];
-		int y[MAX_ROOM_CAPACITY];
-		int z[MAX_ROOM_CAPACITY];
+		int px[MAX_ROOM_CAPACITY];
+		int py[MAX_ROOM_CAPACITY];
+		int pz[MAX_ROOM_CAPACITY];
+		int rx[MAX_ROOM_CAPACITY];
+		int ry[MAX_ROOM_CAPACITY];
+		int rz[MAX_ROOM_CAPACITY];
+		int rw[MAX_ROOM_CAPACITY];
 	};
 
 	struct packet_start_signal : packet_header
