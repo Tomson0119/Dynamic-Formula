@@ -385,30 +385,6 @@ struct AtomicInt4
 		
 		XMStoreFloat4(&origin, nextQuat);
 		SetValue(origin);
-
-		/*XMFLOAT3 temp{};
-		XMStoreFloat3(&temp, XMVector3Length(XMLoadFloat3(&vec)));
-		
-		float length = temp.x;
-		if (length < 1e-6) return;
-
-		float half = length * 0.5f;
-		float sin = sinf(half);
-		float cos = cosf(half);
-
-		XMFLOAT4 quat = {
-			vec.x * sin,
-			vec.y * sin,
-			vec.z * sin,
-			length * cos
-		};*/
-	
-		/*XMFLOAT4 origin = GetXMFloat4();
-		XMVECTOR nextQuat = XMQuaternionMultiply(XMLoadFloat4(&quat), XMLoadFloat4(&origin));
-		nextQuat = XMVector4Normalize(nextQuat);
-		
-		XMStoreFloat4(&origin, nextQuat);
-		SetValue(origin);*/
 	}
 
 	bool IsZero() const

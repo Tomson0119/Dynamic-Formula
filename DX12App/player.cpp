@@ -649,18 +649,6 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 		pck->angular_vel[1],
 		pck->angular_vel[2],
 		latency);
-
-	if (mNetID == 0)
-	{
-		static unsigned long long counter = 0;
-
-		std::stringstream ss;
-		ss << counter++ << ".\n";
-		ss << "Latency: " << latency << "\n";
-		ss << "Origin: " << mCorrectionOrigin.x << " " << mCorrectionOrigin.y << " " << mCorrectionOrigin.z << "\n";
-		ss << "Quat: " << mCorrectionQuat.x << " " << mCorrectionQuat.y << " " << mCorrectionQuat.z << " " << mCorrectionQuat.w << "\n\n";
-		OutputDebugStringA(ss.str().c_str());
-	}
 	
 	mLinearVelocity.SetValue(pck->linear_vel[0], pck->linear_vel[1], pck->linear_vel[2]);
 }
