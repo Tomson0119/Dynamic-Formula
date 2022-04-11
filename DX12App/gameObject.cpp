@@ -968,29 +968,18 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 		pck->quaternion[1],
 		pck->quaternion[2],
 		pck->quaternion[3]);
-
-	std::stringstream ss;
-	ss << "Origin: "<< mCorrectionOrigin.x << ", "
-		<< mCorrectionOrigin.y << ", "
-		<< mCorrectionOrigin.z << "\n\n";
-	OutputDebugStringA(ss.str().c_str());
 }
 
-void MissileObject::SetCurrentTransform(SC::packet_missile_transform* pck, float latency)
+void MissileObject::SetInitialTransform(SC::packet_missile_transform* pck, float latency)
 {
 	SetCorrectionTransform(pck, latency);
-	SetPosition(mCorrectionOrigin.GetXMFloat3());
-	SetQuaternion(mCorrectionQuat.GetXMFloat4());
+	mPrevOrigin = mCorrectionOrigin;
+	mPrevQuat = mCorrectionQuat;
 }
 
 void MissileObject::SetActive(bool state)
 {
 	mActive = state;
-	if (state)
-	{
-		SetPosition(mCorrectionOrigin.GetXMFloat3());
-		SetQuaternion(mCorrectionQuat.GetXMFloat4());
-	}
 }
 
 void MissileObject::Update(float elapsedTime, float updateRate)
@@ -998,12 +987,6 @@ void MissileObject::Update(float elapsedTime, float updateRate)
 	if (mActive)
 	{
 		GameObject::Update(elapsedTime, updateRate);
-		std::stringstream ss;
-		ss << "Origin: " << mPosition.x << ", "
-			<< mPosition.y << ", "
-			<< mPosition.z << "\n\n";
-		OutputDebugStringA(ss.str().c_str());
-		mDuration -= elapsedTime;
 	}
 }
 
