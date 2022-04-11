@@ -355,7 +355,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 
 #ifdef STANDALONE
-	BuildCarObject({ -3200.0f, 10.0f, 1500.0f }, { 0.0f, 0.707107f, 0.0f, 0.707107f },  4, true, cmdList, physics, 0);
+	BuildCarObject({ -100.0f, 10.0f, 250.0f }, { 0.0f, 0.707107f, 0.0f, 0.707107f },  4, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -398,16 +398,16 @@ void InGameScene::BuildCarObject(
 	{
 		auto wheelObj = make_shared<WheelObject>(*carObj.get());
 
-		float x = 7.6f, y = -1.2f, z = 11.0f;
+		XMFLOAT3 wheelOffset = mWheelOffset;
 		if (i >= 2)
 		{
-			z *= -1.0f;
+			wheelOffset.z *= -1.0f;
 		}
 		if (i % 2 == 0)
 		{
-			x *= -1.0f;
+			wheelOffset.x *= -1.0f;
 		}
-		wheelObj->SetLocalOffset({ x, y, z });
+		wheelObj->SetLocalOffset(wheelOffset);
 
 
 		if (i % 2 == 0)
@@ -522,7 +522,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			if (missile->IsActive() == false)
 			{
 				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
-				missile->SetCurrentTransform(pck, mNetPtr->GetLatency());
+				missile->SetInitialTransform(pck, mNetPtr->GetLatency());
 			}
 			else
 			{
@@ -576,8 +576,10 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			if (mCurrentCamera == mDirectorCamera.get())
 				mCurrentCamera = mMainCamera.get();
-			else
+			else {
+				mDirectorCamera->SetPosition(mMainCamera->GetPosition());
 				mCurrentCamera = mDirectorCamera.get();
+			}
 		}
 		if (wParam == 'M')
 		{
@@ -596,7 +598,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 	if (mCurrentCamera == mDirectorCamera.get())
 	{
-		const float dist = 500.0f;
+		const float dist = 50.0f;
 		if (GetAsyncKeyState('A') & 0x8000)
 			mDirectorCamera->Strafe(-dist * elapsed);
 		if (GetAsyncKeyState('D') & 0x8000)

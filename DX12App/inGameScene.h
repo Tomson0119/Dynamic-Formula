@@ -171,6 +171,9 @@ private:
 		(XMFLOAT4)Colors::Orange, (XMFLOAT4)Colors::Yellow
 	};
 
+	// wheel offset
+	const XMFLOAT3 mWheelOffset = { 1.25f, -0.2f, 1.85f };
+
 	UINT mMsaa4xQualityLevels = 0;
 	bool mMsaa4xEnable = false;
 
