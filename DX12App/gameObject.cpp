@@ -990,14 +990,6 @@ void MissileObject::Update(float elapsedTime, float updateRate)
 	}
 }
 
-StaticObject::StaticObject()
-{
-}
-
-StaticObject::~StaticObject()
-{
-}
-
 void StaticObject::Update(float elapsedTime, float updateRate)
 {
 	RotateDirectionVectors();

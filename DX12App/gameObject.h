@@ -315,8 +315,8 @@ private:
 class StaticObject : public GameObject
 {
 public:
-	StaticObject();
-	virtual ~StaticObject();
+	StaticObject() = default;
+	virtual ~StaticObject() = default;
 
 	virtual void Update(float elapsedTime, float updateRate) override;
 };
