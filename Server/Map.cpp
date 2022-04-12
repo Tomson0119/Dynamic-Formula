@@ -8,6 +8,7 @@ Map::Map()
 void Map::CreateTrackRigidBody(btCollisionShape& shape)
 {
 	mTrack.CreateRigidBody(0.0f, shape, this);
+	mTrack.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 }
 
 void Map::CreateCheckpoints(btCollisionShape& shape, const std::vector<CheckpointShape::CheckpointInfo>& infos)
@@ -18,6 +19,7 @@ void Map::CreateCheckpoints(btCollisionShape& shape, const std::vector<Checkpoin
 		mCheckpoints.back().SetPosition(info.position);
 		mCheckpoints.back().SetRotation(info.rotation);
 		mCheckpoints.back().CreateRigidBody(0.0f, shape, this);
+		mCheckpoints.back().SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 	}
 }
 
