@@ -11,6 +11,11 @@ public class SaveCheckPoint : MonoBehaviour
         Debug.Log("Start Writing\r\n");
         FileStream file = new FileStream(Application.dataPath + "/CheckPoint.tmap", FileMode.Create);
         StreamWriter writer = new StreamWriter(file);
+
+        Vector3 Extent = transform.GetChild(0).gameObject.transform.localScale / 2;
+
+        writer.Write(Extent.x.ToString() + " " + Extent.y.ToString() + " " + Extent.z.ToString() + "\r\n");
+
         for (int i = 0; i < transform.childCount; ++i)
         {
             GameObject obj = transform.GetChild(i).gameObject;
@@ -21,9 +26,7 @@ public class SaveCheckPoint : MonoBehaviour
             //쿼터니언 회전각
             var orientation = obj.transform.rotation;
 
-            Vector3 Extent = obj.transform.localScale / 2;
-
-            writer.Write(Extent.x.ToString() + " " + Extent.y.ToString() + " " + Extent.z.ToString() + " " + pos.x.ToString() + " " + pos.y.ToString() + " " + pos.z.ToString() +
+            writer.Write(pos.x.ToString() + " " + pos.y.ToString() + " " + pos.z.ToString() +
                 " " + orientation.x.ToString() + " " + orientation.y.ToString() + " " + orientation.z.ToString() + " " + orientation.w.ToString() + "\r\n");
 
             Debug.Log("Successfully Write CheckPoint" + name + "\r\n");
