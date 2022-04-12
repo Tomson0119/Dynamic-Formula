@@ -31,8 +31,6 @@ void BPHandler::Init(float gravity)
 
 void BPHandler::StepSimulation(float elapsed)
 {
-	/*btScalar timeStep = mPhysicsTimer.getTimeSeconds();
-	mPhysicsTimer.reset();*/
 	mBtDynamicsWorld->stepSimulation(elapsed, 2);
 }
 
