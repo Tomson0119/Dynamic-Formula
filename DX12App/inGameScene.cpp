@@ -1047,7 +1047,7 @@ void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::
 		XMFLOAT4 quaternion;
 		ss >> quaternion.x >> quaternion.y >> quaternion.z >> quaternion.w;
 
-		auto obj = make_shared<GameObject>();
+		auto obj = make_shared<StaticObject>();
 
 		std::shared_ptr<BoxMesh> mesh = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, extent.x * 2, extent.y * 2, extent.z * 2);
 		mesh->SetSrvIndex(0);
