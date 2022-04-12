@@ -46,6 +46,7 @@ CheckpointShape::CheckpointShape(std::string_view filename)
 {
 	std::ifstream file = Helper::OpenFile(filename);
 	LoadShapeData(file);
+	BuildCollisionShape();
 	
 	std::string info;
 	while (std::getline(file, info))
