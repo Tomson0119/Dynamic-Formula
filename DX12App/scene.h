@@ -4,11 +4,12 @@
 #include "mesh.h"
 #include "gameObject.h"
 
-#define STANDALONE
+//#define STANDALONE
 #define START_GAME_INSTANT
 
 class NetModule;
 class UI;
+
 enum class SCENE_STAT : char
 {
 	NONE = 0,
