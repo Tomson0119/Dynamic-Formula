@@ -31,7 +31,7 @@ void GameWorld::InitPhysics(float gravity)
 void GameWorld::InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape)
 {
 	mMap.CreateTrackRigidBody(mapShape.GetCompoundShape());
-	mMap.CreateCheckpoints(cpShape.GetShapes());
+	mMap.CreateCheckpoints(cpShape.GetCollisionShape(), cpShape.GetInfos());
 }
 
 void GameWorld::InitPlayerList(WaitRoom* room)
