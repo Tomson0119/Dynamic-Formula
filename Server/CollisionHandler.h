@@ -8,7 +8,7 @@ enum class OBJ_TAG : uint8_t
 	TRACK
 };
 
-class Player;
+class GameObject;
 class GameWorld;
 
 class CollisionHandler
@@ -16,5 +16,5 @@ class CollisionHandler
 public:
 	static CollisionHandler& GetInstance();
 	static void CheckCollision(btDiscreteDynamicsWorld& dynamicsWorld, GameWorld& gameWorld);
-	static OBJ_TAG GetTag(const btCollisionObject* obj, Player* player);
+	static OBJ_TAG GetTag(const btCollisionObject* obj, GameObject* gameObj);
 };

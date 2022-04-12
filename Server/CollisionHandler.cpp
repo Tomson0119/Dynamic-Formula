@@ -1,6 +1,7 @@
 #include "common.h"
 #include "CollisionHandler.h"
 #include "Player.h"
+#include "Map.h"
 #include "GameWorld.h"
 
 CollisionHandler& CollisionHandler::GetInstance()
@@ -20,8 +21,8 @@ void CollisionHandler::CheckCollision(btDiscreteDynamicsWorld& dynamicsWorld, Ga
 		const btCollisionObject* objA = contactManifold->getBody0();
 		const btCollisionObject* objB = contactManifold->getBody1();
 
-		Player* playerA = reinterpret_cast<Player*>(objA->getUserPointer());
-		Player* playerB = reinterpret_cast<Player*>(objB->getUserPointer());
+		GameObject* playerA = reinterpret_cast<GameObject*>(objA->getUserPointer());
+		GameObject* playerB = reinterpret_cast<GameObject*>(objB->getUserPointer());
 
 		auto aTag = GetTag(objA, playerA);
 		auto bTag = GetTag(objB, playerB);
@@ -40,23 +41,11 @@ void CollisionHandler::CheckCollision(btDiscreteDynamicsWorld& dynamicsWorld, Ga
 	}
 }
 
-OBJ_TAG CollisionHandler::GetTag(const btCollisionObject* obj, Player* player)
+OBJ_TAG CollisionHandler::GetTag(const btCollisionObject* obj, GameObject* gameObj)
 {
-	if (obj == nullptr || player == nullptr)
+	if (obj == nullptr || gameObj == nullptr)
 	{
 		return OBJ_TAG::NONE;
 	}
-
-	if (obj == player->GetVehicleRigidBody().GetRigidBody())
-	{
-		return OBJ_TAG::VEHICLE;
-	}
-	else if (obj == player->GetMissileRigidBody().GetRigidBody())
-	{
-		return OBJ_TAG::MISSILE;
-	}
-	else
-	{
-		return OBJ_TAG::NONE;
-	}
+	return OBJ_TAG::NONE;
 }
