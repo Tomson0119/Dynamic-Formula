@@ -1,14 +1,8 @@
 #pragma once
 
-enum class OBJ_TAG : uint8_t
-{
-	NONE = 0,
-	VEHICLE,
-	MISSILE,
-	TRACK
-};
 
-class GameObject;
+
+class CollisionObject;
 class GameWorld;
 
 class CollisionHandler
@@ -16,5 +10,4 @@ class CollisionHandler
 public:
 	static CollisionHandler& GetInstance();
 	static void CheckCollision(btDiscreteDynamicsWorld& dynamicsWorld, GameWorld& gameWorld);
-	static OBJ_TAG GetTag(const btCollisionObject* obj, GameObject* gameObj);
 };
