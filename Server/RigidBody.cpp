@@ -1,5 +1,6 @@
 #include "common.h"
 #include "RigidBody.h"
+#include "GameObject.h"
 
 RigidBody::RigidBody()
 	: mRigidBody{ nullptr }, 
@@ -11,7 +12,7 @@ RigidBody::RigidBody()
 {
 }
 
-void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape)
+void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr)
 {
 	btAssert(shape.getShapeType() != INVALID_SHAPE_PROXYTYPE);
 
@@ -28,7 +29,7 @@ void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape)
 	btDefaultMotionState* motionState = new btDefaultMotionState(originTransform);
 	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, motionState, &shape, inertia);
 	mRigidBody = new btRigidBody(cInfo);
-	//mRigidBody->setMassProps(mass, inertia);	
+	mRigidBody->setUserPointer(objPtr);
 }
 
 void RigidBody::Update(btDiscreteDynamicsWorld* physicsWorld)
@@ -63,7 +64,6 @@ void RigidBody::UpdateTransformVectors()
 		mRigidBody->getMotionState()->getWorldTransform(transform);
 
 		mPosition = transform.getOrigin();
-		//std::cout << mPosition.x() << " " << mPosition.y() << " " << mPosition.z() << "\n";
 		mQuaternion = transform.getRotation();
 		mLinearVelocity = mRigidBody->getInterpolationLinearVelocity();
 		mAngularVelocity = mRigidBody->getInterpolationAngularVelocity();
@@ -113,7 +113,6 @@ bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 	return true;
 }
 
-
 //
 // MissileRigidBody
 //
@@ -141,7 +140,7 @@ void MissileRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 
 void MissileRigidBody::UpdateRigidBody()
 {
-	mRigidBody->setLinearVelocity(mLinearVelocity);
+	mRigidBody->setLinearVelocity(mConstantVelocity);
 	RigidBody::UpdateRigidBody();
 }
 
@@ -167,7 +166,8 @@ void MissileRigidBody::SetMissileComponents(
 
 	mRigidBody->setWorldTransform(newTransform);
 	mRigidBody->setGravity(gravity);
-	mRigidBody->setLinearVelocity(forward.normalized() * speed);
+	mConstantVelocity = forward.normalized() * speed;
+	mRigidBody->setLinearVelocity(mConstantVelocity);
 }
 
 
@@ -276,40 +276,4 @@ void VehicleRigidBody::UpdateRigidBody()
 	mVehicle->setSteeringValue(mComponent.VehicleSteering, 1);
 
 	mComponent.CurrentSpeed = mVehicle->getCurrentSpeedKmHour();
-}
-
-
-//
-//	MapRigidBody
-//
-void MapRigidBody::CreateTerrainRigidBody(BtTerrainShape* shape)
-{
-	mStaticRigidBodies.emplace_back();
-
-	RigidBody& terrainRigidBody = mStaticRigidBodies.back();
-	terrainRigidBody.SetPosition(shape->GetOriginPosition());
-	terrainRigidBody.CreateRigidBody(0.0f, shape->GetCollisionShape());
-	terrainRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
-}
-
-void MapRigidBody::CreateStaticRigidBodies(std::string_view filename, btCollisionShape* shape)
-{
-	// TODO: Read position, scale, rotation values from file.
-	//		 and create all rigidboies
-}
-
-void MapRigidBody::RemoveRigidBodies(btDiscreteDynamicsWorld* physicsWorld)
-{
-	for (RigidBody& rigid : mStaticRigidBodies)
-	{
-		rigid.RemoveRigidBody(physicsWorld);
-	}
-}
-
-void MapRigidBody::UpdateRigidBodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
-{
-	for (RigidBody& rigid : mStaticRigidBodies)
-	{
-		rigid.Update(physicsWorld);
-	}
 }

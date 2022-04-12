@@ -4,6 +4,8 @@
 #include "BtCompoundShape.h"
 #include "InGameServer.h"
 
+class GameObject;
+
 class RigidBody
 {
 public:
@@ -19,7 +21,7 @@ public:
 	RigidBody();
 	virtual ~RigidBody() = default;
 
-	virtual void CreateRigidBody(btScalar mass, btCollisionShape& shape);
+	void CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr);
 
 	void SetPosition(const btVector3& pos) { mPosition = pos; }
 	void SetRotation(const btQuaternion& quat) { mQuaternion = quat; }
@@ -61,10 +63,6 @@ public:
 	MissileRigidBody();
 	virtual ~MissileRigidBody() = default;
 
-public:
-	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
-	virtual void UpdateRigidBody() override;
-
 	void SetVehicleAndConstantPtr(
 		class VehicleRigidBody* vehiclePtr, 
 		std::shared_ptr<InGameServer::BulletConstant> constantPtr);
@@ -76,7 +74,12 @@ public:
 		const btVector3& gravity,
 		float speed);
 
+public:
+	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void UpdateRigidBody() override;
+
 private:
+	btVector3 mConstantVelocity;
 	VehicleRigidBody* mVehiclePtr;
 	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };
@@ -127,20 +130,4 @@ private:
 	VehicleComponent mComponent;
 	std::unique_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::unique_ptr<btRaycastVehicle> mVehicle;
-};
-
-class MapRigidBody
-{
-public:
-	MapRigidBody() = default;
-	~MapRigidBody() = default;
-	
-	void CreateTerrainRigidBody(BtTerrainShape* shape);
-	void CreateStaticRigidBodies(std::string_view filename,	btCollisionShape* shape);
-
-	void UpdateRigidBodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
-	void RemoveRigidBodies(btDiscreteDynamicsWorld* physicsWorld);
-
-private:
-	std::deque<RigidBody> mStaticRigidBodies;
 };
