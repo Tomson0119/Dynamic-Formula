@@ -33,9 +33,9 @@ public:
 
 		const float DefaultBreakingForce = 10.0f;
 
-		const float MissileSpeed = 10.0f;
-		const btVector3 MissileOffset = { 0.0f, 5.0f, 0.0f };
-		const float MissileForwardMag = 50.0f;
+		const float MissileSpeed = 100.0f;
+		const btVector3 MissileOffset = { 0.0f, 2.0f, 0.0f };
+		const float MissileForwardMag = 10.0f;
 		const btVector3 MissileGravity = { 0.0f, 0.0f, 0.0f };
 	};
 
@@ -64,13 +64,12 @@ private:
 	
 	std::unique_ptr<BtCarShape> mBtCarShape;
 	std::unique_ptr<BtBoxShape> mMissileShape;
-
-	//std::array<std::unique_ptr<BtTerrainShape>, 2> mTerrainShapes;
 	std::unique_ptr<BtMapShape> mMapShape;
+	std::unique_ptr<CheckpointShape> mCheckpointShape;
 
 	std::shared_ptr<BulletConstant> mBulletConstants;
 
-	const btVector3 mStartPosition = { -3200.0f, 10.0f, 1500.0f };
+	const btVector3 mStartPosition = { -100.0f, 2.0f, 250.0 };
 	const btQuaternion mStartRotation = { 0.0f, 0.707107f, 0.0f, 0.707107f };
 	const btVector3 mOffset = { 20.0f, 0.0f, 0.0f };
 

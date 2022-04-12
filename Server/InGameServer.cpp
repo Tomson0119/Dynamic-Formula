@@ -17,6 +17,7 @@ InGameServer::InGameServer()
 	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin", "Resource\\Models\\Car_Body_Convex_Hull.obj");
 	mMissileShape = std::make_unique<BtBoxShape>("Resource\\Missile_Data.bin");
 	mMapShape = std::make_unique<BtMapShape>("Resource\\MapData.tmap");
+	mCheckpointShape = std::make_unique<CheckpointShape>("Resource\\Checkpoint.tmap");
 }
 
 void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
@@ -52,7 +53,7 @@ void InGameServer::PrepareToStartGame(int roomID)
 
 		msWorlds[roomID]->CreateRigidbodies(i, 500.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
 	}
-	msWorlds[roomID]->InitMapRigidBody(*mMapShape.get());
+	msWorlds[roomID]->InitMapRigidBody(*mMapShape.get(), *mCheckpointShape.get());
 	msWorlds[roomID]->SendGameStartSuccess();
 }
 
