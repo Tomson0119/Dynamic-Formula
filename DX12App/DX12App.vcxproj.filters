@@ -239,6 +239,9 @@
     <None Include="Shaders\shadowInstancing.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="Shaders\simple.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="소스 파일">

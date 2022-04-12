@@ -101,6 +101,8 @@ private:
 
 	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path);
 
+	void LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
+
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
 
 private:
@@ -178,6 +180,8 @@ private:
 	bool mMsaa4xEnable = false;
 
 	bool mMotionBlurEnable = true;
+
+	bool mCheckPointEnable = true;
 
 	btRigidBody* mTrackRigidBody = NULL;
 };
