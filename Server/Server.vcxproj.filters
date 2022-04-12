@@ -143,10 +143,10 @@
     <ClInclude Include="Player.h">
       <Filter>헤더 파일\GameObject</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject.h">
+    <ClInclude Include="Map.h">
       <Filter>헤더 파일\GameObject</Filter>
     </ClInclude>
-    <ClInclude Include="Map.h">
+    <ClInclude Include="CollisionObject.h">
       <Filter>헤더 파일\GameObject</Filter>
     </ClInclude>
   </ItemGroup>
