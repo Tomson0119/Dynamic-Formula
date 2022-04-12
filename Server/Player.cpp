@@ -58,6 +58,7 @@ void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape* shape)
 	if (shape)
 	{
 		mMissileRigidBody.CreateRigidBody(mass, shape->GetCollisionShape(), this);
+		mMissileRigidBody.SetNoResponseCollision();
 	}
 }
 
@@ -79,6 +80,34 @@ void Player::Reset(btDiscreteDynamicsWorld* physicsWorld)
 	LoadDone = false;
 	mMissileRigidBody.RemoveRigidBody(physicsWorld);
 	mVehicleRigidBody.RemoveRigidBody(physicsWorld);
+}
+
+void Player::HandleCollisionWith(const OBJ_TAG& myTag, const OBJ_TAG& otherTag)
+{
+	if (myTag == OBJ_TAG::VEHICLE && otherTag == OBJ_TAG::TRACK)
+	{
+	}
+	else if (myTag == OBJ_TAG::MISSILE && otherTag == OBJ_TAG::TRACK)
+	{
+		static long long counter = 0;
+		counter += 1;
+		std::cout << counter << " Wow this is amazing.\n";
+	}
+}
+
+CollisionObject::OBJ_TAG Player::GetTag(const btCollisionObject& obj) const
+{
+	if (&obj == mVehicleRigidBody.GetRigidBody())
+	{
+		return OBJ_TAG::VEHICLE;
+	}
+	else
+	{
+		// This can't be NONE
+		// since rigidbody attached to player instance
+		// has to be vehicle or missile
+		return OBJ_TAG::MISSILE;
+	}
 }
 
 void Player::UpdateWorldTransform()
