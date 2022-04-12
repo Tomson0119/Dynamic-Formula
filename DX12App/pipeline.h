@@ -18,6 +18,7 @@ enum class Layer : int
 	DynamicCubeMap,
 	MotionBlur,
 	Instancing,
+	CheckPoint,
 	Transparent
 };
 

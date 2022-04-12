@@ -182,6 +182,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
+	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
 
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
@@ -189,6 +190,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
+	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera);
 
@@ -215,6 +217,8 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 
 	mPipelines[Layer::Transparent]->SetAlphaBlending();
 	mPipelines[Layer::Transparent]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), instancingShader.get());
+
+	mPipelines[Layer::CheckPoint]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), simpleShader.get());
 
 	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(mDevice.Get());
 	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get());
@@ -355,6 +359,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 #endif
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
+	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 
 #ifdef STANDALONE
 	BuildCarObject({ -100.0f, 10.0f, 250.0f }, 4, true, cmdList, physics, 0);
@@ -588,6 +593,10 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 	{
 		mMotionBlurEnable = 1 - mMotionBlurEnable;
 	}
+	if (GetAsyncKeyState('N') & 1)
+	{
+		mCheckPointEnable = 1 - mCheckPointEnable;
+	}
 
 	if (mCurrentCamera == mDirectorCamera.get())
 	{
@@ -809,7 +818,11 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
 
-		if (cubeMapping && layer == Layer::Color)
+		if (layer == Layer::CheckPoint && !mCheckPointEnable)
+		{
+			continue;
+		}
+		else if (cubeMapping && layer == Layer::Color)
 		{
 			continue;
 		}
@@ -1002,4 +1015,39 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
 
 	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+}
+
+void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
+{
+	std::ifstream in_file{ path };
+	std::string info;
+
+	std::getline(in_file, info);
+	std::stringstream extss(info);
+
+	XMFLOAT3 extent;
+
+	extss >> extent.x >> extent.y >> extent.z;
+
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+
+		XMFLOAT3 pos;
+		ss >> pos.x >> pos.y >> pos.z;
+
+		XMFLOAT4 quaternion;
+		ss >> quaternion.x >> quaternion.y >> quaternion.z >> quaternion.w;
+
+		auto obj = make_shared<GameObject>();
+
+		std::shared_ptr<BoxMesh> mesh = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, extent.x * 2, extent.y * 2, extent.z * 2);
+		mesh->SetSrvIndex(0);
+		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
+		obj->SetMesh(mesh);
+		obj->SetPosition(pos);
+		obj->SetQuaternion(quaternion);
+
+		mPipelines[Layer::CheckPoint]->AppendObject(obj);
+	}
 }

@@ -1,7 +1,5 @@
 #include "common.hlsl"
 
-Texture2D gDiffuseMap : register(t0);
-
 struct VertexIn
 {
     float3 PosL     : POSITION;
