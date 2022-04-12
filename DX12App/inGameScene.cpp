@@ -826,7 +826,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
 
-		if (layer == Layer::CheckPoint)
+		if (layer == Layer::CheckPoint && !cubeMapping)
 		{
 			if (mCheckPointEnable)
 			{

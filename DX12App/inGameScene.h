@@ -181,7 +181,7 @@ private:
 
 	bool mMotionBlurEnable = true;
 
-	bool mCheckPointEnable = true;
+	bool mCheckPointEnable = false;
 
 	btRigidBody* mTrackRigidBody = NULL;
 };
