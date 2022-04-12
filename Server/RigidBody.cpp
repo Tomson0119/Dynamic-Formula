@@ -1,6 +1,5 @@
 #include "common.h"
 #include "RigidBody.h"
-#include "GameObject.h"
 
 RigidBody::RigidBody()
 	: mRigidBody{ nullptr }, 
@@ -12,7 +11,13 @@ RigidBody::RigidBody()
 {
 }
 
-void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr)
+void RigidBody::SetNoResponseCollision()
+{
+	Helper::Assert(mRigidBody, "SetNoResponseCollision failed: RigidBody is null.\n");
+	mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+}
+
+void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape, CollisionObject* objPtr)
 {
 	btAssert(shape.getShapeType() != INVALID_SHAPE_PROXYTYPE);
 
@@ -131,8 +136,6 @@ void MissileRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 			mVehiclePtr->GetQuaternion(),
 			mConstantPtr->MissileGravity,
 			mConstantPtr->MissileSpeed);
-
-		//mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
 		RigidBody::AppendRigidBody(physicsWorld);
 	}
