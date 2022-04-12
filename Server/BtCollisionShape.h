@@ -21,11 +21,33 @@ protected:
 class BtBoxShape : public BtCollisionShape
 {
 public:
+	BtBoxShape() = default;
 	BtBoxShape(std::string_view filename);
+	BtBoxShape(BtBoxShape&& other) noexcept;
 	virtual ~BtBoxShape() = default;
 
 	virtual void LoadShapeData(std::string_view filename) override;
+	virtual void LoadShapeData(std::ifstream& file);
 	virtual void BuildCollisionShape() override;
+};
+
+class CheckpointShape : public BtBoxShape
+{
+public:
+	struct CheckpointInfo
+	{
+		btVector3 position;
+		btQuaternion rotation;
+	};
+
+public:
+	CheckpointShape(std::string_view filename);
+	virtual ~CheckpointShape() = default;
+
+	const std::vector<CheckpointInfo>& GetInfos() const { return mInfos; }
+
+private:
+	std::vector<CheckpointInfo> mInfos;
 };
 
 
