@@ -3,38 +3,37 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 
-public class SaveMap : MonoBehaviour
+public class SaveCheckPoint : MonoBehaviour
 {
+    // Start is called before the first frame update
     void Start()
     {
         Debug.Log("Start Writing\r\n");
-        FileStream file = new FileStream(Application.dataPath + "/MapData.tmap", FileMode.Create);
+        FileStream file = new FileStream(Application.dataPath + "/CheckPoint.tmap", FileMode.Create);
         StreamWriter writer = new StreamWriter(file);
         for (int i = 0; i < transform.childCount; ++i)
         {
             GameObject obj = transform.GetChild(i).gameObject;
-
-            //메쉬 이름
-            string name = obj.name;
-
+            
             //좌표
             Vector3 pos = obj.transform.position;
 
             //쿼터니언 회전각
             var orientation = obj.transform.rotation;
 
-            Vector3 scale = obj.transform.localScale;
+            Vector3 Extent = obj.transform.localScale / 2;
 
-            writer.Write(name + " " + pos.x.ToString() + " " + pos.y.ToString() + " " + pos.z.ToString() +
-                " " + orientation.x.ToString() + " " + orientation.y.ToString() + " " + orientation.z.ToString() + " " + orientation.w.ToString() + " " + scale.x.ToString() + " " + scale.y.ToString() + " " + scale.z.ToString() + "\r\n");
+            writer.Write(Extent.x.ToString() + " " + Extent.y.ToString() + " " + Extent.z.ToString() + " " + pos.x.ToString() + " " + pos.y.ToString() + " " + pos.z.ToString() +
+                " " + orientation.x.ToString() + " " + orientation.y.ToString() + " " + orientation.z.ToString() + " " + orientation.w.ToString() + "\r\n");
 
-            Debug.Log("Successfully Write " + name + "\r\n");
+            Debug.Log("Successfully Write CheckPoint" + name + "\r\n");
             Debug.Log(name + " Transform :" + "\r\n" + obj.transform.localToWorldMatrix.ToString() + "\r\n");
         }
         writer.Flush();
         writer.Close();
     }
 
+    // Update is called once per frame
     void Update()
     {
         
