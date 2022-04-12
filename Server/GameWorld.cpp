@@ -6,7 +6,7 @@
 #include "LoginServer.h"
 #include "RigidBody.h"
 #include "Timer.h"
-
+#include "CollisionHandler.h"
 
 GameWorld::GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
@@ -28,10 +28,10 @@ void GameWorld::InitPhysics(float gravity)
 	mPhysics.Init(gravity);
 }
 
-void GameWorld::InitMapRigidBody(const BtMapShape& mapShape)
+void GameWorld::InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape)
 {
-	mMapRigidBody.CreateRigidBody(0.0f, mapShape.GetCompoundShape());
-	mMapRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
+	mMap.CreateTrackRigidBody(mapShape.GetCompoundShape());
+	mMap.CreateCheckpoints(cpShape.GetShapes());
 }
 
 void GameWorld::InitPlayerList(WaitRoom* room)
@@ -70,18 +70,20 @@ void GameWorld::UpdatePhysicsWorld()
 	mTimer.Tick();
 	float elapsed = mTimer.GetElapsed();
 
-	if(elapsed > 0.0f)
-		mPhysics.StepSimulation(elapsed);
-
-	for (Player* player : GetPlayerList())
+	if (elapsed > 0.0f)
 	{
-		if (player->Empty == false)
-		{
-			player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
-		}
-	}
-	mMapRigidBody.Update(mPhysics.GetDynamicsWorld());
+		mPhysics.StepSimulation(elapsed);
+		CollisionHandler::GetInstance().CheckCollision(*mPhysics.GetDynamicsWorld(), *this);
 
+		for (Player* player : GetPlayerList())
+		{
+			if (player->Empty == false)
+			{
+				player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
+			}
+		}
+		mMap.UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
+	}
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
 	{
@@ -94,9 +96,9 @@ void GameWorld::FlushPhysicsWorld()
 {
 	for (Player* player : GetPlayerList())
 	{
-		player->ResetPlayer(mPhysics.GetDynamicsWorld());
+		player->Reset(mPhysics.GetDynamicsWorld());
 	}
-	mMapRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+	mMap.Reset(mPhysics.GetDynamicsWorld());
 	mPhysics.Flush();
 }
 
