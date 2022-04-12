@@ -218,6 +218,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Transparent]->SetAlphaBlending();
 	mPipelines[Layer::Transparent]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), instancingShader.get());
 
+	mPipelines[Layer::CheckPoint]->SetWiredFrame(true);
 	mPipelines[Layer::CheckPoint]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), simpleShader.get());
 
 	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(mDevice.Get());
@@ -818,9 +819,16 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
 
-		if (layer == Layer::CheckPoint && !mCheckPointEnable)
+		if (layer == Layer::CheckPoint)
 		{
-			continue;
+			if (mCheckPointEnable)
+			{
+				pso->SetAndDraw(cmdList, true, true, cubeMapping);
+			}
+			else
+			{
+				continue;
+			}
 		}
 		else if (cubeMapping && layer == Layer::Color)
 		{
