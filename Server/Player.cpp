@@ -41,9 +41,7 @@ void Player::CreateVehicleRigidBody(
 {
 	if (shape && physicsWorld)
 	{
-		mVehicleRigidBody.CreateRigidBody(
-			mass,
-			shape->GetCompoundShape());
+		mVehicleRigidBody.CreateRigidBody(mass,	shape->GetCompoundShape(), this);
 
 		mVehicleRigidBody.CreateRaycastVehicle(
 			physicsWorld, shape->GetExtents(),
@@ -59,7 +57,7 @@ void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape* shape)
 {
 	if (shape)
 	{
-		mMissileRigidBody.CreateRigidBody(mass, shape->GetCollisionShape());
+		mMissileRigidBody.CreateRigidBody(mass, shape->GetCollisionShape(), this);
 	}
 }
 
@@ -76,7 +74,7 @@ void Player::SetDeletionFlag()
 	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
 }
 
-void Player::ResetPlayer(btDiscreteDynamicsWorld* physicsWorld)
+void Player::Reset(btDiscreteDynamicsWorld* physicsWorld)
 {
 	LoadDone = false;
 	mMissileRigidBody.RemoveRigidBody(physicsWorld);

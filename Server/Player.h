@@ -1,18 +1,21 @@
 #pragma once
 
+#include "GameObject.h"
 #include "RigidBody.h"
 #include "InGameServer.h"
 
 class BtCarShape;
 
-class Player
+class Player : public GameObject
 {
 public:
 	Player();
-	~Player() = default;
+	virtual ~Player() = default;
+
+	virtual void UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void Reset(btDiscreteDynamicsWorld* physicsWorld) override;
 
 	void SetBulletConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr);
-	
 	void SetPosition(const btVector3& pos);
 	void SetRotation(const btQuaternion& quat);
 
@@ -22,13 +25,9 @@ public:
 		BtCarShape* shape);
 
 	void CreateMissileRigidBody(btScalar mass, BtBoxShape* shape);
-
-	void UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
 	void SetDeletionFlag();
 
-	void ResetPlayer(btDiscreteDynamicsWorld* physicsWorld);
 	void UpdateWorldTransform();
-
 	void ToggleKeyValue(uint8_t key, bool pressed);
 	bool CheckMissileExist() const;
 
@@ -43,7 +42,6 @@ private:
 
 	bool UseItem(uint8_t key);
 	bool IsItemAvailable();
-
 
 public:
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
