@@ -28,7 +28,7 @@ void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
 		msWorlds[i] = std::make_unique<GameWorld>(mBulletConstants);
-		msWorlds[i]->InitPhysics(-10.0f);	
+		msWorlds[i]->InitPhysics(-9.8f);	
 		msWorlds[i]->InitPlayerList(roomList[i].get());
 	}
 }
