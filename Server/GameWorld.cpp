@@ -6,7 +6,6 @@
 #include "LoginServer.h"
 #include "RigidBody.h"
 #include "Timer.h"
-#include "CollisionHandler.h"
 
 GameWorld::GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
@@ -73,7 +72,6 @@ void GameWorld::UpdatePhysicsWorld()
 	if (elapsed > 0.0f)
 	{
 		mPhysics.StepSimulation(elapsed);
-		CollisionHandler::GetInstance().CheckCollision(*mPhysics.GetDynamicsWorld(), *this);
 
 		for (Player* player : GetPlayerList())
 		{

@@ -89,9 +89,7 @@ void Player::HandleCollisionWith(const OBJ_TAG& myTag, const OBJ_TAG& otherTag)
 	}
 	else if (myTag == OBJ_TAG::MISSILE && otherTag == OBJ_TAG::TRACK)
 	{
-		static long long counter = 0;
-		counter += 1;
-		std::cout << counter << " Wow this is amazing.\n";
+		
 	}
 }
 
