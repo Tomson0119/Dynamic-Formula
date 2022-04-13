@@ -838,8 +838,8 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 
 	// Input Texture와 ProcessingTexture[0]를 이용해 다운 샘플링
-	float threshold = 0.5f;
-	cmdList->SetComputeRoot32BitConstant(2, threshold, 0);
+	float threshold = 0.8f;
+	cmdList->SetComputeRoot32BitConstants(2, 1, &threshold, 0);
 
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	cmdList->SetComputeRootDescriptorTable(0, gpuHandle);
@@ -887,10 +887,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 		cmdList->SetComputeRootDescriptorTable(0, srvHandle[i]);
 		cmdList->SetComputeRootDescriptorTable(1, uavHandle[i]);
 
-		for (int j = 0; j < 4; ++j)
-		{
-			cmdList->SetComputeRoot32BitConstant(2, mBlurCoefficients[i], j);
-		}
+		cmdList->SetComputeRoot32BitConstants(2, 4, mBlurCoefficients, 0);
 
 		cmdList->SetComputeRoot32BitConstant(2, GAUSSIAN_RADIUS, 4);
 		cmdList->SetComputeRoot32BitConstant(2, i, 5);
