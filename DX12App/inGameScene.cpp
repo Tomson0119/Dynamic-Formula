@@ -221,7 +221,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::CheckPoint]->SetWiredFrame(true);
 	mPipelines[Layer::CheckPoint]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), simpleShader.get());
 
-	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(mDevice.Get());
+	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<MotionBlurPipeline>();
 	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get());
 
 	//mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());

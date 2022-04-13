@@ -478,7 +478,7 @@ void StreamOutputPipeline::CreateStreamOutputDesc()
 
 /////////////////////////////////////////////////////////////////////////
 //
-ComputePipeline::ComputePipeline(ID3D12Device* device)
+ComputePipeline::ComputePipeline()
 {
 }
 
@@ -506,175 +506,36 @@ void ComputePipeline::BuildPipeline(
 	mPSOs.push_back({});
 	ThrowIfFailed(device->CreateComputePipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSOs.back())));
-
-	CreateTextures(device);
-	BuildDescriptorHeap(device);
-}
-
-void ComputePipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn)
-{
-	if(msaaOn)
-		ResolveRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
-	else
-		CopyRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
-}
-
-void ComputePipeline::CopyRTToMap(
-	ID3D12GraphicsCommandList *cmdList,
-	ID3D12Resource* source, 
-	ID3D12Resource* dest)
-{
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		source, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE));
-
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		dest, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
-
-	cmdList->CopyResource(dest,source);
-
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		dest, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
-
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		source, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
-}
-
-void ComputePipeline::ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest)
-{
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		source, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE));
-
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		dest, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST));
-
-	cmdList->ResolveSubresource(dest, 0, source, 0, DXGI_FORMAT_R32G32B32A32_FLOAT);
-
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		dest, D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_COMMON));
-
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		source, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
-}
-
-void ComputePipeline::CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer)
-{
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		rtBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST));
-	
-	cmdList->CopyResource(rtBuffer, mBlurMapOutput->GetResource());
-
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		rtBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET));
-}
-
-void ComputePipeline::CopyCurrentToPreviousBuffer(ID3D12GraphicsCommandList* cmdList)
-{
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		mBlurMapInput[0]->GetResource(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		mBlurMapInput[1]->GetResource(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE));
-
-	cmdList->CopyResource(mBlurMapInput[0]->GetResource(), mBlurMapInput[1]->GetResource());
-	
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		mBlurMapInput[0]->GetResource(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		mBlurMapInput[1]->GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
-}
-
-void ComputePipeline::CreateTextures(ID3D12Device* device)
-{	
-	mBlurMapInput[0] = std::make_unique<Texture>();
-	mBlurMapInput[0]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
-	mBlurMapInput[0]->CreateTexture(device, gFrameWidth, gFrameHeight,
-		1, 1, DXGI_FORMAT_R32G32B32A32_FLOAT,
-		D3D12_RESOURCE_FLAG_NONE,
-		D3D12_RESOURCE_STATE_COMMON, nullptr);
-
-	mBlurMapInput[1] = std::make_unique<Texture>();
-	mBlurMapInput[1]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
-	mBlurMapInput[1]->CreateTexture(device, gFrameWidth, gFrameHeight,
-		1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
-		D3D12_RESOURCE_FLAG_NONE,
-		D3D12_RESOURCE_STATE_COMMON, nullptr);
-
-	mBlurMapOutput = std::make_unique<Texture>();
-	mBlurMapOutput->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
-	mBlurMapOutput->CreateTexture(device, gFrameWidth, gFrameHeight,
-		1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
-		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-		D3D12_RESOURCE_STATE_COMMON, nullptr);
-}
-
-void ComputePipeline::BuildDescriptorHeap(ID3D12Device* device)
-{
-	ThrowIfFailed(device->CreateDescriptorHeap(
-		&Extension::DescriptorHeapDesc(
-			3,
-			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
-		IID_PPV_ARGS(&mSrvUavDescriptorHeap)));
-
-	BuildSRVAndUAV(device);
-}
-
-void ComputePipeline::BuildSRVAndUAV(ID3D12Device* device)
-{
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = 1;
-
-	auto cpuHandle = mSrvUavDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-
-	device->CreateShaderResourceView(mBlurMapInput[0]->GetResource(), &srvDesc, cpuHandle);
-	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
-
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	device->CreateShaderResourceView(mBlurMapInput[1]->GetResource(), &srvDesc, cpuHandle);
-	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
-
-	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
-	uavDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-	uavDesc.Texture2D.MipSlice = 0;
-
-	device->CreateUnorderedAccessView(mBlurMapOutput->GetResource(), nullptr, &uavDesc, cpuHandle);
 }
 
 void ComputePipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 {
-	cmdList->SetComputeRootSignature(mComputeRootSig);
-	ID3D12DescriptorHeap* descHeap[] = { mSrvUavDescriptorHeap.Get() };
-	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
-
-	cmdList->SetComputeRoot32BitConstant(2, gFrameWidth, 0);
-	cmdList->SetComputeRoot32BitConstant(2, gFrameHeight, 1);
-
-	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	cmdList->SetComputeRootDescriptorTable(0, gpuHandle);
-
-	gpuHandle.ptr += 2 * gCbvSrvUavDescriptorSize;
-	cmdList->SetComputeRootDescriptorTable(1, gpuHandle);
-
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		mBlurMapOutput->GetResource(),
-		D3D12_RESOURCE_STATE_COMMON,
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-
 	cmdList->SetPipelineState(mPSOs[0].Get());
 
 	UINT numGroupX = (UINT)(ceilf(gFrameWidth / 32.0f));
 	UINT numGroupY = (UINT)(ceilf(gFrameHeight / 30.0f));
 
 	cmdList->Dispatch(numGroupX, numGroupY, 1);
+}
 
-	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
-		mBlurMapOutput->GetResource(),
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-		D3D12_RESOURCE_STATE_COMMON));
+void ComputePipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn)
+{
+}
+
+void ComputePipeline::CopyRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest)
+{
+}
+
+void ComputePipeline::ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest)
+{
+}
+
+void ComputePipeline::CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer)
+{
+}
+
+void ComputePipeline::CopyCurrentToPreviousBuffer(ID3D12GraphicsCommandList* cmdList)
+{
 }
 
 InstancingPipeline::InstancingPipeline()
@@ -767,4 +628,182 @@ void InstancingPipeline::UpdateConstants()
 			matOffset += mRenderObjects[i]->GetMeshCount();
 		}
 	}
+}
+
+MotionBlurPipeline::MotionBlurPipeline()
+{
+}
+
+MotionBlurPipeline::~MotionBlurPipeline()
+{
+}
+
+void MotionBlurPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, ComputeShader* shader)
+{
+	ComputePipeline::BuildPipeline(device, rootSig, shader);
+	CreateTextures(device);
+	BuildDescriptorHeap(device);
+}
+
+void MotionBlurPipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn)
+{
+	if (msaaOn)
+		ResolveRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
+	else
+		CopyRTToMap(cmdList, buffer, mBlurMapInput[idx]->GetResource());
+}
+
+void MotionBlurPipeline::CreateTextures(ID3D12Device* device)
+{
+	mBlurMapInput[0] = std::make_unique<Texture>();
+	mBlurMapInput[0]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mBlurMapInput[0]->CreateTexture(device, gFrameWidth, gFrameHeight,
+		1, 1, DXGI_FORMAT_R32G32B32A32_FLOAT,
+		D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
+
+	mBlurMapInput[1] = std::make_unique<Texture>();
+	mBlurMapInput[1]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mBlurMapInput[1]->CreateTexture(device, gFrameWidth, gFrameHeight,
+		1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
+		D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
+
+	mBlurMapOutput = std::make_unique<Texture>();
+	mBlurMapOutput->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mBlurMapOutput->CreateTexture(device, gFrameWidth, gFrameHeight,
+		1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
+		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
+}
+
+void MotionBlurPipeline::BuildDescriptorHeap(ID3D12Device* device)
+{
+	ThrowIfFailed(device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			3,
+			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
+		IID_PPV_ARGS(&mSrvUavDescriptorHeap)));
+
+	BuildSRVAndUAV(device);
+}
+
+void MotionBlurPipeline::BuildSRVAndUAV(ID3D12Device* device)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	auto cpuHandle = mSrvUavDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	device->CreateShaderResourceView(mBlurMapInput[0]->GetResource(), &srvDesc, cpuHandle);
+	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	device->CreateShaderResourceView(mBlurMapInput[1]->GetResource(), &srvDesc, cpuHandle);
+	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
+	uavDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	uavDesc.Texture2D.MipSlice = 0;
+
+	device->CreateUnorderedAccessView(mBlurMapOutput->GetResource(), nullptr, &uavDesc, cpuHandle);
+}
+
+void MotionBlurPipeline::CopyRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest)
+{
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+
+	cmdList->CopyResource(dest, source);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
+}
+
+void MotionBlurPipeline::ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest)
+{
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST));
+
+	cmdList->ResolveSubresource(dest, 0, source, 0, DXGI_FORMAT_R32G32B32A32_FLOAT);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_COMMON));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
+}
+
+void MotionBlurPipeline::CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer)
+{
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		rtBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST));
+
+	cmdList->CopyResource(rtBuffer, mBlurMapOutput->GetResource());
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		rtBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET));
+}
+
+void MotionBlurPipeline::CopyCurrentToPreviousBuffer(ID3D12GraphicsCommandList* cmdList)
+{
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mBlurMapInput[0]->GetResource(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mBlurMapInput[1]->GetResource(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE));
+
+	cmdList->CopyResource(mBlurMapInput[0]->GetResource(), mBlurMapInput[1]->GetResource());
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mBlurMapInput[0]->GetResource(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mBlurMapInput[1]->GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
+}
+
+void MotionBlurPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
+{
+	cmdList->SetComputeRootSignature(mComputeRootSig);
+	ID3D12DescriptorHeap* descHeap[] = { mSrvUavDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
+
+	cmdList->SetComputeRoot32BitConstant(2, gFrameWidth, 0);
+	cmdList->SetComputeRoot32BitConstant(2, gFrameHeight, 1);
+
+	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	cmdList->SetComputeRootDescriptorTable(0, gpuHandle);
+
+	gpuHandle.ptr += 2 * gCbvSrvUavDescriptorSize;
+	cmdList->SetComputeRootDescriptorTable(1, gpuHandle);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mBlurMapOutput->GetResource(),
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+
+	cmdList->SetPipelineState(mPSOs[0].Get());
+
+	UINT numGroupX = (UINT)(ceilf(gFrameWidth / 32.0f));
+	UINT numGroupY = (UINT)(ceilf(gFrameHeight / 30.0f));
+
+	cmdList->Dispatch(numGroupX, numGroupY, 1);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mBlurMapOutput->GetResource(),
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+		D3D12_RESOURCE_STATE_COMMON));
 }
