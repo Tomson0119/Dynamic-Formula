@@ -14,7 +14,7 @@ RigidBody::RigidBody()
 void RigidBody::SetNoResponseCollision()
 {
 	Helper::Assert(mRigidBody, "SetNoResponseCollision failed: RigidBody is null.\n");
-	mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	if(mRigidBody) mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 }
 
 void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape, CollisionObject* objPtr)
@@ -130,20 +130,14 @@ void MissileRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
 	if (mRigidBody)
 	{
-		SetMissileComponents(
-			mVehiclePtr->GetPosition() + mConstantPtr->MissileOffset,
-			mVehiclePtr->GetForwardVector() * mConstantPtr->MissileForwardMag,
-			mVehiclePtr->GetQuaternion(),
-			mConstantPtr->MissileGravity,
-			mConstantPtr->MissileSpeed);
-
+		SetMissileComponents();
 		RigidBody::AppendRigidBody(physicsWorld);
 	}
 }
 
 void MissileRigidBody::UpdateRigidBody()
 {
-	mRigidBody->setLinearVelocity(mConstantVelocity);
+	//mRigidBody->setLinearVelocity(mConstantVelocity);
 	RigidBody::UpdateRigidBody();
 }
 
@@ -155,22 +149,26 @@ void MissileRigidBody::SetVehicleAndConstantPtr(
 	mConstantPtr = constantPtr;
 }
 
-void MissileRigidBody::SetMissileComponents(
-	const btVector3& position,
-	const btVector3& forward,
-	const btQuaternion& rotation,
-	const btVector3& gravity,
-	float speed)
+void MissileRigidBody::SetMissileComponents()
 {
 	btTransform newTransform = btTransform::getIdentity();
 
+	btVector3 position = mVehiclePtr->GetPosition();
+	position += mConstantPtr->MissileOffset;
+
+	btVector3 forward = mVehiclePtr->GetForwardVector();
+	forward.setY(0.0f);
+	forward = forward.normalize();
+	forward *= mConstantPtr->MissileForwardMag;
+
 	newTransform.setOrigin(position + forward);
-	newTransform.setRotation(rotation);
+	newTransform.setRotation(mVehiclePtr->GetQuaternion());
 
 	mRigidBody->setWorldTransform(newTransform);
-	mRigidBody->setGravity(gravity);
-	mConstantVelocity = forward.normalized() * speed;
-	mRigidBody->setLinearVelocity(mConstantVelocity);
+	mConstantVelocity = forward.normalize() * mConstantPtr->MissileSpeed;
+	std::cout << mConstantVelocity << "\n";
+	//mRigidBody->setLinearVelocity(mConstantVelocity);
+	mRigidBody->setGravity(mConstantPtr->MissileGravity);
 }
 
 

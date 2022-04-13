@@ -68,16 +68,12 @@ public:
 		class VehicleRigidBody* vehiclePtr, 
 		std::shared_ptr<InGameServer::BulletConstant> constantPtr);
 
-	void SetMissileComponents(
-		const btVector3& position, 
-		const btVector3& forward,
-		const btQuaternion& rotation,
-		const btVector3& gravity,
-		float speed);
-
 public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
 	virtual void UpdateRigidBody() override;
+
+private:
+	void SetMissileComponents();
 
 private:
 	btVector3 mConstantVelocity;
