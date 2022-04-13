@@ -878,9 +878,9 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	srvHandle[1] = gpuHandle;
 
 	gpuHandle.ptr += gCbvSrvUavDescriptorSize;
-	uavHandle[0] = gpuHandle;
-	gpuHandle.ptr += gCbvSrvUavDescriptorSize;
 	uavHandle[1] = gpuHandle;
+	gpuHandle.ptr += gCbvSrvUavDescriptorSize;
+	uavHandle[0] = gpuHandle;
 
 	for (int i = 0; i < 2; ++i)
 	{

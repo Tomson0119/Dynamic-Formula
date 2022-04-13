@@ -17,7 +17,8 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     float4 hIntensity1 = lerp(inputTexture[inPixel + uint2(0, 1)], inputTexture[inPixel + uint2(1, 1)], 0.5);
     float4 intensity = lerp(hIntensity0, hIntensity1, 0.5);
     
-    float intensityTest = (float) (length(intensity.rgb) > threshold);
+    float4 intensityLength = length(intensity.rgb);
+    float intensityTest = (float) (intensityLength > threshold);
 
     outputTexture[pixel] = float4(intensityTest * intensity.rgb, 1.0);
 }
