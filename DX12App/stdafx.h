@@ -146,8 +146,10 @@ struct LightInfo
 	float    FalloffEnd = 0.0f;
 	XMFLOAT3 Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	float    SpotPower = 0.0f;
-	float    Range;
-	int		 Type;
+	float    Range = 0.f;
+	int		 Type = 0;
+	int		 pad0 = 0;
+	int		 pad1 = 0;
 	
 	void SetInfo(
 		const XMFLOAT3& diffuse,

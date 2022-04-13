@@ -72,11 +72,11 @@ void InGameScene::BuildObjects(
 		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
 	mMainLight.Lights[1].SetInfo(
-		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(0.0f, 0.0f, 0.0f),
+		XMFLOAT3(0.6f, 0.6f, 0.0f),
+		XMFLOAT3(-306.5f, 1.0f, 253.7f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
-		0.0f, 0.0f, 0.0f,
-		3000.0f, DIRECTIONAL_LIGHT);
+		1.0f, 10.0f, 0.0f,
+		200.0f, POINT_LIGHT);
 	mMainLight.Lights[2].SetInfo(
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
