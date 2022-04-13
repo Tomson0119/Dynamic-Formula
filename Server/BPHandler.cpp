@@ -1,5 +1,6 @@
 #include "common.h"
 #include "BPHandler.h"
+#include "CollisionObject.h"
 
 BPHandler::BPHandler(float gravity)
 {
@@ -32,6 +33,35 @@ void BPHandler::Init(float gravity)
 void BPHandler::StepSimulation(float elapsed)
 {
 	mBtDynamicsWorld->stepSimulation(elapsed, 2);
+	CheckCollision();
+}
+
+void BPHandler::CheckCollision()
+{
+	int numManifolds = mBtDynamicsWorld->getDispatcher()->getNumManifolds();
+	for (int i = 0; i < numManifolds; i++)
+	{
+		btPersistentManifold* contactManifold =
+			mBtDynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+
+		if (contactManifold->getNumContacts() <= 0) continue;
+
+		const btCollisionObject* objA = contactManifold->getBody0();
+		const btCollisionObject* objB = contactManifold->getBody1();
+
+		if (objA == nullptr || objB == nullptr) continue;
+
+		CollisionObject* gameObjA = reinterpret_cast<CollisionObject*>(objA->getUserPointer());
+		CollisionObject* gameObjB = reinterpret_cast<CollisionObject*>(objB->getUserPointer());
+
+		if (gameObjA == nullptr || gameObjB == nullptr) continue;
+
+		auto aTag = gameObjA->GetTag(*objA);
+		auto bTag = gameObjB->GetTag(*objB);
+		
+		gameObjA->HandleCollisionWith(aTag, bTag);
+		gameObjB->HandleCollisionWith(bTag, aTag);
+	}
 }
 
 void BPHandler::Flush()
