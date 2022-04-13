@@ -158,7 +158,7 @@ void InGameScene::BuildComputeRootSignature()
 	D3D12_ROOT_PARAMETER parameters[3];
 	parameters[0] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);    // Inputs
 	parameters[1] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);    // Output																   
-	parameters[2] = Extension::Constants(2, 0, D3D12_SHADER_VISIBILITY_ALL);					   // 32bit Constant
+	parameters[2] = Extension::Constants(6, 0, D3D12_SHADER_VISIBILITY_ALL);					   // 32bit Constant
 	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = Extension::RootSignatureDesc(_countof(parameters), parameters,
 		0, nullptr , D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -183,6 +183,8 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
 	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
+	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
+	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
 
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
@@ -222,7 +224,11 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::CheckPoint]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), simpleShader.get());
 
 	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<MotionBlurPipeline>();
-	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get());
+	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get(), true);
+
+	mPostProcessingPipelines[Layer::Bloom] = make_unique<BloomPipeline>();
+	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), downSampleShader.get(), true);
+	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), blurShader.get());
 
 	//mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
@@ -595,6 +601,11 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mCheckPointEnable = !mCheckPointEnable;
 		}
+		if (wParam == 'B')
+		{
+			mBloomEnable = !mBloomEnable;
+		}
+
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 		break;
@@ -810,6 +821,12 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 		mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
 	}
 
+	if (mBloomEnable)
+	{
+		mPostProcessingPipelines[Layer::Bloom]->SetInput(cmdList, backBuffer, 1);
+
+		mPostProcessingPipelines[Layer::Bloom]->Dispatch(cmdList);
+	}
 	mpUI.get()->Draw(nFrame);
 }
 

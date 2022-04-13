@@ -17,6 +17,7 @@ enum class Layer : int
 	ShadowDebug,
 	DynamicCubeMap,
 	MotionBlur,
+	Bloom,
 	Instancing,
 	CheckPoint,
 	Transparent
@@ -182,25 +183,25 @@ public:
 	virtual void BuildPipeline(
 		ID3D12Device* device,
 		ID3D12RootSignature* rootSig,
-		ComputeShader* shader = nullptr);
+		ComputeShader* shader = nullptr, bool init = false);
 
 	virtual void Dispatch(ID3D12GraphicsCommandList* cmdList);
 
-	virtual void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn = false);
+	virtual void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn = false) {}
 
 	virtual void CopyRTToMap(
 		ID3D12GraphicsCommandList* cmdList,
 		ID3D12Resource* source,
-		ID3D12Resource* dest);
+		ID3D12Resource* dest) {}
 
 	virtual void ResolveRTToMap(
 		ID3D12GraphicsCommandList* cmdList,
 		ID3D12Resource* source,
-		ID3D12Resource* dest);
+		ID3D12Resource* dest) {}
 
-	virtual void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer);
+	virtual void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer) {}
 
-	virtual void CopyCurrentToPreviousBuffer(ID3D12GraphicsCommandList* cmdList);
+	virtual void CopyCurrentToPreviousBuffer(ID3D12GraphicsCommandList* cmdList) {}
 
 protected:
 	std::vector<ComPtr<ID3D12PipelineState>> mPSOs;
@@ -216,7 +217,7 @@ public:
 	virtual void BuildPipeline(
 		ID3D12Device* device,
 		ID3D12RootSignature* rootSig,
-		ComputeShader* shader = nullptr);
+		ComputeShader* shader = nullptr, bool init = false);
 
 	virtual void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn = false);
 
@@ -236,23 +237,40 @@ public:
 
 	virtual void Dispatch(ID3D12GraphicsCommandList* cmdList);
 
-private:
-	void CreateTextures(ID3D12Device* device);
-	void BuildDescriptorHeap(ID3D12Device* device);
-	void BuildSRVAndUAV(ID3D12Device* device);
+	virtual void CreateTextures(ID3D12Device* device);
+	virtual void BuildDescriptorHeap(ID3D12Device* device);
+	virtual void BuildSRVAndUAV(ID3D12Device* device);
 
 private:
-	static const int BlurMapInputCount = 2;
+	static const int InputCount = 2;
 
 	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
 
-	std::unique_ptr<Texture> mBlurMapInput[BlurMapInputCount];
-	std::unique_ptr<Texture> mBlurMapOutput;
-
-	D3D12_GPU_VIRTUAL_ADDRESS mGPUAddresses[BlurMapInputCount + 1];
+	std::unique_ptr<Texture> mInputTexture[InputCount];
+	std::unique_ptr<Texture> mOutputTexture;
 };
 
-class BloomPipeline :public ComputePipeline
-{
+#define GAUSSIAN_RADIUS 7
 
+class BloomPipeline : public MotionBlurPipeline
+{
+public:
+	BloomPipeline();
+	virtual ~BloomPipeline();
+
+	virtual void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn = false);
+
+	virtual void Dispatch(ID3D12GraphicsCommandList* cmdList);
+
+	virtual void CreateTextures(ID3D12Device* device);
+	virtual void BuildDescriptorHeap(ID3D12Device* device);
+	virtual void BuildSRVAndUAV(ID3D12Device* device);
+
+private:
+	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
+
+	std::unique_ptr<Texture> mInputTexture;
+	std::unique_ptr<Texture> mProcessingTexture[2];
+
+	float mBlurCoefficients[GAUSSIAN_RADIUS + 1];
 };

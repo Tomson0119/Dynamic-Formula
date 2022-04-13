@@ -4,11 +4,11 @@ RWTexture2D<float4> outputTexture : register(u0);
 
 cbuffer ThresholdParams : register(b0)
 {
-    float threshold;
+    float threshold : packoffset(c0.x);
 }
 
-[numthreads(8, 8, 1)]
-void ThresholdAndDownsample(uint3 dispatchID : SV_DispatchThreadID)
+[numthreads(32, 32, 1)]
+void CS(uint3 dispatchID : SV_DispatchThreadID)
 {
     uint2 pixel = uint2(dispatchID.x, dispatchID.y);
     
