@@ -130,14 +130,14 @@ void MissileRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
 	if (mRigidBody)
 	{
-		SetMissileComponents();
 		RigidBody::AppendRigidBody(physicsWorld);
+		SetMissileComponents();
 	}
 }
 
 void MissileRigidBody::UpdateRigidBody()
 {
-	//mRigidBody->setLinearVelocity(mConstantVelocity);
+	mRigidBody->setLinearVelocity(mConstantVelocity);
 	RigidBody::UpdateRigidBody();
 }
 
@@ -165,10 +165,8 @@ void MissileRigidBody::SetMissileComponents()
 	newTransform.setRotation(mVehiclePtr->GetQuaternion());
 
 	mRigidBody->setWorldTransform(newTransform);
-	mConstantVelocity = forward.normalize() * mConstantPtr->MissileSpeed;
-	std::cout << mConstantVelocity << "\n";
-	//mRigidBody->setLinearVelocity(mConstantVelocity);
 	mRigidBody->setGravity(mConstantPtr->MissileGravity);
+	mConstantVelocity = forward.normalize() * mConstantPtr->MissileSpeed;
 }
 
 
