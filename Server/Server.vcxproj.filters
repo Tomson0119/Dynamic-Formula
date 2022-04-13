@@ -84,9 +84,6 @@
     <ClCompile Include="GameWorld.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CollisionHandler.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Player.cpp">
       <Filter>소스 파일\GameObject</Filter>
     </ClCompile>
@@ -136,9 +133,6 @@
     </ClInclude>
     <ClInclude Include="GameWorld.h">
       <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="CollisionHandler.h">
-      <Filter>헤더 파일\Physics</Filter>
     </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>헤더 파일\GameObject</Filter>
