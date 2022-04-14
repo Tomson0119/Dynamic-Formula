@@ -2,6 +2,7 @@
 #include "Player.h"
 #include "BtCompoundShape.h"
 #include "RigidBody.h"
+#include "Map.h"
 
 Player::Player()
 	: Empty{ true }, Color{ -1 }, Ready{ false }, 
@@ -82,18 +83,45 @@ void Player::Reset(btDiscreteDynamicsWorld* physicsWorld)
 	mVehicleRigidBody.RemoveRigidBody(physicsWorld);
 }
 
-void Player::HandleCollisionWith(const OBJ_TAG& myTag, const OBJ_TAG& otherTag)
+void Player::HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj)
 {
-	if (myTag == OBJ_TAG::VEHICLE && otherTag == OBJ_TAG::TRACK)
+	auto myTag = GetTag(objA);
+	auto otherTag = otherObj.GetTag(objB);
+	switch (myTag)
 	{
+	case OBJ_TAG::VEHICLE:
+	{
+		std::cout << "vehicle collided.\n";
+		if (otherTag == OBJ_TAG::CHECKPOINT) // you have to know index of checkpoint.
+		{
+			int idx = dynamic_cast<Map&>(otherObj).GetCheckpointIndex(objB);
+			std::cout << "Checkpoint collided: " << idx << "\n";
+		}
+		else if (otherTag == OBJ_TAG::MISSILE)
+		{
+			// move to recent checkpoint
+		}
+		break;
 	}
-	else if (myTag == OBJ_TAG::MISSILE && otherTag == OBJ_TAG::TRACK)
+	case OBJ_TAG::MISSILE:
 	{
-		
+		if (otherTag == OBJ_TAG::VEHICLE || otherTag == OBJ_TAG::TRACK)
+		{
+			mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+		}
+		if (otherTag == OBJ_TAG::VEHICLE)
+		{
+			// get point
+		}
+		break;
+	}
+	default:
+		std::cout << "Wrong tag" << std::endl;
+		break;
 	}
 }
 
-CollisionObject::OBJ_TAG Player::GetTag(const btCollisionObject& obj) const
+GameObject::OBJ_TAG Player::GetTag(const btCollisionObject& obj) const
 {
 	if (&obj == mVehicleRigidBody.GetRigidBody())
 	{

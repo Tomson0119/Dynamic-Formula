@@ -1,12 +1,12 @@
 #pragma once
 
-#include "CollisionObject.h"
+#include "GameObject.h"
 #include "RigidBody.h"
 #include "InGameServer.h"
 
 class BtCarShape;
 
-class Player : public CollisionObject
+class Player : public GameObject
 {
 public:
 	Player();
@@ -15,7 +15,7 @@ public:
 	virtual void UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld) override;
 	virtual void Reset(btDiscreteDynamicsWorld* physicsWorld) override;
 
-	virtual void HandleCollisionWith(const OBJ_TAG& myTag, const OBJ_TAG& otherTag) override;
+	virtual void HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj) override;
 	virtual OBJ_TAG GetTag(const btCollisionObject& obj) const override;
 
 public:
