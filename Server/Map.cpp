@@ -42,12 +42,11 @@ void Map::Reset(btDiscreteDynamicsWorld* physicsWorld)
 	}
 }
 
-void Map::HandleCollisionWith(const OBJ_TAG& myTag, const OBJ_TAG& otherTag)
+void Map::HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj)
 {
-	// Nothing has to be done here.
 }
 
-CollisionObject::OBJ_TAG Map::GetTag(const btCollisionObject& obj) const
+GameObject::OBJ_TAG Map::GetTag(const btCollisionObject& obj) const
 {
 	if (&obj == mTrack.GetRigidBody())
 	{
@@ -59,5 +58,17 @@ CollisionObject::OBJ_TAG Map::GetTag(const btCollisionObject& obj) const
 		// since rigidbody attached to map instance
 		// has to be track or checkpoint.
 		return OBJ_TAG::CHECKPOINT;
+	}
+}
+
+int Map::GetCheckpointIndex(const btCollisionObject& obj) const
+{
+	for (int i = 0; const RigidBody& cp : mCheckpoints)
+	{
+		if (&obj == cp.GetRigidBody())
+		{
+			return i;
+		}
+		i += 1;
 	}
 }
