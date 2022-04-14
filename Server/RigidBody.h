@@ -4,7 +4,7 @@
 #include "BtCompoundShape.h"
 #include "InGameServer.h"
 
-class CollisionObject;
+class GameObject;
 
 class RigidBody
 {
@@ -22,7 +22,7 @@ public:
 	virtual ~RigidBody() = default;
 
 	void SetNoResponseCollision();
-	void CreateRigidBody(btScalar mass, btCollisionShape& shape, CollisionObject* objPtr);
+	void CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr);
 
 	void SetPosition(const btVector3& pos) { mPosition = pos; }
 	void SetRotation(const btQuaternion& quat) { mQuaternion = quat; }

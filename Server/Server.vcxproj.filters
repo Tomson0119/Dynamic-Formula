@@ -140,7 +140,7 @@
     <ClInclude Include="Map.h">
       <Filter>헤더 파일\GameObject</Filter>
     </ClInclude>
-    <ClInclude Include="CollisionObject.h">
+    <ClInclude Include="GameObject.h">
       <Filter>헤더 파일\GameObject</Filter>
     </ClInclude>
   </ItemGroup>

@@ -240,7 +240,7 @@
     <ClInclude Include="BtCompoundShape.h" />
     <ClInclude Include="BtShapeInterface.h" />
     <ClInclude Include="Client.h" />
-    <ClInclude Include="CollisionObject.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="DBHandler.h" />
     <ClInclude Include="GameWorld.h" />

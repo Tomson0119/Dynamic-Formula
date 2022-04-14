@@ -17,7 +17,7 @@ void RigidBody::SetNoResponseCollision()
 	if(mRigidBody) mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 }
 
-void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape, CollisionObject* objPtr)
+void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr)
 {
 	btAssert(shape.getShapeType() != INVALID_SHAPE_PROXYTYPE);
 

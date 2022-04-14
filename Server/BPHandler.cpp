@@ -1,6 +1,6 @@
 #include "common.h"
 #include "BPHandler.h"
-#include "CollisionObject.h"
+#include "GameObject.h"
 
 BPHandler::BPHandler(float gravity)
 {
@@ -51,16 +51,13 @@ void BPHandler::CheckCollision()
 
 		if (objA == nullptr || objB == nullptr) continue;
 
-		CollisionObject* gameObjA = reinterpret_cast<CollisionObject*>(objA->getUserPointer());
-		CollisionObject* gameObjB = reinterpret_cast<CollisionObject*>(objB->getUserPointer());
+		GameObject* gameObjA = reinterpret_cast<GameObject*>(objA->getUserPointer());
+		GameObject* gameObjB = reinterpret_cast<GameObject*>(objB->getUserPointer());
 
 		if (gameObjA == nullptr || gameObjB == nullptr) continue;
 
-		auto aTag = gameObjA->GetTag(*objA);
-		auto bTag = gameObjB->GetTag(*objB);
-		
-		gameObjA->HandleCollisionWith(aTag, bTag);
-		gameObjB->HandleCollisionWith(bTag, aTag);
+		gameObjA->HandleCollisionWith(*objA, *objB, *gameObjB);
+		gameObjB->HandleCollisionWith(*objB, *objA, *gameObjA);
 	}
 }
 
