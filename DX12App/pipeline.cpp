@@ -838,7 +838,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 
 	// Input Texture와 ProcessingTexture[0]를 이용해 다운 샘플링
-	float threshold = 1.5f;
+	float threshold = 1.0f;
 	cmdList->SetComputeRoot32BitConstants(2, 1, &threshold, 0);
 
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
@@ -902,7 +902,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 			mProcessingTexture[i]->GetResource(),
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-			D3D12_RESOURCE_STATE_COPY_SOURCE));
+			D3D12_RESOURCE_STATE_COMMON));
 	}
 
 	uavHandle[0].ptr += gCbvSrvUavDescriptorSize;
