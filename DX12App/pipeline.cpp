@@ -838,7 +838,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 
 	// Input Texture와 ProcessingTexture[0]를 이용해 다운 샘플링
-	float threshold = 0.8f;
+	float threshold = 1.5f;
 	cmdList->SetComputeRoot32BitConstants(2, 1, &threshold, 0);
 
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
@@ -902,7 +902,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 			mProcessingTexture[i]->GetResource(),
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-			D3D12_RESOURCE_STATE_COMMON));
+			D3D12_RESOURCE_STATE_COPY_SOURCE));
 	}
 
 	uavHandle[0].ptr += gCbvSrvUavDescriptorSize;
@@ -912,6 +912,11 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 
 	cmdList->SetPipelineState(mPSOs[2].Get());
 
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mProcessingTexture[2]->GetResource(),
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+
 	cmdList->SetComputeRootDescriptorTable(0, mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 	cmdList->SetComputeRootDescriptorTable(1, uavHandle[0]);
 
@@ -919,6 +924,11 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetComputeRoot32BitConstants(2, 1, &mergeCoefficient, 0);
 
 	cmdList->Dispatch(numGroupX, numGroupY, 1);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mProcessingTexture[2]->GetResource(),
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+		D3D12_RESOURCE_STATE_COPY_SOURCE));
 }
 
 void BloomPipeline::CreateTextures(ID3D12Device* device)
@@ -991,4 +1001,18 @@ void BloomPipeline::BuildSRVAndUAV(ID3D12Device* device)
 		device->CreateUnorderedAccessView(mProcessingTexture[i]->GetResource(), nullptr, &uavDesc, cpuHandle);
 		cpuHandle.ptr += gCbvSrvUavDescriptorSize;
 	}
+}
+
+void BloomPipeline::CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer)
+{
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		rtBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST));
+
+	cmdList->CopyResource(rtBuffer, mProcessingTexture[2]->GetResource());
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		rtBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mProcessingTexture[2]->GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
 }

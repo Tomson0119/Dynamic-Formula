@@ -266,6 +266,8 @@ public:
 	virtual void BuildDescriptorHeap(ID3D12Device* device);
 	virtual void BuildSRVAndUAV(ID3D12Device* device);
 
+	virtual void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer);
+
 private:
 	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
 

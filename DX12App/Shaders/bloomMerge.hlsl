@@ -18,5 +18,5 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     
     uint2 pixel = uint2(dispatchID.x, dispatchID.y);
     
-    outputTexture[pixel] = mad(coefficient, inputTexture1.Sample(texSampler, uv), inputTexture0.Sample(texSampler, uv));
+    outputTexture[pixel] = mad(coefficient, inputTexture1.SampleLevel(texSampler, uv, 0), inputTexture0.SampleLevel(texSampler, uv, 0));
 }
