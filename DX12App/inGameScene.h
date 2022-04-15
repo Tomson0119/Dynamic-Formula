@@ -183,5 +183,7 @@ private:
 
 	bool mCheckPointEnable = false;
 
+	bool mBloomEnable = true;
+
 	btRigidBody* mTrackRigidBody = NULL;
 };

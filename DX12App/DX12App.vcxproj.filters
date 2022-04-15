@@ -242,7 +242,10 @@
     <None Include="Shaders\simple.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="Shaders\thresholddownsample.hlsl">
+    <None Include="Shaders\thresholdDownSample.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\bloomMerge.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>

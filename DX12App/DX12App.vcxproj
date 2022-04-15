@@ -277,7 +277,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\ThresholdDownSample.hlsl">
+    <None Include="Shaders\thresholdDownSample.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\bloomMerge.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

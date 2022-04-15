@@ -20,9 +20,9 @@ struct Light
     float3 Diffuse;
     float  FalloffStart;
     float3 Position;
-    float  SpotPower;
-    float3 Direction;
     float  FalloffEnd;
+    float3 Direction;
+    float  SpotPower;
     float  Range;
     int    Type;
 };
