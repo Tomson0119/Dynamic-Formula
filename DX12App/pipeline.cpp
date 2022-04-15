@@ -904,6 +904,21 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 			D3D12_RESOURCE_STATE_COMMON));
 	}
+
+	uavHandle[0].ptr += gCbvSrvUavDescriptorSize;
+
+	numGroupX = (UINT)(ceilf(gFrameWidth / 32.0f));
+	numGroupY = (UINT)(ceilf(gFrameHeight / 32.0f));
+
+	cmdList->SetPipelineState(mPSOs[2].Get());
+
+	cmdList->SetComputeRootDescriptorTable(0, mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	cmdList->SetComputeRootDescriptorTable(1, uavHandle[0]);
+
+	float mergeCoefficient = 0.75;
+	cmdList->SetComputeRoot32BitConstants(2, 1, &mergeCoefficient, 0);
+
+	cmdList->Dispatch(numGroupX, numGroupY, 1);
 }
 
 void BloomPipeline::CreateTextures(ID3D12Device* device)
@@ -925,13 +940,20 @@ void BloomPipeline::CreateTextures(ID3D12Device* device)
 			D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
 			D3D12_RESOURCE_STATE_COMMON, nullptr);
 	}
+
+	mProcessingTexture[2] = std::make_unique<Texture>();
+	mProcessingTexture[2]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mProcessingTexture[2]->CreateTexture(device, gFrameWidth, gFrameHeight,
+		1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
+		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
 }
 
 void BloomPipeline::BuildDescriptorHeap(ID3D12Device* device)
 {
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
-			5,
+			6,
 			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
 		IID_PPV_ARGS(&mSrvUavDescriptorHeap)));
@@ -964,7 +986,7 @@ void BloomPipeline::BuildSRVAndUAV(ID3D12Device* device)
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 	uavDesc.Texture2D.MipSlice = 0;
 
-	for (int i = 0; i < 2; ++i)
+	for (int i = 0; i < 3; ++i)
 	{
 		device->CreateUnorderedAccessView(mProcessingTexture[i]->GetResource(), nullptr, &uavDesc, cpuHandle);
 		cpuHandle.ptr += gCbvSrvUavDescriptorSize;

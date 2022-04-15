@@ -270,7 +270,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
 
 	std::unique_ptr<Texture> mInputTexture;
-	std::unique_ptr<Texture> mProcessingTexture[2];
+	std::unique_ptr<Texture> mProcessingTexture[3];
 
 	float mBlurCoefficients[GAUSSIAN_RADIUS + 1];
 };
