@@ -166,7 +166,8 @@ private:
 	float mEngineForce = 0.f;
 
 	float mMaxEngineForce = 1000.f;
-	float mBoosterEngineForce = 3000.f;
+	const float mBoosterEngineForce = 3000.f;
+	const float mBaseEngineForce = 1000.f;
 
 	float mVehicleSteering = 0.f;
 	float mSteeringIncrement = 5.0f;
