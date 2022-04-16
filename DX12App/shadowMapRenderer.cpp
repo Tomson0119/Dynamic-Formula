@@ -18,13 +18,13 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 	mZSplits.resize(mMapCount + 1);
 
 	mZSplits[0] = mainCamera->GetNearZ();
-	mZSplits[mMapCount] = 4000;
+	mZSplits[mMapCount] = 1000;
 	for (UINT i = 1; i < mMapCount; ++i)
 	{
 		float index = (i / (float)mMapCount);
 		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
 		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
-		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.1f);
+		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.3f);
 	}
 }
 

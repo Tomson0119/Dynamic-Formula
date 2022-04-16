@@ -52,7 +52,7 @@ void InGameScene::BuildObjects(
 	mDevice = device;
 
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 700.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -373,7 +373,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 
 #ifdef STANDALONE
-	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  4, true, cmdList, physics, 0);
+	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -389,7 +389,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 700.0f);
 	mCurrentCamera = mMainCamera.get();
 }
 
@@ -453,6 +453,8 @@ void InGameScene::BuildCarObject(
 	carObj->BuildDsvRtvView(mDevice.Get());
 
 	if (isPlayer) mPlayer = carObj.get();
+	else
+		carObj->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 	mPipelines[Layer::Color]->AppendObject(carObj);
 	mPlayerObjects[netID] = std::move(carObj);	
 }
@@ -942,7 +944,8 @@ void InGameScene::UpdatePlayerObjects()
 		case UPDATE_FLAG::REMOVE:
 		{
 			removed_flag = true;
-			mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+			if(mMissileObjects[i])
+				mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			player->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Color]);
 			mPlayerObjects[i].reset();
 			break;
