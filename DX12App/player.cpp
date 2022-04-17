@@ -471,6 +471,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	btTransform btCarTransform;
 	btCarTransform.setIdentity();
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
+	btCarTransform.setRotation(btQuaternion(mQuaternion.x, mQuaternion.y, mQuaternion.z, mQuaternion.w));
 
 	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", physics);
 

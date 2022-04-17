@@ -294,6 +294,7 @@ void GameObject::BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>
 		btTransform btObjectTransform;
 		btObjectTransform.setIdentity();
 		btObjectTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
+		btObjectTransform.setRotation(btQuaternion(mQuaternion.x, mQuaternion.y, mQuaternion.z, mQuaternion.w));
 		mBtRigidBody = physics->CreateRigidBody(mass, btObjectTransform, mBtCollisionShape);
 	}
 }
@@ -584,8 +585,8 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 {
 	if (mPrevOrigin.IsZero())
 	{
-		mPrevOrigin.SetValue(mPosition);
-		mPrevQuat.SetValue(mQuaternion);
+		mPrevOrigin = mPosition;
+		mPrevQuat = mQuaternion;
 	}
 
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
@@ -607,12 +608,14 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 
 void GameObject::SetPosition(float x, float y, float z)
 {
-	mPosition = { x,y,z };
+	SetPosition({ x, y, z });
 }
 
 void GameObject::SetPosition(const XMFLOAT3& pos)
 {
-	SetPosition(pos.x, pos.y, pos.z);
+	mPosition = pos;
+	mPrevOrigin = pos;
+	mCorrectionOrigin = pos;
 }
 
 void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
@@ -691,6 +694,13 @@ void GameObject::ChangeUpdateFlag(UPDATE_FLAG expected, const UPDATE_FLAG& desir
 	mUpdateFlag.compare_exchange_strong(expected, desired);
 }
 
+const XMFLOAT4& GameObject::GetMeshDiffuse(const std::string& name)
+{
+	auto iter = std::find_if(mMeshes.begin(), mMeshes.end(),
+		[&name](const auto& mesh) { return (mesh->GetMaterialName() == name); });
+	return (*iter)->GetDiffuse();
+}
+
 void GameObject::Move(float dx, float dy, float dz)
 {
 	mPosition.x += dx;
@@ -750,6 +760,8 @@ void GameObject::Rotate(const XMFLOAT3& axis, float angle)
 void GameObject::SetQuaternion(const XMFLOAT4& quaternion)
 {
 	mQuaternion = quaternion;
+	mPrevQuat = quaternion;
+	mCorrectionQuat = quaternion;
 }
 
 void GameObject::SetQuaternion(float x, float y, float z, float w)
