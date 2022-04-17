@@ -236,6 +236,22 @@ struct InstancingInfo
 };
 
 
+inline void Print(const std::string& info, const XMFLOAT3& vec)
+{
+	std::stringstream ss;
+	ss << info;
+	ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << "]\n";
+	OutputDebugStringA(ss.str().c_str());
+}
+
+inline void Print(const std::string& info, const XMFLOAT4& vec)
+{
+	std::stringstream ss;
+	ss << info;
+	ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << "]\n";
+	OutputDebugStringA(ss.str().c_str());
+}
+
 ////////////////////////////////////////////////////////////////////////////
 //
 struct AtomicInt3
@@ -255,6 +271,12 @@ struct AtomicInt3
 		x.store(other.x);
 		y.store(other.y);
 		z.store(other.z);
+		return *this;
+	}
+
+	AtomicInt3& operator=(const XMFLOAT3& other)
+	{
+		SetValue(other);
 		return *this;
 	}
 
@@ -343,6 +365,12 @@ struct AtomicInt4
 		y.store(other.y);
 		z.store(other.z);
 		w.store(other.w);
+		return *this;
+	}
+
+	AtomicInt4& operator=(const XMFLOAT4& other)
+	{
+		SetValue(other);
 		return *this;
 	}
 
