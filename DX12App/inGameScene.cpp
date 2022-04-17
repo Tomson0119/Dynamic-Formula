@@ -361,7 +361,10 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 
 #ifdef STANDALONE
-	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  4, true, cmdList, physics, 0);
+	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  1, true, cmdList, physics, 0);
+	BuildCarObject({ -296.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  2, false, cmdList, physics, 1);
+	BuildCarObject({ -286.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  3, false, cmdList, physics, 2);
+	BuildCarObject({ -276.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  4, false, cmdList, physics, 3);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -393,6 +396,8 @@ void InGameScene::BuildCarObject(
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
 	carObj->SetQuaternion(rotation);
+	Print("Position: ", position);
+	Print("Rotation: ", rotation);
 
 	if (mMeshList["Car_Body.obj"].empty())
 		mMeshList["Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
@@ -594,6 +599,10 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (wParam == 'N')
 		{
 			mCheckPointEnable = !mCheckPointEnable;
+		}
+		if (wParam == 'Q')
+		{
+			if(mPlayerObjects[1]) mPlayerObjects[1]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 		}
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
@@ -889,7 +898,7 @@ void InGameScene::UpdateMissileObject()
 			flag = true;
 			missile->SetActive(false);
 			missile->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Default]);
-			//mMissileObjects[i].reset();
+			mMissileObjects[i].reset();
 			break;
 		}
 		case UPDATE_FLAG::NONE:
@@ -916,17 +925,21 @@ void InGameScene::UpdatePlayerObjects()
 		}
 		case UPDATE_FLAG::REMOVE:
 		{
+			OutputDebugStringA(("Remove " + std::to_string(i) + "\n").c_str());
 			removed_flag = true;
-			mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+			if(mMissileObjects[i]) mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			player->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Color]);
 			mPlayerObjects[i].reset();
 			break;
+
 		}
 		case UPDATE_FLAG::NONE:
 			continue;
 		}
 	}
-	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
+	OutputDebugStringA(("RenderObjects: " + std::to_string(mPipelines[Layer::Color]->GetRenderObjects().size()) + "\n").c_str());
+
+	//if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
 }
 
 void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path)
