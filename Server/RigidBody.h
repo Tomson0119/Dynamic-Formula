@@ -27,6 +27,8 @@ public:
 	void SetPosition(const btVector3& pos) { mPosition = pos; }
 	void SetRotation(const btQuaternion& quat) { mQuaternion = quat; }
 
+	void SetAngularVelocity(const btVector3& vel);
+
 	void Update(btDiscreteDynamicsWorld* physicsWorld);
 	void UpdateTransformVectors();
 
@@ -64,7 +66,7 @@ public:
 	MissileRigidBody();
 	virtual ~MissileRigidBody() = default;
 
-	void SetVehicleAndConstantPtr(
+	void SetGameConstantPtr(
 		class VehicleRigidBody* vehiclePtr, 
 		std::shared_ptr<InGameServer::GameConstant> constantPtr);
 
@@ -114,7 +116,6 @@ public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
 	virtual void UpdateRigidBody() override;
 	virtual void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
-	virtual void SetAngularVelocity(const btVector3& angularVelocity);
 
 public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }

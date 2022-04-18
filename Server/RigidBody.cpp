@@ -98,6 +98,11 @@ void RigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 	}
 }
 
+void RigidBody::SetAngularVelocity(const btVector3& vel)
+{
+	mRigidBody->setAngularVelocity(vel);
+}
+
 bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 {
 	if (mFlag.compare_exchange_strong(expected, desired) == false)
@@ -136,7 +141,7 @@ void MissileRigidBody::UpdateRigidBody()
 	RigidBody::UpdateRigidBody();
 }
 
-void MissileRigidBody::SetVehicleAndConstantPtr(
+void MissileRigidBody::SetGameConstantPtr(
 	VehicleRigidBody* vehiclePtr,
 	std::shared_ptr<InGameServer::GameConstant> constantPtr)
 {
@@ -245,11 +250,6 @@ void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 		mVehicle.reset();
 		mVehicleRayCaster.reset();
 	}
-}
-
-void VehicleRigidBody::SetAngularVelocity(const btVector3& angularVelocity)
-{
-	mRigidBody->setAngularVelocity(angularVelocity);
 }
 
 void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
