@@ -68,8 +68,9 @@ private:
 	void BroadcastAllTransform();
 	void PushVehicleTransformPacket(int target, int receiver);
 	void PushMissileTransformPacket(int target, int receiver);
+	void SendMissileRemovePacket(int target);
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
-
+	
 private:
 	int mID;
 	WSAOVERLAPPEDEX mPhysicsOverlapped;

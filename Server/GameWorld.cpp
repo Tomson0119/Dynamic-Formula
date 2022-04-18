@@ -258,12 +258,25 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
 
+void GameWorld::SendMissileRemovePacket(int target)
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[room id: " << mID << "] Send missile remove packet. [" << target << "]\n";
+#endif
+	SC::packet_remove_missile pck{};
+	pck.size = sizeof(SC::packet_remove_missile);
+	pck.type = SC::REMOVE_MISSILE;
+	pck.world_id = mID;
+	pck.missile_idx = target;
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
 bool GameWorld::CheckIfAllLoaded(int idx)
 {
 	if (idx < 0) return false; // logic error
 	mPlayerList[idx]->LoadDone = true;
 
-	for (auto player : mPlayerList)
+	for (auto& player : mPlayerList)
 	{
 		if (player->Empty == false && player->LoadDone == false)
 			return false;
@@ -351,7 +364,7 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, const GameObject::OBJ
 		if (cpIdx < 0)
 		{
 			mPlayerList[idx]->SetMissileDeletionFlag();
-			// Send missile remove packet.
+			SendMissileRemovePacket(idx);
 		}
 		break;
 	}
@@ -384,7 +397,7 @@ void GameWorld::HandleCollisionWithPlayer(int aIdx, int bIdx, const GameObject::
 		{
 			mPlayerList[aIdx]->IncreasePoint(mConstantPtr->MissileHitPoint);
 			mPlayerList[aIdx]->SetMissileDeletionFlag();
-			// Send missile remove packet.
+			SendMissileRemovePacket(aIdx);
 		}
 		break;
 	}
