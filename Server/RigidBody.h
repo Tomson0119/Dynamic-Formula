@@ -66,7 +66,7 @@ public:
 
 	void SetVehicleAndConstantPtr(
 		class VehicleRigidBody* vehiclePtr, 
-		std::shared_ptr<InGameServer::BulletConstant> constantPtr);
+		std::shared_ptr<InGameServer::GameConstant> constantPtr);
 
 public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
@@ -78,7 +78,7 @@ private:
 private:
 	btVector3 mConstantVelocity;
 	VehicleRigidBody* mVehiclePtr;
-	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
+	std::shared_ptr<InGameServer::GameConstant> mConstantPtr;
 };
 
 class VehicleRigidBody : public RigidBody
