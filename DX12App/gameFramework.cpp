@@ -141,11 +141,6 @@ void GameFramework::InitScene(SCENE_STAT state)
 	WaitUntilGPUComplete();
 }
 
-void GameFramework::OnPreciseKeyInput()
-{
-
-}
-
 void GameFramework::CheckAndChangeScene()
 {
 	switch (mScenes.top()->GetSceneChangeFlag())
@@ -177,9 +172,6 @@ void GameFramework::CheckAndChangeScene()
 void GameFramework::Update()
 {
 	D3DFramework::UpdateFrameStates();
-	
-	OnPreciseKeyInput();
-
 	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
@@ -240,4 +232,3 @@ void GameFramework::Draw()
 	
 	WaitUntilGPUComplete();
 }
-
