@@ -57,7 +57,6 @@ CheckpointShape::CheckpointShape(std::string_view filename)
 		mInfos.back().position.setValue(px, py, pz);
 		mInfos.back().rotation.setValue(rx, ry, rz, rw);
 	}
-	std::cout << mInfos.size() << "\n";
 }
 
 
