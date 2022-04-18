@@ -9,7 +9,7 @@ public:
 	Map();
 	virtual ~Map() = default;
 
-	virtual void UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld) override;
 	virtual void Reset(btDiscreteDynamicsWorld* physicsWorld) override;
 
 	virtual void HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj) override;

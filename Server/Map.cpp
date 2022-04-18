@@ -24,7 +24,7 @@ void Map::CreateCheckpoints(btCollisionShape& shape, const std::vector<Checkpoin
 	}
 }
 
-void Map::UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
+void Map::Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
 {
 	mTrack.Update(physicsWorld);
 	for (auto& cp : mCheckpoints)
@@ -54,9 +54,6 @@ GameObject::OBJ_TAG Map::GetTag(const btCollisionObject& obj) const
 	}
 	else
 	{
-		// This can't be NONE
-		// since rigidbody attached to map instance
-		// has to be track or checkpoint.
 		return OBJ_TAG::CHECKPOINT;
 	}
 }
