@@ -63,6 +63,8 @@ public:
 
 	void SetMsaa(bool msaaEnable, UINT msaaQuality) { mMsaa4xQualityLevels = msaaQuality; mMsaaEnable = msaaEnable; }
 
+	void SortMeshes();
+
 	void Pipeline::Update(float elapsed, float updateRate, Camera* camera);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);

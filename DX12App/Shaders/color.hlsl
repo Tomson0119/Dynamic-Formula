@@ -78,7 +78,6 @@ PixelOut PS(VertexOut pin)
     PixelOut pout;
 
     float4 result = ambient + directLight;
-    result.a = gMat.Diffuse.a;
     
     if (gCubemapOn)
     {
@@ -90,7 +89,8 @@ PixelOut PS(VertexOut pin)
 
         result *= gCubeMap.Sample(gLinearWrap, reflected);
     }
-
+    
+    result.a = 1.0f;
     pout.f4Color = result;
 
     if (gMotionBlurOn)
@@ -104,7 +104,7 @@ PixelOut PS(VertexOut pin)
         pout.f4Direction.z = PosV.z;
     }
     
-    if(!gInvincibleOn)
+    if(gInvincibleOn)
     {
         pout.f4Color.a = 0.3f;
     }

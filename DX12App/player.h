@@ -182,4 +182,7 @@ private:
 
 	int mItemNum = 0;
 	float mDriftGauge = 0.0f;
+
+	bool mHit = false;
+	float mTransparentTime = 0.5f;
 };

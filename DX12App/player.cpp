@@ -470,6 +470,16 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 		mCamera->SetFovCoefficient(mFovCoefficient);
 		mCamera->SetLens(mCamera->GetAspect());
 	}
+
+	if (mHit)
+	{
+		mTransparentTime -= elapsedTime;
+		if (mTransparentTime < 0.f)
+		{
+			mTransparentOn = !mTransparentOn;
+			mTransparentTime = 0.5f;
+		}
+	}
 }
 
 void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)

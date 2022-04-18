@@ -47,6 +47,7 @@ public:
 	virtual void ChangeCurrentRenderTarget() {}
 
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
+	void SortMeshes();
 
 protected:
 	virtual void UpdateTransform();
@@ -214,7 +215,7 @@ protected:
 	bool mCubemapOn = false;
 	bool mMotionBlurOn = true;
 	bool mRimLightOn = false;
-	bool mInvincibleOn = false;
+	bool mTransparentOn = false;
 
 	std::string mName;
 };

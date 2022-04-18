@@ -293,6 +293,14 @@ void Pipeline::SetStencilOp(
 	mStencilRef = stencilRef;
 }
 
+void Pipeline::SortMeshes()
+{
+	for (int i = 0; i < mRenderObjects.size(); ++i)
+	{
+		mRenderObjects[i]->SortMeshes();
+	}
+}
+
 void Pipeline::Update(float elapsed, float updateRate, Camera* camera)
 {
 	for (const auto& obj : mRenderObjects)
