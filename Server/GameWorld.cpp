@@ -40,7 +40,7 @@ void GameWorld::InitPlayerList(WaitRoom* room, int cpCount)
 	for (int i = 0; auto& player : mPlayerList)
 	{
 		player = room->GetPlayerPtr(i);
-		player->SetBulletConstant(mConstantPtr);
+		player->SetGameConstant(mConstantPtr);
 		player->SetCheckpointCount(cpCount);
 		i++;
 	}
@@ -73,7 +73,7 @@ void GameWorld::UpdatePhysicsWorld()
 	if (elapsed > 0.0f)
 	{
 		mPhysics.StepSimulation(elapsed);
-
+		CheckCollision();
 		for (Player* player : GetPlayerList())
 		{
 			if (player->Empty == false)
@@ -170,6 +170,27 @@ void GameWorld::SendStartSignal()
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
+void GameWorld::BroadcastAllTransform()
+{
+	for (int receiver = 0; receiver < mPlayerList.size(); receiver++)
+	{
+		if (mPlayerList[receiver]->Empty) continue;
+
+		for (int target = 0; target < mPlayerList.size(); target++)
+		{
+			if (mPlayerList[target]->Empty == false)
+			{
+				PushVehicleTransformPacket(target, receiver);
+				PushMissileTransformPacket(target, receiver);
+			}
+		}
+
+		int id = mPlayerList[receiver]->ID;
+		if (id < 0) continue;
+		gClients[id]->SendMsg(true);
+	}
+}
+
 void GameWorld::PushVehicleTransformPacket(int target, int receiver)
 {
 	SC::packet_player_transform pck{};
@@ -237,27 +258,6 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
 
-void GameWorld::BroadcastAllTransform()
-{
-	for (int receiver = 0; receiver < mPlayerList.size(); receiver++)
-	{
-		if (mPlayerList[receiver]->Empty) continue;	
-
-		for (int target = 0; target < mPlayerList.size(); target++)
-		{
-			if(mPlayerList[target]->Empty == false)
-			{
-				PushVehicleTransformPacket(target, receiver);
-				PushMissileTransformPacket(target, receiver);
-			}
-		}
-
-		int id = mPlayerList[receiver]->ID;
-		if (id < 0) continue;
-		gClients[id]->SendMsg(true);
-	}
-}
-
 bool GameWorld::CheckIfAllLoaded(int idx)
 {
 	if (idx < 0) return false; // logic error
@@ -296,4 +296,110 @@ void GameWorld::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instS
 			if (instSend) gClients[player->ID]->SendMsg();
 		}
 	}
+}
+
+void GameWorld::CheckCollision()
+{
+	int numManifolds = mPhysics.GetNumManifolds();
+	for (int i = 0; i < numManifolds; i++)
+	{
+		btPersistentManifold* contactManifold = mPhysics.GetPersistentManifold(i);
+
+		if (contactManifold->getNumContacts() <= 0) continue;
+
+		const btCollisionObject* objA = contactManifold->getBody0();
+		const btCollisionObject* objB = contactManifold->getBody1();
+
+		if (objA == nullptr || objB == nullptr) continue;
+
+		GameObject* gameObjA = reinterpret_cast<GameObject*>(objA->getUserPointer());
+		GameObject* gameObjB = reinterpret_cast<GameObject*>(objB->getUserPointer());
+
+		HandleCollision(*objA, *objB, *gameObjA, *gameObjB);
+		HandleCollision(*objB, *objA, *gameObjB, *gameObjA);
+	}
+}
+
+void GameWorld::HandleCollision(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& gameObjA, GameObject& gameObjB)
+{
+	if (int idx = GetPlayerIndex(gameObjA); idx >= 0)
+	{
+		auto aTag = gameObjA.GetTag(objA);
+		auto bTag = gameObjB.GetTag(objB);
+
+		if (&gameObjB == &mMap)
+			HandleCollisionWithMap(idx, mMap.GetCheckpointIndex(objB), aTag);
+		else
+			HandleCollisionWithPlayer(idx, GetPlayerIndex(gameObjB), aTag, bTag);
+	}
+}
+
+void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, const GameObject::OBJ_TAG& tag)
+{
+	switch (tag)
+	{
+	case GameObject::OBJ_TAG::VEHICLE:
+	{
+		if (cpIdx >= 0)
+		{
+			mPlayerList[idx]->HandleCheckpointCollision(cpIdx);
+		}
+		break;
+	}
+	case GameObject::OBJ_TAG::MISSILE:
+	{
+		if (cpIdx < 0)
+		{
+			mPlayerList[idx]->SetMissileDeletionFlag();
+			// Send missile remove packet.
+		}
+		break;
+	}
+	default:
+		std::cout << "Wrong tag!" << std::endl;
+		break;
+	}
+}
+
+void GameWorld::HandleCollisionWithPlayer(int aIdx, int bIdx, const GameObject::OBJ_TAG aTag, const GameObject::OBJ_TAG bTag)
+{
+	switch (aTag)
+	{
+	case GameObject::OBJ_TAG::VEHICLE:
+	{
+		if (bTag == GameObject::OBJ_TAG::MISSILE)
+		{
+			if (mPlayerList[aIdx]->IsInvincible() == false)
+			{
+				mPlayerList[aIdx]->SetInvincible();
+				// TODO: Waits for 1.5 second and send spawn packet.
+				// and waits another 1.5 second and release invincible mode.
+			}
+		}
+		break;
+	}
+	case GameObject::OBJ_TAG::MISSILE:
+	{
+		if (bTag == GameObject::OBJ_TAG::VEHICLE)
+		{
+			mPlayerList[aIdx]->IncreasePoint(mConstantPtr->MissileHitPoint);
+			mPlayerList[aIdx]->SetMissileDeletionFlag();
+			// Send missile remove packet.
+		}
+		break;
+	}
+	default:
+		std::cout << "Wrong tag!" << std::endl;
+		break;
+	}
+}
+
+int GameWorld::GetPlayerIndex(const GameObject& obj)
+{
+	for (int i=0; const auto& player : mPlayerList)
+	{
+		if (&obj == player) return i;
+		i += 1;
+	}
+	return -1;
 }

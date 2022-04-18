@@ -25,6 +25,7 @@ public:
 	void CreateRigidbodies(int idx,
 		btScalar carMass, BtCarShape* carShape,
 		btScalar missileMass, BtBoxShape* missileShape);
+
 	void UpdatePhysicsWorld();
 	void FlushPhysicsWorld();
 	void RemovePlayerRigidBody(int idx);
@@ -33,10 +34,6 @@ public:
 
 	void SendGameStartSuccess();
 	void SendStartSignal();
-
-	void PushVehicleTransformPacket(int target, int receiver);
-	void PushMissileTransformPacket(int target, int receiver);
-	void BroadcastAllTransform();
 
 	bool CheckIfAllLoaded(int idx);
 
@@ -48,6 +45,29 @@ public:
 	WSAOVERLAPPEDEX* GetPhysicsOverlapped();
 
 private:
+	void CheckCollision();
+
+	void HandleCollision(
+		const btCollisionObject& objA,
+		const btCollisionObject& objB,
+		GameObject& gameObjA, 
+		GameObject& gameObjB);
+
+	void HandleCollisionWithMap(
+		int idx, int cpIdx,
+		const GameObject::OBJ_TAG& tag);
+
+	void HandleCollisionWithPlayer(
+		int aIdx, int bIdx,
+		const GameObject::OBJ_TAG aTag, 
+		const GameObject::OBJ_TAG bTag);
+
+	int GetPlayerIndex(const GameObject& obj);
+
+private:
+	void BroadcastAllTransform();
+	void PushVehicleTransformPacket(int target, int receiver);
+	void PushMissileTransformPacket(int target, int receiver);
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
 
 private:
