@@ -94,16 +94,6 @@ void TimerQueue::TimerThreadFunc(TimerQueue& timer)
 				std::this_thread::sleep_for(ev.StartTime - now);
 				timer.mGameServerPtr->PostPhysicsOperation(ev.WorldID);
 			}
-			/*else if (ev.Type == EVENT_TYPE::BROADCAST)
-			{
-				auto now = Clock::now();
-				if (now < ev.StartTime)
-				{
-					timer.mQueue.push(ev);
-					continue;
-				}
-				timer.mGameServerPtr->BroadcastTransforms(ev.WorldID);
-			}*/
 		}
 		std::this_thread::sleep_for(10ms);
 	}
