@@ -1,6 +1,5 @@
 #include "common.h"
 #include "RigidBody.h"
-#include "GameObject.h"
 
 RigidBody::RigidBody()
 	: mRigidBody{ nullptr }, 
@@ -10,6 +9,12 @@ RigidBody::RigidBody()
 	  mAngularVelocity{ 0.0f, 0.0f, 0.0f },
 	  mFlag{ UPDATE_FLAG::NONE }
 {
+}
+
+void RigidBody::SetNoResponseCollision()
+{
+	Helper::Assert(mRigidBody, "SetNoResponseCollision failed: RigidBody is null.\n");
+	if(mRigidBody) mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 }
 
 void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr)
@@ -86,12 +91,7 @@ void RigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 	if (mRigidBody)
 	{
 		auto motionState = mRigidBody->getMotionState();
-		if (motionState)
-		{
-			delete motionState;
-			motionState = nullptr;
-		}
-
+		if (motionState) delete motionState;
 		physicsWorld->removeRigidBody(mRigidBody);
 		delete mRigidBody;
 		mRigidBody = nullptr;
@@ -125,16 +125,8 @@ void MissileRigidBody::AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 {
 	if (mRigidBody)
 	{
-		SetMissileComponents(
-			mVehiclePtr->GetPosition() + mConstantPtr->MissileOffset,
-			mVehiclePtr->GetForwardVector() * mConstantPtr->MissileForwardMag,
-			mVehiclePtr->GetQuaternion(),
-			mConstantPtr->MissileGravity,
-			mConstantPtr->MissileSpeed);
-
-		//mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
-
 		RigidBody::AppendRigidBody(physicsWorld);
+		SetMissileComponents();
 	}
 }
 
@@ -152,22 +144,24 @@ void MissileRigidBody::SetVehicleAndConstantPtr(
 	mConstantPtr = constantPtr;
 }
 
-void MissileRigidBody::SetMissileComponents(
-	const btVector3& position,
-	const btVector3& forward,
-	const btQuaternion& rotation,
-	const btVector3& gravity,
-	float speed)
+void MissileRigidBody::SetMissileComponents()
 {
 	btTransform newTransform = btTransform::getIdentity();
 
+	btVector3 position = mVehiclePtr->GetPosition();
+	position += mConstantPtr->MissileOffset;
+
+	btVector3 forward = mVehiclePtr->GetForwardVector();
+	forward.setY(0.0f);
+	forward = forward.normalize();
+	forward *= mConstantPtr->MissileForwardMag;
+
 	newTransform.setOrigin(position + forward);
-	newTransform.setRotation(rotation);
+	newTransform.setRotation(mVehiclePtr->GetQuaternion());
 
 	mRigidBody->setWorldTransform(newTransform);
-	mRigidBody->setGravity(gravity);
-	mConstantVelocity = forward.normalized() * speed;
-	mRigidBody->setLinearVelocity(mConstantVelocity);
+	mRigidBody->setGravity(mConstantPtr->MissileGravity);
+	mConstantVelocity = forward.normalize() * mConstantPtr->MissileSpeed;
 }
 
 

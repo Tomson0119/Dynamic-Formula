@@ -12,6 +12,9 @@ public:
 	void StepSimulation(float elapsed);
 
 	void Flush();
+	
+private:
+	void CheckCollision();
 
 public:
 	btDiscreteDynamicsWorld* GetDynamicsWorld() const { return mBtDynamicsWorld.get(); }

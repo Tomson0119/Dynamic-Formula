@@ -71,6 +71,8 @@ public:
 	const std::string& GetMaterialName() const { return mMaterialName; }
 	const std::string& GetName() const { return mName; }
 
+	const XMFLOAT4& GetDiffuse() const { return mMaterial.Mat.Diffuse; }
+
 protected:
 	ComPtr<ID3D12Resource> mVertexBufferGPU;
 	ComPtr<ID3D12Resource> mIndexBufferGPU;

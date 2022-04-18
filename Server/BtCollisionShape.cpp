@@ -29,7 +29,6 @@ void BtBoxShape::LoadShapeData(std::ifstream& file)
 {
 	btScalar x{}, y{}, z{};
 	file >> x >> y >> z;
-
 	mExtents.setValue(x, y, z);
 }
 
@@ -45,20 +44,15 @@ void BtBoxShape::BuildCollisionShape()
 CheckpointShape::CheckpointShape(std::string_view filename)
 {
 	std::ifstream file = Helper::OpenFile(filename);
-	LoadShapeData(file);
-	BuildCollisionShape();
 	
-	std::string info;
-	while (std::getline(file, info))
-	{		
-		std::stringstream ss(info);
-
-		float px, py, pz;
-		ss >> px >> py >> pz;
-
-		float rx, ry, rz, rw;
-		ss >> rx >> ry >> rz >> rw;
-
+	LoadShapeData(file);
+	BuildCollisionShape();		
+	
+	float px, py, pz;
+	float rx, ry, rz, rw;
+	while (file >> px >> py >> pz >> 
+		rx >> ry >> rz >> rw)
+	{
 		mInfos.emplace_back();
 		mInfos.back().position.setValue(px, py, pz);
 		mInfos.back().rotation.setValue(rx, ry, rz, rw);

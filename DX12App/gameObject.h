@@ -161,6 +161,9 @@ public:
 	void SetUpdateFlag(const UPDATE_FLAG& flag) { mUpdateFlag = flag; }
 	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
 
+	// test
+	const XMFLOAT4& GetMeshDiffuse(const std::string& name);
+
 protected:
 	XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
 	XMFLOAT3 mRight = { 1.0f, 0.0f, 0.0f };

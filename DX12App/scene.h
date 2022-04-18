@@ -9,6 +9,7 @@
 
 class NetModule;
 class UI;
+
 enum class SCENE_STAT : char
 {
 	NONE = 0,

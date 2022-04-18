@@ -236,13 +236,12 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), blurShader.get());
 	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), bloomMergeShader.get());
 
-	//mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
+	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	//mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Instancing, mPipelines[Layer::Instancing].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Transparent, mPipelines[Layer::Transparent].get());
 	mShadowMapRenderer->BuildPipeline(mDevice.Get(), mRootSignature.Get());
-
 }
 
 void InGameScene::BuildConstantBuffers()
@@ -331,7 +330,6 @@ void InGameScene::CreateMsaaDescriptorHeaps()
 		IID_PPV_ARGS(&mMsaaRtvDescriptorHeap)));
 }
 
-
 void InGameScene::CreateMsaaViews()
 {
 	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,0.0f} };
@@ -356,7 +354,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 {
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
-	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
+	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
 	// 지형 스케일에는 정수를 넣는 것을 권장
 	/*auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
@@ -427,7 +425,6 @@ void InGameScene::BuildCarObject(
 		}
 		wheelObj->SetLocalOffset(wheelOffset);
 
-
 		if (i % 2 == 0)
 		{
 			if (mMeshList["Car_Wheel_L.obj"].empty())
@@ -442,7 +439,7 @@ void InGameScene::BuildCarObject(
 			else
 				wheelObj->CopyMeshes(mMeshList["Car_Wheel_R.obj"]);
 		}
-
+		
 		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
@@ -683,8 +680,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
 
-	UpdateMissileObject();
 	UpdatePlayerObjects();
+	UpdateMissileObject();
 	OnPreciseKeyInput(cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
@@ -907,7 +904,6 @@ void InGameScene::UpdateMissileObject()
 			missile->SetActive(true);
 			mPipelines[Layer::Default]->AppendObject(mMissileObjects[i]);
 			missile->SetUpdateFlag(UPDATE_FLAG::NONE);
-
 			flag = true;
 			break;
 		}
@@ -916,7 +912,7 @@ void InGameScene::UpdateMissileObject()
 			flag = true;
 			missile->SetActive(false);
 			missile->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Default]);
-			//mMissileObjects[i].reset();
+			mMissileObjects[i].reset();
 			break;
 		}
 		case UPDATE_FLAG::NONE:
@@ -944,8 +940,7 @@ void InGameScene::UpdatePlayerObjects()
 		case UPDATE_FLAG::REMOVE:
 		{
 			removed_flag = true;
-			if(mMissileObjects[i])
-				mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+			if(mMissileObjects[i]) mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			player->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Color]);
 			mPlayerObjects[i].reset();
 			break;

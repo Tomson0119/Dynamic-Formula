@@ -12,9 +12,13 @@ public:
 	Player();
 	virtual ~Player() = default;
 
-	virtual void UpdateRigidbodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld) override;
 	virtual void Reset(btDiscreteDynamicsWorld* physicsWorld) override;
 
+	virtual void HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj) override;
+	virtual OBJ_TAG GetTag(const btCollisionObject& obj) const override;
+
+public:
 	void SetBulletConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr);
 	void SetPosition(const btVector3& pos);
 	void SetRotation(const btQuaternion& quat);
@@ -34,6 +38,8 @@ public:
 private:
 	void ClearVehicleComponent();
 
+	void HandleCheckpointCollision(int cpIndex);
+
 	void UpdateVehicleComponent(float elapsed);
 	void UpdateDriftGauge(float elapsed);
 	void UpdateBooster(float elapsed);
@@ -44,6 +50,7 @@ private:
 	bool IsItemAvailable();
 
 public:
+	void SetCheckpointCount(int count) { mCPPassed.resize(count, false); }
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
 	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
 	
@@ -58,14 +65,19 @@ public:
 
 private:
 	std::map<int, std::atomic_bool> mKeyMap;
+	std::vector<bool> mCPPassed;
 
 	VehicleRigidBody mVehicleRigidBody;
 	MissileRigidBody mMissileRigidBody;
 
-	std::atomic_bool mBoosterToggle;
-	
+	int mCurrentCPIndex;
+	int mLapCount;
 	float mDriftGauge;
+
+	std::atomic_int mPoint;
 	std::atomic_int mItemCount;
+	std::atomic_bool mInvincible;
+	std::atomic_bool mBoosterToggle;
 
 	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };

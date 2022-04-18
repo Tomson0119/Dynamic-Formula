@@ -28,13 +28,14 @@ void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
 		msWorlds[i] = std::make_unique<GameWorld>(mBulletConstants);
-		msWorlds[i]->InitPhysics(-10.0f);	
-		msWorlds[i]->InitPlayerList(roomList[i].get());
+		msWorlds[i]->InitPhysics(-9.8f);	
+		msWorlds[i]->InitPlayerList(roomList[i].get(), (int)mCheckpointShape->GetInfos().size());
 	}
 }
 
 void InGameServer::PrepareToStartGame(int roomID)
 {
+	btVector3 offset = { 0.0f,0.0f,0.0f };
 	const auto& players = msWorlds[roomID]->GetPlayerList();
 	for (int i = 0; i < players.size(); i++)
 	{
@@ -47,9 +48,28 @@ void InGameServer::PrepareToStartGame(int roomID)
 			continue;
 		}
 
-		static const float offset = 20.0f;
-		msWorlds[roomID]->SetPlayerPosition(i, { mStartPosition + btVector3{ 0.0f, 0.0f, i * offset} });
-		msWorlds[roomID]->SetPlayerRotation(i, mStartRotation);
+		/*float offsetZ = (i % 2 == 1) ? -5.0f : 0.0f;
+		offset.setZ(offsetZ);
+		offset.setX(10.0f * i);*/
+
+		// test
+		if (i == 0)
+		{
+			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + btVector3(20.0f, 0.0f, 0.0f));
+			msWorlds[roomID]->SetPlayerRotation(i, mStartRotation);
+		}
+		else if(i == 1)
+		{
+			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition);
+			btQuaternion temp = mStartRotation;
+			temp.setRotation(btVector3{ 0.0f,1.0f,0.0f }, (btScalar)Math::PI / 2);
+			msWorlds[roomID]->SetPlayerRotation(i, temp);
+		}
+		else
+		{
+			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition);
+			msWorlds[roomID]->SetPlayerRotation(i, mStartRotation);
+		}
 
 		msWorlds[roomID]->CreateRigidbodies(i, 500.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
 	}

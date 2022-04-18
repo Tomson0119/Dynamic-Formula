@@ -6,7 +6,6 @@
 #include "LoginServer.h"
 #include "RigidBody.h"
 #include "Timer.h"
-#include "CollisionHandler.h"
 
 GameWorld::GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
@@ -34,7 +33,7 @@ void GameWorld::InitMapRigidBody(const BtMapShape& mapShape, const CheckpointSha
 	mMap.CreateCheckpoints(cpShape.GetCollisionShape(), cpShape.GetInfos());
 }
 
-void GameWorld::InitPlayerList(WaitRoom* room)
+void GameWorld::InitPlayerList(WaitRoom* room, int cpCount)
 {
 	mID = room->GetID();
 
@@ -42,6 +41,7 @@ void GameWorld::InitPlayerList(WaitRoom* room)
 	{
 		player = room->GetPlayerPtr(i);
 		player->SetBulletConstant(mConstantPtr);
+		player->SetCheckpointCount(cpCount);
 		i++;
 	}
 }
@@ -73,16 +73,15 @@ void GameWorld::UpdatePhysicsWorld()
 	if (elapsed > 0.0f)
 	{
 		mPhysics.StepSimulation(elapsed);
-		CollisionHandler::GetInstance().CheckCollision(*mPhysics.GetDynamicsWorld(), *this);
 
 		for (Player* player : GetPlayerList())
 		{
 			if (player->Empty == false)
 			{
-				player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
+				player->Update(elapsed, mPhysics.GetDynamicsWorld());
 			}
 		}
-		mMap.UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
+		mMap.Update(elapsed, mPhysics.GetDynamicsWorld());
 	}
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)

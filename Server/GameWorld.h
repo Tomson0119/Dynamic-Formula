@@ -17,7 +17,7 @@ public:
 	
 	void InitPhysics(float gravity);
 	void InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape);
-	void InitPlayerList(WaitRoom* room);
+	void InitPlayerList(WaitRoom* room, int cpCount);
 
 	void SetPlayerPosition(int idx, const btVector3& pos);
 	void SetPlayerRotation(int idx, const btQuaternion& quat);
