@@ -226,10 +226,10 @@ void Player::UpdateDriftGauge(float elapsed)
 		auto linearVelNorm = linearVelocity.normalized();
 		auto forwardNorm = forward.normalized();
 
-		float angle = acos(linearVelNorm.dot(forwardNorm) / linearVelNorm.length() * forwardNorm.length());
+		float angle = acos(linearVelNorm.dot(forwardNorm));
 
-		float DriftLimit = 30.0f / 180.0f;
-		float AngleLimit = 50.0f / 180.0f;
+		float DriftLimit = 30.0f / 180.0f * Math::PI;
+		float AngleLimit = 50.0f / 180.0f * Math::PI;
 
 		if (angle > DriftLimit && mDriftGauge < 1.0f)
 		{

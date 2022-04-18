@@ -251,6 +251,7 @@ void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
+#ifdef STAND_ALONE
 	if (mVehicle)
 		mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
 
@@ -426,6 +427,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		wheelIndex = 1;
 		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	}
+#endif
 }
 
 void PhysicsPlayer::Update(float elapsedTime, float updateRate)
