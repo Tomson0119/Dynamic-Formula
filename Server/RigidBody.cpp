@@ -138,7 +138,7 @@ void MissileRigidBody::UpdateRigidBody()
 
 void MissileRigidBody::SetVehicleAndConstantPtr(
 	VehicleRigidBody* vehiclePtr,
-	std::shared_ptr<InGameServer::BulletConstant> constantPtr)
+	std::shared_ptr<InGameServer::GameConstant> constantPtr)
 {
 	mVehiclePtr = vehiclePtr;
 	mConstantPtr = constantPtr;

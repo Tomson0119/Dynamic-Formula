@@ -7,7 +7,7 @@
 #include "RigidBody.h"
 #include "Timer.h"
 
-GameWorld::GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
+GameWorld::GameWorld(std::shared_ptr<InGameServer::GameConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
 	  mPlayerCount{ 0 }, mUpdateTick{ 0 },
 	  mPhysicsOverlapped{ OP::PHYSICS }

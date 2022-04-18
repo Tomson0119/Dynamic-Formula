@@ -12,7 +12,7 @@ class GameWorld
 {
 	using PlayerList = std::array<Player*, MAX_ROOM_CAPACITY>;
 public:
-	GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantsPtr);
+	GameWorld(std::shared_ptr<InGameServer::GameConstant> constantsPtr);
 	~GameWorld();
 	
 	void InitPhysics(float gravity);
@@ -65,5 +65,5 @@ private:
 	BPHandler mPhysics;
 	class Timer mTimer;
 
-	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
+	std::shared_ptr<InGameServer::GameConstant> mConstantPtr;
 };

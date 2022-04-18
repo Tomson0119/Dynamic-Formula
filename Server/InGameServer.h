@@ -14,7 +14,7 @@ class InGameServer
 	using WorldList = std::array<std::unique_ptr<GameWorld>, MAX_ROOM_SIZE>;
 
 public:
-	struct BulletConstant
+	struct GameConstant
 	{
 		const float MaxBoosterTime = 5.0f;
 
@@ -41,6 +41,8 @@ public:
 
 		const int MissileHitPoint = 1000;
 		const int LapFinishPoint = 2500;
+
+		const float InvincibleDuration = 3.0f;
 	};
 
 public:
@@ -71,7 +73,7 @@ private:
 	std::unique_ptr<BtMapShape> mMapShape;
 	std::unique_ptr<CheckpointShape> mCheckpointShape;
 
-	std::shared_ptr<BulletConstant> mBulletConstants;
+	std::shared_ptr<GameConstant> mGameConstants;
 
 	const btVector3 mStartPosition = { -306.5f, 1.0f, 253.7f };
 	const btQuaternion mStartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
