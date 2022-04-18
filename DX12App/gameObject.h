@@ -159,6 +159,9 @@ public:
 
 	void ChangeUpdateFlag(UPDATE_FLAG expected, const UPDATE_FLAG& desired);
 	void SetUpdateFlag(const UPDATE_FLAG& flag) { mUpdateFlag = flag; }
+
+	void SetRimLight(bool rimlight) { mRimLightOn = rimlight; }
+
 	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
 
 	// test

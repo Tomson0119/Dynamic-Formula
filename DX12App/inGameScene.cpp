@@ -450,8 +450,6 @@ void InGameScene::BuildCarObject(
 	carObj->BuildDsvRtvView(mDevice.Get());
 
 	if (isPlayer) mPlayer = carObj.get();
-	else
-		carObj->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 	mPipelines[Layer::Color]->AppendObject(carObj);
 	mPlayerObjects[netID] = std::move(carObj);	
 }
@@ -652,7 +650,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		mMissileInterval -= elapsed;
 	}
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
-	
+
 #ifndef STANDALONE
 	for (auto& [key, val] : mKeyMap)
 	{
