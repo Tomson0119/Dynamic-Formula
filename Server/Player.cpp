@@ -119,7 +119,8 @@ void Player::UpdateDriftGauge(float elapsed)
 
 	if (mKeyMap[VK_LSHIFT])
 	{
-		comp.BackFrictionSlip = mConstantPtr->WheelDriftFriction;
+		comp.FrontFrictionSlip = mConstantPtr->FrontWheelDriftFriction;
+		comp.BackFrictionSlip = mConstantPtr->RearWheelDriftFriction;
 
 		auto linearVelocity = mVehicleRigidBody.GetLinearVelocity();
 		auto forward = mVehicleRigidBody.GetForwardVector();
@@ -132,9 +133,12 @@ void Player::UpdateDriftGauge(float elapsed)
 		auto linearVelNorm = linearVelocity.normalized();
 		auto forwardNorm = forward.normalized();
 
-		float angle = acos(linearVelNorm.dot(forwardNorm));
-		
-		if (angle > Math::PI / 18.0f && mDriftGauge < 1.0f)
+		float angle = acos(linearVelNorm.dot(forwardNorm) / linearVelNorm.length() * forwardNorm.length());
+
+		float DriftLimit = 30.0f / 180.0f;
+		float AngleLimit = 50.0f / 180.0f;
+
+		if (angle > DriftLimit && mDriftGauge < 1.0f)
 		{
 			mDriftGauge += elapsed * 0.5f;
 			if (mDriftGauge > 1.0f)
@@ -143,9 +147,15 @@ void Player::UpdateDriftGauge(float elapsed)
 				if (mItemCount < 2)	mItemCount += 1;	
 			}
 		}
+
+		if (angle > AngleLimit)
+		{
+			mVehicleRigidBody.SetAngularVelocity(btVector3(0.f, 0.f, 0.f));
+		}
 	}
 	else
 	{
+		comp.FrontFrictionSlip = mConstantPtr->WheelDefaultFriction;
 		comp.BackFrictionSlip = mConstantPtr->WheelDefaultFriction;
 	}
 }

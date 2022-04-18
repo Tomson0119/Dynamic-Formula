@@ -352,12 +352,19 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
 	{	
 		accel = true;
-		for (int i = 2; i < 4; ++i)
+		for (int i = 0; i < 2; ++i)
 		{
-			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = mWheelDriftFriction;
+			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 1.5f;
 		}
 
-		float Epsilon = 50.0f / 180.0f;
+		for (int i = 2; i < 4; ++i)
+		{
+			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 0.0f;
+		}
+
+		float DriftLimit = 30.0f / 180.0f;
+
+		float AngleLimit = 50.0f / 180.0f;
 
 		auto camLook = mCamera->GetLook();
 		camLook.y = 0.0f;
@@ -369,10 +376,16 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 		float angle = acos(Vector3::Dot(camLook, playerLook) / (Vector3::Length(camLook) * Vector3::Length(playerLook)));
 
-		if (Epsilon < angle && mDriftGauge < 1.0f)
+		if (DriftLimit < angle && mDriftGauge < 1.0f)
 		{
 			mDriftGauge += Elapsed / 2.0f;
 		}
+
+		if (AngleLimit < angle && mDriftGauge < 1.0f)
+		{
+			mBtRigidBody->setAngularVelocity(btVector3(0, 0, 0));
+		}
+
 		if (mDriftGauge > 1.0f)
 		{
 			mDriftGauge = 0.0f;
@@ -382,7 +395,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	else
 	{
-		for (int i = 2; i < 4; ++i)
+		for (int i = 0; i < 4; ++i)
 		{
 			if(mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = mWheelFriction;
 		}
@@ -479,6 +492,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	btTransform btCarTransform;
 	btCarTransform.setIdentity();
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
+	btCarTransform.setRotation(btQuaternion(mQuaternion.x, mQuaternion.y, mQuaternion.z, mQuaternion.w));
 
 	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", physics);
 

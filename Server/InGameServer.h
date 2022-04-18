@@ -24,8 +24,9 @@ public:
 		const float SteeringIncrement = 5.0f;
 		const float SteeringClamp = 0.15f;
 
-		const float	WheelDriftFriction = 5.0f;
-		const float WheelDefaultFriction = 10.0f;
+		const float FrontWheelDriftFriction = 1.5f;
+		const float	RearWheelDriftFriction = 0.0f;
+		const float WheelDefaultFriction = 5.0f;
 		const float MinSpeedForDrift = 100.0f;
 
 		const float DefaultMaxSpeed = 350.0f;

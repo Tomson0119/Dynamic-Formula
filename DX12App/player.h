@@ -130,8 +130,8 @@ public:
 private:
 	static const int RtvCounts = 12;
 
-	const float mWheelFriction = 10.0f;
-	const float mWheelDriftFriction = 5.0f;
+	const float mWheelFriction = 5.0f;
+	const float mWheelDriftFriction = 0.0f;
 
 	ULONG mCubeMapSize = 500;
 

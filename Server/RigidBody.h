@@ -117,6 +117,7 @@ public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
 	virtual void UpdateRigidBody() override;
 	virtual void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void SetAngularVelocity(const btVector3& angularVelocity);
 
 public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }

@@ -253,6 +253,11 @@ void VehicleRigidBody::RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld)
 	}
 }
 
+void VehicleRigidBody::SetAngularVelocity(const btVector3& angularVelocity)
+{
+	mRigidBody->setAngularVelocity(angularVelocity);
+}
+
 void VehicleRigidBody::StoreWorldTransform(btTransform& transform)
 {
 	auto motionState = mVehicle->getRigidBody()->getMotionState();
