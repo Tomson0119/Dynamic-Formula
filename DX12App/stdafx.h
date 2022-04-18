@@ -215,6 +215,7 @@ struct ObjectConstants
 	int32_t cubemapOn;
 	int32_t motionBlurOn;
 	int32_t rimLightOn;
+	int32_t invincibleOn;
 };
 
 struct MaterialConstants

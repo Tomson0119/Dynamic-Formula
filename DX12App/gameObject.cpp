@@ -810,6 +810,7 @@ ObjectConstants GameObject::GetObjectConstants()
 	objCnst.cubemapOn = mCubemapOn;
 	objCnst.motionBlurOn = mMotionBlurOn;
 	objCnst.rimLightOn = mRimLightOn;
+	objCnst.invincibleOn = mInvincibleOn;
 
 	return objCnst;
 }

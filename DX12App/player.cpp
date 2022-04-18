@@ -251,7 +251,7 @@ void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
-#ifdef STAND_ALONE
+#ifdef STANDALONE
 	if (mVehicle)
 		mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
 

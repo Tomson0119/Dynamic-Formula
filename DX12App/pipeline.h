@@ -9,7 +9,6 @@ enum class Layer : int
 	Terrain,
 	NormalMapped,
 	Default,
-	Color,
 	Mirror,
 	Reflected,
 	Billboard,
@@ -20,7 +19,8 @@ enum class Layer : int
 	Bloom,
 	Instancing,
 	CheckPoint,
-	Transparent
+	Transparent,
+	Color
 };
 
 class Pipeline

@@ -216,6 +216,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
 	mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
 
+	mPipelines[Layer::Color]->SetAlphaBlending();
 	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());
 	
 	mPipelines[Layer::Instancing]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), instancingShader.get());

@@ -103,6 +103,11 @@ PixelOut PS(VertexOut pin)
         pout.f4Direction = float4(0.0f, 0.0f, 0.0f, 0.0f);
         pout.f4Direction.z = PosV.z;
     }
-
+    
+    if(!gInvincibleOn)
+    {
+        pout.f4Color.a = 0.3f;
+    }
+    
     return pout;
 }
