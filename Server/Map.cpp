@@ -68,4 +68,5 @@ int Map::GetCheckpointIndex(const btCollisionObject& obj) const
 		}
 		i += 1;
 	}
+	return -1;
 }
