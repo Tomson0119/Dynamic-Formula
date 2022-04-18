@@ -42,10 +42,6 @@ void Map::Reset(btDiscreteDynamicsWorld* physicsWorld)
 	}
 }
 
-void Map::HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj)
-{
-}
-
 GameObject::OBJ_TAG Map::GetTag(const btCollisionObject& obj) const
 {
 	if (&obj == mTrack.GetRigidBody())
