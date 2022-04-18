@@ -14,12 +14,10 @@ public:
 
 	virtual void Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld) override;
 	virtual void Reset(btDiscreteDynamicsWorld* physicsWorld) override;
-
-	virtual void HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj) override;
 	virtual OBJ_TAG GetTag(const btCollisionObject& obj) const override;
 
 public:
-	void SetBulletConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr);
+	void SetGameConstant(std::shared_ptr<InGameServer::GameConstant> constantPtr);
 	void SetPosition(const btVector3& pos);
 	void SetRotation(const btQuaternion& quat);
 
@@ -30,17 +28,21 @@ public:
 
 	void CreateMissileRigidBody(btScalar mass, BtBoxShape* shape);
 	void SetDeletionFlag();
+	void SetMissileDeletionFlag();
+
+	void SetInvincible();
 
 	void UpdateWorldTransform();
 	void ToggleKeyValue(uint8_t key, bool pressed);
 	bool CheckMissileExist() const;
 
+	void HandleCheckpointCollision(int cpIndex);
+
 private:
 	void ClearVehicleComponent();
 
-	void HandleCheckpointCollision(int cpIndex);
-
 	void UpdateVehicleComponent(float elapsed);
+	void UpdateInvincibleDuration(float elapsed);
 	void UpdateDriftGauge(float elapsed);
 	void UpdateBooster(float elapsed);
 	void UpdateSteering(float elapsed);
@@ -50,7 +52,10 @@ private:
 	bool IsItemAvailable();
 
 public:
+	void IncreasePoint(int point) { mPoint += point; }
 	void SetCheckpointCount(int count) { mCPPassed.resize(count, false); }
+
+	bool IsInvincible() const { return mInvincible; }
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
 	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
 	
@@ -73,11 +78,12 @@ private:
 	int mCurrentCPIndex;
 	int mLapCount;
 	float mDriftGauge;
+	float mInvincibleDuration;
+	bool mInvincible;
 
 	std::atomic_int mPoint;
 	std::atomic_int mItemCount;
-	std::atomic_bool mInvincible;
 	std::atomic_bool mBoosterToggle;
 
-	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
+	std::shared_ptr<InGameServer::GameConstant> mConstantPtr;
 };

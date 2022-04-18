@@ -14,9 +14,10 @@ Player::Player()
 	  mCurrentCPIndex{ -1 },
 	  mLapCount{ 0 },
 	  mDriftGauge{ 0.0f },
+	  mInvincibleDuration{ 0.0f },
+	  mInvincible{ false },
 	  mPoint{ 0 },
 	  mItemCount{ 0 }, 
-	  mInvincible{ false },
 	  mBoosterToggle{ false } 
 {
 	mKeyMap[VK_UP]	   = false;
@@ -38,10 +39,10 @@ void Player::SetRotation(const btQuaternion& quat)
 	mMissileRigidBody.SetRotation(quat);
 }
 
-void Player::SetBulletConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
+void Player::SetGameConstant(std::shared_ptr<InGameServer::GameConstant> constantPtr)
 {
 	mConstantPtr = constantPtr;
-	mMissileRigidBody.SetVehicleAndConstantPtr(&mVehicleRigidBody, constantPtr);
+	mMissileRigidBody.SetGameConstantPtr(&mVehicleRigidBody, constantPtr);
 }
 
 void Player::CreateVehicleRigidBody(
@@ -75,16 +76,26 @@ void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape* shape)
 void Player::Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
 {
 	UpdateVehicleComponent(elapsed);
-	// Update invincible mode duration.
-
+	UpdateInvincibleDuration(elapsed);
 	mVehicleRigidBody.Update(physicsWorld);
 	mMissileRigidBody.Update(physicsWorld);
 }
 
 void Player::SetDeletionFlag()
 {
-	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
 	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+	SetMissileDeletionFlag();
+}
+
+void Player::SetMissileDeletionFlag()
+{
+	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+}
+
+void Player::SetInvincible()
+{
+	mInvincible = true;
+	mInvincibleDuration = mConstantPtr->InvincibleDuration;
 }
 
 void Player::Reset(btDiscreteDynamicsWorld* physicsWorld)
@@ -94,52 +105,7 @@ void Player::Reset(btDiscreteDynamicsWorld* physicsWorld)
 	mVehicleRigidBody.RemoveRigidBody(physicsWorld);
 }
 
-void Player::HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj)
-{
-	auto myTag = GetTag(objA);
-	auto otherTag = otherObj.GetTag(objB);
-	switch (myTag)
-	{
-	case OBJ_TAG::VEHICLE:
-	{
-		if (otherTag == OBJ_TAG::CHECKPOINT)
-		{
-			int cpIdx = dynamic_cast<Map&>(otherObj).GetCheckpointIndex(objB);
-			HandleCheckpointCollision(cpIdx);
-		}
-		else if (otherTag == OBJ_TAG::MISSILE)
-		{
-			if (mInvincible == false)
-			{
-				mInvincible = true;
-				std::cout << "Hit by missile!\n";
-				// TODO: waits for like 1 second and send spawn packet.
-				// and waits another 1 second and release invincible mode.
-			}
-		}
-		break;
-	}
-	case OBJ_TAG::MISSILE:
-	{
-		if (otherTag == OBJ_TAG::VEHICLE || otherTag == OBJ_TAG::TRACK)
-		{
-			mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
-		}
-		else if (otherTag == OBJ_TAG::VEHICLE)
-		{
-			bool isInvincible = dynamic_cast<Player&>(otherObj).mInvincible;
-			if (isInvincible == false)
-			{
-				mPoint += mConstantPtr->MissileHitPoint;
-			}
-		}
-		break;
-	}
-	default:
-		std::cout << "Wrong tag" << std::endl;
-		break;
-	}
-}
+
 
 GameObject::OBJ_TAG Player::GetTag(const btCollisionObject& obj) const
 {
@@ -151,6 +117,7 @@ GameObject::OBJ_TAG Player::GetTag(const btCollisionObject& obj) const
 	{
 		return OBJ_TAG::MISSILE;
 	}
+	return OBJ_TAG::NONE;
 }
 
 void Player::HandleCheckpointCollision(int cpIndex)
@@ -201,6 +168,19 @@ void Player::UpdateVehicleComponent(float elapsed)
 	UpdateBooster(elapsed);
 	UpdateSteering(elapsed);
 	UpdateEngineForce();
+}
+
+void Player::UpdateInvincibleDuration(float elapsed)
+{
+	if (mInvincible == false) return;
+
+	mInvincibleDuration -= elapsed;
+	if (mInvincibleDuration <= 0.0f)
+	{
+		mInvincible = false;
+		mInvincibleDuration = 0.0f;
+		std::cout << "(ID " << ID << ") " << "Invincible disabled.\n";
+	}
 }
 
 void Player::UpdateDriftGauge(float elapsed)
