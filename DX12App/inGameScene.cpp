@@ -403,6 +403,8 @@ void InGameScene::BuildCarObject(
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
 	carObj->SetQuaternion(rotation);
+	Print("Position: ", position);
+	Print("Rotation: ", rotation);
 
 	if (mMeshList["Car_Body.obj"].empty())
 		mMeshList["Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
@@ -508,6 +510,13 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 
 		auto player = mPlayerObjects[pck->player_idx];
 		if (player)	player->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+		break;
+	}
+	case SC::REMOVE_MISSILE:
+	{
+		SC::packet_remove_missile* pck = reinterpret_cast<SC::packet_remove_missile*>(packet);
+		auto missile = mMissileObjects[pck->missile_idx];
+		if (missile) missile->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 		break;
 	}
 	case SC::TRANSFER_TIME:
