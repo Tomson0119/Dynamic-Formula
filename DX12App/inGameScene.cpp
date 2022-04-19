@@ -84,6 +84,11 @@ void InGameScene::BuildObjects(
 		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
 
+	for (int i = 0; i < NUM_LIGHTS; ++i)
+	{
+		mLights.push_back(mMainLight.Lights[i]);
+	}
+
 	BuildRootSignature();
 	BuildComputeRootSignature();
 	BuildShadersAndPSOs(cmdList);
@@ -711,6 +716,20 @@ void InGameScene::UpdateLightConstants()
 {
 	for(int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
 		mMainLight.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(i));
+
+	auto playerPos = mPlayer->GetPosition();
+
+	std::sort(mLights.begin(), mLights.end(),
+		[playerPos](LightInfo l1, LightInfo l2)
+		{
+			return Vector3::Distance(l1.Position, playerPos) < Vector3::Distance(l2.Position, playerPos);
+		}
+	);
+
+	for (int i = 0; i < NUM_LIGHTS; ++i)
+	{
+		mMainLight.Lights[i] = mLights[i];
+	}
 
 	mLightCB->CopyData(0, mMainLight);
 }
