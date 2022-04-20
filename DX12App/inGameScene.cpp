@@ -66,7 +66,7 @@ void InGameScene::BuildObjects(
 
 	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	mMainLight.Lights[0].SetInfo(
-		XMFLOAT3(0.6f, 0.6f, 0.6f),
+		XMFLOAT3(0.3f, 0.3f, 0.3f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		0.0f, 0.0f, 0.0f,
