@@ -14,9 +14,10 @@ cbuffer CameraCB : register(b0)
     matrix gView            : packoffset(c0);
     matrix gProj            : packoffset(c4);
     matrix gViewProj        : packoffset(c8);
-    float3 gCameraPos       : packoffset(c12);
-    float  gAspect          : packoffset(c12.w);
-    matrix gOldViewProj     : packoffset(c13);
+    matrix gInvViewProj     : packoffset(c12);
+    float3 gCameraPos       : packoffset(c16);
+    float  gAspect          : packoffset(c16.w);
+    matrix gOldViewProj     : packoffset(c17);
 }
 
 cbuffer LightCB : register(b1)
