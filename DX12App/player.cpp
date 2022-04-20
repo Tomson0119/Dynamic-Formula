@@ -782,9 +782,7 @@ void PhysicsPlayer::UpdateFrontLight()
 	XMMATRIX R = XMMatrixRotationQuaternion(XMLoadFloat4(&mQuaternion));
 	for (int i = 0; i < 2; ++i)
 	{
-		auto offset = Vector3::Transform(mLightOffset[i], R);
-
-		mFrontLight[i].Position = Vector3::Add(mPosition, offset);
+		mFrontLight[i].Position = Vector3::Transform(mLightOffset[i], XMLoadFloat4x4(&mWorld));
 
 		auto dir = mLook;
 		dir.y -= 0.3f;

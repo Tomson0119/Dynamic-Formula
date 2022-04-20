@@ -190,6 +190,6 @@ private:
 	bool mHit = false;
 	float mTransparentTime = 0.5f;
 
-	XMFLOAT3 mLightOffset[2] = { {1.5f, 0.0f, 0.5f}, {-1.5f, 0.0f, 0.5f} };
+	XMFLOAT3 mLightOffset[2] = { {1.0f, 0.0f, 1.5f}, {-1.0f, 0.0f, 1.5f} };
 	LightInfo mFrontLight[2];
 };
