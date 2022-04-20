@@ -248,6 +248,9 @@
     <None Include="Shaders\bloomMerge.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="Shaders\volumetricScattering.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="소스 파일">

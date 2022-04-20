@@ -1,5 +1,7 @@
 #include "lighting.hlsl"
 
+#define PI 3.141592653589793238f
+
 Texture2D gShadowMap[3] : register(t0, space1);
 TextureCube gCubeMap : register(t0, space2);
 
