@@ -1,8 +1,10 @@
-#include "common.hlsl"
+#include "lighting.hlsl"
 
 Texture2D<float4> inputTexture : register(t0);
 Texture2D<float> depthTexture : register(t1);
 RWTexture2D<float4> outputTexture : register(u0);
+
+#define PI 3.141592653589793238f
 
 cbuffer VolumetricCB : register(b0)
 {
@@ -13,6 +15,13 @@ cbuffer VolumetricCB : register(b0)
     float anisotropy : packoffset(c1.z);
     float scatteringZFar : packoffset(c1.w);
     float3 scatteringColor : packoffset(c2);
+    
+    int pad0;
+    
+    matrix gInvViewProj : packoffset(c3);
+    float3 gCameraPos : packoffset(c7);
+    
+    Light gLights[NUM_LIGHTS] : packoffset(c7.w);
 }
 
 float random(float2 co)

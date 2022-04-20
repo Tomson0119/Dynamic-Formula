@@ -1,7 +1,5 @@
 #include "lighting.hlsl"
 
-#define PI 3.141592653589793238f
-
 Texture2D gShadowMap[3] : register(t0, space1);
 TextureCube gCubeMap : register(t0, space2);
 
@@ -16,10 +14,9 @@ cbuffer CameraCB : register(b0)
     matrix gView            : packoffset(c0);
     matrix gProj            : packoffset(c4);
     matrix gViewProj        : packoffset(c8);
-    matrix gInvViewProj     : packoffset(c12);
-    float3 gCameraPos       : packoffset(c16);
-    float  gAspect          : packoffset(c16.w);
-    matrix gOldViewProj     : packoffset(c17);
+    float3 gCameraPos       : packoffset(c12);
+    float  gAspect          : packoffset(c12.w);
+    matrix gOldViewProj     : packoffset(c13);
 }
 
 cbuffer LightCB : register(b1)

@@ -178,6 +178,24 @@ struct LightConstants
 	LightInfo Lights[NUM_LIGHTS];
 };
 
+struct VolumetricConstants
+{
+	float absorptionTau;
+	XMFLOAT3 absorptionColor;
+	int scatteringSamples;
+	float scatteringTau;
+	float anisotropy;
+	float scatteringZFar;
+	XMFLOAT3 scatteringColor;
+
+	int pad0;
+
+	XMFLOAT4X4 gInvViewProj;
+	XMFLOAT3 gCameraPos;
+
+	LightInfo gLights[NUM_LIGHTS];
+};
+
 struct CameraConstants
 {
 	XMFLOAT4X4 View;
