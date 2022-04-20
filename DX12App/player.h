@@ -105,6 +105,8 @@ public:
 	virtual void ChangeCurrentRenderTarget() { mCurrentRenderTarget = 1 - mCurrentRenderTarget; }
 
 	virtual void RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& pipeline) override;
+	
+	virtual void UpdateFrontLight();
 
 public:
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
@@ -126,6 +128,8 @@ public:
 	virtual float GetDriftGauge() { return mDriftGauge; }
 
 	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
+
+	LightInfo* GetLightInfo() { return mFrontLight; }
 
 private:
 	static const int RtvCounts = 12;
@@ -185,4 +189,7 @@ private:
 
 	bool mHit = false;
 	float mTransparentTime = 0.5f;
+
+	XMFLOAT3 mLightOffset[2] = { {1.5f, 0.0f, 0.5f}, {-1.5f, 0.0f, 0.5f} };
+	LightInfo mFrontLight[2];
 };

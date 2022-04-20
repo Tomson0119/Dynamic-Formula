@@ -204,7 +204,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera);
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mMainLight.Lights[0].Direction);
 
 	if (mMsaa4xEnable)
 	{
@@ -698,7 +698,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	mCurrentCamera->Update(elapsed);
 
 	mShadowMapRenderer->UpdateSplitFrustum(mCurrentCamera);
-	mShadowMapRenderer->UpdateDepthCamera(cmdList, mMainLight);
+	mShadowMapRenderer->UpdateDepthCamera(cmdList);
 
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
@@ -718,6 +718,26 @@ void InGameScene::UpdateLightConstants()
 		mMainLight.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(i));
 
 	auto playerPos = mPlayer->GetPosition();
+
+	for (auto i = mLights.begin(); i < mLights.end();)
+	{
+		if (i->pad0 == 1.0f)
+			i = mLights.erase(i);
+		else
+			++i;
+	}
+
+	for (int i = 0; i < mPlayerObjects.size(); ++i)
+	{
+		if (mPlayerObjects[i])
+		{
+			LightInfo* frontLights;
+			frontLights = mPlayerObjects[i]->GetLightInfo();
+
+			mLights.push_back(frontLights[0]);
+			mLights.push_back(frontLights[1]);
+		}
+	}
 
 	std::sort(mLights.begin(), mLights.end(),
 		[playerPos](LightInfo l1, LightInfo l2)
