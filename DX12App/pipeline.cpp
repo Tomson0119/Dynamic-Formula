@@ -1084,7 +1084,7 @@ void VolumetricScatteringPipeline::CreateTextures(ID3D12Device* device)
 	mInputTexture[1] = std::make_unique<Texture>();
 	mInputTexture[1]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
 	mInputTexture[1]->CreateTexture(device, gFrameWidth, gFrameHeight,
-		1, 1, DXGI_FORMAT_D24_UNORM_S8_UINT,
+		1, 1, DXGI_FORMAT_R24_UNORM_X8_TYPELESS,
 		D3D12_RESOURCE_FLAG_NONE,
 		D3D12_RESOURCE_STATE_COMMON, nullptr);
 

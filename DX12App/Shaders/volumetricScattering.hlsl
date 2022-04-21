@@ -35,7 +35,7 @@ float3 PixelWorldPos(float depthValue, int2 pixel)
     float4 ndcCoords = float4(
         pixel.x / width * 2 - 1,
         pixel.y / height * (-2) + 1,
-        depthValue * 2 - 1,
+        depthValue,
         1.0);
 
     float4 worldCoords = mul(ndcCoords, gInvViewProj);
@@ -62,19 +62,19 @@ float phaseFunction(float3 inDir, float3 outDir)
     return nom * factor;
 }
 
-float3 volumetricScattering(float3 fragPosition, Light light)
+float3 volumetricScattering(float3 worldPosition, Light light)
 {
     float3 result = float3(0.0, 0.0, 0.0);
-    float3 camToFrag = fragPosition - gCameraPos;
+    float3 camToFrag = worldPosition - gCameraPos;
     if (length(camToFrag) > scatteringZFar)
     {
         camToFrag = normalize(camToFrag) * scatteringZFar;
     }
     float3 deltaStep = camToFrag / (scatteringSamples + 1);
-    float3 fragToCamNorm = normalize(gCameraPos - fragPosition);
+    float3 fragToCamNorm = normalize(gCameraPos - worldPosition);
     float3 x = gCameraPos;
     
-    float rand = random(fragPosition.xy + fragPosition.z);
+    float rand = random(worldPosition.xy + worldPosition.z);
     x += (deltaStep * rand);
     
     for (int i = 0; i < scatteringSamples; ++i)
@@ -98,16 +98,17 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     int2 pixel = int2(dispatchID.x, dispatchID.y);
     
     float4 volumetricColor = float4(0.0, 0.0, 0.0, 1.0);
-    float depthValue = depthTexture[pixel];
-    float3 fragPosition = PixelWorldPos(depthValue, pixel);
+    float depthValue = depthTexture[pixel].r;
+    float3 worldPosition = PixelWorldPos(depthValue, pixel);
     
-    float fragCamDist = distance(fragPosition, gCameraPos);
+    float fragCamDist = distance(worldPosition, gCameraPos);
     
     for (int i = 0; i < NUM_LIGHTS; ++i)
     {
-        volumetricColor += float4(volumetricScattering(fragPosition, gLights[i]), 0.0);
+        if(gLights[i].Type == SPOT_LIGHT)
+            volumetricColor += float4(volumetricScattering(worldPosition, gLights[i]), 0.0);
     }
     
     
     outputTexture[pixel] = volumetricColor;
-}
+}   
