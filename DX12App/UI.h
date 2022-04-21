@@ -84,6 +84,9 @@ public:
 
    void SetFrame(float H, float W) { mfHeight = H; mfWidth = W; }
    void SetBitmapFileNames(const std::vector<PCWSTR>& names) { for (auto& name : names) mvBitmapFileNames.push_back(name); }
+
+   TCHAR* GetFontName() { return cFontName; }
+   void FontLoad(const WCHAR* FontFilePath);
 private:
 
     float mfHeight = 0.0f;
@@ -105,15 +108,25 @@ private:
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;
     ComPtr<ID2D1Factory3> mpd2dFactory;
-    ComPtr<IDWriteFactory> mpd2dWriteFactory;
+    ComPtr<IDWriteFactory5> mpd2dWriteFactory;
     ComPtr<ID2D1Device2> mpd2dDevice;
     ComPtr<ID3D11Device> pd3d11Device;
     ComPtr<IDXGIDevice> pdxgiDevice;
     ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
 
+    ComPtr<IDWriteFontFile> mIDWriteFontFile;
+    ComPtr<IDWriteFontSetBuilder1> mIDWriteFontSetBuilder;
+    ComPtr<IDWriteInMemoryFontFileLoader> mIDWriteInMemoryFontFileLoader;
+    ComPtr<IDWriteFontSet> mIDWriteFontSet;
+    ComPtr<IDWriteFontCollection1> mIDWriteFontCollection;
+
+    ComPtr<IDWriteFontFamily> mIDWriteFontFamily;
+    ComPtr<IDWriteLocalizedStrings> mIDWriteLocalizedStrings;
+    TCHAR cFontName[50];
+
     IWICImagingFactory* mWICFactoryPtr;
 
-    std::vector<ComPtr<ID2D1Bitmap>> mvBitmaps;
+    std::vector<ComPtr<ID2D1Bitmap1>> mvBitmaps;
 
     std::vector<ComPtr<IDWriteTextFormat>> mvdwTextFormat;
 

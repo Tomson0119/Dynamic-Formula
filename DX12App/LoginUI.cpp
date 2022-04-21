@@ -31,6 +31,7 @@ void LoginUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 
     mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
     mvBitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
+    FontLoad(L"Fonts\\Blazed.ttf");
 
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
@@ -447,7 +448,8 @@ void LoginUI::CreateFontFormat()
     vfFontSize[6] = mfHeight * 0.04f;
     
    // std::vector<std::wstring> Fonts;
-    Fonts.push_back(L"Goudy Stout"); // Title logo
+    //Goudy Stout
+    Fonts.push_back(GetFontName()); // Title logo
     Fonts.push_back(L"Modern No. 20"); // Login
     Fonts.push_back(L"Modern No. 20"); //ID
     Fonts.push_back(L"Modern No. 20"); //PWD
@@ -458,7 +460,7 @@ void LoginUI::CreateFontFormat()
 
     //DWRITE_TEXT_ALIGNMENT TextAlignments[6];
     //TextAlignments.resize(TextCnt);
-    TextAlignments[0]=DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[0]=  DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_CENTER;
