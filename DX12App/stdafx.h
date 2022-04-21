@@ -184,14 +184,14 @@ struct VolumetricConstants
 	XMFLOAT3 absorptionColor;
 	int scatteringSamples;
 	float scatteringTau;
-	float anisotropy;
 	float scatteringZFar;
 	XMFLOAT3 scatteringColor;
 
 	int pad0;
+	int pad1;
 
 	XMFLOAT4X4 gInvViewProj;
-	XMFLOAT3 gCameraPos;
+	XMFLOAT3 CameraPos;
 
 	LightInfo gLights[NUM_LIGHTS];
 };

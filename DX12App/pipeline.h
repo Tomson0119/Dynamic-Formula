@@ -17,6 +17,7 @@ enum class Layer : int
 	DynamicCubeMap,
 	MotionBlur,
 	Bloom,
+	VolumetricScattering,
 	Instancing,
 	CheckPoint,
 	Transparent,
@@ -277,4 +278,28 @@ private:
 	std::unique_ptr<Texture> mProcessingTexture[3];
 
 	float mBlurCoefficients[GAUSSIAN_RADIUS + 1];
+};
+
+class VolumetricScatteringPipeline : public MotionBlurPipeline
+{
+public:
+	VolumetricScatteringPipeline();
+	virtual ~VolumetricScatteringPipeline();
+
+	virtual void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn = false);
+
+	virtual void Dispatch(ID3D12GraphicsCommandList* cmdList);
+
+	virtual void CreateTextures(ID3D12Device* device);
+	virtual void BuildDescriptorHeap(ID3D12Device* device);
+	virtual void BuildSRVAndUAV(ID3D12Device* device);
+
+	virtual void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer);
+
+private:
+	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
+
+	std::unique_ptr<Texture> mInputTexture;
+	std::unique_ptr<Texture> mDepthTexture;
+	std::unique_ptr<Texture> mOutputTexture;
 };

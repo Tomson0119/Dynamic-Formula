@@ -6,17 +6,17 @@ RWTexture2D<float4> outputTexture : register(u0);
 
 #define PI 3.141592653589793238f
 
-cbuffer VolumetricCB : register(b0)
+cbuffer VolumetricCB : register(b1)
 {
     float absorptionTau : packoffset(c0);
     float3 absorptionColor : packoffset(c0.y);
     int scatteringSamples : packoffset(c1.x);
     float scatteringTau : packoffset(c1.y);
-    float anisotropy : packoffset(c1.z);
-    float scatteringZFar : packoffset(c1.w);
-    float3 scatteringColor : packoffset(c2);
+    float scatteringZFar : packoffset(c1.z);
+    float3 scatteringColor : packoffset(c1.w);
     
-    int pad0;
+    int pad0 : packoffset(c2.z);
+    int pad1 : packoffset(c2.w);
     
     matrix gInvViewProj : packoffset(c3);
     float3 gCameraPos : packoffset(c7);
@@ -30,15 +30,15 @@ float random(float2 co)
 }
 
 
-float3 fragmentWorldPos(float depthValue, int2 dispatchID)
+float3 PixelWorldPos(float depthValue, int2 pixel)
 {
     uint width, height;
     inputTexture.GetDimensions(width, height);
     
     float4 ndcCoords = float4(
-        dispatchID.x / width,
-        dispatchID.y / height,
-        depthValue,
+        pixel.x / width * 2 - 1,
+        pixel.y / height * (-2) + 1,
+        depthValue * 2 - 1,
         1.0);
 
     float4 worldCoords = mul(ndcCoords, gInvViewProj);
@@ -102,7 +102,7 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     
     float4 volumetricColor = float4(0.0, 0.0, 0.0, 1.0);
     float depthValue = depthTexture[pixel];
-    float3 fragPosition = fragmentWorldPos(depthValue, pixel);
+    float3 fragPosition = PixelWorldPos(depthValue, pixel);
     
     float fragCamDist = distance(fragPosition, gCameraPos);
     

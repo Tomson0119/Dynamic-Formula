@@ -160,10 +160,11 @@ void InGameScene::BuildComputeRootSignature()
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
-	D3D12_ROOT_PARAMETER parameters[3];
+	D3D12_ROOT_PARAMETER parameters[4];
 	parameters[0] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);    // Inputs
 	parameters[1] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);    // Output																   
 	parameters[2] = Extension::Constants(6, 0, D3D12_SHADER_VISIBILITY_ALL);					   // 32bit Constant
+	parameters[3] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_ALL);    // CameraCB
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[1];
 	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_COMPARISON_FUNC_NEVER, D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE, D3D12_SHADER_VISIBILITY_ALL);
@@ -255,6 +256,7 @@ void InGameScene::BuildConstantBuffers()
 	mLightCB = std::make_unique<ConstantBuffer<LightConstants>>(mDevice.Get(), 2);
 	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(mDevice.Get(), 10); // 메인 카메라 1개, 그림자 매핑 카메라 3개, 다이나믹 큐브매핑 카메라 6개
 	mGameInfoCB = std::make_unique<ConstantBuffer<GameInfoConstants>>(mDevice.Get(), 1);
+	mVolumetricCB = std::make_unique<ConstantBuffer<VolumetricConstants>>(mDevice.Get(), 1);
 
 	for (const auto& [_, pso] : mPipelines)
 	{
@@ -760,10 +762,31 @@ void InGameScene::UpdateCameraConstant(int idx, Camera* camera)
 	mCameraCB->CopyData(idx, camera->GetConstants());
 }
 
+void InGameScene::UpdateVolumetricConstant()
+{
+	VolumetricConstants volumeConst;
+
+	volumeConst.CameraPos = mCurrentCamera->GetPosition();
+	volumeConst.gInvViewProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseViewProj());
+
+	for(int i = 0; i < NUM_LIGHTS; ++i)
+		volumeConst.gLights[i] = mMainLight.Lights[i];
+
+	volumeConst.absorptionColor = { 0.5f, 0.5f, 0.5f };
+	volumeConst.absorptionTau = 0.02f;
+	volumeConst.scatteringSamples = 50;
+	volumeConst.scatteringTau = 0.06f;
+	volumeConst.scatteringZFar = 40.0f;
+	volumeConst.scatteringColor = { 1.0f, 1.0f, 1.0f };
+	
+	mVolumetricCB->CopyData(0, volumeConst);
+}
+
 void InGameScene::UpdateConstants(const GameTimer& timer)
 {
 	UpdateCameraConstant(0, mCurrentCamera);
-	UpdateLightConstants();	
+	UpdateLightConstants();
+	UpdateVolumetricConstant();
 
 	GameInfoConstants gameInfo{};
 	gameInfo.RandFloat4 = XMFLOAT4(
@@ -824,11 +847,16 @@ void InGameScene::UpdateDynamicsWorld()
 	}
 }
 
-void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
+void InGameScene::SetGraphicsCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 {
 	cmdList->SetGraphicsRootConstantBufferView(0, mCameraCB->GetGPUVirtualAddress(cameraCBIndex));
 	cmdList->SetGraphicsRootConstantBufferView(1, mLightCB->GetGPUVirtualAddress(0));
 	cmdList->SetGraphicsRootConstantBufferView(2, mGameInfoCB->GetGPUVirtualAddress(0));
+}
+
+void InGameScene::SetComputeCBV(ID3D12GraphicsCommandList* cmdList)
+{
+	cmdList->SetComputeRootConstantBufferView(3, mVolumetricCB->GetGPUVirtualAddress(0));
 }
 
 void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
@@ -878,12 +906,18 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 
 		mPostProcessingPipelines[Layer::Bloom]->CopyMapToRT(cmdList, backBuffer);
 	}
+
+	if (mVolumetricEnable)
+	{
+
+	}
+
 	mpUI.get()->Draw(nFrame);
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex, bool cubeMapping)
 {	
-	SetCBV(cmdList, cameraCBIndex);
+	SetGraphicsCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
 
 	for (const auto& [layer, pso] : mPipelines)
@@ -916,7 +950,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex, bool cubeMapping)
 {
-	SetCBV(cmdList, cameraCBIndex);
+	SetGraphicsCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
 
 	for (const auto& [layer, pso] : mPipelines)

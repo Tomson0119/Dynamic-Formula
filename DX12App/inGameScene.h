@@ -51,10 +51,13 @@ public:
 	void UpdateLight(float elapsed);
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
+	void UpdateVolumetricConstant();
 	void UpdateConstants(const GameTimer& timer);
 	void UpdateDynamicsWorld();
 
-	void SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
+	void SetGraphicsCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
+
+	void SetComputeCBV(ID3D12GraphicsCommandList* cmdList);
 
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0, bool cubeMapping=false);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0, bool cubeMapping = false);
@@ -132,6 +135,7 @@ private:
 	std::unique_ptr<ConstantBuffer<CameraConstants>> mCameraCB;
 	std::unique_ptr<ConstantBuffer<LightConstants>> mLightCB;
 	std::unique_ptr<ConstantBuffer<GameInfoConstants>> mGameInfoCB;
+	std::unique_ptr<ConstantBuffer<VolumetricConstants>> mVolumetricCB;
 
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
@@ -184,6 +188,8 @@ private:
 	bool mCheckPointEnable = false;
 
 	bool mBloomEnable = true;
+
+	bool mVolumetricEnable = true;
 
 	btRigidBody* mTrackRigidBody = NULL;
 

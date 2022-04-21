@@ -114,6 +114,16 @@ XMFLOAT4X4 Camera::GetInverseView() const
 	return mInvView;
 }
 
+XMFLOAT4X4 Camera::GetInverseViewProj() const
+{
+	auto viewProj = XMLoadFloat4x4(&Matrix4x4::Multiply(GetView(), GetProj()));
+
+	XMFLOAT4X4 invViewProj;
+	XMStoreFloat4x4(&invViewProj, XMMatrixInverse(&XMMatrixDeterminant(viewProj), viewProj));
+
+	return invViewProj;
+}
+
 CameraConstants Camera::GetConstants() const
 {
 	CameraConstants cameraCnst;
