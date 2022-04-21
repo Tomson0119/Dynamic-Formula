@@ -34,15 +34,21 @@ float3 PixelWorldPos(float depthValue, int2 pixel)
     uint width, height;
     inputTexture.GetDimensions(width, height);
     
-    float4 ndcCoords = float4(
-        pixel.x / width * 2 - 1,
-        pixel.y / height * (-2) + 1,
-        depthValue,
-        1.0);
-
-    float4 worldCoords = mul(mul(ndcCoords, gInvProj), gInvView);
+    float2 fPixel = float2(pixel.x, pixel.y);
     
-    return worldCoords.xyz / worldCoords.w;
+    float x = (fPixel.x / width * 2) - 1;
+    float y = (fPixel.y / height * (-2)) + 1;
+    float z = depthValue;
+    
+    float4 ndcCoords = float4(x, y, z, 1.0f);
+
+    float4 p = mul(ndcCoords, gInvProj);
+    
+    p /= p.w;
+    
+    float4 worldCoords = mul(p, gInvView);
+    
+    return worldCoords.xyz;
 }
 
 float3 absorptionTransmittance(float dist)
