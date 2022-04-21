@@ -13,12 +13,14 @@ cbuffer VolumetricCB : register(b1)
     int scatteringSamples : packoffset(c1.x);
     float scatteringTau : packoffset(c1.y);
     float scatteringZFar : packoffset(c1.z);
+    
     float3 scatteringColor : packoffset(c2);
     
-    matrix gInvViewProj : packoffset(c3);
-    float3 gCameraPos : packoffset(c7);
+    matrix gInvProj : packoffset(c3);
+    matrix gInvView : packoffset(c7);
+    float3 gCameraPos : packoffset(c11);
     
-    Light gLights[NUM_LIGHTS] : packoffset(c8);
+    Light gLights[NUM_LIGHTS] : packoffset(c12);
 }
 
 float random(float2 co)
@@ -38,7 +40,7 @@ float3 PixelWorldPos(float depthValue, int2 pixel)
         depthValue,
         1.0);
 
-    float4 worldCoords = mul(ndcCoords, gInvViewProj);
+    float4 worldCoords = mul(mul(ndcCoords, gInvProj), gInvView);
     
     return worldCoords.xyz / worldCoords.w;
 }

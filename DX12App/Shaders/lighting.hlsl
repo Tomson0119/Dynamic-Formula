@@ -1,4 +1,4 @@
-#define NUM_LIGHTS 5
+#define NUM_LIGHTS 7
 
 #define POINT_LIGHT       1
 #define SPOT_LIGHT        2

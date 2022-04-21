@@ -771,7 +771,8 @@ void InGameScene::UpdateVolumetricConstant()
 	VolumetricConstants volumeConst;
 
 	volumeConst.CameraPos = mCurrentCamera->GetPosition();
-	volumeConst.gInvViewProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseViewProj());
+	volumeConst.gInvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
+	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetInverseView());
 
 	for(int i = 0; i < NUM_LIGHTS; ++i)
 		volumeConst.gLights[i] = mMainLight.Lights[i];

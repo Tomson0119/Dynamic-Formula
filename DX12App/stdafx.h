@@ -185,12 +185,15 @@ struct VolumetricConstants
 	int scatteringSamples;
 	float scatteringTau;
 	float scatteringZFar;
+
+	int pad0 = 0;
+
 	XMFLOAT3 scatteringColor;
 
-	int pad0;
-	int pad1;
+	int pad1 = 0;
 
-	XMFLOAT4X4 gInvViewProj;
+	XMFLOAT4X4 gInvProj;
+	XMFLOAT4X4 gInvView;
 	XMFLOAT3 CameraPos;
 
 	LightInfo gLights[NUM_LIGHTS];
