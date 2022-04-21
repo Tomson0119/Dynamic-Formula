@@ -196,6 +196,8 @@ struct VolumetricConstants
 	XMFLOAT4X4 gInvView;
 	XMFLOAT3 CameraPos;
 
+	int pad2 = 0;
+
 	LightInfo gLights[NUM_LIGHTS];
 };
 
