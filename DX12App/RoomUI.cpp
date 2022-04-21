@@ -7,6 +7,8 @@ RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 {
     SetVectorSize(nFrame, TextCnt);
     Initialize(device, pd3dCommandQueue);
+    for (int i = 0; i < mvBitmapFileNames.size(); ++i)
+        LoadBitmapResourceFromFile(mvBitmapFileNames[i], i);
 }
 
 RoomUI::~RoomUI()
@@ -23,6 +25,12 @@ void RoomUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 {
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
+    SetBitmapsSize(2);
+
+
+    mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
+    mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
+
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
 
@@ -226,13 +234,29 @@ void RoomUI::Draw(UINT nFrame)
     bool IsOutlined[13] = { true, true, true, true, true, true, true, true, true, true, true, true, true };
     UI::BeginDraw(nFrame); 
     UI::RectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0, IsOutlined);
+    float aOpacities[2] = { 0.5f, 0.5f };
+    UI::DrawBmp(RectLTRB, 0, 1, aOpacities);
     UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     UI::EndDraw(nFrame);
 }
 
 void RoomUI::CreateFontFormat()
 {
-    float fFontSize = mfHeight / 15.0f;
+    float fFontSize = mfHeight / 25.0f;
+    //vfFontSize.resize(TextCnt);
+
+    /*vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);*/
+
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Tahoma");
      Fonts.push_back(L"Vladimir Script ∫∏≈Î");
@@ -331,6 +355,8 @@ void RoomUI::Reset()
 {
     UI::Reset();
     mvTextBlocks.clear();
+    mvBitmapFileNames.clear();
+
 }
 
 void RoomUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,

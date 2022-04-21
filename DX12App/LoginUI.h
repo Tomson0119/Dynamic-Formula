@@ -28,16 +28,24 @@ public:
 
 	virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair(mvTextBlocks[3].strText, mvTextBlocks[4].strText); }
 
+	void SetLoginFail(bool TF) { IsLoginFail = TF; }
+	void SetSignupBool(bool TF) { IsSignup = TF; }
+	void SetLoginOrSignup(std::string msg) { mvTextBlocks[1].strText = LoginOrSignup = msg; }
+	void SetLoginOrSignupReverse(std::string msg) { mvTextBlocks[5].strText = LoginOrSignupReverse = msg; }
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
 	bool IsSignup = false;
-	bool IsLoginFail = false;
+	bool IsLoginFail = true;
 
+	std::string LoginOrSignup = "Login";
+	std::string LoginOrSignupReverse = "Signup";
 	float mfWidth = 0.0f;
 	float mfHeight = 0.0f;
 
 	float fFontSize = 0.0f; 
+	std::vector<float> vfFontSize;
+
 	std::vector<std::wstring> Fonts;
 	DWRITE_TEXT_ALIGNMENT TextAlignments[7];
 	UINT TextCnt;
@@ -45,5 +53,8 @@ private:
 	std::vector<D2D1::ColorF> mvColors;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 	std::vector<TextBlock>          mvTextBlocks;
+
+	std::vector<PCWSTR > mvBitmapFileNames;
+
 };
 

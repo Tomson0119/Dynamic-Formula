@@ -37,5 +37,8 @@ private:
 	std::vector<D2D1::ColorF> mvColors;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 	std::vector<TextBlock>          mvTextBlocks;
+
+	std::vector<PCWSTR > mvBitmapFileNames;
+
 };
 

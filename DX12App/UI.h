@@ -1,11 +1,19 @@
 #pragma once
 #include "player.h"
+
 struct TextBlock
 {
     std::string        strText;
     D2D1_RECT_F         d2dLayoutRect;
     IDWriteTextFormat* pdwFormat;
 };
+
+struct GradientColors
+{
+    UINT ColorCnt;
+    D2D1::ColorF* ColorList;
+};
+
 class UI 
 {
 public:
@@ -17,17 +25,25 @@ public:
     virtual void Update(float GTime);
     virtual void Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
      XMFLOAT4 RetLTRM[], XMFLOAT4 FillLTRB[]*/);
+
+    virtual HRESULT LoadBitmapResourceFromFile(PCWSTR ImageNam, int index);
+    virtual void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
+
     virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
     virtual void BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, 
         UINT gradientCnt, D2D1::ColorF* gradientColors);
+
     virtual void BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList);
     virtual void BuildSolidBrush(UINT UICnt, UINT TextCnt, std::vector<D2D1::ColorF>& ColorList);
     virtual void BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList);
+    virtual void BuildLinearGradientBrushes(UINT GradientCnt, GradientColors GColors[]);
     virtual void Reset();
     virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
         ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
     virtual void SetVectorSize(UINT nFrame);
-    virtual void CreateFontFormat(float FontSize, const std::vector<std::wstring>& Fonts, UINT TextCnt,
+    virtual void CreateFontFormat(float vFontSize, const std::vector<std::wstring>& Fonts, UINT TextCnt,
+        DWRITE_TEXT_ALIGNMENT* Alignment);
+    virtual void CreateFontFormat(std::vector<float>& vFontSize, const std::vector<std::wstring>& Fonts, UINT TextCnt,
         DWRITE_TEXT_ALIGNMENT* Alignment);
 
     //ID2D1DeviceContext2* GetDeviceContext() { return mpd2dDeviceContext.Get(); }
@@ -55,7 +71,9 @@ public:
    virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair("", ""); }
    virtual int GetLobbyPacket() { return -1; }
    virtual int GetRoomPacket() { return -1; }
-
+   virtual std::vector<ComPtr<ID2D1Bitmap>> GetBitmaps() { return mvBitmaps; }
+   void SetBitmapsSize(int size) { mvBitmaps.resize(size); }
+   void SetGradientCnt(int Gcnt) { GradientCnt = Gcnt; }
 private:
 
     float mfHeight = 0.0f;
@@ -63,7 +81,8 @@ private:
 
     //UINT TextCnt = 0;
 
-
+    UINT GradientCnt = 0;
+    GradientColors* pGradientColors;
 
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;
@@ -74,6 +93,10 @@ private:
     ComPtr<IDXGIDevice> pdxgiDevice;
     ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
 
+    ComPtr<IWICImagingFactory> mWICFactoryPtr;
+
+    std::vector<ComPtr<ID2D1Bitmap>> mvBitmaps;
+
     std::vector<ComPtr<IDWriteTextFormat>> mvdwTextFormat;
 
     std::vector<ComPtr<ID2D1SolidColorBrush>> mvd2dSolidBrush;
@@ -81,6 +104,3 @@ private:
     std::vector<ComPtr<ID3D11Resource>>    mvWrappedRenderTargets;
     std::vector<ComPtr<ID2D1Bitmap1>>      mvd2dRenderTargets;
 };
-
-
-

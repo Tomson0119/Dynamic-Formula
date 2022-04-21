@@ -42,7 +42,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	float CountdownTime = 5.0f;
 	if (GTime > 4.0f)
 	{
-		for (auto wc : L"Start")
+		for (auto &wc : L"Start")
 			mvTextBlocks[4].strText.push_back(wc);
 	}
 	else if (GTime > 3.0f)
@@ -96,7 +96,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 
 	if (Min < 10)
 		mvTextBlocks[0].strText.push_back('0');
-	for (auto wc : std::to_wstring(Min))
+	for (auto &wc : std::to_wstring(Min))
 		mvTextBlocks[0].strText.push_back(wc);
 
 	mvTextBlocks[0].strText.push_back(':');
@@ -108,9 +108,9 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	//Lap Count Set
 	if (static_cast<int>(GTime / 60) > 0)
 	{
-		for (auto wc : std::to_wstring(static_cast<int>(LapTime / 60)))
+		for (auto &wc : std::to_wstring(static_cast<int>(LapTime / 60)))
 			mvTextBlocks[1].strText.push_back(wc);
-		for (auto wc : std::wstring{ L"Lap" })
+		for (auto &wc : std::wstring{ L"Lap" })
 			mvTextBlocks[1].strText.push_back(wc);
 	}
 	//My Rank
@@ -158,7 +158,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 		for (int i = 0; i < 3; ++i)
 			mvTextBlocks[3].strText.push_back(std::to_wstring(0.0f)[i]);
 	}
-	for (auto wc : std::wstring(L"km/h"))
+	for (auto &wc : std::wstring(L"km/h"))
 		mvTextBlocks[3].strText.push_back(wc);
 
    /* for (int i = 0; i < TextCnt; ++i)
@@ -172,7 +172,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 
 void InGameUI::Update(float GTime, std::vector<std::string> Texts)
 {
-	for (auto text : Texts[0])
+	for (auto &text : Texts[0])
 		mvTextBlocks[2].strText.push_back(text);
 }
 
@@ -285,13 +285,19 @@ void InGameUI::Draw(UINT nFrame)
 
 void InGameUI::CreateFontFormat()
 {
-    float fFontSize = mfHeight / 15.0f;
+	float fFontSize = mfHeight / 25.0f;
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Tahoma");
     Fonts.push_back(L"Vladimir Script ∫∏≈Î");
     Fonts.push_back(L"πŸ≈¡√º");
     Fonts.push_back(L"±º∏≤√º");
     Fonts.push_back(L"±º∏≤√º");
+	/*vfFontSize.push_back(mfHeight / 15.0f);
+	vfFontSize.push_back(mfHeight / 15.0f);
+	vfFontSize.push_back(mfHeight / 15.0f);
+	vfFontSize.push_back(mfHeight / 15.0f);
+	vfFontSize.push_back(mfHeight / 15.0f);*/
+
 
 	DWRITE_TEXT_ALIGNMENT TextAlignments[5];
 	//TextAlignments.resize(TextCnt);

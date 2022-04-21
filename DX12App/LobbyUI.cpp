@@ -2,10 +2,12 @@
 #include "LobbyUI.h"
 
 LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(13), UICnt(14)
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(13), UICnt(18)
 {
     SetVectorSize(nFrame, TextCnt);
     Initialize(device, pd3dCommandQueue);
+    for (int i = 0;i<mvBitmapFileNames.size();++i)
+        LoadBitmapResourceFromFile(mvBitmapFileNames[i], i);
 }
 
 LobbyUI::~LobbyUI()
@@ -30,7 +32,14 @@ void LobbyUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 {
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
+    SetBitmapsSize(3);
+
+    mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
+    mvBitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
+    mvBitmapFileNames.push_back(L"Resources\\LeftRightArrow.jpeg");
+
     //mvd2dLinearGradientBrush.resize(TextCnt);
+    SetGradientCnt(12);
 }
 
 int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
@@ -50,7 +59,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     {// 12, 34, 56, 78, 910, 1112
         if (MouseCollisionCheck(dx, dy, mvTextBlocks[i]))
         {
-            mvColors[(i+1)/2*2-1].a = 0.1f;
+            mvColors[(((i+1)/2)*2)-1].a = 0.1f;
         }
         else mvColors[i].a = 0.9f;
     }
@@ -85,189 +94,265 @@ void LobbyUI::Draw(UINT nFrame)
 {
     XMFLOAT4 RectLTRB[] =
     {
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36,
-        mfWidth / 32 * 24,
-        mfHeight / 36 * 29
+        {//BigBackGroundBox
+            mfWidth * 0.04f,
+            mfHeight * 0.04f,
+            mfWidth * 0.96f,
+            mfHeight * 0.96f
+        },
+        {//SmallBackGroundBox
+            mfWidth * 0.24f,
+            mfHeight * 0.34f,
+            mfWidth * 0.90f,
+            mfHeight * 0.86f
         },
         {
-            mfWidth / 32 * 9, 
-            mfHeight / 18, 
-            mfWidth / 32 * 15, 
-            mfHeight / 18 * 2
+        mfWidth * 0.25f,
+        mfHeight * 0.11f,
+        mfWidth * 0.75f,
+        mfHeight * 0.77f
         },
         {
-        mfWidth / 32 * 9,
-        mfHeight / 36 * 10, 
-        mfWidth / 32 * 15, 
-        mfHeight / 36 * 12
+            mfWidth * 0.27f, 
+            mfHeight * 0.055f, 
+            mfWidth * 0.48f, 
+            mfHeight * 0.11f
         },
         {
-            mfWidth / 32 * 16, 
-            mfHeight / 36 * 10, 
-            mfWidth / 32 * 22, 
-            mfHeight / 36 * 12
+        mfWidth * 0.27f,
+        mfHeight * 0.275f, 
+        mfWidth * 0.48f, 
+        mfHeight * 0.44f
         },
         {
-            mfWidth / 32 * 9, 
-            mfHeight / 36 * 16,
-            mfWidth / 32 * 15, 
-            mfHeight / 36 * 18
+            mfWidth * 0.5f, 
+            mfHeight * 0.275f, 
+            mfWidth * 0.61f, 
+            mfHeight * 0.33f
         },
         {
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 16,
-        mfWidth / 32 * 22, 
-        mfHeight / 36 * 18
+            mfWidth * 0.275f, 
+            mfHeight * 0.44f,
+            mfWidth * 0.43f, 
+            mfHeight * 0.5f
         },
         {
-        mfWidth / 32 * 9, 
-        mfHeight / 36 * 22, 
-        mfWidth / 32 * 15, 
-        mfHeight / 36 * 24
+        mfWidth * 0.5f,
+        mfHeight * 0.44f,
+        mfWidth * 0.61f, 
+        mfHeight * 0.5f
         },
         {
-        mfWidth / 32 * 16, 
-        mfHeight / 36 * 22,
-        mfWidth / 32 * 22, 
-        mfHeight / 36 * 24
+        mfWidth * 0.275f, 
+        mfHeight * 0.61f, 
+        mfWidth * 0.49f, 
+        mfHeight * 0.66f
+        },
+        {
+        mfWidth * 0.5f, 
+        mfHeight * 0.61f,
+        mfWidth * 0.61f, 
+        mfHeight * 0.66f
         },
         //---
         {
-        mfWidth / 32 * 8,
-        mfHeight / 36 * 9,
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 15
+        mfWidth * 0.22f,
+        mfHeight * 0.23f,
+        mfWidth * 0.5f,
+        mfHeight * 0.42f
         },
         {
-            mfWidth / 32 * 17,
-            mfHeight / 36 * 9,
-            mfWidth / 32 * 25,
-            mfHeight / 36 * 15
+            mfWidth * 0.52f,
+            mfHeight * 0.24f,
+            mfWidth * 0.68f,
+            mfHeight * 0.42f
         },
         {
-            mfWidth / 32 * 8,
-            mfHeight / 36 * 15,
-            mfWidth / 32 * 16,
-            mfHeight / 36 * 21
+            mfWidth * 0.25f,
+            mfHeight * 0.42f,
+            mfWidth * 0.5f,
+            mfHeight * 0.57f
         },
         {
-        mfWidth / 32 * 17,
-        mfHeight / 36 * 15,
-        mfWidth / 32 * 25,
-        mfHeight / 36 * 21
+        mfWidth * 0.57f,
+        mfHeight * 0.42f,
+        mfWidth *0.78125f,
+        mfHeight * 0.57f
         },
         {
-        mfWidth / 32 * 8,
-        mfHeight / 36 * 21,
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 27
+        mfWidth * 0.25f,
+        mfHeight * 0.57f,
+        mfWidth * 0.5f,
+        mfHeight *0.75f
         },
         {
-        mfWidth / 32 * 17,
-        mfHeight / 36 * 21,
-        mfWidth / 32 * 25,
-        mfHeight / 36 * 27
+        mfWidth * 0.52f,
+        mfHeight * 0.57f,
+        mfWidth * 0.77f,
+        mfHeight * 0.75f
         }
     };
     XMFLOAT4 FillLTRB[] =
     {
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36,
-        mfWidth / 32 * 24,
-        mfHeight / 36 * 29
+        {//BigBackGroundBox
+            mfWidth * 0.04f,
+            mfHeight * 0.02f,
+            mfWidth * 0.96f,
+            mfHeight * 0.96f
         },
-        {
-            mfWidth / 32 * 9,
-            mfHeight / 18,
-            mfWidth / 32 * 15,
-            mfHeight / 18 * 2
+        {//SmallBackGroundBox
+            mfWidth * 0.18f,
+            mfHeight * 0.04f,
+            mfWidth * 0.86f,
+            mfHeight * 0.86f
         },
-        {
-        mfWidth / 32 * 9,
-        mfHeight / 36 * 10,
-        mfWidth / 32 * 15,
-        mfHeight / 36 * 12
+        {//SmallWhiteBackGroundBox
+        mfWidth * 0.20f,
+        mfHeight * 0.18f,
+        mfWidth * 0.80f,
+        mfHeight * 0.84f
         },
-        {
-            mfWidth / 32 * 16,
-            mfHeight / 36 * 10,
-            mfWidth / 32 * 22,
-            mfHeight / 36 * 12
+        {//MakeRoomBox
+            mfWidth * 0.27f,
+            mfHeight * 0.055f,
+            mfWidth * 0.48f,
+            mfHeight * 0.11f
         },
-        {
-            mfWidth / 32 * 9,
-            mfHeight / 36 * 16,
-            mfWidth / 32 * 15,
-            mfHeight / 36 * 18
+        {//RoomTitle1
+        mfWidth * 0.27f,
+        mfHeight * 0.26f,
+        mfWidth * 0.48f,
+        mfHeight * 0.33f
         },
-        {
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 16,
-        mfWidth / 32 * 22,
-        mfHeight / 36 * 18
+        {//RoomTitle2
+            mfWidth * 0.54f,
+            mfHeight * 0.26f,
+            mfWidth * 0.75f,
+            mfHeight * 0.33f
         },
-        {
-        mfWidth / 32 * 9,
-        mfHeight / 36 * 22,
-        mfWidth / 32 * 15,
-        mfHeight / 36 * 24
+        {//RoomTitle3
+            mfWidth * 0.27f,
+            mfHeight * 0.44f,
+            mfWidth * 0.48f,
+            mfHeight * 0.5f
         },
-        {
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 22,
-        mfWidth / 32 * 22,
-        mfHeight / 36 * 24
+        {//RoomTitle4
+        mfWidth * 0.54f,
+        mfHeight * 0.44f,
+        mfWidth * 0.75f,
+        mfHeight *0.5f
         },
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36 * 9,
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 15
+        {//RoomTitle5
+        mfWidth * 0.27f,
+        mfHeight * 0.605f,
+        mfWidth * 0.48f,
+        mfHeight * 0.66f
         },
-        {
-            mfWidth / 32 * 17,
-            mfHeight / 36 * 9,
-            mfWidth / 32 * 25,
-            mfHeight / 36 * 15
+        {//RoomTitle6
+        mfWidth * 0.54f,
+        mfHeight * 0.605f,
+        mfWidth * 0.75f,
+        mfHeight * 0.66f
         },
-        {
-            mfWidth / 32 * 8,
-            mfHeight / 36 * 15,
-            mfWidth / 32 * 16,
-            mfHeight / 36 * 21
+        {//RoomBox1
+        mfWidth * 0.25f,
+        mfHeight * 0.25f,
+        mfWidth * 0.5f,
+        mfHeight * 0.42f
         },
-        {
-        mfWidth / 32 * 17,
-        mfHeight / 36 * 15,
-        mfWidth / 32 * 25,
-        mfHeight / 36 * 21
+        {//RoomBox2
+            mfWidth * 0.52f,
+            mfHeight * 0.25f,
+            mfWidth * 0.77f,
+            mfHeight * 0.42f
         },
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36 * 21,
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 27
+        {//RoomBox3
+            mfWidth * 0.25f,
+            mfHeight * 0.42f,
+            mfWidth * 0.5f,
+            mfHeight * 0.57f
         },
-        {
-        mfWidth / 32 * 17,
-        mfHeight / 36 * 21,
-        mfWidth / 32 * 25,
-        mfHeight / 36 * 27
+        {//RoomBox4
+        mfWidth * 0.52f,
+        mfHeight * 0.42f,
+        mfWidth * 0.77f,
+        mfHeight * 0.57f
+        },
+        {//RoomBox5
+        mfWidth * 0.25f,
+        mfHeight * 0.57f,
+        mfWidth * 0.5f,
+        mfHeight * 0.75f
+        },
+        {//RoomBox6
+        mfWidth * 0.52f,
+        mfHeight * 0.57f,
+        mfWidth * 0.77f,
+        mfHeight * 0.75f
+        },
+        {//LeftArrowBox
+        mfWidth * 0.044f,
+        mfHeight * 0.076f,
+        mfWidth * 0.05f,
+        mfHeight * 0.082f
+        },
+        {//RightArrowBox
+        mfWidth * 0.052f,
+        mfHeight * 0.076f,
+        mfWidth * 0.058f,
+        mfHeight * 0.082f
         }
     };
-    bool IsOutlined[14] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true };
+    XMFLOAT4 LTRB[] =
+    {
+        {
+            390.0f,
+            290.0f,
+            410.0f,
+            310.0f
+        },
+        {
+            0.0f,
+            0.0f,
+            mfWidth,
+            mfHeight
+        },
+        {
+             mfWidth * 0.44f,
+           mfHeight * 0.76f,
+            mfWidth * 0.58f,
+            mfHeight * 0.82f
+        }
+    };
+    bool IsOutlined[18] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false };
+    float aOpacities[3] = { 0.5f, 1.0f, 0.5f };
     UI::BeginDraw(nFrame);
+    UI::DrawBmp(LTRB, 0, 2, aOpacities);
     UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt + 1, 0, 0, IsOutlined);
+    UI::DrawBmp(LTRB, 2, 1, aOpacities);
     UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     UI::EndDraw(nFrame);
 }
 
 void LobbyUI::CreateFontFormat()
 {
-    fFontSize = mfHeight / 25.0f;
+    float fFontSize = mfHeight / 25.0f;;
+   // vfFontSize.resize(TextCnt);
+
+    /*vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);
+    vfFontSize.push_back(mfHeight / 15.0f);*/
+
     Fonts.push_back(L"Tahoma");
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
@@ -330,8 +415,11 @@ void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
     mfHeight = static_cast<float>(nHeight);
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
-
-    D2D1::ColorF colorList[27] = { D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) };
+    
+    D2D1::ColorF colorList[31] = { D2D1::ColorF(D2D1::ColorF::DarkGray , 1.0f), D2D1::ColorF(D2D1::ColorF::DarkGray , 1.0f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), 
+        D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), 
+        D2D1::ColorF(D2D1::ColorF::Gray, 0.98f), D2D1::ColorF(D2D1::ColorF::DarkGray, 0.9f),D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f),
+        D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::LightGray, 0.3f) , D2D1::ColorF(D2D1::ColorF::LightGray, 0.3f)};
     //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
     for (auto color : colorList)
         mvColors.push_back(color);
@@ -370,6 +458,8 @@ void LobbyUI::Reset()
 {
     UI::Reset();
     mvTextBlocks.clear();
+    mvBitmapFileNames.clear();
+
 }
 
 void LobbyUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,

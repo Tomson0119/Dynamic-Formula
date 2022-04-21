@@ -8,6 +8,8 @@ LoginUI::LoginUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 {
     SetVectorSize(nFrame, TextCnt);
     Initialize(device, pd3dCommandQueue);
+    for (int i = 0; i < mvBitmapFileNames.size(); ++i)
+        LoadBitmapResourceFromFile(mvBitmapFileNames[i], i);
 }
 
 LoginUI::~LoginUI()
@@ -24,6 +26,12 @@ void LoginUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 {
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
+    SetBitmapsSize(2);
+    vfFontSize.resize(TextCnt);
+
+    mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
+    mvBitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
+
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
 
@@ -45,59 +53,68 @@ int LoginUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
     
-    if (IsLoginFail && MouseCollisionCheck(dx, dy, mvTextBlocks[6]))
+    /*if (IsLoginFail && MouseCollisionCheck(dx, dy, mvTextBlocks[6]))
     {
         IsLoginFail = false;
         UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    }*/
+
+    if (MouseCollisionCheck(dx, dy, mvTextBlocks[6])) // LoginFail
+    {
+        mvColors[12].a = 0.0f;
+        mvColors[6].a = 0.0f;
+        SetLoginFail(false);
+        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
     }
-    
+
     if (MouseCollisionCheck(dx, dy, mvTextBlocks[1])) //Log-in
     {
         mvColors[1].a = 0.5f;
-        if (buttonState & MK_LBUTTON)
-        {
-            
-            if (!IsSignup)
-            {
-                // 로그인 실패하면?
-                IsLoginFail = true;
-                UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
-                return 1;
-            }
-            else
-            {
-                //회원가입 실패하면?
-                IsLoginFail = true;
-                UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
-                return 2;
-            }
-        }
+        //if (buttonState & MK_LBUTTON)
+        //{
+        //    
+        //    if (!IsSignup)
+        //    {
+        //        // 로그인 실패하면?
+        //        IsLoginFail = true;
+        //        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+        //        return 1;
+        //    }
+        //    else
+        //    {
+        //        //회원가입 실패하면?
+        //        IsLoginFail = true;
+        //        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+        //        return 2;
+        //    }
+        //}
+        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
     }
-    else if (MouseCollisionCheck(dx, dy, mvTextBlocks[4]))
+
+    if (MouseCollisionCheck(dx, dy, mvTextBlocks[5])) // Sign-up
     {
+        //MouseUp일 때 실행되도록 변경해야 함.
         if (!IsSignup)
         {
-            if (buttonState & MK_LBUTTON)
-                IsSignup = true;
-            return 0;
+            SetLoginOrSignup("Signup");
+            SetLoginOrSignupReverse("Login");
         }
         else
         {
-            if (buttonState & MK_LBUTTON)
-                IsSignup = false;
-            return 0;
+            SetLoginOrSignup("Login");
+            SetLoginOrSignupReverse("Signup");
         }
-               
+        SetSignupBool(!IsSignup);
         UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
         return 2;
     }
-    else 
+    /*else 
     { 
         mvColors[1].a = 1.0f; 
         UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
         return 0;
-    }
-
+    }*/
+    return 0;
     
 }
 
@@ -107,36 +124,37 @@ void LoginUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
     
-    if (IsLoginFail && MouseCollisionCheck(dx, dy, mvTextBlocks[6]))
-    {
-        mvColors[6].a = 0.5f;
-        mvColors[12].a = 0.5f;
+    //if (/*IsLoginFail &&*/ MouseCollisionCheck(dx, dy, mvTextBlocks[6]))
+    //{
+    //    mvColors[6].a = 0.5f;
+    //    mvColors[12].a = 0.5f;
 
-        UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
-    }
+    //    UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    //}
     
     if (MouseCollisionCheck(dx, dy, mvTextBlocks[1])) //Log-in
     {
-        mvColors[1].a = 0.5f;
         if (buttonState & MK_LBUTTON)
         {
             // 로그인 실패하면?
-            IsLoginFail = true;
+            //IsLoginFail = true;
             //return 1;
+            ;
         }
+        //UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
     }
     else mvColors[1].a = 1.0f;
 
     /*if (MouseCollisionCheck(dx, dy, mvTextBlocks[5]) && buttonState)
         exit(0);*/
 
-    if (MouseCollisionCheck(dx, dy, mvTextBlocks[4]))  // Sign-up
+    if (MouseCollisionCheck(dx, dy, mvTextBlocks[5]))  // Sign-up
     {
         // UI에서 MouseDown됐을 때 반환 값을 주도록 처리
         // 그 반환 값을 통해서 Netptr처리.
         // 여기서 반환 값 줘야 함
         //새로운 UI처리
-       
+        ;
     }
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
     //return 0;
@@ -147,7 +165,7 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
 
-    if (MouseCollisionCheck(dx, dy, mvTextBlocks[1]))
+    if (MouseCollisionCheck(dx, dy, mvTextBlocks[1])) // Login
     {
         mvColors[1].a = 0.5f; // Log-in
        /* if (buttonState & MK_LBUTTON)
@@ -157,13 +175,21 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     }
     else mvColors[1].a = 1.0f;
 
-    if (MouseCollisionCheck(dx, dy, mvTextBlocks[5]))
-        mvColors[11].a = 0.3f; // X
-    else mvColors[11].a = 0.9f;
+    if (IsLoginFail)
+    {
+        if (MouseCollisionCheck(dx, dy, mvTextBlocks[6])) // LoginFail
+        {
+            mvColors[6].a = 0.3f;
+        }
+        else mvColors[6].a = 1.0f;
+    }
+    if (MouseCollisionCheck(dx, dy, mvTextBlocks[4])) //  Exit
+        mvColors[4].a = 0.3f; 
+    else mvColors[4].a = 1.0f;
 
-    if (MouseCollisionCheck(dx, dy, mvTextBlocks[4]))
-        mvColors[4].a = 0.3f; // Sign-up
-    else mvColors[4].a = 0.8f;
+    if (MouseCollisionCheck(dx, dy, mvTextBlocks[5])) // Sign-up
+        mvColors[5].a = 0.3f; 
+    else mvColors[5].a = 1.0f;
 
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
 }
@@ -185,19 +211,19 @@ void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
         mvTextBlocks[3].strText.assign(Texts[1].begin(), Texts[1].end());
     }
 
-    if (IsLoginFail)
+    /*if (IsLoginFail)
     {
         mvColors[6].a = 0.9f;
         mvColors[12].a = 0.9f;
         UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
-    }
-    else
+    }*/
+   /* else
     {
         mvColors[6].a = 0.0f;
         mvColors[12].a = 0.0f;
         UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
-    }
-    if (IsSignup)
+    }*/
+    /*if (IsSignup)
     {
         mvTextBlocks[1].strText.clear();
         mvTextBlocks[4].strText.clear();
@@ -224,7 +250,7 @@ void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
         for (auto wc : std::string{ "Login Fail" })
             mvTextBlocks[6].strText.push_back(wc);
         UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
-    }
+    }*/
 }
 
 void LoginUI::Update(std::vector<std::string>& Texts) 
@@ -261,23 +287,24 @@ void LoginUI::ChangeTextAlignment(UINT uNum, UINT uState)
         }
     }
     UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, TextAlignments);
+    UI::CreateFontFormat(vfFontSize, Fonts, TextCnt, TextAlignments);
 }
 
 void LoginUI::Draw(UINT nFrame)
-{// BOX, ID, Password, Login, Sign, Close
+{// BOX, Login, Sign, ID, Password, Login, Close
+    //RoundedRectOutline
     XMFLOAT4 RectLTRB[] =
     {
         {
-         mfWidth / 60 * 23,
+         mfWidth / 0.30f,
         mfHeight / 64 * 25,
-        mfWidth / 40 * 30,
+        mfWidth / 0.70f,
         mfHeight / 128 * 81
         },
         {
-            mfWidth / 40 * 25, 
+            mfWidth * 0.31f, 
             mfHeight / 64 * 28, 
-            mfWidth / 40 * 29, 
+            mfWidth * 0.55f, 
             mfHeight / 128 * 71
         },
         {
@@ -323,37 +350,44 @@ void LoginUI::Draw(UINT nFrame)
             mfHeight / 128 * 68
         }
     };
+    //RoundedRectFill
     XMFLOAT4 FillLTRB[] =
     {
-        {
-         mfWidth / 60 * 23,
-        mfHeight / 64 * 25,
-        mfWidth / 40 * 30,
-        mfHeight / 128 * 81
+        {//MainBlackBox
+         mfWidth *0.25f,
+        mfHeight * 0.375f,
+        mfWidth *0.75f,
+        mfHeight * 0.625f
         },
-        {
-            mfWidth / 40 * 25,
-            mfHeight / 64 * 28,
-            mfWidth / 40 * 29,
-            mfHeight / 128 * 71
+        {//LoginBox
+            mfWidth * 0.61f,
+            mfHeight * 0.43f,
+            mfWidth * 0.74f,
+            mfHeight * 0.55f
         },
-        {
-            mfWidth / 5 * 2,
-            mfHeight / 64 * 28,
-            mfWidth / 5 *3,
-            mfHeight / 128 * 63
+        {//IDBox
+            mfWidth * 0.27f,
+            mfHeight * 0.43f,
+            mfWidth * 0.59f,
+            mfHeight * 0.485f
         },
-        {
-            mfWidth / 5 * 2,
-            mfHeight / 128 * 64,
-            mfWidth / 5 * 3,
-            mfHeight / 128*71
+        {//PWDBox
+            mfWidth *0.27f,
+            mfHeight * 0.49f,
+            mfWidth *0.59f,
+            mfHeight * 0.545f
         },
-        {
-            mfWidth / 160 * 117,
-            mfHeight / 256 * 103,
-            mfWidth / 160 * 119,
-            mfHeight / 256 * 115
+        {//Exit
+            mfWidth *0.675f,
+            mfHeight* 0.38f,
+            mfWidth * 0.745f,
+            mfHeight * 0.425f
+        },
+        {//Login-Fail
+            mfWidth * 0.40f,
+            mfHeight * 0.40f,
+            mfWidth * 0.60f,
+            mfHeight * 0.60f
         },
         {
             mfWidth / 5 * 1,
@@ -362,42 +396,64 @@ void LoginUI::Draw(UINT nFrame)
             mfHeight / 128 * 68
         },
         {
-            mfWidth / 5 * 1,
-            mfHeight / 128 * 43,
-            mfWidth / 5 * 2,
-            mfHeight / 128 * 68
-        },
-        {
             mfWidth / 5 * 2,
             mfHeight / 128 * 43,
             mfWidth / 5 * 3,
             mfHeight / 128 * 68
         },
         {
-            mfWidth / 5 * 3,
+            mfWidth * 0.66f,
             mfHeight / 128 * 43,
-            mfWidth / 5 * 4,
+            mfWidth * 0.69f,
             mfHeight / 128 * 68
         }
     };
     bool IsOutlined[9] = {true,true, true, true, true,false,false, false,false};
     UI::BeginDraw(nFrame);
-    UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0, IsOutlined);
+    
+    //bitmap
+    XMFLOAT4 LTRB[] =
+    {
+        {
+            390.0f,
+            290.0f,
+            410.0f,
+            310.0f
+        },
+        {
+            0.0f,
+            0.0f,
+            mfWidth,
+            mfHeight
+        }
+    };
+    float aOpacities[2] = { 0.5f, 1.0f };
+    UI::DrawBmp(LTRB,0 , 2, aOpacities);
+    UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt + 1, 0, 0, IsOutlined);
     UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     UI::EndDraw(nFrame);
 }
 
 void LoginUI::CreateFontFormat()
 {
-    fFontSize = mfHeight / 22.0f;
+    fFontSize = mfHeight * 0.04f;
+    
+    vfFontSize[0] = mfHeight * 0.05f;
+    vfFontSize[1] = mfHeight * 0.04f;
+    vfFontSize[2] = mfHeight * 0.04f;
+    vfFontSize[3] = mfHeight * 0.04f;
+    vfFontSize[4] = mfHeight * 0.04f;
+    vfFontSize[5] = mfHeight * 0.04f;
+    vfFontSize[6] = mfHeight * 0.04f;
+    
    // std::vector<std::wstring> Fonts;
-    Fonts.push_back(L"Tahoma");
-    Fonts.push_back(L"Vladimir Script 보통");
-    Fonts.push_back(L"바탕체");
-    Fonts.push_back(L"굴림체");
-    Fonts.push_back(L"굴림체");
-    Fonts.push_back(L"굴림체");
-    Fonts.push_back(L"굴림체");
+    Fonts.push_back(L"Goudy Stout"); // Title logo
+    Fonts.push_back(L"Modern No. 20"); // Login
+    Fonts.push_back(L"Modern No. 20"); //ID
+    Fonts.push_back(L"Modern No. 20"); //PWD
+    Fonts.push_back(L"Modern No. 20"); //Sign-up
+    Fonts.push_back(L"Modern No. 20"); // Exit
+    Fonts.push_back(L"Modern No. 20"); // Login Fail
 
 
     //DWRITE_TEXT_ALIGNMENT TextAlignments[6];
@@ -411,19 +467,20 @@ void LoginUI::CreateFontFormat()
     TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
 
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, TextAlignments);
+    UI::CreateFontFormat(vfFontSize, Fonts, TextCnt, TextAlignments);
 }
 
 void LoginUI::SetTextRect()
-{//Text: GameName, Login, ID, Password, sign, close, LoginFail, SignID, SignPWD
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth/128 * 63, mfHeight/8 * 2,mfWidth  / 128 * 83, mfHeight / 8 * 3);
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth / 40 * 25, mfHeight / 64 * 28, mfWidth / 40 * 29, mfHeight / 128 * 71);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth / 200 * 81, mfHeight / 64 * 28,  mfWidth / 200 * 119,  mfHeight / 128 * 63);
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth / 200 * 81,  mfHeight / 128 * 64, mfWidth / 200 * 119,  mfHeight / 128 * 71);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth / 5 * 2, mfHeight / 128 * 73, mfWidth / 2 , mfHeight / 128 * 80);
-    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth / 160 * 117, mfHeight / 256 * 102,  mfWidth / 160 * 119, mfHeight / 256 * 114);
-    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth / 5 * 1, mfHeight / 128 * 43, mfWidth / 5 * 2, mfHeight / 128 * 68);
+{//Text: GameName, Login, ID, Password, Exit, sign, LoginFail 
+ // SignID, SignPWD
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth * 0.25f, mfHeight * 0.25f, mfWidth  * 0.75f, mfHeight * 0.375f);
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth * 0.625f, mfHeight * 0.4375f, mfWidth * 0.725f, mfHeight * 0.55f);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth * 0.401f, mfHeight * 0.4375f,  mfWidth * 0.599f,  mfHeight * 0.499f);
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth * 0.401f,  mfHeight * 0.501f, mfWidth * 0.599f,  mfHeight * 0.5615f);
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 0.68f, mfHeight * 0.35f, mfWidth * 0.75f, mfHeight * 0.45f);
 
+    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth * 0.4f, mfHeight * 0.5635f, mfWidth * 0.52f , mfHeight * 0.625f);
+    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth * 0.41f, mfHeight * 0.40f, mfWidth * 0.59f, mfHeight * 0.60f);
 }
 
 void LoginUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
@@ -432,26 +489,29 @@ void LoginUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
     mfHeight = static_cast<float>(nHeight);
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
-
-    D2D1::ColorF colorList[16] = { D2D1::ColorF(D2D1::ColorF::White, 1.0f), D2D1::ColorF(D2D1::ColorF::White, 1.0f), D2D1::ColorF(D2D1::ColorF::White, 0.5f), D2D1::ColorF(D2D1::ColorF::White, 0.5f), D2D1::ColorF(D2D1::ColorF::White, 0.8f), D2D1::ColorF(D2D1::ColorF::White, 1.0f), D2D1::ColorF(D2D1::ColorF::White, 0.0f)/*Text*/, 
-        /*UI*/ D2D1::ColorF(D2D1::ColorF::Blue, 0.5f), D2D1::ColorF(D2D1::ColorF::Yellow, 0.5f), D2D1::ColorF(D2D1::ColorF::Blue, 0.1f), D2D1::ColorF(D2D1::ColorF::Blue, 0.1f), D2D1::ColorF(D2D1::ColorF::Red, 0.9f), D2D1::ColorF(D2D1::ColorF::Black, 0.0f), D2D1::ColorF(D2D1::ColorF::Black, 0.0f), D2D1::ColorF(D2D1::ColorF::Black, 0.0f), D2D1::ColorF(D2D1::ColorF::Black, 0.0f) };
+    //Logo, 
+    D2D1::ColorF colorList[16] = {  D2D1::ColorF(D2D1::ColorF::Tomato , 1.0f), D2D1::ColorF(D2D1::ColorF::White, 1.0f), D2D1::ColorF(D2D1::ColorF::White, 0.5f), D2D1::ColorF(D2D1::ColorF::White, 0.5f), D2D1::ColorF(D2D1::ColorF::White, 1.0f), D2D1::ColorF(D2D1::ColorF::White, 1.0f), D2D1::ColorF(D2D1::ColorF::White, 1.0f)/*Text*/,
+        // BigBackGround, SmallBackGround Title logo, Login, ID, PWD, Exit, Sign-up, LoginFail
+        /*UI*/  D2D1::ColorF(D2D1::ColorF::Black, 0.9f), D2D1::ColorF(D2D1::ColorF::Red, 0.8f), D2D1::ColorF(D2D1::ColorF::Coral, 0.4f), D2D1::ColorF(D2D1::ColorF::Coral, 0.4f), D2D1::ColorF(D2D1::ColorF::Red, 0.9f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 0.0f), D2D1::ColorF(D2D1::ColorF::Black, 0.0f), D2D1::ColorF(D2D1::ColorF::Black, 0.0f) };
+    //UI - CenterBigBox, LoginBox, IDBox, PWDBox, ExitBox, Login Fail, Sigu-up Fail, Sign-up IDBox, Sign-up PWDBox
     for (auto color : colorList)
         mvColors.push_back(color);
     //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
     
-    UI::BuildSolidBrush(UICnt+1 - (!IsLoginFail), TextCnt, mvColors);
+    UI::BuildSolidBrush(UICnt+1 /*- (!IsLoginFail)*/, TextCnt, mvColors);
 
     SetTextRect();
     for (auto wc : std::string{ "Dynamic Fomula" })
         mvTextBlocks[0].strText.push_back(wc);
-    for (auto wc : std::string{ "Log-in" })
+    for (auto wc : std::string{ LoginOrSignup })
         mvTextBlocks[1].strText.push_back(wc);
-    for (auto wc : std::string{ "Sign-up" })
+    for (auto wc : std::string{ "EXT" })
         mvTextBlocks[4].strText.push_back(wc);
-    for (auto wc : std::string{ "X" })
+    for (auto wc : std::string{LoginOrSignupReverse })
         mvTextBlocks[5].strText.push_back(wc);
+    
 
-    for (auto wc : std::string{ "Login Fail" })
+    for (auto wc : LoginOrSignup + std::string{ "-FAIL" })
         mvTextBlocks[6].strText.push_back(wc);
 }
 
@@ -459,6 +519,7 @@ void LoginUI::Reset()
 {
     UI::Reset();
     mvTextBlocks.clear();
+    mvBitmapFileNames.clear();
 }
 
 void LoginUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,

@@ -7,7 +7,7 @@ UI::UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommand
 
 UI::~UI() 
 {
-
+    
 }
 
 void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
@@ -57,6 +57,9 @@ void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommand
     mpd2dDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&mpd2dWriteFactory));
+
+    //mvBitmaps.resize(2);
+
 }
 
 void UI::SetVectorSize(UINT nFrame)
@@ -65,13 +68,14 @@ void UI::SetVectorSize(UINT nFrame)
     //mvdwTextFormat.resize(TextCnt);
     mvd2dRenderTargets.resize(nFrame);
    //mvd2dLinearGradientBrush.resize(TextCnt);
+
 }
 
 void UI::BeginDraw(UINT nFrame)
 {
     mpd3d11On12Device->AcquireWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 1);
-    mpd2dDeviceContext.Get()->SetTarget(mvd2dRenderTargets[nFrame].Get());
-    mpd2dDeviceContext.Get()->BeginDraw();
+    mpd2dDeviceContext->SetTarget(mvd2dRenderTargets[nFrame].Get());
+    mpd2dDeviceContext->BeginDraw();
 }
 
 void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks)
@@ -82,10 +86,45 @@ void UI::TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTex
     for (int i =0; i < static_cast<int>(TextCnt); ++i)
     {
         Text.assign(mvTextBlocks[i].strText.begin(), mvTextBlocks[i].strText.end());
-        mpd2dDeviceContext.Get()->DrawTextW(Text.c_str(), static_cast<UINT>(mvTextBlocks[i].strText.length()),
-            mvdwTextFormat[i].Get(), mvTextBlocks[i].d2dLayoutRect, mvd2dSolidBrush[i+1].Get());
+        mpd2dDeviceContext->DrawTextW(Text.c_str(), static_cast<UINT>(mvTextBlocks[i].strText.length()),
+            mvdwTextFormat[i].Get(), mvTextBlocks[i].d2dLayoutRect, mvd2dSolidBrush[static_cast<size_t>(i)+1].Get());
     }
 }
+
+HRESULT UI::LoadBitmapResourceFromFile(PCWSTR ImageName, int index)
+{
+    ThrowIfFailed(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&mWICFactoryPtr)));
+    ComPtr<IWICBitmapDecoder> pDecoder;     
+    ComPtr<IWICBitmapFrameDecode> pFrame;   
+    ComPtr<IWICFormatConverter> pConverter;
+
+    IWICStream* pStream = NULL;
+    IWICBitmapScaler* pScaler = NULL;
+
+    HRESULT hresult = mWICFactoryPtr->CreateDecoderFromFilename(ImageName, NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder);
+    if (SUCCEEDED(hresult)) hresult = pDecoder->GetFrame(0, &pFrame);
+    if (SUCCEEDED(hresult)) hresult = mWICFactoryPtr->CreateFormatConverter(&pConverter);
+    if (SUCCEEDED(hresult)) hresult = pConverter->Initialize(pFrame.Get(), GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.0f, WICBitmapPaletteTypeMedianCut);
+    if (SUCCEEDED(hresult)) hresult = mpd2dDeviceContext->CreateBitmapFromWicBitmap(pConverter.Get(), NULL, &mvBitmaps[index]);
+
+    //mWICFactoryPtr->Release();
+    //pConverter->Release();
+    //pFrame->Release();
+    //pDecoder->Release();
+    //pDecoder.Reset();
+   // pFrame.Reset();
+    //pConverter.Reset();
+   
+    
+    return hresult;
+}
+
+void UI::DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[])
+{
+    for (int i = static_cast<int>(StartNum); i < static_cast<int>(StartNum + BmpNum); ++i)
+        mpd2dDeviceContext->DrawBitmap(mvBitmaps[i].Get(), D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), aOpacities[i], D2D1_INTERPOLATION_MODE_LINEAR);
+}
+
 
 void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT noFill, UINT GradientCnt, bool IsOutlined[])
 {
@@ -93,17 +132,17 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT n
     {
         for (int i = 0; i < static_cast<int>(GradientCnt); ++i)
         {
-            mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), md2dLinearGradientBrush.Get());
+            mpd2dDeviceContext->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), md2dLinearGradientBrush.Get());
             if(IsOutlined[i])
-                mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
+                mpd2dDeviceContext->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
         }
     }
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt; ++i)
         if(IsOutlined[i])
-            mpd2dDeviceContext.Get()->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
+            mpd2dDeviceContext->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[0].Get());
     
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt-noFill; ++i)
-            mpd2dDeviceContext.Get()->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mvd2dSolidBrush[i+TextCnt].Get());
+            mpd2dDeviceContext->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mvd2dSolidBrush[static_cast<size_t>(i)+static_cast<size_t>(TextCnt)].Get());
     
 }
 
@@ -113,29 +152,29 @@ void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt,
     {
         for (int i = 0; i < static_cast<int>(GradientCnt); ++i)
         {
-            mpd2dDeviceContext.Get()->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), md2dLinearGradientBrush.Get());
+            mpd2dDeviceContext->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), md2dLinearGradientBrush.Get());
             if(IsOutlined[i])
-            mpd2dDeviceContext.Get()->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[0].Get());
+            mpd2dDeviceContext->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[0].Get());
         }
     }
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt; ++i)
         if(IsOutlined[i])
-        mpd2dDeviceContext.Get()->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[0].Get());
+        mpd2dDeviceContext->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[0].Get());
 
     for (int i = GradientCnt; i < mvd2dSolidBrush.size() - TextCnt - bias; ++i)
-        mpd2dDeviceContext.Get()->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[i + TextCnt].Get());
+        mpd2dDeviceContext->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[static_cast<size_t>(i) + static_cast<size_t>(TextCnt)].Get());
 
 }
 
 void UI::EndDraw(UINT nFrame)
 {
-    mpd2dDeviceContext.Get()->EndDraw();
+    mpd2dDeviceContext->EndDraw();
     mpd3d11On12Device->ReleaseWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 1);
 }
 
 void UI::Flush()
 {
-    mpd3d11DeviceContext.Get()->Flush();
+    mpd3d11DeviceContext->Flush();
 }
 
 void UI::Update(float GTime)
@@ -181,6 +220,19 @@ void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts
     }
 }
 
+void UI::CreateFontFormat(std::vector<float>& FontSize, const std::vector<std::wstring>& Fonts, UINT TextCnt, DWRITE_TEXT_ALIGNMENT* Alignment)
+{
+    mvdwTextFormat.resize(TextCnt);
+
+    for (int i = 0; i < static_cast<int>(TextCnt); ++i)
+        ThrowIfFailed(mpd2dWriteFactory->CreateTextFormat(Fonts[i].c_str(), nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, FontSize[i], L"en-us", mvdwTextFormat[i].GetAddressOf()));
+    for (int i = 0; i < static_cast<int>(TextCnt); ++i)
+    {
+        ThrowIfFailed(mvdwTextFormat[i]->SetTextAlignment(Alignment[i]));
+        ThrowIfFailed(mvdwTextFormat[i]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)); // DWRITE_PARAGRAPH_ALIGNMENT_NEAR
+    }
+}
+
 void UI::BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, 
     UINT gradientCnt, D2D1::ColorF* gradientColors)
 {
@@ -191,9 +243,9 @@ void UI::BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList,
 void UI::BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList)
 {
     //첫번째 SolidColorBrush는 무조건 Black으로 설정한 후 테두리로 사용할 것. 그게 편할 듯.
-    mvd2dSolidBrush.resize(TextCnt+UICnt);
+    mvd2dSolidBrush.resize(static_cast<size_t>(TextCnt)+static_cast<size_t>(UICnt));
     ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[0]));
-    for (int i = 0; i < static_cast<int>(TextCnt+UICnt-1); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(TextCnt)+static_cast<size_t>(UICnt)-1; ++i)
         ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(ColorList[i]), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[i+1]));
     // 0번 SolidBrush는 무조건 Black, 나머지는 인자로 받은 ColorList로 설정. 따라서 Resize할 때 UI와 Text 수에다가 1을 더해서 설정
     // 1번부터는 ColorList색. Text색 이후 UI 색으로 설정
@@ -201,13 +253,13 @@ void UI::BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList)
 
 void UI::BuildSolidBrush(UINT UICnt, UINT TextCnt, std::vector<D2D1::ColorF>& ColorList)
 {
-    mvd2dSolidBrush.resize(TextCnt + UICnt);
+    mvd2dSolidBrush.resize(static_cast<size_t>(TextCnt) + static_cast<size_t>(UICnt));
     ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[0]));
-    for (int i = 0; i < static_cast<int>(TextCnt + UICnt - 1); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(TextCnt) + static_cast<size_t>(UICnt) - 1; ++i)
         ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(ColorList[i]), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[i + 1]));
 }
 
-void UI::BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList) 
+void UI::BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList)
 {
     ID2D1GradientStopCollection* pGradientStops = NULL;
     D2D1_GRADIENT_STOP* gradientStops = new D2D1_GRADIENT_STOP[ColorCnt];
@@ -223,7 +275,11 @@ void UI::BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList)
     delete[] gradientStops;
     pGradientStops->Release();
 }
-
+void UI::BuildLinearGradientBrushes(UINT GradientCnt, GradientColors GColors[])
+{
+    for (UINT i = 0; i < GradientCnt; ++i)
+        BuildLinearGradientBrush(GColors[i].ColorCnt, GColors[i].ColorList);
+}
 void UI::Reset() 
 {
     md2dLinearGradientBrush.Reset();
@@ -236,16 +292,21 @@ void UI::Reset()
     pdxgiDevice.Reset();
     mpd2dDeviceContext.Reset();
 
+    mWICFactoryPtr.Reset();
+
     mvd2dSolidBrush.clear();
     mvdwTextFormat.clear();
 
     for (auto renderTarget : mvWrappedRenderTargets)
         renderTarget.Reset();
-    for (auto bitmap : mvd2dRenderTargets)
+    for (auto& bitmap : mvd2dRenderTargets)
+        bitmap.Reset();
+    for (auto& bitmap : mvBitmaps)
         bitmap.Reset();
 
     mvWrappedRenderTargets.clear();
     mvd2dRenderTargets.clear();
+    mvBitmaps.clear();
 }
 
 void UI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,

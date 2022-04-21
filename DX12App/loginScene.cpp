@@ -5,7 +5,7 @@
 
 
 LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::LOGIN, (XMFLOAT4)Colors::Aqua, netPtr }
+	: Scene{ hwnd, SCENE_STAT::LOGIN, (XMFLOAT4)Colors::Black, netPtr }
 {
 	OutputDebugStringW(L"Login Scene Entered.\n");
 	Texts.resize(2);
@@ -14,12 +14,12 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	{
 		// TEST
 		//mNetPtr->Client()->RequestLogin("", "");
-		mNetPtr->Client()->RequestLogin("GM", "GM");
+		/mNetPtr->Client()->RequestLogin("GM", "GM");
 		
 	}
 	else OutputDebugStringW(L"Failed to connect to server.\n");
 #else
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #endif
 }
 
