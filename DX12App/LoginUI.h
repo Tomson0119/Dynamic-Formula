@@ -40,21 +40,22 @@ private:
 
 	std::string LoginOrSignup = "Login";
 	std::string LoginOrSignupReverse = "Signup";
+
 	float mfWidth = 0.0f;
 	float mfHeight = 0.0f;
-
 	float fFontSize = 0.0f; 
 	std::vector<float> vfFontSize;
-
 	std::vector<std::wstring> Fonts;
-	DWRITE_TEXT_ALIGNMENT TextAlignments[7];
 	UINT TextCnt;
 	UINT UICnt;
+	std::vector<PCWSTR > mvBitmapFileNames;
+
+	DWRITE_TEXT_ALIGNMENT TextAlignments[7];
+	
 	std::vector<D2D1::ColorF> mvColors;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 	std::vector<TextBlock>          mvTextBlocks;
 
-	std::vector<PCWSTR > mvBitmapFileNames;
 
 };
 

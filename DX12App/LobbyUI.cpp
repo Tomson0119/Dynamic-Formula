@@ -96,96 +96,95 @@ void LobbyUI::Draw(UINT nFrame)
     {
         {//BigBackGroundBox
             mfWidth * 0.04f,
-            mfHeight * 0.04f,
+            mfHeight * 0.02f,
             mfWidth * 0.96f,
             mfHeight * 0.96f
         },
         {//SmallBackGroundBox
-            mfWidth * 0.24f,
-            mfHeight * 0.34f,
-            mfWidth * 0.90f,
+            mfWidth * 0.18f,
+            mfHeight * 0.04f,
+            mfWidth * 0.86f,
             mfHeight * 0.86f
         },
-        {
-        mfWidth * 0.25f,
-        mfHeight * 0.11f,
-        mfWidth * 0.75f,
-        mfHeight * 0.77f
+        {//SmallWhiteBackGroundBox
+        mfWidth * 0.20f,
+        mfHeight * 0.18f,
+        mfWidth * 0.80f,
+        mfHeight * 0.84f
         },
-        {
-            mfWidth * 0.27f, 
-            mfHeight * 0.055f, 
-            mfWidth * 0.48f, 
+        {//MakeRoomBox
+            mfWidth * 0.27f,
+            mfHeight * 0.055f,
+            mfWidth * 0.48f,
             mfHeight * 0.11f
         },
-        {
+        {//RoomTitle1
         mfWidth * 0.27f,
-        mfHeight * 0.275f, 
-        mfWidth * 0.48f, 
-        mfHeight * 0.44f
+        mfHeight * 0.26f,
+        mfWidth * 0.48f,
+        mfHeight * 0.33f
         },
-        {
-            mfWidth * 0.5f, 
-            mfHeight * 0.275f, 
-            mfWidth * 0.61f, 
+        {//RoomTitle2
+            mfWidth * 0.54f,
+            mfHeight * 0.26f,
+            mfWidth * 0.75f,
             mfHeight * 0.33f
         },
-        {
-            mfWidth * 0.275f, 
+        {//RoomTitle3
+            mfWidth * 0.27f,
             mfHeight * 0.44f,
-            mfWidth * 0.43f, 
+            mfWidth * 0.48f,
             mfHeight * 0.5f
         },
-        {
-        mfWidth * 0.5f,
+        {//RoomTitle4
+        mfWidth * 0.54f,
         mfHeight * 0.44f,
-        mfWidth * 0.61f, 
+        mfWidth * 0.75f,
         mfHeight * 0.5f
         },
-        {
-        mfWidth * 0.275f, 
-        mfHeight * 0.61f, 
-        mfWidth * 0.49f, 
+        {//RoomTitle5
+        mfWidth * 0.27f,
+        mfHeight * 0.605f,
+        mfWidth * 0.48f,
         mfHeight * 0.66f
         },
-        {
-        mfWidth * 0.5f, 
-        mfHeight * 0.61f,
-        mfWidth * 0.61f, 
+        {//RoomTitle6
+        mfWidth * 0.54f,
+        mfHeight * 0.605f,
+        mfWidth * 0.75f,
         mfHeight * 0.66f
         },
-        //---
-        {
-        mfWidth * 0.22f,
-        mfHeight * 0.23f,
+        {//RoomBox1
+        mfWidth * 0.25f,
+        mfHeight * 0.25f,
         mfWidth * 0.5f,
         mfHeight * 0.42f
         },
-        {
+        {//RoomBox2
             mfWidth * 0.52f,
-            mfHeight * 0.24f,
-            mfWidth * 0.68f,
+            mfHeight * 0.25f,
+            mfWidth * 0.77f,
             mfHeight * 0.42f
         },
-        {
+        {//RoomBox3
             mfWidth * 0.25f,
             mfHeight * 0.42f,
             mfWidth * 0.5f,
             mfHeight * 0.57f
         },
-        {
-        mfWidth * 0.57f,
+        {//RoomBox4
+        mfWidth * 0.52f,
         mfHeight * 0.42f,
-        mfWidth *0.78125f,
+        mfWidth * 0.77f,
         mfHeight * 0.57f
         },
-        {
+        {//RoomBox5
         mfWidth * 0.25f,
         mfHeight * 0.57f,
         mfWidth * 0.5f,
-        mfHeight *0.75f
+        mfHeight * 0.75f
         },
-        {
+        {//RoomBox6
         mfWidth * 0.52f,
         mfHeight * 0.57f,
         mfWidth * 0.77f,
@@ -387,26 +386,25 @@ void LobbyUI::CreateFontFormat()
 
 void LobbyUI::SetTextRect()
 {//MakeRoom, Room1, Room2, Room3, Room4, Room5, Room6
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 9, mfHeight / 18, mfWidth / 32 * 15, mfHeight / 18 * 2);
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth * 0.28125f, mfHeight * 0.055f, mfWidth * 0.46875f, mfHeight * 0.11f);
 
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 9, mfHeight / 36 * 10, mfWidth / 32 * 15, mfHeight / 36 * 12);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 13, mfHeight / 36 * 13, mfWidth / 32 * 15, mfHeight / 36 * 14);
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth * 0.27f, mfHeight * 0.26f, mfWidth * 0.48f, mfHeight * 0.33f);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth * 0.25f, mfHeight * 0.25f, mfWidth * 0.5f, mfHeight * 0.42f);
 
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 16, mfHeight / 36 * 10, mfWidth / 32 * 22, mfHeight / 36 * 12);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 20, mfHeight / 36 * 13, mfWidth / 32 * 22, mfHeight / 36 * 14);
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth * 0.54f, mfHeight * 0.26f, mfWidth * 0.75f, mfHeight * 0.33f);
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 0.52f, mfHeight * 0.25f, mfWidth * 0.77f, mfHeight * 0.42f);
 
-    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 9, mfHeight / 36 * 16, mfWidth / 32 * 15, mfHeight / 36 * 18);
-    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 13, mfHeight / 36 * 19, mfWidth / 32 * 15, mfHeight / 36 * 20);
+    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth * 0.27f, mfHeight * 0.44f, mfWidth * 0.48f, mfHeight * 0.5f);
+    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth * 0.25f, mfHeight * 0.42f, mfWidth * 0.5f, mfHeight * 0.57f);
 
-    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 16, mfHeight / 36 * 16, mfWidth / 32 * 22, mfHeight / 36 * 18);
-    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(mfWidth / 32 *20, mfHeight / 36 * 19, mfWidth / 32 * 22, mfHeight / 36 * 20);
+    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(mfWidth * 0.54f, mfHeight * 0.44f, mfWidth * 0.75f, mfHeight * 0.5f);
+    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(mfWidth * 0.52f, mfHeight * 0.42f, mfWidth * 0.77f, mfHeight * 0.57f);
 
-    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 9, mfHeight / 36 * 22, mfWidth / 32 * 15, mfHeight / 36 * 24);
-    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 13, mfHeight / 36 * 25, mfWidth / 32 * 15, mfHeight / 36 * 26);
+    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(mfWidth * 0.27f, mfHeight * 0.605f, mfWidth * 0.48f, mfHeight * 0.66f);
+    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(mfWidth * 0.25f, mfHeight * 0.57f, mfWidth * 0.5f, mfHeight * 0.75f);
 
-    mvTextBlocks[11].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 16, mfHeight / 36 * 22, mfWidth / 32 * 22, mfHeight / 36 * 24);
-    mvTextBlocks[12].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 20, mfHeight / 36 * 25, mfWidth / 32 * 22, mfHeight / 36 * 26);
-
+    mvTextBlocks[11].d2dLayoutRect = D2D1::RectF(mfWidth * 0.54f, mfHeight * 0.605f, mfWidth * 0.75f, mfHeight * 0.66f);
+    mvTextBlocks[12].d2dLayoutRect = D2D1::RectF(mfWidth * 0.52f, mfHeight * 0.57f, mfWidth * 0.77f, mfHeight * 0.75f);
 }
 
 void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
@@ -468,5 +466,7 @@ void LobbyUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device>
     //Reset();
     SetVectorSize(nFrame, TextCnt);
     UI::Initialize(device, pd3dCommandQueue);
+    for (int i = 0; i < mvBitmapFileNames.size(); ++i)
+        LoadBitmapResourceFromFile(mvBitmapFileNames[i], i);
     PreDraw(ppd3dRenderTargets, width, height);
 }

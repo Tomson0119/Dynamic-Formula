@@ -7,7 +7,7 @@ UI::UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommand
 
 UI::~UI() 
 {
-    
+
 }
 
 void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
@@ -98,23 +98,14 @@ HRESULT UI::LoadBitmapResourceFromFile(PCWSTR ImageName, int index)
     ComPtr<IWICBitmapFrameDecode> pFrame;   
     ComPtr<IWICFormatConverter> pConverter;
 
-    IWICStream* pStream = NULL;
-    IWICBitmapScaler* pScaler = NULL;
+    ComPtr<IWICStream> pStream;
+    ComPtr<IWICBitmapScaler> pScaler;
 
     HRESULT hresult = mWICFactoryPtr->CreateDecoderFromFilename(ImageName, NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder);
     if (SUCCEEDED(hresult)) hresult = pDecoder->GetFrame(0, &pFrame);
     if (SUCCEEDED(hresult)) hresult = mWICFactoryPtr->CreateFormatConverter(&pConverter);
     if (SUCCEEDED(hresult)) hresult = pConverter->Initialize(pFrame.Get(), GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.0f, WICBitmapPaletteTypeMedianCut);
-    if (SUCCEEDED(hresult)) hresult = mpd2dDeviceContext->CreateBitmapFromWicBitmap(pConverter.Get(), NULL, &mvBitmaps[index]);
-
-    //mWICFactoryPtr->Release();
-    //pConverter->Release();
-    //pFrame->Release();
-    //pDecoder->Release();
-    //pDecoder.Reset();
-   // pFrame.Reset();
-    //pConverter.Reset();
-   
+    if (SUCCEEDED(hresult)) hresult = mpd2dDeviceContext->CreateBitmapFromWicBitmap(pConverter.Get(), NULL, mvBitmaps[index].GetAddressOf());
     
     return hresult;
 }
@@ -168,7 +159,7 @@ void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt,
 
 void UI::EndDraw(UINT nFrame)
 {
-    mpd2dDeviceContext->EndDraw();
+    HRESULT hr = mpd2dDeviceContext->EndDraw();
     mpd3d11On12Device->ReleaseWrappedResources(mvWrappedRenderTargets[nFrame].GetAddressOf(), 1);
 }
 
@@ -292,17 +283,17 @@ void UI::Reset()
     pdxgiDevice.Reset();
     mpd2dDeviceContext.Reset();
 
-    mWICFactoryPtr.Reset();
+    mWICFactoryPtr->Release();
 
     mvd2dSolidBrush.clear();
     mvdwTextFormat.clear();
 
-    for (auto renderTarget : mvWrappedRenderTargets)
+    for (auto &renderTarget : mvWrappedRenderTargets)
         renderTarget.Reset();
-    for (auto& bitmap : mvd2dRenderTargets)
+    for (auto &bitmap : mvd2dRenderTargets)
         bitmap.Reset();
-    for (auto& bitmap : mvBitmaps)
-        bitmap.Reset();
+    for (auto &bitmap : mvBitmaps)
+        bitmap->Release();
 
     mvWrappedRenderTargets.clear();
     mvd2dRenderTargets.clear();

@@ -26,7 +26,7 @@ public:
     virtual void Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
      XMFLOAT4 RetLTRM[], XMFLOAT4 FillLTRB[]*/);
 
-    virtual HRESULT LoadBitmapResourceFromFile(PCWSTR ImageNam, int index);
+    virtual HRESULT LoadBitmapResourceFromFile(PCWSTR ImageName, int index);
     virtual void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
 
     virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
@@ -71,18 +71,36 @@ public:
    virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair("", ""); }
    virtual int GetLobbyPacket() { return -1; }
    virtual int GetRoomPacket() { return -1; }
-   virtual std::vector<ComPtr<ID2D1Bitmap>> GetBitmaps() { return mvBitmaps; }
+   //virtual std::vector<ComPtr<ID2D1Bitmap>> GetBitmaps() { return mvBitmaps; }
+   
    void SetBitmapsSize(int size) { mvBitmaps.resize(size); }
-   void SetGradientCnt(int Gcnt) { GradientCnt = Gcnt; }
+
+   void SetTextCnt(int TextCnt) { miTextCnt = TextCnt; }
+   void SetRectCnt(int RectCnt) { miRectCnt = RectCnt; }
+   void SetRoundedRectCnt(int RoundeRectCnt) { miRoundRectCnt = RoundeRectCnt; }
+   void SetEllipseCnt(int EllipseCnt) { miEllipseCnt = EllipseCnt; }
+   void SetGradientCnt(int GradientCnt) { miGradientCnt = GradientCnt; }
+   void SetBitmapCnt(int BitmapCnt) { miBitmapCnt = BitmapCnt; }
+
+   void SetFrame(float H, float W) { mfHeight = H; mfWidth = W; }
+   void SetBitmapFileNames(const std::vector<PCWSTR>& names) { for (auto& name : names) mvBitmapFileNames.push_back(name); }
 private:
 
     float mfHeight = 0.0f;
     float mfWidth = 0.0f;
 
-    //UINT TextCnt = 0;
-
-    UINT GradientCnt = 0;
+    //Text and UI Count
+    UINT miTextCnt = 0;
+    UINT miRectCnt = 0;
+    UINT miRoundRectCnt = 0;
+    UINT miEllipseCnt = 0;
+    UINT miGradientCnt = 0;
+    UINT miBitmapCnt = 0;
+    
     GradientColors* pGradientColors;
+
+    std::vector<PCWSTR> mvBitmapFileNames;
+
 
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;
@@ -93,7 +111,7 @@ private:
     ComPtr<IDXGIDevice> pdxgiDevice;
     ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
 
-    ComPtr<IWICImagingFactory> mWICFactoryPtr;
+    IWICImagingFactory* mWICFactoryPtr;
 
     std::vector<ComPtr<ID2D1Bitmap>> mvBitmaps;
 

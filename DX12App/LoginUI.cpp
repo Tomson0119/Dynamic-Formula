@@ -528,5 +528,7 @@ void LoginUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device>
     //Reset();
     SetVectorSize(nFrame, TextCnt);
     UI::Initialize(device, pd3dCommandQueue);
+    for (int i = 0; i < mvBitmapFileNames.size(); ++i)
+        LoadBitmapResourceFromFile(mvBitmapFileNames[i], i);
     PreDraw(ppd3dRenderTargets, width, height);
 }
