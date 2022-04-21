@@ -196,6 +196,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
 	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
 	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
+	auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
 
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
@@ -242,6 +243,9 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), downSampleShader.get(), true);
 	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), blurShader.get());
 	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), bloomMergeShader.get());
+
+	mPostProcessingPipelines[Layer::VolumetricScattering] = make_unique<VolumetricScatteringPipeline>();
+	mPostProcessingPipelines[Layer::VolumetricScattering]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), volumetricScatteringShader.get(), true);
 
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
@@ -859,7 +863,7 @@ void InGameScene::SetComputeCBV(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetComputeRootConstantBufferView(3, mVolumetricCB->GetGPUVirtualAddress(0));
 }
 
-void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
+void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
 {
 	const XMFLOAT4& velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
 	cmdList->ClearRenderTargetView(mMsaaVelocityMapRtvHandle, (FLOAT*)&velocity, 0, nullptr);
@@ -909,7 +913,12 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 
 	if (mVolumetricEnable)
 	{
+		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, backBuffer, 0);
+		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, depthBuffer, 1, true);
 
+		mPostProcessingPipelines[Layer::VolumetricScattering]->Dispatch(cmdList);
+
+		mPostProcessingPipelines[Layer::VolumetricScattering]->CopyMapToRT(cmdList, backBuffer);
 	}
 
 	mpUI.get()->Draw(nFrame);

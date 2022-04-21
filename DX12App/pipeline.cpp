@@ -644,7 +644,7 @@ void MotionBlurPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature
 void MotionBlurPipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn)
 {
 	if (msaaOn)
-		ResolveRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource());
+		ResolveRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource(), DXGI_FORMAT_R32G32B32A32_FLOAT);
 	else
 		CopyRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource());
 }
@@ -728,7 +728,7 @@ void MotionBlurPipeline::CopyRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12R
 		source, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
 }
 
-void MotionBlurPipeline::ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest)
+void MotionBlurPipeline::ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest, DXGI_FORMAT format)
 {
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		source, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE));
@@ -736,7 +736,7 @@ void MotionBlurPipeline::ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		dest, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST));
 
-	cmdList->ResolveSubresource(dest, 0, source, 0, DXGI_FORMAT_R32G32B32A32_FLOAT);
+	cmdList->ResolveSubresource(dest, 0, source, 0, format);
 
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		dest, D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_COMMON));
@@ -836,7 +836,7 @@ BloomPipeline::~BloomPipeline()
 
 void BloomPipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn)
 {
-	CopyRTToMap(cmdList, buffer, mInputTexture->GetResource());
+	CopyRTToMap(cmdList, buffer, mInputTexture[0]->GetResource());
 }
 
 void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
@@ -941,9 +941,9 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 
 void BloomPipeline::CreateTextures(ID3D12Device* device)
 {
-	mInputTexture = std::make_unique<Texture>();
-	mInputTexture->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
-	mInputTexture->CreateTexture(device, gFrameWidth, gFrameHeight,
+	mInputTexture[0] = std::make_unique<Texture>();
+	mInputTexture[0]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mInputTexture[0]->CreateTexture(device, gFrameWidth, gFrameHeight,
 		1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
 		D3D12_RESOURCE_FLAG_NONE,
 		D3D12_RESOURCE_STATE_COMMON, nullptr);
@@ -989,7 +989,7 @@ void BloomPipeline::BuildSRVAndUAV(ID3D12Device* device)
 	srvDesc.Texture2D.MipLevels = 1;
 
 	auto cpuHandle = mSrvUavDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	device->CreateShaderResourceView(mInputTexture->GetResource(), &srvDesc, cpuHandle);
+	device->CreateShaderResourceView(mInputTexture[0]->GetResource(), &srvDesc, cpuHandle);
 	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
 
 
@@ -1023,4 +1023,129 @@ void BloomPipeline::CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resour
 
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
 		mProcessingTexture[2]->GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
+}
+
+VolumetricScatteringPipeline::VolumetricScatteringPipeline()
+{
+}
+
+VolumetricScatteringPipeline::~VolumetricScatteringPipeline()
+{
+}
+
+void VolumetricScatteringPipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn)
+{
+	if (msaaOn)
+		ResolveRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource(), DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
+	else
+		CopyRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource());
+}
+
+void VolumetricScatteringPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
+{
+	cmdList->SetComputeRootSignature(mComputeRootSig);
+	ID3D12DescriptorHeap* descHeap[] = { mSrvUavDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
+
+	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	cmdList->SetComputeRootDescriptorTable(0, gpuHandle);
+
+	gpuHandle.ptr += 2 * gCbvSrvUavDescriptorSize;
+	cmdList->SetComputeRootDescriptorTable(1, gpuHandle);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mOutputTexture->GetResource(),
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+
+	cmdList->SetPipelineState(mPSOs[0].Get());
+
+	UINT numGroupX = (UINT)(ceilf(gFrameWidth / 32.0f));
+	UINT numGroupY = (UINT)(ceilf(gFrameHeight / 30.0f));
+
+	cmdList->Dispatch(numGroupX, numGroupY, 1);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		mOutputTexture->GetResource(),
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+		D3D12_RESOURCE_STATE_COMMON));
+}
+
+void VolumetricScatteringPipeline::CreateTextures(ID3D12Device* device)
+{
+	mInputTexture[0] = std::make_unique<Texture>();
+	mInputTexture[0]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mInputTexture[0]->CreateTexture(device, gFrameWidth, gFrameHeight,
+		1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
+		D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
+
+
+	mInputTexture[1] = std::make_unique<Texture>();
+	mInputTexture[1]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mInputTexture[1]->CreateTexture(device, gFrameWidth, gFrameHeight,
+		1, 1, DXGI_FORMAT_D24_UNORM_S8_UINT,
+		D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
+
+	mOutputTexture = std::make_unique<Texture>();
+	mOutputTexture->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mOutputTexture->CreateTexture(device, gFrameWidth, gFrameHeight,
+		1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
+		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
+}
+
+void VolumetricScatteringPipeline::BuildDescriptorHeap(ID3D12Device* device)
+{
+	ThrowIfFailed(device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			3,
+			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
+		IID_PPV_ARGS(&mSrvUavDescriptorHeap)));
+
+	BuildSRVAndUAV(device);
+}
+
+void VolumetricScatteringPipeline::BuildSRVAndUAV(ID3D12Device* device)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	auto cpuHandle = mSrvUavDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	device->CreateShaderResourceView(mInputTexture[0]->GetResource(), &srvDesc, cpuHandle);
+	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	device->CreateShaderResourceView(mInputTexture[1]->GetResource(), &srvDesc, cpuHandle);
+	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
+	uavDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	uavDesc.Texture2D.MipSlice = 0;
+
+	device->CreateUnorderedAccessView(mOutputTexture->GetResource(), nullptr, &uavDesc, cpuHandle);
+}
+
+void VolumetricScatteringPipeline::ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest, DXGI_FORMAT format)
+{
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_RESOLVE_SOURCE));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST));
+
+	cmdList->ResolveSubresource(dest, 0, source, 0, format);
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		dest, D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_COMMON));
+
+	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+		source, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 }

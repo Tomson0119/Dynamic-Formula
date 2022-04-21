@@ -200,7 +200,7 @@ public:
 	virtual void ResolveRTToMap(
 		ID3D12GraphicsCommandList* cmdList,
 		ID3D12Resource* source,
-		ID3D12Resource* dest) {}
+		ID3D12Resource* dest, DXGI_FORMAT format) {}
 
 	virtual void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer) {}
 
@@ -232,7 +232,7 @@ public:
 	virtual void ResolveRTToMap(
 		ID3D12GraphicsCommandList* cmdList,
 		ID3D12Resource* source,
-		ID3D12Resource* dest);
+		ID3D12Resource* dest, DXGI_FORMAT format);
 
 	virtual void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer);
 
@@ -244,7 +244,7 @@ public:
 	virtual void BuildDescriptorHeap(ID3D12Device* device);
 	virtual void BuildSRVAndUAV(ID3D12Device* device);
 
-private:
+protected:
 	static const int InputCount = 2;
 
 	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
@@ -272,9 +272,6 @@ public:
 	virtual void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer);
 
 private:
-	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
-
-	std::unique_ptr<Texture> mInputTexture;
 	std::unique_ptr<Texture> mProcessingTexture[3];
 
 	float mBlurCoefficients[GAUSSIAN_RADIUS + 1];
@@ -286,20 +283,12 @@ public:
 	VolumetricScatteringPipeline();
 	virtual ~VolumetricScatteringPipeline();
 
-	virtual void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn = false);
+	virtual void SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn);
 
 	virtual void Dispatch(ID3D12GraphicsCommandList* cmdList);
 
 	virtual void CreateTextures(ID3D12Device* device);
 	virtual void BuildDescriptorHeap(ID3D12Device* device);
 	virtual void BuildSRVAndUAV(ID3D12Device* device);
-
-	virtual void CopyMapToRT(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* rtBuffer);
-
-private:
-	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
-
-	std::unique_ptr<Texture> mInputTexture;
-	std::unique_ptr<Texture> mDepthTexture;
-	std::unique_ptr<Texture> mOutputTexture;
+	virtual void ResolveRTToMap(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* source, ID3D12Resource* dest, DXGI_FORMAT format);
 };

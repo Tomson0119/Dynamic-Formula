@@ -13,15 +13,12 @@ cbuffer VolumetricCB : register(b1)
     int scatteringSamples : packoffset(c1.x);
     float scatteringTau : packoffset(c1.y);
     float scatteringZFar : packoffset(c1.z);
-    float3 scatteringColor : packoffset(c1.w);
-    
-    int pad0 : packoffset(c2.z);
-    int pad1 : packoffset(c2.w);
+    float3 scatteringColor : packoffset(c2);
     
     matrix gInvViewProj : packoffset(c3);
     float3 gCameraPos : packoffset(c7);
     
-    Light gLights[NUM_LIGHTS] : packoffset(c7.w);
+    Light gLights[NUM_LIGHTS] : packoffset(c8);
 }
 
 float random(float2 co)
