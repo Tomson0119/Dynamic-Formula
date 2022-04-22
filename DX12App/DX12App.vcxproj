@@ -150,6 +150,7 @@
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Server\Network\WSAInit.h" />
     <ClInclude Include="basewin.h" />
     <ClInclude Include="bulletWrap.h" />
     <ClInclude Include="camera.h" />
@@ -288,6 +289,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\volumetricScattering.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\lightSource.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

@@ -151,7 +151,6 @@
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="Socket.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="WSAInit.h" />
     <ClInclude Include="WSAOverlappedEx.h" />
   </ItemGroup>
   <ItemGroup>

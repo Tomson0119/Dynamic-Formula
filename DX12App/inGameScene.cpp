@@ -779,19 +779,28 @@ void InGameScene::UpdateVolumetricConstant()
 {
 	VolumetricConstants volumeConst;
 
-	volumeConst.CameraPos = mCurrentCamera->GetPosition();
+	/*volumeConst.CameraPos = mCurrentCamera->GetPosition();
 	volumeConst.gInvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
-	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetInverseView());
+	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetInverseView());*/
+
+	volumeConst.NUM_SAMPLES = 10;
+	volumeConst.Decay = 0.1f;
+	volumeConst.Density = 0.1f;
+	volumeConst.Exposure = 0.1f;
+	volumeConst.Weight = 0.1f;
+	volumeConst.gProj = mMainCamera->GetProj();
+	volumeConst.gView = mMainCamera->GetView();
+	volumeConst.gCameraPos = mMainCamera->GetPosition();
 
 	for(int i = 0; i < NUM_LIGHTS; ++i)
 		volumeConst.gLights[i] = mMainLight.Lights[i];
 
-	volumeConst.absorptionColor = { 0.5f, 0.5f, 0.5f };
+	/*volumeConst.absorptionColor = { 0.5f, 0.5f, 0.5f };
 	volumeConst.absorptionTau = mAbsorptionTau;
 	volumeConst.scatteringSamples = 50;
 	volumeConst.scatteringTau = mScatteringTau;
 	volumeConst.scatteringZFar = 2000.0f;
-	volumeConst.scatteringColor = { 1.0f, 1.0f, 1.0f };
+	volumeConst.scatteringColor = { 1.0f, 0.0f, 1.0f };*/
 	
 	mVolumetricCB->CopyData(0, volumeConst);
 }
@@ -1210,7 +1219,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 			XMFLOAT3(0.6f, 0.6f, 0.6f),
 			pos,
 			direction,
-			0.0f, 100.0f, 10.0f,
+			0.0f, 500.0f, 10.0f,
 			0.0f, SPOT_LIGHT);;
 
 		mLights.push_back(l);
