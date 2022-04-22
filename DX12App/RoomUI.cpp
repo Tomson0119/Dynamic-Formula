@@ -242,20 +242,20 @@ void RoomUI::Draw(UINT nFrame)
 
 void RoomUI::CreateFontFormat()
 {
-    float fFontSize = mfHeight / 25.0f;
+    float fFontSize = GetFrameHeight() / 25.0f;
     //vfFontSize.resize(TextCnt);
 
-    /*vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);*/
+    /*vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);*/
 
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Tahoma");
@@ -291,23 +291,23 @@ void RoomUI::CreateFontFormat()
 
 void RoomUI::SetTextRect()
 {//Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth * 2 / 32,  mfHeight * 9 / 16,  mfWidth /4,  mfHeight *11/16 );
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth * 2 / 32, mfHeight * 23 / 32, mfWidth / 4, mfHeight * 27 / 32);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth * 26 / 32, mfHeight * 25 / 32, mfWidth*30/32, mfHeight * 29 / 32);
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 32, mfHeight * 1/ 32, mfWidth*7/32, mfHeight*8/32);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 8 / 32, mfHeight * 1 / 32, mfWidth * 14 / 32, mfHeight * 8 / 32);
-    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth * 15 / 32, mfHeight * 1 / 32, mfWidth * 21 / 32, mfHeight * 8 / 32);
-    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth * 22 / 32, mfHeight * 1 / 32, mfWidth * 28 / 32, mfHeight * 8 / 32);
-    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 32, mfHeight * 9 / 32, mfWidth * 7 / 32, mfHeight * 16 / 32);
-    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(mfWidth * 8 / 32, mfHeight * 9 / 32, mfWidth * 14 / 32, mfHeight * 16 / 32);
-    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(mfWidth * 15 / 32, mfHeight * 9 / 32, mfWidth * 21 / 32, mfHeight * 16 / 32);
-    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(mfWidth * 22 / 32, mfHeight * 9 / 32, mfWidth * 28 / 32, mfHeight * 16 / 32);
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 2 / 32,  GetFrameHeight() * 9 / 16,  GetFrameWidth() /4,  GetFrameHeight() *11/16 );
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 2 / 32, GetFrameHeight() * 23 / 32, GetFrameWidth() / 4, GetFrameHeight() * 27 / 32);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 26 / 32, GetFrameHeight() * 25 / 32, GetFrameWidth()*30/32, GetFrameHeight() * 29 / 32);
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 1 / 32, GetFrameHeight() * 1/ 32, GetFrameWidth()*7/32, GetFrameHeight()*8/32);
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 8 / 32, GetFrameHeight() * 1 / 32, GetFrameWidth() * 14 / 32, GetFrameHeight() * 8 / 32);
+    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 15 / 32, GetFrameHeight() * 1 / 32, GetFrameWidth() * 21 / 32, GetFrameHeight() * 8 / 32);
+    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 22 / 32, GetFrameHeight() * 1 / 32, GetFrameWidth() * 28 / 32, GetFrameHeight() * 8 / 32);
+    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 1 / 32, GetFrameHeight() * 9 / 32, GetFrameWidth() * 7 / 32, GetFrameHeight() * 16 / 32);
+    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 8 / 32, GetFrameHeight() * 9 / 32, GetFrameWidth() * 14 / 32, GetFrameHeight() * 16 / 32);
+    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 15 / 32, GetFrameHeight() * 9 / 32, GetFrameWidth() * 21 / 32, GetFrameHeight() * 16 / 32);
+    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 22 / 32, GetFrameHeight() * 9 / 32, GetFrameWidth() * 28 / 32, GetFrameHeight() * 16 / 32);
 }
 
 void RoomUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
-    mfWidth = static_cast<float>(nWidth);
-    mfHeight = static_cast<float>(nHeight);
+    //SetFrame(static_cast<float>(nWidth), static_cast<float>(nHeight));
+
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
     //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]

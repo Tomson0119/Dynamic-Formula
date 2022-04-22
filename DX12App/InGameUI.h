@@ -23,9 +23,6 @@ public:
 private:
     virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
-    float mfWidth = 0.0f;
-    float mfHeight = 0.0f;
-
     UINT uItemCnt = 0;
     float fDriftGauge = 0.0f;    
 

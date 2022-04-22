@@ -95,211 +95,211 @@ void LobbyUI::Draw(UINT nFrame)
     XMFLOAT4 RectLTRB[] =
     {
         {//BigBackGroundBox
-            mfWidth * 0.04f,
-            mfHeight * 0.02f,
-            mfWidth * 0.96f,
-            mfHeight * 0.96f
+            GetFrameWidth() * 0.04f,
+            GetFrameHeight() * 0.02f,
+            GetFrameWidth() * 0.96f,
+            GetFrameHeight() * 0.96f
         },
         {//SmallBackGroundBox
-            mfWidth * 0.18f,
-            mfHeight * 0.04f,
-            mfWidth * 0.86f,
-            mfHeight * 0.86f
+            GetFrameWidth() * 0.18f,
+            GetFrameHeight() * 0.04f,
+            GetFrameWidth() * 0.86f,
+            GetFrameHeight() * 0.86f
         },
         {//SmallWhiteBackGroundBox
-        mfWidth * 0.20f,
-        mfHeight * 0.18f,
-        mfWidth * 0.80f,
-        mfHeight * 0.84f
+        GetFrameWidth() * 0.20f,
+        GetFrameHeight() * 0.18f,
+        GetFrameWidth() * 0.80f,
+        GetFrameHeight() * 0.84f
         },
         {//MakeRoomBox
-            mfWidth * 0.27f,
-            mfHeight * 0.055f,
-            mfWidth * 0.48f,
-            mfHeight * 0.11f
+            GetFrameWidth() * 0.27f,
+            GetFrameHeight() * 0.055f,
+            GetFrameWidth() * 0.48f,
+            GetFrameHeight() * 0.11f
         },
         {//RoomTitle1
-        mfWidth * 0.27f,
-        mfHeight * 0.26f,
-        mfWidth * 0.48f,
-        mfHeight * 0.33f
+        GetFrameWidth() * 0.27f,
+        GetFrameHeight() * 0.26f,
+        GetFrameWidth() * 0.48f,
+        GetFrameHeight() * 0.33f
         },
         {//RoomTitle2
-            mfWidth * 0.54f,
-            mfHeight * 0.26f,
-            mfWidth * 0.75f,
-            mfHeight * 0.33f
+            GetFrameWidth() * 0.54f,
+            GetFrameHeight() * 0.26f,
+            GetFrameWidth() * 0.75f,
+            GetFrameHeight() * 0.33f
         },
         {//RoomTitle3
-            mfWidth * 0.27f,
-            mfHeight * 0.44f,
-            mfWidth * 0.48f,
-            mfHeight * 0.5f
+            GetFrameWidth() * 0.27f,
+            GetFrameHeight() * 0.44f,
+            GetFrameWidth() * 0.48f,
+            GetFrameHeight() * 0.5f
         },
         {//RoomTitle4
-        mfWidth * 0.54f,
-        mfHeight * 0.44f,
-        mfWidth * 0.75f,
-        mfHeight * 0.5f
+        GetFrameWidth() * 0.54f,
+        GetFrameHeight() * 0.44f,
+        GetFrameWidth() * 0.75f,
+        GetFrameHeight() * 0.5f
         },
         {//RoomTitle5
-        mfWidth * 0.27f,
-        mfHeight * 0.605f,
-        mfWidth * 0.48f,
-        mfHeight * 0.66f
+        GetFrameWidth() * 0.27f,
+        GetFrameHeight() * 0.605f,
+        GetFrameWidth() * 0.48f,
+        GetFrameHeight() * 0.66f
         },
         {//RoomTitle6
-        mfWidth * 0.54f,
-        mfHeight * 0.605f,
-        mfWidth * 0.75f,
-        mfHeight * 0.66f
+        GetFrameWidth() * 0.54f,
+        GetFrameHeight() * 0.605f,
+        GetFrameWidth() * 0.75f,
+        GetFrameHeight() * 0.66f
         },
         {//RoomBox1
-        mfWidth * 0.25f,
-        mfHeight * 0.25f,
-        mfWidth * 0.5f,
-        mfHeight * 0.42f
+        GetFrameWidth() * 0.25f,
+        GetFrameHeight() * 0.25f,
+        GetFrameWidth() * 0.5f,
+        GetFrameHeight() * 0.42f
         },
         {//RoomBox2
-            mfWidth * 0.52f,
-            mfHeight * 0.25f,
-            mfWidth * 0.77f,
-            mfHeight * 0.42f
+            GetFrameWidth() * 0.52f,
+            GetFrameHeight() * 0.25f,
+            GetFrameWidth() * 0.77f,
+            GetFrameHeight() * 0.42f
         },
         {//RoomBox3
-            mfWidth * 0.25f,
-            mfHeight * 0.42f,
-            mfWidth * 0.5f,
-            mfHeight * 0.57f
+            GetFrameWidth() * 0.25f,
+            GetFrameHeight() * 0.42f,
+            GetFrameWidth() * 0.5f,
+            GetFrameHeight() * 0.57f
         },
         {//RoomBox4
-        mfWidth * 0.52f,
-        mfHeight * 0.42f,
-        mfWidth * 0.77f,
-        mfHeight * 0.57f
+        GetFrameWidth() * 0.52f,
+        GetFrameHeight() * 0.42f,
+        GetFrameWidth() * 0.77f,
+        GetFrameHeight() * 0.57f
         },
         {//RoomBox5
-        mfWidth * 0.25f,
-        mfHeight * 0.57f,
-        mfWidth * 0.5f,
-        mfHeight * 0.75f
+        GetFrameWidth() * 0.25f,
+        GetFrameHeight() * 0.57f,
+        GetFrameWidth() * 0.5f,
+        GetFrameHeight() * 0.75f
         },
         {//RoomBox6
-        mfWidth * 0.52f,
-        mfHeight * 0.57f,
-        mfWidth * 0.77f,
-        mfHeight * 0.75f
+        GetFrameWidth() * 0.52f,
+        GetFrameHeight() * 0.57f,
+        GetFrameWidth() * 0.77f,
+        GetFrameHeight() * 0.75f
         }
     };
     XMFLOAT4 FillLTRB[] =
     {
         {//BigBackGroundBox
-            mfWidth * 0.04f,
-            mfHeight * 0.02f,
-            mfWidth * 0.96f,
-            mfHeight * 0.96f
+            GetFrameWidth() * 0.04f,
+            GetFrameHeight() * 0.02f,
+            GetFrameWidth() * 0.96f,
+            GetFrameHeight() * 0.96f
         },
         {//SmallBackGroundBox
-            mfWidth * 0.18f,
-            mfHeight * 0.04f,
-            mfWidth * 0.86f,
-            mfHeight * 0.86f
+            GetFrameWidth() * 0.18f,
+            GetFrameHeight() * 0.04f,
+            GetFrameWidth() * 0.86f,
+            GetFrameHeight() * 0.86f
         },
         {//SmallWhiteBackGroundBox
-        mfWidth * 0.20f,
-        mfHeight * 0.18f,
-        mfWidth * 0.80f,
-        mfHeight * 0.84f
+        GetFrameWidth() * 0.20f,
+        GetFrameHeight() * 0.18f,
+        GetFrameWidth() * 0.80f,
+        GetFrameHeight() * 0.84f
         },
         {//MakeRoomBox
-            mfWidth * 0.27f,
-            mfHeight * 0.055f,
-            mfWidth * 0.48f,
-            mfHeight * 0.11f
+            GetFrameWidth() * 0.27f,
+            GetFrameHeight() * 0.055f,
+            GetFrameWidth() * 0.48f,
+            GetFrameHeight() * 0.11f
         },
         {//RoomTitle1
-        mfWidth * 0.27f,
-        mfHeight * 0.26f,
-        mfWidth * 0.48f,
-        mfHeight * 0.33f
+        GetFrameWidth() * 0.27f,
+        GetFrameHeight() * 0.26f,
+        GetFrameWidth() * 0.48f,
+        GetFrameHeight() * 0.33f
         },
         {//RoomTitle2
-            mfWidth * 0.54f,
-            mfHeight * 0.26f,
-            mfWidth * 0.75f,
-            mfHeight * 0.33f
+            GetFrameWidth() * 0.54f,
+            GetFrameHeight() * 0.26f,
+            GetFrameWidth() * 0.75f,
+            GetFrameHeight() * 0.33f
         },
         {//RoomTitle3
-            mfWidth * 0.27f,
-            mfHeight * 0.44f,
-            mfWidth * 0.48f,
-            mfHeight * 0.5f
+            GetFrameWidth() * 0.27f,
+            GetFrameHeight() * 0.44f,
+            GetFrameWidth() * 0.48f,
+            GetFrameHeight() * 0.5f
         },
         {//RoomTitle4
-        mfWidth * 0.54f,
-        mfHeight * 0.44f,
-        mfWidth * 0.75f,
-        mfHeight *0.5f
+        GetFrameWidth() * 0.54f,
+        GetFrameHeight() * 0.44f,
+        GetFrameWidth() * 0.75f,
+        GetFrameHeight() *0.5f
         },
         {//RoomTitle5
-        mfWidth * 0.27f,
-        mfHeight * 0.605f,
-        mfWidth * 0.48f,
-        mfHeight * 0.66f
+        GetFrameWidth() * 0.27f,
+        GetFrameHeight() * 0.605f,
+        GetFrameWidth() * 0.48f,
+        GetFrameHeight() * 0.66f
         },
         {//RoomTitle6
-        mfWidth * 0.54f,
-        mfHeight * 0.605f,
-        mfWidth * 0.75f,
-        mfHeight * 0.66f
+        GetFrameWidth() * 0.54f,
+        GetFrameHeight() * 0.605f,
+        GetFrameWidth() * 0.75f,
+        GetFrameHeight() * 0.66f
         },
         {//RoomBox1
-        mfWidth * 0.25f,
-        mfHeight * 0.25f,
-        mfWidth * 0.5f,
-        mfHeight * 0.42f
+        GetFrameWidth() * 0.25f,
+        GetFrameHeight() * 0.25f,
+        GetFrameWidth() * 0.5f,
+        GetFrameHeight() * 0.42f
         },
         {//RoomBox2
-            mfWidth * 0.52f,
-            mfHeight * 0.25f,
-            mfWidth * 0.77f,
-            mfHeight * 0.42f
+            GetFrameWidth() * 0.52f,
+            GetFrameHeight() * 0.25f,
+            GetFrameWidth() * 0.77f,
+            GetFrameHeight() * 0.42f
         },
         {//RoomBox3
-            mfWidth * 0.25f,
-            mfHeight * 0.42f,
-            mfWidth * 0.5f,
-            mfHeight * 0.57f
+            GetFrameWidth() * 0.25f,
+            GetFrameHeight() * 0.42f,
+            GetFrameWidth() * 0.5f,
+            GetFrameHeight() * 0.57f
         },
         {//RoomBox4
-        mfWidth * 0.52f,
-        mfHeight * 0.42f,
-        mfWidth * 0.77f,
-        mfHeight * 0.57f
+        GetFrameWidth() * 0.52f,
+        GetFrameHeight() * 0.42f,
+        GetFrameWidth() * 0.77f,
+        GetFrameHeight() * 0.57f
         },
         {//RoomBox5
-        mfWidth * 0.25f,
-        mfHeight * 0.57f,
-        mfWidth * 0.5f,
-        mfHeight * 0.75f
+        GetFrameWidth() * 0.25f,
+        GetFrameHeight() * 0.57f,
+        GetFrameWidth() * 0.5f,
+        GetFrameHeight() * 0.75f
         },
         {//RoomBox6
-        mfWidth * 0.52f,
-        mfHeight * 0.57f,
-        mfWidth * 0.77f,
-        mfHeight * 0.75f
+        GetFrameWidth() * 0.52f,
+        GetFrameHeight() * 0.57f,
+        GetFrameWidth() * 0.77f,
+        GetFrameHeight() * 0.75f
         },
         {//LeftArrowBox
-        mfWidth * 0.044f,
-        mfHeight * 0.076f,
-        mfWidth * 0.05f,
-        mfHeight * 0.082f
+        GetFrameWidth() * 0.044f,
+        GetFrameHeight() * 0.076f,
+        GetFrameWidth() * 0.05f,
+        GetFrameHeight() * 0.082f
         },
         {//RightArrowBox
-        mfWidth * 0.052f,
-        mfHeight * 0.076f,
-        mfWidth * 0.058f,
-        mfHeight * 0.082f
+        GetFrameWidth() * 0.052f,
+        GetFrameHeight() * 0.076f,
+        GetFrameWidth() * 0.058f,
+        GetFrameHeight() * 0.082f
         }
     };
     XMFLOAT4 LTRB[] =
@@ -313,14 +313,14 @@ void LobbyUI::Draw(UINT nFrame)
         {
             0.0f,
             0.0f,
-            mfWidth,
-            mfHeight
+            GetFrameWidth(),
+            GetFrameHeight()
         },
         {
-             mfWidth * 0.44f,
-           mfHeight * 0.76f,
-            mfWidth * 0.58f,
-            mfHeight * 0.82f
+             GetFrameWidth() * 0.44f,
+           GetFrameHeight() * 0.76f,
+            GetFrameWidth() * 0.58f,
+            GetFrameHeight() * 0.82f
         }
     };
     bool IsOutlined[18] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false };
@@ -335,22 +335,22 @@ void LobbyUI::Draw(UINT nFrame)
 
 void LobbyUI::CreateFontFormat()
 {
-    float fFontSize = mfHeight / 25.0f;;
+    float fFontSize = GetFrameHeight() / 25.0f;;
    // vfFontSize.resize(TextCnt);
 
-    /*vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);
-    vfFontSize.push_back(mfHeight / 15.0f);*/
+    /*vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);
+    vfFontSize.push_back(GetFrameHeight() / 15.0f);*/
 
     Fonts.push_back(L"Tahoma");
     Fonts.push_back(L"±¼¸²Ã¼");
@@ -386,31 +386,31 @@ void LobbyUI::CreateFontFormat()
 
 void LobbyUI::SetTextRect()
 {//MakeRoom, Room1, Room2, Room3, Room4, Room5, Room6
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth * 0.28125f, mfHeight * 0.055f, mfWidth * 0.46875f, mfHeight * 0.11f);
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.28125f, GetFrameHeight() * 0.055f, GetFrameWidth() * 0.46875f, GetFrameHeight() * 0.11f);
 
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth * 0.27f, mfHeight * 0.26f, mfWidth * 0.48f, mfHeight * 0.33f);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth * 0.25f, mfHeight * 0.25f, mfWidth * 0.5f, mfHeight * 0.42f);
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.26f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.33f);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.25f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.42f);
 
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth * 0.54f, mfHeight * 0.26f, mfWidth * 0.75f, mfHeight * 0.33f);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 0.52f, mfHeight * 0.25f, mfWidth * 0.77f, mfHeight * 0.42f);
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.26f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.33f);
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.25f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.42f);
 
-    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth * 0.27f, mfHeight * 0.44f, mfWidth * 0.48f, mfHeight * 0.5f);
-    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth * 0.25f, mfHeight * 0.42f, mfWidth * 0.5f, mfHeight * 0.57f);
+    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.44f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.5f);
+    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.42f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.57f);
 
-    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(mfWidth * 0.54f, mfHeight * 0.44f, mfWidth * 0.75f, mfHeight * 0.5f);
-    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(mfWidth * 0.52f, mfHeight * 0.42f, mfWidth * 0.77f, mfHeight * 0.57f);
+    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.44f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.5f);
+    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.42f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.57f);
 
-    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(mfWidth * 0.27f, mfHeight * 0.605f, mfWidth * 0.48f, mfHeight * 0.66f);
-    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(mfWidth * 0.25f, mfHeight * 0.57f, mfWidth * 0.5f, mfHeight * 0.75f);
+    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.66f);
+    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.57f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.75f);
 
-    mvTextBlocks[11].d2dLayoutRect = D2D1::RectF(mfWidth * 0.54f, mfHeight * 0.605f, mfWidth * 0.75f, mfHeight * 0.66f);
-    mvTextBlocks[12].d2dLayoutRect = D2D1::RectF(mfWidth * 0.52f, mfHeight * 0.57f, mfWidth * 0.77f, mfHeight * 0.75f);
+    mvTextBlocks[11].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.66f);
+    mvTextBlocks[12].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.57f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.75f);
 }
 
 void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
-    mfWidth = static_cast<float>(nWidth);
-    mfHeight = static_cast<float>(nHeight);
+    //SetFrame(static_cast<float>(nWidth), static_cast<float>(nHeight));
+
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
     

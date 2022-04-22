@@ -83,6 +83,8 @@ public:
    void SetBitmapCnt(int BitmapCnt) { miBitmapCnt = BitmapCnt; }
 
    void SetFrame(float H, float W) { mfHeight = H; mfWidth = W; }
+   float GetFrameWidth() { return mfWidth; }
+   float GetFrameHeight() { return mfHeight; }
    void SetBitmapFileNames(const std::vector<PCWSTR>& names) { for (auto& name : names) mvBitmapFileNames.push_back(name); }
 
    TCHAR* GetFontName() { return cFontName; }

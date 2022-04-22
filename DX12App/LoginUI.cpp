@@ -308,116 +308,116 @@ void LoginUI::Draw(UINT nFrame)
     XMFLOAT4 RectLTRB[] =
     {
         {
-         mfWidth / 0.30f,
-        mfHeight / 64 * 25,
-        mfWidth / 0.70f,
-        mfHeight / 128 * 81
+         GetFrameWidth() / 0.30f,
+        GetFrameHeight() / 64 * 25,
+        GetFrameWidth() / 0.70f,
+        GetFrameHeight() / 128 * 81
         },
         {
-            mfWidth * 0.31f, 
-            mfHeight / 64 * 28, 
-            mfWidth * 0.55f, 
-            mfHeight / 128 * 71
+            GetFrameWidth() * 0.31f, 
+            GetFrameHeight() / 64 * 28, 
+            GetFrameWidth() * 0.55f, 
+            GetFrameHeight() / 128 * 71
         },
         {
-            mfWidth / 5 * 2, 
-            mfHeight / 64 * 28, 
-            mfWidth / 5 * 3, 
-            mfHeight / 128 * 63
+            GetFrameWidth() / 5 * 2, 
+            GetFrameHeight() / 64 * 28, 
+            GetFrameWidth() / 5 * 3, 
+            GetFrameHeight() / 128 * 63
         },
         {
-            mfWidth / 5 * 2, 
-            mfHeight / 128 * 64,
-            mfWidth / 5 * 3, 
-           mfHeight / 128 * 71
+            GetFrameWidth() / 5 * 2, 
+            GetFrameHeight() / 128 * 64,
+            GetFrameWidth() / 5 * 3, 
+           GetFrameHeight() / 128 * 71
         },
         {
-            mfWidth / 160 * 117, 
-            mfHeight / 256 * 103, 
-            mfWidth / 160 * 119, 
-            mfHeight / 256 * 115
+            GetFrameWidth() / 160 * 117, 
+            GetFrameHeight() / 256 * 103, 
+            GetFrameWidth() / 160 * 119, 
+            GetFrameHeight() / 256 * 115
         },
         {
-            mfWidth / 5 * 1,
-            mfHeight / 128 * 43,
-            mfWidth / 5 * 2,
-            mfHeight / 128 * 68
+            GetFrameWidth() / 5 * 1,
+            GetFrameHeight() / 128 * 43,
+            GetFrameWidth() / 5 * 2,
+            GetFrameHeight() / 128 * 68
         },
         {
-            mfWidth / 5 * 1,
-            mfHeight / 128 * 43,
-            mfWidth / 5 * 2,
-            mfHeight / 128 * 68
+            GetFrameWidth() / 5 * 1,
+            GetFrameHeight() / 128 * 43,
+            GetFrameWidth() / 5 * 2,
+            GetFrameHeight() / 128 * 68
         },
         {
-            mfWidth / 5 * 2,
-            mfHeight / 128 * 43,
-            mfWidth / 5 * 3,
-            mfHeight / 128 * 68
+            GetFrameWidth() / 5 * 2,
+            GetFrameHeight() / 128 * 43,
+            GetFrameWidth() / 5 * 3,
+            GetFrameHeight() / 128 * 68
         },
         {
-            mfWidth / 5 * 3,
-            mfHeight / 128 * 43,
-            mfWidth / 5 * 4,
-            mfHeight / 128 * 68
+            GetFrameWidth() / 5 * 3,
+            GetFrameHeight() / 128 * 43,
+            GetFrameWidth() / 5 * 4,
+            GetFrameHeight() / 128 * 68
         }
     };
     //RoundedRectFill
     XMFLOAT4 FillLTRB[] =
     {
         {//MainBlackBox
-         mfWidth *0.25f,
-        mfHeight * 0.375f,
-        mfWidth *0.75f,
-        mfHeight * 0.625f
+         GetFrameWidth() *0.25f,
+        GetFrameHeight() * 0.375f,
+        GetFrameWidth() *0.75f,
+        GetFrameHeight() * 0.625f
         },
         {//LoginBox
-            mfWidth * 0.61f,
-            mfHeight * 0.43f,
-            mfWidth * 0.74f,
-            mfHeight * 0.55f
+            GetFrameWidth() * 0.61f,
+            GetFrameHeight() * 0.43f,
+            GetFrameWidth() * 0.74f,
+            GetFrameHeight() * 0.55f
         },
         {//IDBox
-            mfWidth * 0.27f,
-            mfHeight * 0.43f,
-            mfWidth * 0.59f,
-            mfHeight * 0.485f
+            GetFrameWidth() * 0.27f,
+            GetFrameHeight() * 0.43f,
+            GetFrameWidth() * 0.59f,
+            GetFrameHeight() * 0.485f
         },
         {//PWDBox
-            mfWidth *0.27f,
-            mfHeight * 0.49f,
-            mfWidth *0.59f,
-            mfHeight * 0.545f
+            GetFrameWidth() *0.27f,
+            GetFrameHeight() * 0.49f,
+            GetFrameWidth() *0.59f,
+            GetFrameHeight() * 0.545f
         },
         {//Exit
-            mfWidth *0.675f,
-            mfHeight* 0.38f,
-            mfWidth * 0.745f,
-            mfHeight * 0.425f
+            GetFrameWidth() *0.675f,
+            GetFrameHeight()* 0.38f,
+            GetFrameWidth() * 0.745f,
+            GetFrameHeight() * 0.425f
         },
         {//Login-Fail
-            mfWidth * 0.40f,
-            mfHeight * 0.40f,
-            mfWidth * 0.60f,
-            mfHeight * 0.60f
+            GetFrameWidth() * 0.40f,
+            GetFrameHeight() * 0.40f,
+            GetFrameWidth() * 0.60f,
+            GetFrameHeight() * 0.60f
         },
         {
-            mfWidth / 5 * 1,
-            mfHeight / 128 * 43,
-            mfWidth / 5 * 2,
-            mfHeight / 128 * 68
+            GetFrameWidth() / 5 * 1,
+            GetFrameHeight() / 128 * 43,
+            GetFrameWidth() / 5 * 2,
+            GetFrameHeight() / 128 * 68
         },
         {
-            mfWidth / 5 * 2,
-            mfHeight / 128 * 43,
-            mfWidth / 5 * 3,
-            mfHeight / 128 * 68
+            GetFrameWidth() / 5 * 2,
+            GetFrameHeight() / 128 * 43,
+            GetFrameWidth() / 5 * 3,
+            GetFrameHeight() / 128 * 68
         },
         {
-            mfWidth * 0.66f,
-            mfHeight / 128 * 43,
-            mfWidth * 0.69f,
-            mfHeight / 128 * 68
+            GetFrameWidth() * 0.66f,
+            GetFrameHeight() / 128 * 43,
+            GetFrameWidth() * 0.69f,
+            GetFrameHeight() / 128 * 68
         }
     };
     bool IsOutlined[9] = {true,true, true, true, true,false,false, false,false};
@@ -435,8 +435,8 @@ void LoginUI::Draw(UINT nFrame)
         {
             0.0f,
             0.0f,
-            mfWidth,
-            mfHeight
+            GetFrameWidth(),
+            GetFrameHeight()
         }
     };
     float aOpacities[2] = { 0.5f, 1.0f };
@@ -448,15 +448,15 @@ void LoginUI::Draw(UINT nFrame)
 
 void LoginUI::CreateFontFormat()
 {
-    fFontSize = mfHeight * 0.04f;
+    fFontSize = GetFrameHeight() * 0.04f;
     
-    vfFontSize[0] = mfHeight * 0.05f;
-    vfFontSize[1] = mfHeight * 0.04f;
-    vfFontSize[2] = mfHeight * 0.04f;
-    vfFontSize[3] = mfHeight * 0.04f;
-    vfFontSize[4] = mfHeight * 0.04f;
-    vfFontSize[5] = mfHeight * 0.04f;
-    vfFontSize[6] = mfHeight * 0.04f;
+    vfFontSize[0] = GetFrameHeight() * 0.05f;
+    vfFontSize[1] = GetFrameHeight() * 0.04f;
+    vfFontSize[2] = GetFrameHeight() * 0.04f;
+    vfFontSize[3] = GetFrameHeight() * 0.04f;
+    vfFontSize[4] = GetFrameHeight() * 0.04f;
+    vfFontSize[5] = GetFrameHeight() * 0.04f;
+    vfFontSize[6] = GetFrameHeight() * 0.04f;
     
    // std::vector<std::wstring> Fonts;
     //Goudy Stout, Modern No. 20
@@ -486,20 +486,19 @@ void LoginUI::CreateFontFormat()
 void LoginUI::SetTextRect()
 {//Text: GameName, Login, ID, Password, Exit, sign, LoginFail 
  // SignID, SignPWD
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth * 0.25f, mfHeight * 0.25f, mfWidth  * 0.75f, mfHeight * 0.375f);
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth * 0.625f, mfHeight * 0.4375f, mfWidth * 0.725f, mfHeight * 0.55f);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth * 0.401f, mfHeight * 0.4375f,  mfWidth * 0.599f,  mfHeight * 0.499f);
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth * 0.401f,  mfHeight * 0.501f, mfWidth * 0.599f,  mfHeight * 0.5615f);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 0.68f, mfHeight * 0.35f, mfWidth * 0.75f, mfHeight * 0.45f);
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.25f, GetFrameWidth()  * 0.75f, GetFrameHeight() * 0.375f);
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.625f, GetFrameHeight() * 0.4375f, GetFrameWidth() * 0.725f, GetFrameHeight() * 0.55f);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.401f, GetFrameHeight() * 0.4375f,  GetFrameWidth() * 0.599f,  GetFrameHeight() * 0.499f);
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.401f,  GetFrameHeight() * 0.501f, GetFrameWidth() * 0.599f,  GetFrameHeight() * 0.5615f);
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.68f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.45f);
 
-    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth * 0.4f, mfHeight * 0.5635f, mfWidth * 0.52f , mfHeight * 0.625f);
-    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth * 0.41f, mfHeight * 0.40f, mfWidth * 0.59f, mfHeight * 0.60f);
+    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.4f, GetFrameHeight() * 0.5635f, GetFrameWidth() * 0.52f , GetFrameHeight() * 0.625f);
+    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.41f, GetFrameHeight() * 0.40f, GetFrameWidth() * 0.59f, GetFrameHeight() * 0.60f);
 }
 
 void LoginUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
-    mfWidth = static_cast<float>(nWidth);
-    mfHeight = static_cast<float>(nHeight);
+    //SetFrame(static_cast<float>(nWidth), static_cast<float>(nHeight));
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
     //Logo, 

@@ -41,8 +41,7 @@ private:
 	std::string LoginOrSignup = "Login";
 	std::string LoginOrSignupReverse = "Signup";
 
-	float mfWidth = 0.0f;
-	float mfHeight = 0.0f;
+	
 	float fFontSize = 0.0f; 
 	std::vector<float> vfFontSize;
 	std::vector<std::wstring> Fonts;

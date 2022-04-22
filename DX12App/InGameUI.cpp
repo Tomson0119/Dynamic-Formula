@@ -238,42 +238,42 @@ void InGameUI::Draw(UINT nFrame)
     {
         {
             mfWidth * (3.0f / 16.0f), 
-			mfHeight * (5.0f / 6.0f),
+			GetFrameHeight() * (5.0f / 6.0f),
         mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)),
-        mfHeight * (8.0f / 9.0f)
+        GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
         {
             mfWidth * (17.0f / 32.0f), 
-			mfHeight * (5.0f / 6.0f),
+			GetFrameHeight() * (5.0f / 6.0f),
         mfWidth * (18.0f / 32.0f), 
-		mfHeight * (8.0f / 9.0f)
+		GetFrameHeight() * (8.0f / 9.0f)
         }, //Item1 UI
         {
             mfWidth * (19.0f / 32.0f), 
-			mfHeight * (5.0f / 6.0f),
+			GetFrameHeight() * (5.0f / 6.0f),
         mfWidth * (20.0f / 32.0f),
-		mfHeight * (8.0f / 9.0f)
+		GetFrameHeight() * (8.0f / 9.0f)
         }//Item2 UI
     };
     XMFLOAT4 FillLTRB[] = 
     { 
         {
             mfWidth * (3.0f / 16.0f), 
-			mfHeight * (5.0f / 6.0f), 
+			GetFrameHeight() * (5.0f / 6.0f), 
 			mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)) * fDriftGauge, 
-			mfHeight * (8.0f / 9.0f)
+			GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
         {
             mfWidth * (17.0f / 32.0f), 
-			mfHeight * (5.0f / 6.0f), 
+			GetFrameHeight() * (5.0f / 6.0f), 
 			mfWidth * (18.0f / 32.0f), 
-			mfHeight * (8.0f / 9.0f)
+			GetFrameHeight() * (8.0f / 9.0f)
         }, //Item1 UI
         {
             mfWidth * (19.0f / 32.0f),
-			mfHeight * (5.0f / 6.0f), 
+			GetFrameHeight() * (5.0f / 6.0f), 
 			mfWidth * (20.0f / 32.0f), 
-			mfHeight * (8.0f / 9.0f)
+			GetFrameHeight() * (8.0f / 9.0f)
         }//Item2 UI
     };
 	bool IsOutlined[3] = { true, true, true };
@@ -285,18 +285,18 @@ void InGameUI::Draw(UINT nFrame)
 
 void InGameUI::CreateFontFormat()
 {
-	float fFontSize = mfHeight / 25.0f;
+	float fFontSize = GetFrameHeight() / 25.0f;
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Tahoma");
     Fonts.push_back(L"Vladimir Script ∫∏≈Î");
     Fonts.push_back(L"πŸ≈¡√º");
     Fonts.push_back(L"±º∏≤√º");
     Fonts.push_back(L"±º∏≤√º");
-	/*vfFontSize.push_back(mfHeight / 15.0f);
-	vfFontSize.push_back(mfHeight / 15.0f);
-	vfFontSize.push_back(mfHeight / 15.0f);
-	vfFontSize.push_back(mfHeight / 15.0f);
-	vfFontSize.push_back(mfHeight / 15.0f);*/
+	/*vfFontSize.push_back(GetFrameHeight() / 15.0f);
+	vfFontSize.push_back(GetFrameHeight() / 15.0f);
+	vfFontSize.push_back(GetFrameHeight() / 15.0f);
+	vfFontSize.push_back(GetFrameHeight() / 15.0f);
+	vfFontSize.push_back(GetFrameHeight() / 15.0f);*/
 
 
 	DWRITE_TEXT_ALIGNMENT TextAlignments[5];
@@ -313,17 +313,17 @@ void InGameUI::CreateFontFormat()
 
 void InGameUI::SetTextRect()
 {
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f + mfHeight / 6, mfWidth / 6, 23.0f + (mfHeight / 6));
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f, mfWidth / 6, mfHeight / 6);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 0.0f, mfWidth, mfHeight / 6);
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 5 * (mfHeight / 6), mfWidth, mfHeight);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 8, mfHeight / 2 - mfHeight * (1 / 11), mfWidth * 7 / 8, mfHeight / 2 + mfHeight * (1 / 11));
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f + GetFrameHeight() / 6, mfWidth / 6, 23.0f + (GetFrameHeight() / 6));
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f, mfWidth / 6, GetFrameHeight() / 6);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 0.0f, mfWidth, GetFrameHeight() / 6);
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 5 * (GetFrameHeight() / 6), mfWidth, GetFrameHeight());
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 8, GetFrameHeight() / 2 - GetFrameHeight() * (1 / 11), mfWidth * 7 / 8, GetFrameHeight() / 2 + GetFrameHeight() * (1 / 11));
 }
 
 void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
-    mfWidth = static_cast<float>(nWidth);
-    mfHeight = static_cast<float>(nHeight);
+	SetFrame(static_cast<float>(nWidth), static_cast<float>(nHeight));
+
     UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
 
