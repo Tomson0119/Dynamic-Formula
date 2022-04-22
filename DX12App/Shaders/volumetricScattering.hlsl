@@ -113,11 +113,11 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     
     for (int i = 0; i < NUM_LIGHTS; ++i)
     {
-        if(gLights[i].Type == SPOT_LIGHT)
+        if (gLights[i].Type == SPOT_LIGHT && gLights[i].FalloffEnd > length(gLights[i].Position - worldPosition))
             volumetricColor += float4(volumetricScattering(worldPosition, gLights[i]), 0.0);
     }
     
-    outputTexture[pixel] = volumetricColor;
+    outputTexture[pixel] = volumetricColor + inputTexture[pixel];
 }   
 
 //[numthreads(32, 32, 1)]

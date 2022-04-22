@@ -190,7 +190,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mMainLight.Lights[0].Direction);
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.Direction);
 
 	if (mMsaa4xEnable)
 	{
@@ -611,6 +611,28 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mBloomEnable = !mBloomEnable;
 		}
+		if (wParam == 'V')
+		{
+			mVolumetricEnable = !mVolumetricEnable;
+		}
+
+		if (wParam == 'U')
+			mAbsorptionTau += 0.001f;
+
+		if (wParam == 'J')
+			mAbsorptionTau -= 0.001f;
+
+		if (wParam == 'I')
+			mScatteringTau += 0.001f;
+
+		if (wParam == 'K')
+			mScatteringTau -= 0.001f;
+
+		wstring abs = std::to_wstring(mAbsorptionTau);
+		wstring scat = std::to_wstring(mScatteringTau);
+
+		OutputDebugStringW((L"mAbsorptionTau : " + abs + L"\n").c_str());
+		OutputDebugStringW((L"mScatteringTau : " + scat + L"\n\n").c_str());
 
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
@@ -737,12 +759,12 @@ void InGameScene::UpdateLightConstants()
 		}
 	);
 
-	for (int i = 0; i < NUM_LIGHTS - 1; ++i)
+	for (int i = 1; i < NUM_LIGHTS; ++i)
 	{
-		mMainLight.Lights[i] = mLights[i];
+		mMainLight.Lights[i] = mLights[i - 1];
 	}
 
-	mMainLight.Lights[NUM_LIGHTS - 1] = mDirectionalLight;
+	mMainLight.Lights[0] = mDirectionalLight;
 
 	mLightCB->CopyData(0, mMainLight);
 }
@@ -765,10 +787,10 @@ void InGameScene::UpdateVolumetricConstant()
 		volumeConst.gLights[i] = mMainLight.Lights[i];
 
 	volumeConst.absorptionColor = { 0.5f, 0.5f, 0.5f };
-	volumeConst.absorptionTau = 0.02f;
+	volumeConst.absorptionTau = mAbsorptionTau;
 	volumeConst.scatteringSamples = 50;
-	volumeConst.scatteringTau = 0.06f;
-	volumeConst.scatteringZFar = 40.0f;
+	volumeConst.scatteringTau = mScatteringTau;
+	volumeConst.scatteringZFar = 2000.0f;
 	volumeConst.scatteringColor = { 1.0f, 1.0f, 1.0f };
 	
 	mVolumetricCB->CopyData(0, volumeConst);
@@ -1188,7 +1210,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 			XMFLOAT3(0.6f, 0.6f, 0.6f),
 			pos,
 			direction,
-			0.0f, 100.0f, 100.0f,
+			0.0f, 100.0f, 10.0f,
 			0.0f, SPOT_LIGHT);;
 
 		mLights.push_back(l);

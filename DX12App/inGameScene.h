@@ -189,10 +189,13 @@ private:
 
 	bool mBloomEnable = true;
 
-	bool mVolumetricEnable = false;
+	bool mVolumetricEnable = true;
 
 	btRigidBody* mTrackRigidBody = NULL;
 
 	std::vector<LightInfo> mLights;
 	LightInfo mDirectionalLight;
+
+	float mAbsorptionTau = -0.061f;
+	float mScatteringTau = 0.059f;
 };
