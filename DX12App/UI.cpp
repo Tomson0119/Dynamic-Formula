@@ -110,25 +110,30 @@ HRESULT UI::LoadBitmapResourceFromFile(PCWSTR ImageName, int index)
     return hresult;
 }
 
-void UI::FontLoad(const WCHAR* FontFilePath)
+void UI::FontLoad(const std::vector<WCHAR*>& FontFilePaths)
 {
-    mpd2dWriteFactory->CreateFontFileReference(FontFilePath, nullptr, &mIDWriteFontFile);
-    mpd2dWriteFactory->CreateFontSetBuilder(&mIDWriteFontSetBuilder);
+    int i = 0;
+    mIDWriteFontCollection.resize(FontFilePaths.size());
+    for (auto& FontFilePath : FontFilePaths)
+    {
+        mpd2dWriteFactory->CreateFontFileReference(FontFilePath, nullptr, &mIDWriteFontFile);
+        mpd2dWriteFactory->CreateFontSetBuilder(&mIDWriteFontSetBuilder);
 
-    //mpd2dWriteFactory->CreateInMemoryFontFileLoader(&mIDWriteInMemoryFontFileLoader);
-    //mpd2dWriteFactory->RegisterFontFileLoader(mIDWriteInMemoryFontFileLoader.Get());
-    //mIDWriteInMemoryFontFileLoader->CreateInMemoryFontFileReference(mpd2dWriteFactory.Get(), mIDWriteFontFile.Get().)
+        //mpd2dWriteFactory->CreateInMemoryFontFileLoader(&mIDWriteInMemoryFontFileLoader);
+        //mpd2dWriteFactory->RegisterFontFileLoader(mIDWriteInMemoryFontFileLoader.Get());
+        //mIDWriteInMemoryFontFileLoader->CreateInMemoryFontFileReference(mpd2dWriteFactory.Get(), mIDWriteFontFile.Get().)
+
+        mIDWriteFontSetBuilder->AddFontFile(mIDWriteFontFile.Get());
+        mIDWriteFontSetBuilder->CreateFontSet(&mIDWriteFontSet);
+
+        mIDWriteFontSetBuilder->AddFontSet(mIDWriteFontSet.Get());
+
+        mpd2dWriteFactory->CreateFontCollectionFromFontSet(mIDWriteFontSet.Get(), &mIDWriteFontCollection[i++]);
+    }
+    //mIDWriteFontCollection[i-1]->GetFontFamily(i-1, &mIDWriteFontFamily);
+    //mIDWriteFontFamily->GetFamilyNames(&mIDWriteLocalizedStrings);
+    //mIDWriteLocalizedStrings->GetString(i-1, cFontName, 50);
     
-    mIDWriteFontSetBuilder->AddFontFile(mIDWriteFontFile.Get());
-    mIDWriteFontSetBuilder->CreateFontSet(&mIDWriteFontSet);
-    mIDWriteFontSetBuilder->AddFontSet(mIDWriteFontSet.Get());
-    
-    mpd2dWriteFactory->CreateFontCollectionFromFontSet(mIDWriteFontSet.Get(), &mIDWriteFontCollection);
-
-    mIDWriteFontCollection->GetFontFamily(0, &mIDWriteFontFamily);
-    mIDWriteFontFamily->GetFamilyNames(&mIDWriteLocalizedStrings);
-    mIDWriteLocalizedStrings->GetString(0, cFontName, 50);
-
 
 }
 
@@ -225,7 +230,7 @@ void UI::CreateFontFormat(float FontSize, const std::vector<std::wstring> &Fonts
     mvdwTextFormat.resize(TextCnt);
 
     for (int i = 0; i < static_cast<int>(TextCnt); ++i)
-        ThrowIfFailed(mpd2dWriteFactory->CreateTextFormat(Fonts[i].c_str(), mIDWriteFontCollection.Get(), DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, FontSize, L"en-us", mvdwTextFormat[i].GetAddressOf()));
+        ThrowIfFailed(mpd2dWriteFactory->CreateTextFormat(Fonts[i].c_str(), mIDWriteFontCollection[i].Get(), DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, FontSize, L"en-us", mvdwTextFormat[i].GetAddressOf()));
     for (int i = 0; i < static_cast<int>(TextCnt); ++i)
     {
         ThrowIfFailed(mvdwTextFormat[i]->SetTextAlignment(Alignment[i]));
@@ -238,7 +243,7 @@ void UI::CreateFontFormat(std::vector<float>& FontSize, const std::vector<std::w
     mvdwTextFormat.resize(TextCnt);
 
     for (int i = 0; i < static_cast<int>(TextCnt); ++i)
-        ThrowIfFailed(mpd2dWriteFactory->CreateTextFormat(Fonts[i].c_str(), mIDWriteFontCollection.Get(), DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, FontSize[i], L"en-us", mvdwTextFormat[i].GetAddressOf()));
+        ThrowIfFailed(mpd2dWriteFactory->CreateTextFormat(Fonts[i].c_str(), mIDWriteFontCollection[i].Get(), DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, FontSize[i], L"en-us", mvdwTextFormat[i].GetAddressOf()));
     for (int i = 0; i < static_cast<int>(TextCnt); ++i)
     {
         ThrowIfFailed(mvdwTextFormat[i]->SetTextAlignment(Alignment[i]));

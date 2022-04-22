@@ -31,7 +31,18 @@ void LoginUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 
     mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
     mvBitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
-    FontLoad(L"Fonts\\Blazed.ttf");
+    std::vector<WCHAR*> Fonts;
+    Fonts.push_back(L"Fonts\\Blazed.ttf");
+    Fonts.push_back(L"Fonts\\Xenogears.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+
+    
+    FontLoad(Fonts);
+
 
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
@@ -448,14 +459,14 @@ void LoginUI::CreateFontFormat()
     vfFontSize[6] = mfHeight * 0.04f;
     
    // std::vector<std::wstring> Fonts;
-    //Goudy Stout
-    Fonts.push_back(GetFontName()); // Title logo
-    Fonts.push_back(L"Modern No. 20"); // Login
-    Fonts.push_back(L"Modern No. 20"); //ID
-    Fonts.push_back(L"Modern No. 20"); //PWD
-    Fonts.push_back(L"Modern No. 20"); //Sign-up
-    Fonts.push_back(L"Modern No. 20"); // Exit
-    Fonts.push_back(L"Modern No. 20"); // Login Fail
+    //Goudy Stout, Modern No. 20
+    Fonts.push_back(L"Blazed"); // Title logo
+    Fonts.push_back(L"Xenogears"); // Login
+    Fonts.push_back(L"abberancy"); //ID
+    Fonts.push_back(L"abberancy"); //PWD
+    Fonts.push_back(L"abberancy"); //Sign-up
+    Fonts.push_back(L"abberancy"); // Exit
+    Fonts.push_back(L"abberancy"); // Login Fail
 
 
     //DWRITE_TEXT_ALIGNMENT TextAlignments[6];

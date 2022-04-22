@@ -86,7 +86,7 @@ public:
    void SetBitmapFileNames(const std::vector<PCWSTR>& names) { for (auto& name : names) mvBitmapFileNames.push_back(name); }
 
    TCHAR* GetFontName() { return cFontName; }
-   void FontLoad(const WCHAR* FontFilePath);
+   void FontLoad(const std::vector<WCHAR*>& FontFilePath);
 private:
 
     float mfHeight = 0.0f;
@@ -118,7 +118,7 @@ private:
     ComPtr<IDWriteFontSetBuilder1> mIDWriteFontSetBuilder;
     ComPtr<IDWriteInMemoryFontFileLoader> mIDWriteInMemoryFontFileLoader;
     ComPtr<IDWriteFontSet> mIDWriteFontSet;
-    ComPtr<IDWriteFontCollection1> mIDWriteFontCollection;
+    std::vector<ComPtr<IDWriteFontCollection1>> mIDWriteFontCollection;
 
     ComPtr<IDWriteFontFamily> mIDWriteFontFamily;
     ComPtr<IDWriteLocalizedStrings> mIDWriteLocalizedStrings;
