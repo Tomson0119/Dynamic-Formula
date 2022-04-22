@@ -22,6 +22,8 @@ void InGameUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 {
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
+	ResizeFontSize(TextCnt);
+	ResizeFonts(TextCnt);
     //mvd2dLinearGradientBrush.resize(TextCnt);
 }
 
@@ -288,19 +290,24 @@ void InGameUI::Draw(UINT nFrame)
 
 void InGameUI::CreateFontFormat()
 {
-	float fFontSize = GetFrameHeight() / 25.0f;
+	
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Tahoma");
     Fonts.push_back(L"Vladimir Script ∫∏≈Î");
     Fonts.push_back(L"πŸ≈¡√º");
     Fonts.push_back(L"±º∏≤√º");
     Fonts.push_back(L"±º∏≤√º");
-	/*vfFontSize.push_back(GetFrameHeight() / 15.0f);
-	vfFontSize.push_back(GetFrameHeight() / 15.0f);
-	vfFontSize.push_back(GetFrameHeight() / 15.0f);
-	vfFontSize.push_back(GetFrameHeight() / 15.0f);
-	vfFontSize.push_back(GetFrameHeight() / 15.0f);*/
 
+	SetFonts(Fonts);
+
+	std::vector<float> fFontSize;
+	fFontSize.push_back(GetFrameHeight() / 15.0f);
+	fFontSize.push_back(GetFrameHeight() / 15.0f);
+	fFontSize.push_back(GetFrameHeight() / 15.0f);
+	fFontSize.push_back(GetFrameHeight() / 15.0f);
+	fFontSize.push_back(GetFrameHeight() / 15.0f);
+
+	SetFontSize(fFontSize);
 
 	DWRITE_TEXT_ALIGNMENT TextAlignments[5];
 	//TextAlignments.resize(TextCnt);
@@ -311,7 +318,7 @@ void InGameUI::CreateFontFormat()
 	TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	//TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
-    UI::CreateFontFormat(fFontSize, Fonts, GetTextCnt(), TextAlignments);
+    UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextCnt(), TextAlignments);
 }
 
 void InGameUI::SetTextRect()

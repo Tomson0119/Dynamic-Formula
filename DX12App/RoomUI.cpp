@@ -29,7 +29,8 @@ void RoomUI::SetVectorSize(UINT nFrame, UINT TextCnt)
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
     SetBitmapsSize(2);
-
+    ResizeFontSize(TextCnt);
+    ResizeFonts(TextCnt);
 
     mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
     mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
@@ -245,20 +246,21 @@ void RoomUI::Draw(UINT nFrame)
 
 void RoomUI::CreateFontFormat()
 {
-    float fFontSize = GetFrameHeight() / 25.0f;
-    //vfFontSize.resize(TextCnt);
+    std::vector<float> fFontSize;
 
-    /*vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);*/
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+
+    SetFontSize(fFontSize);
 
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Tahoma");
@@ -272,6 +274,8 @@ void RoomUI::CreateFontFormat()
      Fonts.push_back(L"±¼¸²Ã¼");
      Fonts.push_back(L"±¼¸²Ã¼");
      Fonts.push_back(L"±¼¸²Ã¼");
+
+     SetFonts(Fonts);
 
      DWRITE_TEXT_ALIGNMENT TextAlignments[11];
      //TextAlignments.resize(TextCnt);
@@ -289,7 +293,7 @@ void RoomUI::CreateFontFormat()
      
 
 
-    UI::CreateFontFormat(fFontSize, Fonts, GetTextCnt(), TextAlignments);
+    UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextCnt(), TextAlignments);
 }
 
 void RoomUI::SetTextRect()

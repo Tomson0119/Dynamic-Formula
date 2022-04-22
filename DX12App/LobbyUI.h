@@ -26,8 +26,6 @@ public:
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
-	float fFontSize = 0.0f;
-	std::vector<std::wstring> Fonts;
 	DWRITE_TEXT_ALIGNMENT TextAlignments[13];
 	
 	std::vector<D2D1::ColorF> mvColors;

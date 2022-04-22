@@ -30,10 +30,12 @@ void LoginUI::SetVectorSize(UINT nFrame, UINT TextCnt)
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
     SetBitmapsSize(2);
-    vfFontSize.resize(TextCnt);
+    ResizeFontSize(TextCnt);
+    ResizeFonts(TextCnt);
 
     mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
     mvBitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
+
     std::vector<WCHAR*> Fonts;
     Fonts.push_back(L"Fonts\\Blazed.ttf");
     Fonts.push_back(L"Fonts\\Xenogears.ttf");
@@ -43,11 +45,7 @@ void LoginUI::SetVectorSize(UINT nFrame, UINT TextCnt)
     Fonts.push_back(L"Fonts\\abberancy.ttf");
     Fonts.push_back(L"Fonts\\abberancy.ttf");
 
-    
     FontLoad(Fonts);
-
-
-    //mvd2dLinearGradientBrush.resize(TextCnt);
 }
 
 void LoginUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -302,7 +300,7 @@ void LoginUI::ChangeTextAlignment(UINT uNum, UINT uState)
         }
     }
     UI::BuildSolidBrush(GetRoundRectCnt() + 1, GetTextCnt(), mvColors);
-    UI::CreateFontFormat(vfFontSize, Fonts, GetTextCnt(), TextAlignments);
+    UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextCnt(), TextAlignments);
 }
 
 void LoginUI::Draw(UINT nFrame)
@@ -451,17 +449,18 @@ void LoginUI::Draw(UINT nFrame)
 
 void LoginUI::CreateFontFormat()
 {
-    fFontSize = GetFrameHeight() * 0.04f;
-    
-    vfFontSize[0] = GetFrameHeight() * 0.05f;
-    vfFontSize[1] = GetFrameHeight() * 0.04f;
-    vfFontSize[2] = GetFrameHeight() * 0.04f;
-    vfFontSize[3] = GetFrameHeight() * 0.04f;
-    vfFontSize[4] = GetFrameHeight() * 0.04f;
-    vfFontSize[5] = GetFrameHeight() * 0.04f;
-    vfFontSize[6] = GetFrameHeight() * 0.04f;
-    
-   // std::vector<std::wstring> Fonts;
+    std::vector<float> vfFontSizes;
+    vfFontSizes.resize(GetTextCnt());
+    vfFontSizes[0] = GetFrameHeight() * 0.05f;
+    vfFontSizes[1] = GetFrameHeight() * 0.04f;
+    vfFontSizes[2] = GetFrameHeight() * 0.04f;
+    vfFontSizes[3] = GetFrameHeight() * 0.04f;
+    vfFontSizes[4] = GetFrameHeight() * 0.04f;
+    vfFontSizes[5] = GetFrameHeight() * 0.04f;
+    vfFontSizes[6] = GetFrameHeight() * 0.04f;
+    SetFontSize(vfFontSizes);
+
+    std::vector<std::wstring> Fonts;
     //Goudy Stout, Modern No. 20
     Fonts.push_back(L"Blazed"); // Title logo
     Fonts.push_back(L"Xenogears"); // Login
@@ -470,10 +469,11 @@ void LoginUI::CreateFontFormat()
     Fonts.push_back(L"abberancy"); //Sign-up
     Fonts.push_back(L"abberancy"); // Exit
     Fonts.push_back(L"abberancy"); // Login Fail
-
+    SetFonts(Fonts);
 
     //DWRITE_TEXT_ALIGNMENT TextAlignments[6];
     //TextAlignments.resize(GetTextCnt());
+
     TextAlignments[0]=  DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
@@ -483,7 +483,7 @@ void LoginUI::CreateFontFormat()
     TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
 
-    UI::CreateFontFormat(vfFontSize, Fonts, GetTextCnt(), TextAlignments);
+    UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextCnt(), TextAlignments);
 }
 
 void LoginUI::SetTextRect()
@@ -526,7 +526,7 @@ void LoginUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
         mvTextBlocks[5].strText.push_back(wc);
     
 
-    for (auto wc : LoginOrSignup + std::string{ "-FAIL" })
+    for (auto wc : std::string{ "Login-FAIL" })
         mvTextBlocks[6].strText.push_back(wc);
 }
 

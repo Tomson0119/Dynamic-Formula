@@ -60,10 +60,10 @@ public:
 
     virtual void ChangeTextAlignment(UINT uNum, UINT uState) {}
 
-    std::pair<float, float> GetFrame() const { return std::make_pair(mfWidth, mfHeight); }
+    //?
    ID3D11Resource* GetRenderTarget() const { return mvWrappedRenderTargets[0].Get(); }
    UINT GetRenderTargetsCount() const { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
-
+   //?
    virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair("", ""); }
    virtual int GetLobbyPacket() { return -1; }
    virtual int GetRoomPacket() { return -1; }
@@ -72,11 +72,12 @@ public:
 
    //Frame
    void SetFrame(float H, float W) { mfHeight = H; mfWidth = W; }
+   std::pair<float, float> GetFrame() const { return std::make_pair(mfWidth, mfHeight); }
    float GetFrameWidth() { return mfWidth; }
    float GetFrameHeight() { return mfHeight; }
 
    //Font 
-   TCHAR* GetFontName() { return cFontName; }
+   TCHAR* GetFontName() { return mtcFontName; }
    void FontLoad(const std::vector<WCHAR*>& FontFilePath);
 
    //TextCnt
@@ -103,11 +104,21 @@ public:
    UINT GetBitmapCnt() { return miBitmapCnt; }
    void SetBitmapCnt(UINT n) { miBitmapCnt = n; }
 
+  //Font Size
+   void ResizeFontSize(UINT n) { mvfFontSizes.resize(n); }
+   void SetFontSize(const std::vector<float>& vfFontsizes) { for (int i = 0; i < static_cast<int>(GetTextCnt());++i) mvfFontSizes[i] = vfFontsizes[i]; }
+   void SetFontSize(float FontSize, int index) { mvfFontSizes[index] = FontSize; }
+   float GetFontSize(int index) { return mvfFontSizes[index]; }
+   std::vector<float>& GetFontSize() { return mvfFontSizes; }
+
+   //Fonts
+   void ResizeFonts(UINT n) { mvwsFonts.resize(n); }
+   std::vector<std::wstring>& GetFonts() { return mvwsFonts; }
+   void SetFonts(const std::vector<std::wstring>& Fonts) { for (int i = 0; i < static_cast<int>(GetTextCnt()); ++i) mvwsFonts[i] = Fonts[i]; }
+
    void SetBitmapFileNames(const std::vector<PCWSTR>& names) { for (auto& name : names) mvBitmapFileNames.push_back(name); }
 
-   
 private:
-
     float mfHeight = 0.0f;
     float mfWidth = 0.0f;
 
@@ -119,10 +130,14 @@ private:
     UINT miGradientCnt = 0;
     UINT miBitmapCnt = 0;
     
+    //FontSize
+    std::vector<float> mvfFontSizes;
+    //Fonts
+    std::vector<std::wstring> mvwsFonts;
+
     GradientColors* pGradientColors;
 
     std::vector<PCWSTR> mvBitmapFileNames;
-
 
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;
@@ -133,15 +148,15 @@ private:
     ComPtr<IDXGIDevice> pdxgiDevice;
     ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
 
-    ComPtr<IDWriteFontFile> mIDWriteFontFile;
-    ComPtr<IDWriteFontSetBuilder1> mIDWriteFontSetBuilder;
-    ComPtr<IDWriteInMemoryFontFileLoader> mIDWriteInMemoryFontFileLoader;
-    ComPtr<IDWriteFontSet> mIDWriteFontSet;
-    std::vector<ComPtr<IDWriteFontCollection1>> mIDWriteFontCollection;
+    ComPtr<IDWriteFontFile> mdwFontFile;
+    ComPtr<IDWriteFontSetBuilder1> mdwFontSetBuilder;
+    ComPtr<IDWriteInMemoryFontFileLoader> mdwInMemoryFontFileLoader;
+    ComPtr<IDWriteFontSet> mdwFontSet;
+    std::vector<ComPtr<IDWriteFontCollection1>> mdwFontCollection;
 
-    ComPtr<IDWriteFontFamily> mIDWriteFontFamily;
-    ComPtr<IDWriteLocalizedStrings> mIDWriteLocalizedStrings;
-    TCHAR cFontName[50];
+    ComPtr<IDWriteFontFamily> mdwFontFamily;
+    ComPtr<IDWriteLocalizedStrings> mdwLocalizedStrings;
+    TCHAR mtcFontName[50];
 
     IWICImagingFactory* mWICFactoryPtr;
 

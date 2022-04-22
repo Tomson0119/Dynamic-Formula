@@ -36,6 +36,8 @@ void LobbyUI::SetVectorSize(UINT nFrame, UINT TextCnt)
     UI::SetVectorSize(nFrame);
     mvTextBlocks.resize(TextCnt);
     SetBitmapsSize(3);
+    ResizeFontSize(TextCnt);
+    ResizeFonts(TextCnt);
 
     mvBitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
     mvBitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
@@ -338,23 +340,24 @@ void LobbyUI::Draw(UINT nFrame)
 
 void LobbyUI::CreateFontFormat()
 {
-    float fFontSize = GetFrameHeight() / 25.0f;;
-   // vfFontSize.resize(TextCnt);
+    std::vector<float>fFontSize;
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
+    fFontSize.push_back(GetFrameHeight() / 15.0f);
 
-    /*vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);
-    vfFontSize.push_back(GetFrameHeight() / 15.0f);*/
+    SetFontSize(fFontSize);
 
+    std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Tahoma");
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
@@ -368,6 +371,8 @@ void LobbyUI::CreateFontFormat()
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
     Fonts.push_back(L"±¼¸²Ã¼");
+
+    SetFonts(Fonts);
 
     //TextAlignments.resize(TextCnt);
     TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
@@ -384,7 +389,7 @@ void LobbyUI::CreateFontFormat()
     TextAlignments[11] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[12] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
-    UI::CreateFontFormat(fFontSize, Fonts, GetTextCnt(), TextAlignments);
+    UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextCnt(), TextAlignments);
 }
 
 void LobbyUI::SetTextRect()

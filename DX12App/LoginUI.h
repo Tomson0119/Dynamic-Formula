@@ -41,11 +41,6 @@ private:
 	std::string LoginOrSignup = "Login";
 	std::string LoginOrSignupReverse = "Signup";
 
-	
-	float fFontSize = 0.0f; 
-	std::vector<float> vfFontSize;
-	std::vector<std::wstring> Fonts;
-	
 	std::vector<PCWSTR > mvBitmapFileNames;
 
 	DWRITE_TEXT_ALIGNMENT TextAlignments[7];
