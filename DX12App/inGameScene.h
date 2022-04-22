@@ -103,8 +103,8 @@ private:
 	void UpdatePlayerObjects();
 
 	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path);
-
 	void LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
+	void LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
 
@@ -194,4 +194,5 @@ private:
 	btRigidBody* mTrackRigidBody = NULL;
 
 	std::vector<LightInfo> mLights;
+	LightInfo mDirectionalLight;
 };

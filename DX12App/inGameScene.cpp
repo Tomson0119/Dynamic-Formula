@@ -65,29 +65,13 @@ void InGameScene::BuildObjects(
 	mCurrentCamera = mDirectorCamera.get();
 
 	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
-	mMainLight.Lights[0].SetInfo(
+
+	mDirectionalLight.SetInfo(
 		XMFLOAT3(0.3f, 0.3f, 0.3f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
-	mMainLight.Lights[1].SetInfo(
-		XMFLOAT3(0.6f, 0.6f, 0.0f),
-		XMFLOAT3(-306.5f, 1.0f, 253.7f),
-		XMFLOAT3(-1.0f, 0.75f, -1.0f),
-		1.0f, 10.0f, 0.0f,
-		200.0f, POINT_LIGHT);
-	mMainLight.Lights[2].SetInfo(
-		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(-1.0f, 0.75f, 1.0f),
-		0.0f, 0.0f, 0.0f,
-		3000.0f, DIRECTIONAL_LIGHT);
-
-	for (int i = 0; i < NUM_LIGHTS; ++i)
-	{
-		mLights.push_back(mMainLight.Lights[i]);
-	}
 
 	BuildRootSignature();
 	BuildComputeRootSignature();
@@ -381,6 +365,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
+	LoadLights(cmdList, L"Map\\Lights.tmap");
 
 #ifdef STANDALONE
 	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
@@ -752,10 +737,12 @@ void InGameScene::UpdateLightConstants()
 		}
 	);
 
-	for (int i = 0; i < NUM_LIGHTS; ++i)
+	for (int i = 0; i < NUM_LIGHTS - 1; ++i)
 	{
 		mMainLight.Lights[i] = mLights[i];
 	}
+
+	mMainLight.Lights[NUM_LIGHTS - 1] = mDirectionalLight;
 
 	mLightCB->CopyData(0, mMainLight);
 }
@@ -1177,5 +1164,33 @@ void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::
 		obj->SetQuaternion(quaternion);
 
 		mPipelines[Layer::CheckPoint]->AppendObject(obj);
+	}
+}
+
+void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
+{
+	std::ifstream in_file{ path };
+	std::string info;
+
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+
+		XMFLOAT3 pos;
+		ss >> pos.x >> pos.y >> pos.z;
+
+		XMFLOAT3 direction;
+		ss >> direction.x >> direction.y >> direction.z;
+
+		LightInfo l;
+
+		l.SetInfo(
+			XMFLOAT3(0.6f, 0.6f, 0.6f),
+			pos,
+			direction,
+			0.0f, 100.0f, 100.0f,
+			0.0f, SPOT_LIGHT);;
+
+		mLights.push_back(l);
 	}
 }
