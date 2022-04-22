@@ -189,7 +189,7 @@ private:
 
 	bool mBloomEnable = true;
 
-	bool mVolumetricEnable = true;
+	bool mVolumetricEnable = false;
 
 	btRigidBody* mTrackRigidBody = NULL;
 

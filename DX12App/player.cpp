@@ -183,7 +183,7 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 			XMFLOAT3(0.6f, 0.6f, 0.6f),
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
 			XMFLOAT3(-0.3f, 0.0f, -1.0f),
-			0.0f, 30.0f, 50.0f,
+			0.0f, 5000.0f, 100.0f,
 			0.0f, SPOT_LIGHT);;
 
 		mFrontLight[i].pad0 = 1.0f;

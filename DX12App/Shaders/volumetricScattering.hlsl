@@ -117,6 +117,39 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
             volumetricColor += float4(volumetricScattering(worldPosition, gLights[i]), 0.0);
     }
     
-    
     outputTexture[pixel] = volumetricColor;
 }   
+
+//[numthreads(32, 32, 1)]
+//void CS(uint3 dispatchID : SV_DispatchThreadID) : COLOR0
+//{ 
+//    uint2 pixel = dispatchID.xy;
+    
+//    for (int i = 0; i < NUM_LIGHTS; ++i)
+//    {
+//        // Calculate vector from pixel to light source in screen space.
+//        half2 deltaTexCoord = (float2(pixel.x / width, pixel.y / height) - mul(mul(gLights[i].Position, gView), gProj).xy);
+//        // Divide by number of samples and scale by control factor.
+//        deltaTexCoord *= 1.0f / NUM_SAMPLES * Density;
+//        // Store initial sample.
+//        half3 color = inputTexture[pixel];
+//        // Set up illumination decay factor.
+//        half illuminationDecay = 1.0f;
+//        // Evaluate summation from Equation 3 NUM_SAMPLES iterations.
+//        for (int i = 0; i < NUM_SAMPLES; i++)
+//        {
+//            // Step sample location along ray.
+//            texCoord -= deltaTexCoord;
+//            // Retrieve sample at new location.
+//            half3 sample = tex2D(frameSampler, texCoord);
+//            // Apply sample attenuation scale/decay factors.
+//            sample *= illuminationDecay * Weight;
+//            // Accumulate combined color.
+//            color += sample;
+//            // Update exponential decay factor.
+//            illuminationDecay *= Decay;
+//        }
+//        // Output final color with a further scale control factor.
+//        outputTexture[pixel] = float4(color * Exposure, 1);
+//    }
+//} 
