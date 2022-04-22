@@ -45,8 +45,7 @@ private:
 	float fFontSize = 0.0f; 
 	std::vector<float> vfFontSize;
 	std::vector<std::wstring> Fonts;
-	UINT TextCnt;
-	UINT UICnt;
+	
 	std::vector<PCWSTR > mvBitmapFileNames;
 
 	DWRITE_TEXT_ALIGNMENT TextAlignments[7];

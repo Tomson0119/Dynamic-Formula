@@ -25,10 +25,6 @@ private:
 
     UINT uItemCnt = 0;
     float fDriftGauge = 0.0f;    
-
-    UINT TextCnt;
-    UINT UICnt;
-
     
     float mItemOffTime = 3.5f;
     float mItemOffStart = 0.0f;

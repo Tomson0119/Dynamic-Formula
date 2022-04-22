@@ -2,9 +2,12 @@
 #include "LobbyUI.h"
 
 LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(13), UICnt(18)
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue)
+    //Text: 13, RoundRect: 18
 {
-    SetVectorSize(nFrame, TextCnt);
+    SetTextCnt(13);
+    SetRoundRectCnt(18);
+    SetVectorSize(nFrame, GetTextCnt());
     Initialize(device, pd3dCommandQueue);
     for (int i = 0;i<mvBitmapFileNames.size();++i)
         LoadBitmapResourceFromFile(mvBitmapFileNames[i], i);
@@ -55,7 +58,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         mvColors[0].a = 0.1f;
     else
         mvColors[0].a = 0.9f;
-    for (int i = 1; i < static_cast<int>(TextCnt); ++i)
+    for (int i = 1; i < static_cast<int>(GetTextCnt()); ++i)
     {// 12, 34, 56, 78, 910, 1112
         if (MouseCollisionCheck(dx, dy, mvTextBlocks[i]))
         {
@@ -63,7 +66,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         }
         else mvColors[i].a = 0.9f;
     }
-    UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    UI::BuildSolidBrush(GetRoundRectCnt() + 1, GetTextCnt(), mvColors);
 
 }
 
@@ -71,7 +74,7 @@ void LobbyUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
-    for (int i = 1; i < static_cast<int>(TextCnt); ++i)
+    for (int i = 1; i < static_cast<int>(GetTextCnt()); ++i)
     {
         if (MouseCollisionCheck(dx, dy, mvTextBlocks[i]))
         {
@@ -327,9 +330,9 @@ void LobbyUI::Draw(UINT nFrame)
     float aOpacities[3] = { 0.5f, 1.0f, 0.5f };
     UI::BeginDraw(nFrame);
     UI::DrawBmp(LTRB, 0, 2, aOpacities);
-    UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt + 1, 0, 0, IsOutlined);
+    UI::RoundedRectDraw(RectLTRB, FillLTRB, GetTextCnt() + 1, 0, 0, IsOutlined);
     UI::DrawBmp(LTRB, 2, 1, aOpacities);
-    UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
+    UI::TextDraw(nFrame, GetTextCnt(), mvTextBlocks);
     UI::EndDraw(nFrame);
 }
 
@@ -381,7 +384,7 @@ void LobbyUI::CreateFontFormat()
     TextAlignments[11] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[12] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, TextAlignments);
+    UI::CreateFontFormat(fFontSize, Fonts, GetTextCnt(), TextAlignments);
 }
 
 void LobbyUI::SetTextRect()
@@ -421,7 +424,7 @@ void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHe
     //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
     for (auto color : colorList)
         mvColors.push_back(color);
-    UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    UI::BuildSolidBrush(GetRoundRectCnt() + 1, GetTextCnt(), mvColors);
 
     SetTextRect();
     for (auto wc : std::string{ "MakeRoom" })
@@ -464,7 +467,7 @@ void LobbyUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device>
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     //Reset();
-    SetVectorSize(nFrame, TextCnt);
+    SetVectorSize(nFrame, GetTextCnt());
     UI::Initialize(device, pd3dCommandQueue);
     for (int i = 0; i < mvBitmapFileNames.size(); ++i)
         LoadBitmapResourceFromFile(mvBitmapFileNames[i], i);

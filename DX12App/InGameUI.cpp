@@ -2,11 +2,14 @@
 #include "InGameUI.h"
 
 InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(5), UICnt(3)
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue)
+	//Text: 5, Rect: 3
     // Text: GameTime, LapCnt, Rank, StartCount, Velocity
     //UI: DraftGage, Item1, Item2
 {
-    SetVectorSize(nFrame, TextCnt);
+	SetTextCnt(5);
+	SetRectCnt(3);
+    SetVectorSize(nFrame, GetTextCnt());
     Initialize(device, pd3dCommandQueue);
 }
 
@@ -29,7 +32,7 @@ void InGameUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dC
 
 void InGameUI::StartPrint(const std::string& strUIText)
 {
-    mvTextBlocks[TextCnt - 1].strText = strUIText;
+    mvTextBlocks[GetTextCnt() - 1].strText = strUIText;
 }
 
 void InGameUI::Update(float GTime, Player* mPlayer)
@@ -85,7 +88,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	
 
 
-	for(int i=0;i<static_cast<int>(TextCnt);++i)
+	for(int i=0;i<static_cast<int>(GetTextCnt());++i)
 		mvTextBlocks[i].strText.clear();
 
 	float LapTime = GTime - CountdownTime;
@@ -237,48 +240,48 @@ void InGameUI::Draw(UINT nFrame)
     XMFLOAT4 RectLTRB[] =
     {
         {
-            mfWidth * (3.0f / 16.0f), 
+            GetFrameWidth()* (3.0f / 16.0f),
 			GetFrameHeight() * (5.0f / 6.0f),
-        mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)),
+		GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)),
         GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
         {
-            mfWidth * (17.0f / 32.0f), 
+			GetFrameWidth()* (17.0f / 32.0f),
 			GetFrameHeight() * (5.0f / 6.0f),
-        mfWidth * (18.0f / 32.0f), 
+		GetFrameWidth()* (18.0f / 32.0f),
 		GetFrameHeight() * (8.0f / 9.0f)
         }, //Item1 UI
         {
-            mfWidth * (19.0f / 32.0f), 
+			GetFrameWidth()* (19.0f / 32.0f),
 			GetFrameHeight() * (5.0f / 6.0f),
-        mfWidth * (20.0f / 32.0f),
+		GetFrameWidth()* (20.0f / 32.0f),
 		GetFrameHeight() * (8.0f / 9.0f)
         }//Item2 UI
     };
     XMFLOAT4 FillLTRB[] = 
     { 
         {
-            mfWidth * (3.0f / 16.0f), 
+			GetFrameWidth()* (3.0f / 16.0f),
 			GetFrameHeight() * (5.0f / 6.0f), 
-			mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)) * fDriftGauge, 
+			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * fDriftGauge,
 			GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
         {
-            mfWidth * (17.0f / 32.0f), 
+			GetFrameWidth()* (17.0f / 32.0f),
 			GetFrameHeight() * (5.0f / 6.0f), 
-			mfWidth * (18.0f / 32.0f), 
+			GetFrameWidth()* (18.0f / 32.0f),
 			GetFrameHeight() * (8.0f / 9.0f)
         }, //Item1 UI
         {
-            mfWidth * (19.0f / 32.0f),
+			GetFrameWidth()* (19.0f / 32.0f),
 			GetFrameHeight() * (5.0f / 6.0f), 
-			mfWidth * (20.0f / 32.0f), 
+			GetFrameWidth()* (20.0f / 32.0f),
 			GetFrameHeight() * (8.0f / 9.0f)
         }//Item2 UI
     };
 	bool IsOutlined[3] = { true, true, true };
-	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 2-uItemCnt, 1, IsOutlined);
-	UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
+	UI::RectDraw(RectLTRB, FillLTRB, GetTextCnt(), 2-uItemCnt, 1, IsOutlined);
+	UI::TextDraw(nFrame, GetTextCnt(), mvTextBlocks);
     //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 	UI::EndDraw(nFrame);
 }
@@ -308,16 +311,16 @@ void InGameUI::CreateFontFormat()
 	TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	//TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, TextAlignments);         
+    UI::CreateFontFormat(fFontSize, Fonts, GetTextCnt(), TextAlignments);
 }
 
 void InGameUI::SetTextRect()
 {
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f + GetFrameHeight() / 6, mfWidth / 6, 23.0f + (GetFrameHeight() / 6));
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f, mfWidth / 6, GetFrameHeight() / 6);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 0.0f, mfWidth, GetFrameHeight() / 6);
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (mfWidth / 6), 5 * (GetFrameHeight() / 6), mfWidth, GetFrameHeight());
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 8, GetFrameHeight() / 2 - GetFrameHeight() * (1 / 11), mfWidth * 7 / 8, GetFrameHeight() / 2 + GetFrameHeight() * (1 / 11));
+    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f + GetFrameHeight() / 6, GetFrameWidth() / 6, 23.0f + (GetFrameHeight() / 6));
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(0.0f, 23.0f, GetFrameWidth() / 6, GetFrameHeight() / 6);
+    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(5 * (GetFrameWidth() / 6), 0.0f, GetFrameWidth(), GetFrameHeight() / 6);
+    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(5 * (GetFrameWidth() / 6), 5 * (GetFrameHeight() / 6), GetFrameWidth(), GetFrameHeight());
+    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 1 / 8, GetFrameHeight() / 2 - GetFrameHeight() * (1 / 11), GetFrameWidth() * 7 / 8, GetFrameHeight() / 2 + GetFrameHeight() * (1 / 11));
 }
 
 void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
@@ -331,7 +334,7 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
 
     D2D1::ColorF colorList[8] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f),D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f), D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f), D2D1::ColorF(D2D1::ColorF::Red, 1.0f), D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f) };
     D2D1::ColorF gradientColors[4] = { D2D1::ColorF(D2D1::ColorF::ForestGreen, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Yellow, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Orange, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Red, gradient_Alpha) };
-    UI::BuildBrush(UICnt, TextCnt, colorList,  4, gradientColors);
+    UI::BuildBrush(GetRectCnt(), GetTextCnt(), colorList, 4, gradientColors);
     
     SetTextRect();
 }
@@ -346,7 +349,7 @@ void InGameUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     //Reset();
-    SetVectorSize(nFrame, TextCnt);
+    SetVectorSize(nFrame, GetTextCnt());
     UI::Initialize(device, pd3dCommandQueue);
     PreDraw(ppd3dRenderTargets, width, height);
 }

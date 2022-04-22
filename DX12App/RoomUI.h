@@ -22,8 +22,7 @@ public:
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
-	UINT TextCnt;
-	UINT UICnt;
+
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 	std::vector<TextBlock>          mvTextBlocks;

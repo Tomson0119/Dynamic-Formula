@@ -23,8 +23,7 @@ public:
     virtual void Update(float GTime, std::vector<std::wstring>& Texts) {}
     virtual void Update(std::vector<std::wstring>& Texts) {}
     virtual void Update(float GTime);
-    virtual void Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
-     XMFLOAT4 RetLTRM[], XMFLOAT4 FillLTRB[]*/);
+    virtual void Draw(UINT nFrame);
 
     virtual HRESULT LoadBitmapResourceFromFile(PCWSTR ImageName, int index);
     virtual void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
@@ -46,7 +45,6 @@ public:
     virtual void CreateFontFormat(std::vector<float>& vFontSize, const std::vector<std::wstring>& Fonts, UINT TextCnt,
         DWRITE_TEXT_ALIGNMENT* Alignment);
 
-    //ID2D1DeviceContext2* GetDeviceContext() { return mpd2dDeviceContext.Get(); }
     virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) {}
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) {}
@@ -62,8 +60,6 @@ public:
 
     virtual void ChangeTextAlignment(UINT uNum, UINT uState) {}
 
-
-    //void SetTextcnt(UINT Cnt) { TextCnt = Cnt; }
     std::pair<float, float> GetFrame() const { return std::make_pair(mfWidth, mfHeight); }
    ID3D11Resource* GetRenderTarget() const { return mvWrappedRenderTargets[0].Get(); }
    UINT GetRenderTargetsCount() const { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
@@ -71,24 +67,45 @@ public:
    virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair("", ""); }
    virtual int GetLobbyPacket() { return -1; }
    virtual int GetRoomPacket() { return -1; }
-   //virtual std::vector<ComPtr<ID2D1Bitmap>> GetBitmaps() { return mvBitmaps; }
    
    void SetBitmapsSize(int size) { mvBitmaps.resize(size); }
 
-   void SetTextCnt(int TextCnt) { miTextCnt = TextCnt; }
-   void SetRectCnt(int RectCnt) { miRectCnt = RectCnt; }
-   void SetRoundedRectCnt(int RoundeRectCnt) { miRoundRectCnt = RoundeRectCnt; }
-   void SetEllipseCnt(int EllipseCnt) { miEllipseCnt = EllipseCnt; }
-   void SetGradientCnt(int GradientCnt) { miGradientCnt = GradientCnt; }
-   void SetBitmapCnt(int BitmapCnt) { miBitmapCnt = BitmapCnt; }
-
+   //Frame
    void SetFrame(float H, float W) { mfHeight = H; mfWidth = W; }
    float GetFrameWidth() { return mfWidth; }
    float GetFrameHeight() { return mfHeight; }
-   void SetBitmapFileNames(const std::vector<PCWSTR>& names) { for (auto& name : names) mvBitmapFileNames.push_back(name); }
 
+   //Font 
    TCHAR* GetFontName() { return cFontName; }
    void FontLoad(const std::vector<WCHAR*>& FontFilePath);
+
+   //TextCnt
+   UINT GetTextCnt() { return miTextCnt; }
+   void SetTextCnt(UINT n) { miTextCnt = n; }
+
+   //RoundRectCnt
+   UINT GetRoundRectCnt() { return miRoundRectCnt; }
+   void SetRoundRectCnt(UINT n) { miRoundRectCnt = n; }
+
+   // RectCnt
+   UINT GetRectCnt() { return miRectCnt; }
+   void SetRectCnt(UINT n) { miRectCnt = n; }
+
+   //Ellipse
+   UINT GetEllipseCnt() { return miEllipseCnt; }
+   void SetEllipseCnt(UINT n) { miEllipseCnt  = n; }
+
+   //Gradient
+   UINT GetGradientCnt() { return miGradientCnt; }
+   void SetGradientCnt(UINT n) { miGradientCnt = n; }
+
+   // Bitmap
+   UINT GetBitmapCnt() { return miBitmapCnt; }
+   void SetBitmapCnt(UINT n) { miBitmapCnt = n; }
+
+   void SetBitmapFileNames(const std::vector<PCWSTR>& names) { for (auto& name : names) mvBitmapFileNames.push_back(name); }
+
+   
 private:
 
     float mfHeight = 0.0f;

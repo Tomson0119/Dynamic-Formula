@@ -1,11 +1,14 @@
 #include "stdafx.h"
 #include "RoomUI.h"
 RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(11), UICnt(13)
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue)
+    // Text: 11, RoundRect: 13
     //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
     //UI: NicknameBox[8], StartBox, CarSelectBox[2], MapSelectBox[2]
 {
-    SetVectorSize(nFrame, TextCnt);
+    SetTextCnt(11);
+    SetRoundRectCnt(13);
+    SetVectorSize(nFrame, GetTextCnt());
     Initialize(device, pd3dCommandQueue);
     for (int i = 0; i < mvBitmapFileNames.size(); ++i)
         LoadBitmapResourceFromFile(mvBitmapFileNames[i], i);
@@ -233,10 +236,10 @@ void RoomUI::Draw(UINT nFrame)
     };
     bool IsOutlined[13] = { true, true, true, true, true, true, true, true, true, true, true, true, true };
     UI::BeginDraw(nFrame); 
-    UI::RectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0, IsOutlined);
+    UI::RectDraw(RectLTRB, FillLTRB, GetTextCnt() + 1, 0, 0, IsOutlined);
     float aOpacities[2] = { 0.5f, 0.5f };
     UI::DrawBmp(RectLTRB, 0, 1, aOpacities);
-    UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
+    UI::TextDraw(nFrame, GetTextCnt(), mvTextBlocks);
     UI::EndDraw(nFrame);
 }
 
@@ -286,7 +289,7 @@ void RoomUI::CreateFontFormat()
      
 
 
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, TextAlignments);
+    UI::CreateFontFormat(fFontSize, Fonts, GetTextCnt(), TextAlignments);
 }
 
 void RoomUI::SetTextRect()
@@ -324,7 +327,7 @@ void RoomUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHei
         D2D1::ColorF(D2D1::ColorF::Gray, 0.5f)/*UI*/
     };
     //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
-    UI::BuildSolidBrush(UICnt, TextCnt+1, colorList);
+    UI::BuildSolidBrush(GetRoundRectCnt(), GetTextCnt() + 1, colorList);
 
     SetTextRect(); 
     for (auto wc : std::wstring{ L"StartOrReady" })
@@ -363,7 +366,7 @@ void RoomUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> 
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     //Reset();
-    SetVectorSize(nFrame, TextCnt);
+    SetVectorSize(nFrame, GetTextCnt());
     UI::Initialize(device, pd3dCommandQueue);
     for (int i = 0; i < mvBitmapFileNames.size(); ++i)
         LoadBitmapResourceFromFile(mvBitmapFileNames[i], i);
