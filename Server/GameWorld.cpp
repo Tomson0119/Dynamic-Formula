@@ -57,10 +57,10 @@ void GameWorld::SetPlayerRotation(int idx, const btQuaternion& quat)
 }
 
 void GameWorld::CreateRigidbodies(int idx,
-	btScalar carMass, BtCarShape* carShape,
-	btScalar missileMass, BtBoxShape* missileShape)
+	btScalar carMass, BtCarShape& carShape,
+	btScalar missileMass, BtBoxShape& missileShape)
 {
-	mPlayerList[idx]->CreateVehicleRigidBody(carMass, mPhysics.GetDynamicsWorld(), carShape);
+	mPlayerList[idx]->CreateVehicleRigidBody(carMass, mPhysics, carShape);
 	mPlayerList[idx]->CreateMissileRigidBody(missileMass, missileShape);
 	mPlayerCount += 1;
 }
@@ -76,12 +76,12 @@ void GameWorld::UpdatePhysicsWorld()
 		CheckCollision();
 		for (Player* player : GetPlayerList())
 		{
-			if (player->Empty == false)
+			if (player->NeedUpdate())
 			{
-				player->Update(elapsed, mPhysics.GetDynamicsWorld());
+				player->Update(elapsed, mPhysics);
 			}
 		}
-		mMap.Update(elapsed, mPhysics.GetDynamicsWorld());
+		mMap.Update(elapsed, mPhysics);
 	}
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
@@ -95,9 +95,9 @@ void GameWorld::FlushPhysicsWorld()
 {
 	for (Player* player : GetPlayerList())
 	{
-		player->Reset(mPhysics.GetDynamicsWorld());
+		player->Reset(mPhysics);
 	}
-	mMap.Reset(mPhysics.GetDynamicsWorld());
+	mMap.Reset(mPhysics);
 	mPhysics.Flush();
 }
 
@@ -363,7 +363,7 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, const GameObject::OBJ
 	{
 		if (cpIdx < 0)
 		{
-			mPlayerList[idx]->SetMissileDeletionFlag();
+			mPlayerList[idx]->DisableMissile();
 			SendMissileRemovePacket(idx);
 		}
 		break;
@@ -387,6 +387,7 @@ void GameWorld::HandleCollisionWithPlayer(int aIdx, int bIdx, const GameObject::
 				mPlayerList[aIdx]->SetInvincible();
 				// TODO: Waits for 1.5 second and send spawn packet.
 				// and waits another 1.5 second and release invincible mode.
+				std::cout << "Hit by missile.\n";
 			}
 		}
 		break;
@@ -396,7 +397,7 @@ void GameWorld::HandleCollisionWithPlayer(int aIdx, int bIdx, const GameObject::
 		if (bTag == GameObject::OBJ_TAG::VEHICLE)
 		{
 			mPlayerList[aIdx]->IncreasePoint(mConstantPtr->MissileHitPoint);
-			mPlayerList[aIdx]->SetMissileDeletionFlag();
+			mPlayerList[aIdx]->DisableMissile();
 			SendMissileRemovePacket(aIdx);
 		}
 		break;

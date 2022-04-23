@@ -23,8 +23,8 @@ public:
 	void SetPlayerRotation(int idx, const btQuaternion& quat);
 
 	void CreateRigidbodies(int idx,
-		btScalar carMass, BtCarShape* carShape,
-		btScalar missileMass, BtBoxShape* missileShape);
+		btScalar carMass, BtCarShape& carShape,
+		btScalar missileMass, BtBoxShape& missileShape);
 
 	void UpdatePhysicsWorld();
 	void FlushPhysicsWorld();
