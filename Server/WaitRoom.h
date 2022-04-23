@@ -1,7 +1,8 @@
 #pragma once
 
+#include "Player.h"
+
 class LoginServer;
-class Player;
 
 class WaitRoom
 {
@@ -42,7 +43,7 @@ public:
 	ROOM_STAT GetRoomState() const { return mState; }
 
 	int GetID() const { return mID; }
-	Player* GetPlayerPtr(int idx) const { return msPlayers[idx].get(); }
+	Player* GetPlayerPtr(int idx) const { return mPlayers[idx].get(); }
 
 public:
 	void SendGameStartFail(bool instSend=true);
@@ -65,6 +66,6 @@ private:
 
 	std::atomic<ROOM_STAT> mState;
 
-	static PlayerList msPlayers;
-	static const int MIN_PLAYER_TO_START = 2;
+	PlayerList mPlayers;
+	static const int MIN_PLAYER_TO_START = 1;
 };
