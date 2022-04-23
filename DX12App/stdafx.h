@@ -132,7 +132,7 @@ inline std::wstring AnsiToWString(const std::string& str)
 
 ////////////////////////////////////////////////////////////////////////////
 //
-#define NUM_LIGHTS 7
+#define NUM_LIGHTS 32
 
 #define POINT_LIGHT		  1
 #define SPOT_LIGHT		  2
@@ -176,6 +176,29 @@ struct LightConstants
 	XMFLOAT4X4 ShadowTransform[3];
 	XMFLOAT4 Ambient;
 	LightInfo Lights[NUM_LIGHTS];
+};
+
+struct VolumetricConstants
+{
+	float absorptionTau;
+	XMFLOAT3 absorptionColor;
+	int scatteringSamples;
+	float scatteringTau;
+	float scatteringZFar;
+
+	int pad0 = 0;
+
+	XMFLOAT3 scatteringColor;
+
+	int pad1 = 0;
+
+	XMFLOAT4X4 gInvProj;
+	XMFLOAT4X4 gInvView;
+	XMFLOAT3 CameraPos;
+
+	int pad2 = 0;
+
+	LightInfo gLights[NUM_LIGHTS];
 };
 
 struct CameraConstants
@@ -499,7 +522,7 @@ namespace Vector3
 {
 	inline float Distance(const XMFLOAT3& v1, const XMFLOAT3& v2)
 	{
-		return sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2) + pow(v1.z - v2.z, 2));
+		return (float)sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2) + pow(v1.z - v2.z, 2));
 	}
 
 	inline XMFLOAT3 btVectorToXM(const btVector3& v)

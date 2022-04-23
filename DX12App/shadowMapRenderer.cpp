@@ -341,7 +341,7 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, InGameScen
 		cmdList->OMSetRenderTargets(0, nullptr, false, &mDsvCPUDescriptorHandles[i]);
 
 		scene->UpdateCameraConstant(i + 1, mDepthCamera[i].get());
-		scene->SetCBV(cmdList, i + 1);
+		scene->SetGraphicsCBV(cmdList, i + 1);
 		RenderPipelines(cmdList, i);
 
 		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(

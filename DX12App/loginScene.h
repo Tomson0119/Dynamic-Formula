@@ -27,7 +27,7 @@ public:
 		const GameTimer& timer,
 		const std::shared_ptr<BulletWrapper>& physics) override;
 
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame) override;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame) override;
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
 	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y);
 	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y);
