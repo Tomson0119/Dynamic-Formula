@@ -186,7 +186,7 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 			0.0f, 30.0f, 50.0f,
 			0.0f, SPOT_LIGHT);;
 
-		mFrontLight[i].pad0 = 1.0f;
+		mFrontLight[i].pad0 = 1;
 	}
 }
 
