@@ -9,6 +9,8 @@ InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 {
 	SetTextCnt(5);
 	SetRectCnt(3);
+	SetGradientCnt(1);
+	SetUICnt();
     SetVectorSize(nFrame, GetTextCnt());
     Initialize(device, pd3dCommandQueue);
 }
@@ -25,6 +27,15 @@ void InGameUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 	ResizeFontSize(TextCnt);
 	ResizeFonts(TextCnt);
     //mvd2dLinearGradientBrush.resize(TextCnt);
+
+	std::vector<std::wstring> Fonts;
+	Fonts.push_back(L"Fonts\\Blazed.ttf");
+	Fonts.push_back(L"Fonts\\Xenogears.ttf");
+	Fonts.push_back(L"Fonts\\abberancy.ttf");
+	Fonts.push_back(L"Fonts\\abberancy.ttf");
+	Fonts.push_back(L"Fonts\\abberancy.ttf");
+	
+	FontLoad(Fonts);
 }
 
 void InGameUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
@@ -282,8 +293,8 @@ void InGameUI::Draw(UINT nFrame)
         }//Item2 UI
     };
 	bool IsOutlined[3] = { true, true, true };
-	UI::RectDraw(RectLTRB, FillLTRB, GetTextCnt(), 2-uItemCnt, 1, IsOutlined);
-	UI::TextDraw(nFrame, GetTextCnt(), mvTextBlocks);
+	UI::RectDraw(RectLTRB, FillLTRB, 1, IsOutlined);
+	UI::TextDraw(nFrame, mvTextBlocks);
     //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 	UI::EndDraw(nFrame);
 }
@@ -309,8 +320,8 @@ void InGameUI::CreateFontFormat()
 
 	SetFontSize(fFontSize);
 
-	DWRITE_TEXT_ALIGNMENT TextAlignments[5];
-	//TextAlignments.resize(TextCnt);
+	std::vector<DWRITE_TEXT_ALIGNMENT> TextAlignments;
+	TextAlignments.resize(GetTextCnt());
 	TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
@@ -318,7 +329,7 @@ void InGameUI::CreateFontFormat()
 	TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	//TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
-    UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextCnt(), TextAlignments);
+    UI::CreateFontFormat(GetFontSize(), GetFonts(), TextAlignments);
 }
 
 void InGameUI::SetTextRect()
@@ -330,18 +341,29 @@ void InGameUI::SetTextRect()
     mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 1 / 8, GetFrameHeight() / 2 - GetFrameHeight() * (1 / 11), GetFrameWidth() * 7 / 8, GetFrameHeight() / 2 + GetFrameHeight() * (1 / 11));
 }
 
-void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
+void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
 	SetFrame(static_cast<float>(nWidth), static_cast<float>(nHeight));
 
-    UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
+    UI::BuildObjects(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
 
 	const float	gradient_Alpha = 0.6f;
+	std::vector<D2D1::ColorF> colorList;
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f));
 
-    D2D1::ColorF colorList[8] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f),D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f), D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f), D2D1::ColorF(D2D1::ColorF::Red, 1.0f), D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f) };
+
+    //D2D1::ColorF colorList[8] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f),D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f), D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f), D2D1::ColorF(D2D1::ColorF::Red, 1.0f), D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f) };
     D2D1::ColorF gradientColors[4] = { D2D1::ColorF(D2D1::ColorF::ForestGreen, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Yellow, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Orange, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Red, gradient_Alpha) };
-    UI::BuildBrush(GetRectCnt(), GetTextCnt(), colorList, 4, gradientColors);
+	SetColors(colorList);
+	UI::BuildBrush(GetColors(), 4, gradientColors);
     
     SetTextRect();
 }
@@ -349,14 +371,13 @@ void InGameUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nH
 void InGameUI::Reset()
 {
     UI::Reset();
-    mvTextBlocks.clear();
 }
 
 void InGameUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
-    //Reset();
+	UI::Initialize(device, pd3dCommandQueue);
+	//Reset();
     SetVectorSize(nFrame, GetTextCnt());
-    UI::Initialize(device, pd3dCommandQueue);
-    PreDraw(ppd3dRenderTargets, width, height);
+    BuildObjects(ppd3dRenderTargets, width, height);
 }

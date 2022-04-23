@@ -7,13 +7,13 @@ public:
 		pd3dCommandQueue);
 	~LobbyUI();
 
-	void SetVectorSize(UINT nFrame, UINT TextCnt);
+	void SetVectorSize(UINT nFrame);
 	virtual void Update(float GTime, Player* mPlayer) {}
 	virtual void Update(float GTime);
 	void Draw(UINT nFrame);
 	void CreateFontFormat();
 	void SetTextRect();
-	void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight);
+	void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight);
 	void Reset();
 	void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
@@ -26,13 +26,6 @@ public:
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
-	DWRITE_TEXT_ALIGNMENT TextAlignments[13];
-	
-	std::vector<D2D1::ColorF> mvColors;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
-	std::vector<TextBlock>          mvTextBlocks;
-
-	std::vector<PCWSTR > mvBitmapFileNames;
-
 };
 

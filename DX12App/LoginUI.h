@@ -7,14 +7,14 @@ public:
 	LoginUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 		pd3dCommandQueue);
 	~LoginUI();
-	void SetVectorSize(UINT nFrame, UINT TextCnt);
+	void SetVectorSize(UINT nFrame);
 	virtual void Update(float GTime, std::vector<std::string>& Texts);
 	virtual void Update(float GTime) {}
 	virtual void Update(std::vector<std::string>& Texts);
 	virtual void Draw(UINT nFrame);
 	void CreateFontFormat();
 	void SetTextRect();
-	virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight);
+	virtual void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight);
 	virtual void Reset();
 	virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
@@ -26,28 +26,25 @@ public:
 	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
 	virtual void ChangeTextAlignment(UINT uNum, UINT uState  );
 
-	virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair(mvTextBlocks[3].strText, mvTextBlocks[4].strText); }
+	virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair(GetTextBlock()[3].strText, GetTextBlock()[4].strText); }
 
 	void SetLoginFail(bool TF) { IsLoginFail = TF; }
 	void SetSignupBool(bool TF) { IsSignup = TF; }
-	void SetLoginOrSignup(std::string msg) { mvTextBlocks[1].strText = LoginOrSignup = msg; }
-	void SetLoginOrSignupReverse(std::string msg) { mvTextBlocks[5].strText = LoginOrSignupReverse = msg; }
+	void SetLoginOrSignup(std::string msg) { GetTextBlock()[1].strText = LoginOrSignup = msg; }
+	void SetLoginOrSignupReverse(std::string msg) { GetTextBlock()[5].strText = LoginOrSignupReverse = msg; }
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 
 	bool IsSignup = false;
 	bool IsLoginFail = true;
 
+	std::vector<D2D1::ColorF> mvColors;
+
 	std::string LoginOrSignup = "Login";
 	std::string LoginOrSignupReverse = "Signup";
 
-	std::vector<PCWSTR > mvBitmapFileNames;
-
-	DWRITE_TEXT_ALIGNMENT TextAlignments[7];
 	
-	std::vector<D2D1::ColorF> mvColors;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
-	std::vector<TextBlock>          mvTextBlocks;
 
 
 };

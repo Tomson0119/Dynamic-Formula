@@ -8,7 +8,7 @@ LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
 #ifdef STANDALONE
-	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #else
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
@@ -22,7 +22,7 @@ void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 {
 	mDevice = device;
 	mpUI = std::make_unique<LobbyUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)

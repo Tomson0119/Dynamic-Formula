@@ -7,13 +7,13 @@ public:
 	RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 		pd3dCommandQueue);
 	~RoomUI();
-	void SetVectorSize(UINT nFrame, UINT TextCnt);
+	void SetVectorSize(UINT nFrame);
 	virtual void Update(float GTime);
 	virtual void Update(float GTime, Player* mPlayer) {}
 	void Draw(UINT nFrame);
 	void CreateFontFormat();
 	void SetTextRect();
-	void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight);
+	void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight);
 	void Reset();
 	void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
@@ -22,9 +22,6 @@ public:
 private:
 	virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
-	std::vector<TextBlock>          mvTextBlocks;
-
-	std::vector<PCWSTR > mvBitmapFileNames;
-
+	//std::vector<TextBlock>          mvTextBlocks;
 };
 

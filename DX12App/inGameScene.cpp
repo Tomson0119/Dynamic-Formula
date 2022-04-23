@@ -92,7 +92,7 @@ void InGameScene::BuildObjects(
 	BuildDescriptorHeap();
 
 	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE

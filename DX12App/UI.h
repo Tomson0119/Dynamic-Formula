@@ -25,25 +25,24 @@ public:
     virtual void Update(float GTime);
     virtual void Draw(UINT nFrame);
 
-    virtual HRESULT LoadBitmapResourceFromFile(PCWSTR ImageName, int index);
+    virtual HRESULT LoadBitmapResourceFromFile(std::wstring ImageName, int index);
     virtual void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
 
-    virtual void PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
-    virtual void BuildBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList, 
+    virtual void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
+    virtual void BuildBrush(D2D1::ColorF* ColorList, 
         UINT gradientCnt, D2D1::ColorF* gradientColors);
-
-    virtual void BuildSolidBrush(UINT UICnt, UINT TextCnt, D2D1::ColorF* ColorList);
-    virtual void BuildSolidBrush(UINT UICnt, UINT TextCnt, std::vector<D2D1::ColorF>& ColorList);
+    virtual void BuildBrush(std::vector<D2D1::ColorF>& ColorList,
+        UINT gradientCnt, D2D1::ColorF* gradientColors);
+    virtual void BuildSolidBrush(D2D1::ColorF* ColorList);
+    virtual void BuildSolidBrush(const std::vector<D2D1::ColorF>& ColorList);
     virtual void BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList);
     virtual void BuildLinearGradientBrushes(UINT GradientCnt, GradientColors GColors[]);
     virtual void Reset();
     virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
         ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
     virtual void SetVectorSize(UINT nFrame);
-    virtual void CreateFontFormat(float vFontSize, const std::vector<std::wstring>& Fonts, UINT TextCnt,
-        DWRITE_TEXT_ALIGNMENT* Alignment);
-    virtual void CreateFontFormat(std::vector<float>& vFontSize, const std::vector<std::wstring>& Fonts, UINT TextCnt,
-        DWRITE_TEXT_ALIGNMENT* Alignment);
+    virtual void CreateFontFormat(float vFontSize, const std::vector<std::wstring>& Fonts, const std::vector<DWRITE_TEXT_ALIGNMENT>& Alignment);
+    virtual void CreateFontFormat(std::vector<float>& vFontSize, const std::vector<std::wstring>& Fonts, const std::vector<DWRITE_TEXT_ALIGNMENT>& Alignment);
 
     virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) {}
@@ -51,9 +50,9 @@ public:
     virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) {  }
     virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y) { return 0; }
     void BeginDraw(UINT nFrame);
-    void TextDraw(UINT nFrame, UINT TextCnt, const std::vector<TextBlock> &mvTextBlocks);
-    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt, bool IsOutlined[]);
-    void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT TextCnt, UINT bias, UINT GradientCnt, bool IsOutlined[]);
+    void TextDraw(UINT nFrame, const std::vector<TextBlock> &mvTextBlocks);
+    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
+    void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT bias, UINT GradientCnt, bool IsOutlined[]);
     void RoundedRectDraw() {}
     void EndDraw(UINT nFrame);
     void Flush();
@@ -68,7 +67,6 @@ public:
    virtual int GetLobbyPacket() { return -1; }
    virtual int GetRoomPacket() { return -1; }
    
-   void SetBitmapsSize(int size) { mvBitmaps.resize(size); }
 
    //Frame
    void SetFrame(float H, float W) { mfHeight = H; mfWidth = W; }
@@ -78,7 +76,7 @@ public:
 
    //Font 
    TCHAR* GetFontName() { return mtcFontName; }
-   void FontLoad(const std::vector<WCHAR*>& FontFilePath);
+   void FontLoad(const std::vector<std::wstring>& FontFilePath);
 
    //TextCnt
    UINT GetTextCnt() { return miTextCnt; }
@@ -103,6 +101,7 @@ public:
    // Bitmap
    UINT GetBitmapCnt() { return miBitmapCnt; }
    void SetBitmapCnt(UINT n) { miBitmapCnt = n; }
+   void SetBitmapsSize(int size) { mvBitmaps.resize(size); }
 
   //Font Size
    void ResizeFontSize(UINT n) { mvfFontSizes.resize(n); }
@@ -116,8 +115,28 @@ public:
    std::vector<std::wstring>& GetFonts() { return mvwsFonts; }
    void SetFonts(const std::vector<std::wstring>& Fonts) { for (int i = 0; i < static_cast<int>(GetTextCnt()); ++i) mvwsFonts[i] = Fonts[i]; }
 
-   void SetBitmapFileNames(const std::vector<PCWSTR>& names) { for (auto& name : names) mvBitmapFileNames.push_back(name); }
+   //BitmapFileName
+   void ResizeBitmapNames(UINT n) { mvBitmapFileNames.resize(n); }
+   std::vector<std::wstring>& GetBitmapFileNames() { return mvBitmapFileNames; }
+   void SetBitmapFileNames(const std::vector<std::wstring>& names) { for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i) mvBitmapFileNames[i] = names[i]; }
 
+   //TextBlock
+   void ResizeTextBlock(UINT n) { mvTextBlocks.resize(n); }
+   std::vector<TextBlock>& GetTextBlock() { return mvTextBlocks; }
+   void SetTextBlock(const std::vector<TextBlock>& TextBlocks);
+
+   //Colors - no resize
+   std::vector<D2D1::ColorF>& GetColors() { return mvColors; }
+   void SetColors(const std::vector<D2D1::ColorF>& Colors) { for (auto& color : Colors) mvColors.push_back(color); }
+   void SetColors(D2D1::ColorF* Colors) { for (int i = 0; i < static_cast<int>(mvColors.size()); ++i) mvColors.push_back(Colors[i]); }
+
+   //TextAllignments
+   void ResizeTextAlignment(UINT n) { mvdwTextAlignments.resize(n); }
+   std::vector<DWRITE_TEXT_ALIGNMENT>& GetTextAlignment() { return mvdwTextAlignments; }
+   void SetTextAllignments(const std::vector< DWRITE_TEXT_ALIGNMENT>& Allignments) { for (int i = 0; i < static_cast<int>(GetTextCnt());++i) mvdwTextAlignments[i] = Allignments[i]; }
+   
+   //UI
+   void SetUICnt() { miUICnt = miRectCnt + miRoundRectCnt + miEllipseCnt; }
 private:
     float mfHeight = 0.0f;
     float mfWidth = 0.0f;
@@ -130,23 +149,34 @@ private:
     UINT miGradientCnt = 0;
     UINT miBitmapCnt = 0;
     
+    UINT miUICnt = 0;
     //FontSize
     std::vector<float> mvfFontSizes;
     //Fonts
     std::vector<std::wstring> mvwsFonts;
+    //BitmapFileNames
+    std::vector<std::wstring> mvBitmapFileNames;
+    //Bitmaps
+    std::vector<ComPtr<ID2D1Bitmap1>> mvBitmaps;
+    //TextBlocks
+    std::vector<TextBlock>          mvTextBlocks;
+    //Colors
+    std::vector<D2D1::ColorF> mvColors;
+    //TextAllignments
+    std::vector<DWRITE_TEXT_ALIGNMENT> mvdwTextAlignments;
 
     GradientColors* pGradientColors;
 
-    std::vector<PCWSTR> mvBitmapFileNames;
 
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;
     ComPtr<ID2D1Factory3> mpd2dFactory;
-    ComPtr<IDWriteFactory5> mpd2dWriteFactory;
     ComPtr<ID2D1Device2> mpd2dDevice;
     ComPtr<ID3D11Device> pd3d11Device;
     ComPtr<IDXGIDevice> pdxgiDevice;
     ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
+
+    ComPtr<IDWriteFactory5> mpd2dWriteFactory;
 
     ComPtr<IDWriteFontFile> mdwFontFile;
     ComPtr<IDWriteFontSetBuilder1> mdwFontSetBuilder;
@@ -160,7 +190,6 @@ private:
 
     IWICImagingFactory* mWICFactoryPtr;
 
-    std::vector<ComPtr<ID2D1Bitmap1>> mvBitmaps;
 
     std::vector<ComPtr<IDWriteTextFormat>> mvdwTextFormat;
 

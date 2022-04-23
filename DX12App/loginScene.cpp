@@ -19,7 +19,7 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	}
 	else OutputDebugStringW(L"Failed to connect to server.\n");
 #else
-	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #endif
 }
 
@@ -33,7 +33,7 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 {
 	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void LoginScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
