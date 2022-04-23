@@ -9,8 +9,8 @@ public:
 	Map();
 	virtual ~Map() = default;
 
-	virtual void Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld) override;
-	virtual void Reset(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void Update(float elapsed, BPHandler& physics) override;
+	virtual void Reset(BPHandler& physics) override;
 	virtual OBJ_TAG GetTag(const btCollisionObject& obj) const override;
 
 	int GetCheckpointIndex(const btCollisionObject& obj) const;

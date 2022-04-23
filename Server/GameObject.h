@@ -1,5 +1,7 @@
 #pragma once
 
+class BPHandler;
+
 class GameObject
 {
 public:
@@ -14,7 +16,7 @@ public:
 
 public:
 	virtual ~GameObject() = default;
-	virtual void Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld) = 0;
-	virtual void Reset(btDiscreteDynamicsWorld* physicsWorld) = 0;
+	virtual void Update(float elapsed, BPHandler& physics) = 0;
+	virtual void Reset(BPHandler& physics) = 0;
 	virtual OBJ_TAG GetTag(const btCollisionObject& obj) const = 0;
 };

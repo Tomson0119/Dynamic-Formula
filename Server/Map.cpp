@@ -24,21 +24,21 @@ void Map::CreateCheckpoints(btCollisionShape& shape, const std::vector<Checkpoin
 	}
 }
 
-void Map::Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
+void Map::Update(float elapsed, BPHandler& physics)
 {
-	mTrack.Update(physicsWorld);
+	mTrack.Update(physics);
 	for (auto& cp : mCheckpoints)
 	{
-		cp.Update(physicsWorld);
+		cp.Update(physics);
 	}
 }
 
-void Map::Reset(btDiscreteDynamicsWorld* physicsWorld)
+void Map::Reset(BPHandler& physics)
 {
-	mTrack.RemoveRigidBody(physicsWorld);
+	mTrack.RemoveRigidBody(physics);
 	for (auto& cp : mCheckpoints)
 	{
-		cp.RemoveRigidBody(physicsWorld);
+		cp.RemoveRigidBody(physics);
 	}
 }
 
