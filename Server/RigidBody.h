@@ -5,6 +5,7 @@
 #include "InGameServer.h"
 
 class GameObject;
+class BPHandler;
 
 class RigidBody
 {
@@ -19,7 +20,7 @@ public:
 
 public:
 	RigidBody();
-	virtual ~RigidBody() = default;
+	virtual ~RigidBody();
 
 	void SetNoResponseCollision();
 	void CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr);
@@ -29,12 +30,12 @@ public:
 
 	void SetAngularVelocity(const btVector3& vel);
 
-	void Update(btDiscreteDynamicsWorld* physicsWorld);
+	void Update(BPHandler& physics);
 	void UpdateTransformVectors();
 
-	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	virtual void AppendRigidBody(BPHandler& physics);
 	virtual void UpdateRigidBody();
-	virtual void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld);
+	virtual void RemoveRigidBody(BPHandler& physics);
 
 public:
 	void SetUpdateFlag(UPDATE_FLAG flag) { mFlag = flag; }
@@ -71,14 +72,20 @@ public:
 		std::shared_ptr<InGameServer::GameConstant> constantPtr);
 
 public:
-	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void AppendRigidBody(BPHandler& physics) override;
 	virtual void UpdateRigidBody() override;
+	virtual void RemoveRigidBody(BPHandler& physics) override;
+
+public:
+	void Activate() { mActive = true; }
+	void Deactivate() { mActive = false; }
+	bool IsActive() const { return mActive; }
 
 private:
 	void SetMissileComponents();
 
 private:
-	btVector3 mConstantVelocity;
+	bool mActive;
 	VehicleRigidBody* mVehiclePtr;
 	std::shared_ptr<InGameServer::GameConstant> mConstantPtr;
 };
@@ -105,7 +112,7 @@ public:
 	virtual ~VehicleRigidBody() = default;
 
 	void CreateRaycastVehicle(
-		btDiscreteDynamicsWorld* physicsWorld,
+		BPHandler& physics,
 		const btVector3& bodyExtents, 
 		const BtCarShape::WheelInfo& wheelInfo);
 	
@@ -113,9 +120,9 @@ public:
 	void StoreWorldTransform(btTransform& transform);
 
 public:
-	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void AppendRigidBody(BPHandler& physics) override;
 	virtual void UpdateRigidBody() override;
-	virtual void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void RemoveRigidBody(BPHandler& physics) override;
 
 public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }
