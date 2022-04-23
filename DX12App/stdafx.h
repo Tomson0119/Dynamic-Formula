@@ -178,42 +178,25 @@ struct LightConstants
 	LightInfo Lights[NUM_LIGHTS];
 };
 
-//struct VolumetricConstants
-//{
-//	float absorptionTau;
-//	XMFLOAT3 absorptionColor;
-//	int scatteringSamples;
-//	float scatteringTau;
-//	float scatteringZFar;
-//
-//	int pad0 = 0;
-//
-//	XMFLOAT3 scatteringColor;
-//
-//	int pad1 = 0;
-//
-//	XMFLOAT4X4 gInvProj;
-//	XMFLOAT4X4 gInvView;
-//	XMFLOAT3 CameraPos;
-//
-//	int pad2 = 0;
-//
-//	LightInfo gLights[NUM_LIGHTS];
-//};
-
-
 struct VolumetricConstants
 {
-	int NUM_SAMPLES;
-	float Density;
-	float Exposure;
-	float Weight;
-	XMFLOAT4X4 gProj;
-	XMFLOAT4X4 gView;
+	float absorptionTau;
+	XMFLOAT3 absorptionColor;
+	int scatteringSamples;
+	float scatteringTau;
+	float scatteringZFar;
 
-	float Decay;
+	int pad0 = 0;
 
-	XMFLOAT3 gCameraPos;
+	XMFLOAT3 scatteringColor;
+
+	int pad1 = 0;
+
+	XMFLOAT4X4 gInvProj;
+	XMFLOAT4X4 gInvView;
+	XMFLOAT3 CameraPos;
+
+	int pad2 = 0;
 
 	LightInfo gLights[NUM_LIGHTS];
 };

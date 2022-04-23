@@ -21,6 +21,9 @@
     <ClInclude Include="stdafx.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="WSAInit.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="NetException.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
