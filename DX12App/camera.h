@@ -34,8 +34,8 @@ public:
 	
 	void SetFovCoefficient(float AspectCoefficient);
 
-	void LookAt(XMFLOAT3& pos, XMFLOAT3& target, XMFLOAT3& up);
-	void LookAt(XMFLOAT3& target);
+	void LookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT3& up);
+	void LookAt(const XMFLOAT3& target);
 	void LookAt(float x, float y, float z);
 
 	virtual void Move(float dx, float dy, float dz);

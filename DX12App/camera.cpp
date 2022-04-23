@@ -78,7 +78,7 @@ void Camera::SetFovCoefficient(float FovCoefficient)
 	mFovCoefficient = FovCoefficient;
 }
 
-void Camera::LookAt(XMFLOAT3& pos, XMFLOAT3& target, XMFLOAT3& up)
+void Camera::LookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT3& up)
 {
 	mPosition = pos;
 	mLook = Vector3::Normalize(Vector3::Subtract(target, pos));
@@ -88,7 +88,7 @@ void Camera::LookAt(XMFLOAT3& pos, XMFLOAT3& target, XMFLOAT3& up)
 	mViewDirty = true;
 }
 
-void Camera::LookAt(XMFLOAT3& target)
+void Camera::LookAt(const XMFLOAT3& target)
 {
 	LookAt(mPosition, target, GetUp());
 }
