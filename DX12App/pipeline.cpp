@@ -456,9 +456,9 @@ void StreamOutputPipeline::BuildSOPipeline(ID3D12Device* device, ID3D12RootSigna
 	psoDesc.NumRenderTargets = 0;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 	psoDesc.DSVFormat = mDepthStencilFormat;
-	psoDesc.SampleDesc.Count = 1;
 	psoDesc.StreamOutput = mStreamOutputDesc;
-	//psoDesc.SampleDesc.Quality = gMsaaStateDesc.Quality;
+	psoDesc.SampleDesc.Count = 1;
+	//psoDesc.SampleDesc.Quality = mMsaaEnable ? mMsaa4xQualityLevels - 1 : 0;
 
 	ThrowIfFailed(device->CreateGraphicsPipelineState(
 		&psoDesc, IID_PPV_ARGS(&mPSO[1])));
@@ -468,6 +468,7 @@ void StreamOutputPipeline::CreateStreamOutputDesc()
 {
 	mSODeclarations.push_back({ 0, "POSITION",  0, 0, 3, 0 });
 	mSODeclarations.push_back({ 0, "SIZE",      0, 0, 2, 0 });
+	mSODeclarations.push_back({ 0, "COLOR",     0, 0, 4, 0 });
 	mSODeclarations.push_back({ 0, "DIRECTION", 0, 0, 3, 0 });
 	mSODeclarations.push_back({ 0, "LIFETIME",  0, 0, 2, 0 });
 	mSODeclarations.push_back({ 0, "SPEED",	    0, 0, 1, 0 });

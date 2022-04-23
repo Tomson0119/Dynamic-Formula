@@ -49,6 +49,7 @@ public:
 
 public:
 	void UpdateLight(float elapsed);
+	void AddParticleObject();
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
 	//void UpdateVolumetricConstant();
