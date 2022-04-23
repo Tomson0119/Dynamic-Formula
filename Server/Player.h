@@ -12,8 +12,8 @@ public:
 	Player();
 	virtual ~Player() = default;
 
-	virtual void Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld) override;
-	virtual void Reset(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void Update(float elapsed, BPHandler& physics) override;
+	virtual void Reset(BPHandler& physics) override;
 	virtual OBJ_TAG GetTag(const btCollisionObject& obj) const override;
 
 public:
@@ -21,14 +21,11 @@ public:
 	void SetPosition(const btVector3& pos);
 	void SetRotation(const btQuaternion& quat);
 
-	void CreateVehicleRigidBody(
-		btScalar mass,
-		btDiscreteDynamicsWorld* physicsWorld, 
-		BtCarShape* shape);
+	void CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShape& shape);
+	void CreateMissileRigidBody(btScalar mass, BtBoxShape& shape);
 
-	void CreateMissileRigidBody(btScalar mass, BtBoxShape* shape);
 	void SetDeletionFlag();
-	void SetMissileDeletionFlag();
+	void DisableMissile();
 
 	void SetInvincible();
 
@@ -37,6 +34,8 @@ public:
 	bool CheckMissileExist() const;
 
 	void HandleCheckpointCollision(int cpIndex);
+
+	bool NeedUpdate();
 
 private:
 	void ClearVehicleComponent();

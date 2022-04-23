@@ -45,50 +45,41 @@ void Player::SetGameConstant(std::shared_ptr<InGameServer::GameConstant> constan
 	mMissileRigidBody.SetGameConstantPtr(&mVehicleRigidBody, constantPtr);
 }
 
-void Player::CreateVehicleRigidBody(
-	btScalar mass,
-	btDiscreteDynamicsWorld* physicsWorld, 
-	BtCarShape* shape)
-{
-	if (shape && physicsWorld)
-	{
-		mVehicleRigidBody.CreateRigidBody(mass,	shape->GetCompoundShape(), this);
+void Player::CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShape& shape)
+{	
+	mVehicleRigidBody.CreateRigidBody(mass,	shape.GetCompoundShape(), this);
 
-		mVehicleRigidBody.CreateRaycastVehicle(
-			physicsWorld, shape->GetExtents(),
-			shape->GetWheelInfo());
+	mVehicleRigidBody.CreateRaycastVehicle(
+		physics, shape.GetExtents(),
+		shape.GetWheelInfo());
 
-		ClearVehicleComponent();
-
-		mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
-	}
+	ClearVehicleComponent();
+	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
 }
 
-void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape* shape)
-{
-	if (shape)
-	{
-		mMissileRigidBody.CreateRigidBody(mass, shape->GetCollisionShape(), this);
-		mMissileRigidBody.SetNoResponseCollision();
-	}
+void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape& shape)
+{	
+	mMissileRigidBody.CreateRigidBody(mass, shape.GetCollisionShape(), this);
+	mMissileRigidBody.SetNoResponseCollision();	
 }
 
-void Player::Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
+void Player::Update(float elapsed, BPHandler& physics)
 {
 	UpdateVehicleComponent(elapsed);
 	UpdateInvincibleDuration(elapsed);
-	mVehicleRigidBody.Update(physicsWorld);
-	mMissileRigidBody.Update(physicsWorld);
+	mVehicleRigidBody.Update(physics);
+	mMissileRigidBody.Update(physics);
 }
 
 void Player::SetDeletionFlag()
 {
 	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
-	SetMissileDeletionFlag();
+	DisableMissile();
 }
 
-void Player::SetMissileDeletionFlag()
+void Player::DisableMissile()
 {
+	mMissileRigidBody.Deactivate();
 	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
 }
 
@@ -98,14 +89,12 @@ void Player::SetInvincible()
 	mInvincibleDuration = mConstantPtr->InvincibleDuration;
 }
 
-void Player::Reset(btDiscreteDynamicsWorld* physicsWorld)
+void Player::Reset(BPHandler& physics)
 {
 	LoadDone = false;
-	mMissileRigidBody.RemoveRigidBody(physicsWorld);
-	mVehicleRigidBody.RemoveRigidBody(physicsWorld);
+	mVehicleRigidBody.RemoveRigidBody(physics);
+	mMissileRigidBody.RemoveRigidBody(physics);
 }
-
-
 
 GameObject::OBJ_TAG Player::GetTag(const btCollisionObject& obj) const
 {
@@ -113,7 +102,8 @@ GameObject::OBJ_TAG Player::GetTag(const btCollisionObject& obj) const
 	{
 		return OBJ_TAG::VEHICLE;
 	}
-	else if (&obj == mMissileRigidBody.GetRigidBody())
+	else if (&obj == mMissileRigidBody.GetRigidBody()
+		&& mMissileRigidBody.IsActive())
 	{
 		return OBJ_TAG::MISSILE;
 	}
@@ -139,6 +129,16 @@ void Player::HandleCheckpointCollision(int cpIndex)
 		mCurrentCPIndex = nextIdx;
 		mCPPassed[nextIdx] = true;
 	}
+}
+
+bool Player::NeedUpdate()
+{
+	if (mVehicleRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::DELETION
+		|| mMissileRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::DELETION)
+	{
+		return true;
+	}
+	return (Empty == false);
 }
 
 void Player::UpdateWorldTransform()
@@ -208,8 +208,8 @@ void Player::UpdateDriftGauge(float elapsed)
 
 		float angle = acos(linearVelNorm.dot(forwardNorm));
 
-		float DriftLimit = 30.0f / 180.0f * Math::PI;
-		float AngleLimit = 50.0f / 180.0f * Math::PI;
+		float DriftLimit = 30.0f / 180.0f * (float)Math::PI;
+		float AngleLimit = 50.0f / 180.0f * (float)Math::PI;
 
 		if (angle > DriftLimit && mDriftGauge < 1.0f)
 		{
@@ -361,14 +361,18 @@ bool Player::UseItem(uint8_t key)
 	}
 	case 'X':
 	{
-		return mMissileRigidBody.ChangeUpdateFlag(
+		if (mMissileRigidBody.ChangeUpdateFlag(
 			RigidBody::UPDATE_FLAG::NONE,
-			RigidBody::UPDATE_FLAG::CREATION);
+			RigidBody::UPDATE_FLAG::CREATION))
+		{
+			mMissileRigidBody.Activate();
+			return true;
+		}
 	}}
 	return false;
 }
 
 bool Player::CheckMissileExist() const
 {
-	return (mMissileRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::UPDATE);
+	return (mMissileRigidBody.IsActive());
 }
