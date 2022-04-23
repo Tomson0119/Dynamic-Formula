@@ -994,11 +994,10 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 		pck->quaternion[3]);
 }
 
-void MissileObject::SetInitialTransform(SC::packet_missile_transform* pck, float latency)
+void MissileObject::SetTransform(const XMFLOAT3& pos, const XMFLOAT4& quat)
 {
-	SetCorrectionTransform(pck, latency);
-	mPrevOrigin = mCorrectionOrigin;
-	mPrevQuat = mCorrectionQuat;
+	SetPosition(pos);
+	SetQuaternion(quat);
 }
 
 void MissileObject::SetActive(bool state)

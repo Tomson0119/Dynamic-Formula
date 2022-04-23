@@ -135,13 +135,13 @@ public:
 	void Scale(float scale);
 
 public:
-	XMFLOAT3 GetPosition() const { return mPosition; }
-	XMFLOAT3 GetRight() const { return mRight; }
-	XMFLOAT3 GetLook() const { return mLook; }
-	XMFLOAT3 GetUp() const { return mUp; }
-	XMFLOAT4 GetQuaternion() const { return mQuaternion; }
+	const XMFLOAT3& GetPosition() const { return mPosition; }
+	const XMFLOAT3& GetRight() const { return mRight; }
+	const XMFLOAT3& GetLook() const { return mLook; }
+	const XMFLOAT3& GetUp() const { return mUp; }
+	const XMFLOAT4& GetQuaternion() const { return mQuaternion; }
 
-	XMFLOAT4X4 GetWorld() const { return mWorld; }
+	const XMFLOAT4X4& GetWorld() const { return mWorld; }
 
 	const AtomicInt3& GetLinearVelocity() { return mLinearVelocity; }
 
@@ -154,7 +154,7 @@ public:
 	virtual ULONG GetCubeMapSize() const { return 0; }	
 	virtual ObjectConstants GetObjectConstants();
 	virtual InstancingInfo GetInstancingInfo();
-	BoundingOrientedBox GetBoundingBox() const { return mOOBB; }	
+	const BoundingOrientedBox GetBoundingBox() const { return mOOBB; }
 	
 	btRigidBody* GetRigidBody() { return mBtRigidBody; }
 
@@ -163,7 +163,7 @@ public:
 
 	void SetRimLight(bool rimlight) { mRimLightOn = rimlight; }
 
-	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
+	const UPDATE_FLAG& GetUpdateFlag() const { return mUpdateFlag; }
 
 	// test
 	const XMFLOAT4& GetMeshDiffuse(const std::string& name);
@@ -306,7 +306,7 @@ public:
 	float GetDuration() { return mDuration; }
 
 	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
-	void SetInitialTransform(SC::packet_missile_transform* pck, float latency);
+	void SetTransform(const XMFLOAT3& pos, const XMFLOAT4& quat);
 
 public:
 	void SetActive(bool state);
