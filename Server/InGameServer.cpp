@@ -48,10 +48,6 @@ void InGameServer::PrepareToStartGame(int roomID)
 			continue;
 		}
 
-		/*float offsetZ = (i % 2 == 1) ? -5.0f : 0.0f;
-		offset.setZ(offsetZ);
-		offset.setX(10.0f * i);*/
-
 		// test
 		if (i == 0)
 		{
@@ -71,7 +67,7 @@ void InGameServer::PrepareToStartGame(int roomID)
 			msWorlds[roomID]->SetPlayerRotation(i, mStartRotation);
 		}
 
-		msWorlds[roomID]->CreateRigidbodies(i, 500.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
+		msWorlds[roomID]->CreateRigidbodies(i, 500.0f, *mBtCarShape, 1.0f, *mMissileShape);
 	}
 	msWorlds[roomID]->InitMapRigidBody(*mMapShape.get(), *mCheckpointShape.get());
 	msWorlds[roomID]->SendGameStartSuccess();
