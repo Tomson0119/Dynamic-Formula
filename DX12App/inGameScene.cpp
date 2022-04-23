@@ -557,8 +557,10 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 			if (missile->IsActive() == false)
 			{
+				const XMFLOAT3& pos = mPlayerObjects[pck->missile_idx]->GetPosition();
+				const XMFLOAT4& quat = mPlayerObjects[pck->missile_idx]->GetQuaternion();
+				missile->SetTransform(pos, quat);
 				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
-				missile->SetInitialTransform(pck, mNetPtr->GetLatency());
 			}
 			else
 			{
@@ -965,11 +967,11 @@ void InGameScene::UpdateMissileObject()
 			flag = true;
 			missile->SetActive(false);
 			missile->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Default]);
-			mMissileObjects[i].reset();
+			missile->SetUpdateFlag(UPDATE_FLAG::NONE);
 			break;
 		}
 		case UPDATE_FLAG::NONE:
-			continue;
+			break;
 		}
 	}
 	if (flag) mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
@@ -995,11 +997,11 @@ void InGameScene::UpdatePlayerObjects()
 			removed_flag = true;
 			if(mMissileObjects[i]) mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			player->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Color]);
-			mPlayerObjects[i].reset();
+			player->SetUpdateFlag(UPDATE_FLAG::NONE);
 			break;
 		}
 		case UPDATE_FLAG::NONE:
-			continue;
+			break;
 		}
 	}
 	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
