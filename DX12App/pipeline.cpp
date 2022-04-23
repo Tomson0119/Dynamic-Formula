@@ -293,6 +293,14 @@ void Pipeline::SetStencilOp(
 	mStencilRef = stencilRef;
 }
 
+void Pipeline::SortMeshes()
+{
+	for (int i = 0; i < mRenderObjects.size(); ++i)
+	{
+		mRenderObjects[i]->SortMeshes();
+	}
+}
+
 void Pipeline::Update(float elapsed, float updateRate, Camera* camera)
 {
 	for (const auto& obj : mRenderObjects)
@@ -320,7 +328,7 @@ SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* 
 
 	auto skyboxObj = std::make_shared<GameObject>();
 	skyboxObj->SetMesh(boxMesh);
-	skyboxObj->LoadTexture(device, cmdList, L"Resources\\skyboxarray.dds", D3D12_SRV_DIMENSION_TEXTURE2DARRAY);
+	skyboxObj->LoadTexture(device, cmdList, L"Resources\\skyboxarray_night.dds", D3D12_SRV_DIMENSION_TEXTURE2DARRAY);
 	mRenderObjects.push_back(skyboxObj);
 }
 

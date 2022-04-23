@@ -2,7 +2,7 @@
 #include "shadowMapRenderer.h"
 #include "inGameScene.h"
 
-ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount, const Camera* mainCamera)
+ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount, const Camera* mainCamera, XMFLOAT3 shadowDirection)
 	: mMapWidth(width), mMapHeight(height), mMapCount(lightCount)
 {
 	mViewPort = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
@@ -26,6 +26,8 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
 		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.2f);
 	}
+
+	mShadowDirection = shadowDirection;
 }
 
 ShadowMapRenderer::~ShadowMapRenderer()
@@ -303,11 +305,11 @@ void ShadowMapRenderer::BuildDescriptorViews(ID3D12Device* device)
 	}
 }
 
-void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, LightConstants& lightCnst)
+void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList)
 {
 	for (UINT i = 0; i < mMapCount; i++)
 	{
-		XMFLOAT3 look = Vector3::Normalize(lightCnst.Lights[0].Direction);
+		XMFLOAT3 look = Vector3::Normalize(mShadowDirection);
 		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange[i], look, mCenter[i]);
 
 		mDepthCamera[i]->LookAt(position, mCenter[i], XMFLOAT3(0.0f, 1.0f, 0.0f));

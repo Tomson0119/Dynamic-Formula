@@ -7,13 +7,13 @@ class InGameScene;
 class ShadowMapRenderer : public Pipeline
 {
 public:
-	ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount, const Camera* mainCamera);
+	ShadowMapRenderer(ID3D12Device* device, UINT width, UINT height, UINT lightCount, const Camera* mainCamera, XMFLOAT3 shadowDirection);
 	virtual ~ShadowMapRenderer();
 
 	virtual void BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader = nullptr) override;
 	virtual void BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex) override;
 
-	void UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList, LightConstants& lightCnst);
+	void UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList);
 	void PreRender(ID3D12GraphicsCommandList* cmdList, InGameScene* scene);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int idx);
 
@@ -64,4 +64,6 @@ private:
 
 	ComPtr<ID3D12PipelineState> mTerrainPSO;
 	ComPtr<ID3D12PipelineState> mInstancingPSO;
+
+	XMFLOAT3 mShadowDirection = { 0.0f, 0.0f, 0.0f };
 };

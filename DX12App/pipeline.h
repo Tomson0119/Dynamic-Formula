@@ -9,7 +9,6 @@ enum class Layer : int
 	Terrain,
 	NormalMapped,
 	Default,
-	Color,
 	Mirror,
 	Reflected,
 	Billboard,
@@ -20,7 +19,8 @@ enum class Layer : int
 	Bloom,
 	Instancing,
 	CheckPoint,
-	Transparent
+	Transparent,
+	Color
 };
 
 class Pipeline
@@ -62,6 +62,8 @@ public:
 	void PreparePipeline(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame = false, bool setPipeline = true, bool msaaOff = false);
 
 	void SetMsaa(bool msaaEnable, UINT msaaQuality) { mMsaa4xQualityLevels = msaaQuality; mMsaaEnable = msaaEnable; }
+
+	void SortMeshes();
 
 	void Pipeline::Update(float elapsed, float updateRate, Camera* camera);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);

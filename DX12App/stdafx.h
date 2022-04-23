@@ -132,7 +132,7 @@ inline std::wstring AnsiToWString(const std::string& str)
 
 ////////////////////////////////////////////////////////////////////////////
 //
-#define NUM_LIGHTS 3
+#define NUM_LIGHTS 7
 
 #define POINT_LIGHT		  1
 #define SPOT_LIGHT		  2
@@ -215,6 +215,7 @@ struct ObjectConstants
 	int32_t cubemapOn;
 	int32_t motionBlurOn;
 	int32_t rimLightOn;
+	int32_t invincibleOn;
 };
 
 struct MaterialConstants
@@ -496,6 +497,11 @@ namespace Math
 
 namespace Vector3
 {
+	inline float Distance(const XMFLOAT3& v1, const XMFLOAT3& v2)
+	{
+		return sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2) + pow(v1.z - v2.z, 2));
+	}
+
 	inline XMFLOAT3 btVectorToXM(const btVector3& v)
 	{
 		return XMFLOAT3(v.x(), v.y(), v.z());

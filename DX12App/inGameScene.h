@@ -186,4 +186,6 @@ private:
 	bool mBloomEnable = true;
 
 	btRigidBody* mTrackRigidBody = NULL;
+
+	std::vector<LightInfo> mLights;
 };

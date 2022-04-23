@@ -175,6 +175,19 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 		camera = std::make_unique<Camera>();
 		camera->SetLens(0.5f * Math::PI, 1.0f, 0.1f, 100.0f);
 	}
+
+	for (int i = 0; i < 2; ++i)
+	{
+		// Falloff는 전부 미터 단위임에 주의할 것
+		mFrontLight[i].SetInfo(
+			XMFLOAT3(0.6f, 0.6f, 0.6f),
+			XMFLOAT3(0.0f, 0.0f, 0.0f),
+			XMFLOAT3(-0.3f, 0.0f, -1.0f),
+			0.0f, 30.0f, 50.0f,
+			0.0f, SPOT_LIGHT);;
+
+		mFrontLight[i].pad0 = 1.0f;
+	}
 }
 
 PhysicsPlayer::~PhysicsPlayer()
@@ -251,7 +264,7 @@ void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
-#ifdef STAND_ALONE
+#ifdef STANDALONE
 	if (mVehicle)
 		mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
 
@@ -447,6 +460,8 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 		}
 	}
 
+	UpdateFrontLight();
+
 	//btVector3 linearVel = mBtRigidBody->getLinearVelocity();
 	//mBtRigidBody->applyCentralImpulse(btVector3(0, -linearVel.length() / 10, 0));
 
@@ -469,6 +484,16 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 	{
 		mCamera->SetFovCoefficient(mFovCoefficient);
 		mCamera->SetLens(mCamera->GetAspect());
+	}
+
+	if (mHit)
+	{
+		mTransparentTime -= elapsedTime;
+		if (mTransparentTime < 0.f)
+		{
+			mTransparentOn = !mTransparentOn;
+			mTransparentTime = 0.5f;
+		}
 	}
 }
 
@@ -749,6 +774,19 @@ void PhysicsPlayer::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipelin
 
 		if (!wheel_removed)
 			iter++;
+	}
+}
+
+void PhysicsPlayer::UpdateFrontLight()
+{
+	XMMATRIX R = XMMatrixRotationQuaternion(XMLoadFloat4(&mQuaternion));
+	for (int i = 0; i < 2; ++i)
+	{
+		mFrontLight[i].Position = Vector3::Transform(mLightOffset[i], XMLoadFloat4x4(&mWorld));
+
+		auto dir = mLook;
+		dir.y -= 0.3f;
+		mFrontLight[i].Direction = dir;
 	}
 }
 

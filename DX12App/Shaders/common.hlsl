@@ -47,6 +47,7 @@ cbuffer ObjectCB : register(b4)
     bool gCubemapOn : packoffset(c8.x);
     bool gMotionBlurOn : packoffset(c8.y);
     bool gRimLightOn : packoffset(c8.z);
+    bool gInvincibleOn : packoffset(c8.w);
 }
 
 cbuffer StandardCB : register(b5)

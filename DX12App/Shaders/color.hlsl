@@ -78,7 +78,6 @@ PixelOut PS(VertexOut pin)
     PixelOut pout;
 
     float4 result = ambient + directLight;
-    result.a = gMat.Diffuse.a;
     
     if (gCubemapOn)
     {
@@ -86,11 +85,10 @@ PixelOut PS(VertexOut pin)
         float3 fromEye = normalize(pin.PosW - gCameraPos.xyz);
         float3 reflected = normalize(reflect(fromEye, pin.NormalW));
     
-        result = saturate((gCubeMap.Sample(gLinearWrap, reflected) * 0.1f) + (result * 0.9f));
-
-        result *= gCubeMap.Sample(gLinearWrap, reflected);
+        result = saturate((gCubeMap.Sample(gLinearWrap, reflected) * 0.3f) + (result * 0.7f));
     }
-
+    
+    result.a = 1.0f;
     pout.f4Color = result;
 
     if (gMotionBlurOn)
@@ -103,6 +101,11 @@ PixelOut PS(VertexOut pin)
         pout.f4Direction = float4(0.0f, 0.0f, 0.0f, 0.0f);
         pout.f4Direction.z = PosV.z;
     }
-
+    
+    if(gInvincibleOn)
+    {
+        pout.f4Color.a = 0.3f;
+    }
+    
     return pout;
 }

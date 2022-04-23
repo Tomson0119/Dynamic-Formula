@@ -537,6 +537,17 @@ void GameObject::UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, 
 		matCnst->CopyData(offset + i, mMeshes[i]->GetMaterialConstant());
 }
 
+void GameObject::SortMeshes()
+{
+	std::sort(
+		mMeshes.begin(), mMeshes.end(),
+		[](std::shared_ptr<Mesh> first, std::shared_ptr<Mesh> second)
+		{
+			return first->mOOBB.Center.z > second->mOOBB.Center.z;
+		}
+	);
+}
+
 void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
 {
 	auto rigid = mBtRigidBody;
@@ -810,6 +821,7 @@ ObjectConstants GameObject::GetObjectConstants()
 	objCnst.cubemapOn = mCubemapOn;
 	objCnst.motionBlurOn = mMotionBlurOn;
 	objCnst.rimLightOn = mRimLightOn;
+	objCnst.invincibleOn = mTransparentOn;
 
 	return objCnst;
 }

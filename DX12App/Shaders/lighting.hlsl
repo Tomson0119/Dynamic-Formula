@@ -1,4 +1,4 @@
-#define NUM_LIGHTS 3
+#define NUM_LIGHTS 5
 
 #define POINT_LIGHT       1
 #define SPOT_LIGHT        2
@@ -147,10 +147,10 @@ float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat, float3 pos, float
             result += shadowFactor * ComputeDirectLight(lights[i], mat, normal, view);
         
         else if (lights[i].Type == SPOT_LIGHT)
-            result += shadowFactor * ComputeSpotLight(lights[i], mat, pos, normal, view);
+            result += ComputeSpotLight(lights[i], mat, pos, normal, view);
         
         else if(lights[i].Type == POINT_LIGHT)
-            result += shadowFactor * ComputePointLight(lights[i], mat, pos, normal, view);;
+            result += ComputePointLight(lights[i], mat, pos, normal, view);;
     }
     
     if (rimLightOn)
