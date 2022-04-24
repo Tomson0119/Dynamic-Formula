@@ -98,18 +98,18 @@ void Camera::LookAt(float x, float y, float z)
 	LookAt(mPosition, XMFLOAT3(x,y,z), GetUp());
 }
 
-XMFLOAT4X4 Camera::GetView() const
+const XMFLOAT4X4& Camera::GetView() const
 {
 	assert(!mViewDirty && "Camera -> mView is not updated!!");
 	return mView;
 }
 
-XMFLOAT4X4 Camera::GetOldView() const
+const XMFLOAT4X4& Camera::GetOldView() const
 {
 	return mOldView;
 }
 
-XMFLOAT4X4 Camera::GetInverseView() const
+const XMFLOAT4X4& Camera::GetInverseView() const
 {
 	return mInvView;
 }
@@ -135,7 +135,7 @@ void Camera::Move(float dx, float dy, float dz)
 	mViewDirty = true;
 }
 
-void Camera::Move(XMFLOAT3& dir, float dist)
+void Camera::Move(const XMFLOAT3& dir, float dist)
 {
 	mPosition = Vector3::MultiplyAdd(dist, dir, mPosition);
 	mViewDirty = true;

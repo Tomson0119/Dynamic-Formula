@@ -549,7 +549,7 @@ namespace Vector3
 		return ret;
 	}
 
-	inline XMFLOAT3 MultiplyAdd(float delta, XMFLOAT3& src, XMFLOAT3& dst)
+	inline XMFLOAT3 MultiplyAdd(float delta, const XMFLOAT3& src, const XMFLOAT3& dst)
 	{		
 		XMVECTOR v1 = XMLoadFloat3(&Replicate(delta));
 		XMVECTOR v2 = XMLoadFloat3(&src);
