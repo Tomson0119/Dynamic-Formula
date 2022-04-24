@@ -248,6 +248,7 @@
     <ClInclude Include="LobbyServer.h" />
     <ClInclude Include="LoginServer.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="ObjectMask.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Timer.h" />
