@@ -21,6 +21,7 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	mKeyMap[VK_LSHIFT] = false;
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
+	mKeyMap['Q'] = false;
 
 #ifdef STANDALONE
 	mGameStarted = true;
@@ -518,14 +519,14 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 		mNetPtr->RemovePlayer(pck);
 
-		auto player = mPlayerObjects[pck->player_idx];
+		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player)	player->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 		break;
 	}
 	case SC::REMOVE_MISSILE:
 	{
 		SC::packet_remove_missile* pck = reinterpret_cast<SC::packet_remove_missile*>(packet);
-		auto missile = mMissileObjects[pck->missile_idx];
+		const auto& missile = mMissileObjects[pck->missile_idx];
 		if (missile) missile->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 		break;
 	}
@@ -539,7 +540,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::PLAYER_TRANSFORM:
 	{
 		SC::packet_player_transform* pck = reinterpret_cast<SC::packet_player_transform*>(packet);
-		auto player = mPlayerObjects[pck->player_idx];
+		const auto& player = mPlayerObjects[pck->player_idx];
 		
 		if (player)
 		{
@@ -551,7 +552,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::MISSILE_TRANSFORM:
 	{
 		SC::packet_missile_transform* pck = reinterpret_cast<SC::packet_missile_transform*>(packet);
-		auto& missile = mMissileObjects[pck->missile_idx];
+		const auto& missile = mMissileObjects[pck->missile_idx];
 		
 		if (missile)
 		{
@@ -559,7 +560,8 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			{
 				const XMFLOAT3& pos = mPlayerObjects[pck->missile_idx]->GetPosition();
 				const XMFLOAT4& quat = mPlayerObjects[pck->missile_idx]->GetQuaternion();
-				missile->SetTransform(pos, quat);
+				missile->SetPosition(pos);
+				missile->SetQuaternion(quat);
 				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
 			}
 			else
@@ -569,7 +571,24 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
+	case SC::INVINCIBLE_ON:
+	{
+		SC::packet_invincible_on* pck = reinterpret_cast<SC::packet_invincible_on*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if (player)
+		{
+			int duration = pck->duration - (int)(mNetPtr->GetLatency() * FIXED_FLOAT_LIMIT);
+			player->SetInvincibleOn(duration);
+		}
+		break;
 	}
+	case SC::SPAWN_TRANSFORM:
+	{
+		SC::packet_spawn_transform* pck = reinterpret_cast<SC::packet_spawn_transform*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if (player) player->SetSpawnTransform(pck);
+		break;
+	}}
 	return true;
 }
 

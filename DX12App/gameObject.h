@@ -306,7 +306,6 @@ public:
 	float GetDuration() { return mDuration; }
 
 	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
-	void SetTransform(const XMFLOAT3& pos, const XMFLOAT4& quat);
 
 public:
 	void SetActive(bool state);

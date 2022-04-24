@@ -161,8 +161,11 @@ void Player::Update(float elapsedTime, float updateRate)
 	GameObject::Update(elapsedTime, updateRate);
 }
 
+const float PhysicsPlayer::TransparentInterval = 0.3f;
 
-PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
+PhysicsPlayer::PhysicsPlayer(UINT netID) 
+	: Player(), 
+	  mNetID(netID)
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
@@ -184,7 +187,7 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
 			XMFLOAT3(-0.3f, 0.0f, -1.0f),
 			0.0f, 30.0f, 50.0f,
-			0.0f, SPOT_LIGHT);;
+			0.0f, SPOT_LIGHT);
 
 		mFrontLight[i].pad0 = 1;
 	}
@@ -192,6 +195,15 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 
 PhysicsPlayer::~PhysicsPlayer()
 {
+}
+
+void PhysicsPlayer::SetSpawnTransform(SC::packet_spawn_transform* pck)
+{
+	mSpawnFlag = true;
+	mSpawnPosition.SetValue(pck->position[0], pck->position[1], pck->position[2]);
+	mSpawnRotation.SetValue(
+		pck->quaternion[0], pck->quaternion[1],
+		pck->quaternion[2], pck->quaternion[3]);
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
@@ -204,6 +216,12 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& Mesh)
 {
 	GameObject::SetMesh(Mesh);
+}
+
+void PhysicsPlayer::SetInvincibleOn(int duration)
+{
+	mInvincibleOnFlag = true;
+	mInvincibleInterval = duration;
 }
 
 Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
@@ -445,6 +463,18 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 {
+	if (mSpawnFlag)
+	{
+		mSpawnFlag = false;
+		SetPosition(mSpawnPosition.GetXMFloat3());
+		SetQuaternion(mSpawnRotation.GetXMFloat4());
+		if (mCamera)
+		{
+			mCamera->SetPosition(mPosition);
+			mCamera->Update(elapsedTime);
+		}
+	}
+
 	GameObject::Update(elapsedTime, updateRate);
 	
 	for (int i = 0; i < 4; ++i)
@@ -486,13 +516,33 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 		mCamera->SetLens(mCamera->GetAspect());
 	}
 
-	if (mHit)
+	UpdateInvincibleState(elapsedTime);
+}
+
+void PhysicsPlayer::UpdateInvincibleState(float elapsed)
+{
+	if (mInvincibleOnFlag)
 	{
-		mTransparentTime -= elapsedTime;
-		if (mTransparentTime < 0.f)
+		mInvincibleOnFlag = false;
+		mInvincible = true;
+		mInvincibleDuration = (float)mInvincibleInterval / FIXED_FLOAT_LIMIT;
+	}
+
+	if (mInvincible)
+	{
+		mInvincibleDuration -= elapsed;
+		mTransparentTime -= elapsed;
+		if (mTransparentTime <= 0.f)
 		{
 			mTransparentOn = !mTransparentOn;
-			mTransparentTime = 0.5f;
+			mTransparentTime = TransparentInterval;
+		}
+		if (mInvincibleDuration <= 0.0f)
+		{
+			mInvincibleDuration = 0.0f;
+			mTransparentTime = TransparentInterval;
+			mTransparentOn = false;
+			mInvincible = false;
 		}
 	}
 }

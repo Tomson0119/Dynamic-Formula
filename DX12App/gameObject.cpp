@@ -994,12 +994,6 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 		pck->quaternion[3]);
 }
 
-void MissileObject::SetTransform(const XMFLOAT3& pos, const XMFLOAT4& quat)
-{
-	SetPosition(pos);
-	SetQuaternion(quat);
-}
-
 void MissileObject::SetActive(bool state)
 {
 	mActive = state;
