@@ -51,22 +51,20 @@ void InGameServer::PrepareToStartGame(int roomID)
 		// test
 		if (i == 0)
 		{
-			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + btVector3(20.0f, 0.0f, 0.0f));
-			msWorlds[roomID]->SetPlayerRotation(i, mStartRotation);
+			msWorlds[roomID]->SetPlayerTransform(i, 
+				mStartPosition + btVector3(20.0f, 0.0f, 0.0f),
+				mStartRotation);
 		}
 		else if(i == 1)
 		{
-			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition);
-			btQuaternion temp = mStartRotation;
-			temp.setRotation(btVector3{ 0.0f,1.0f,0.0f }, (btScalar)Math::PI / 2);
-			msWorlds[roomID]->SetPlayerRotation(i, temp);
+			btQuaternion rot = mStartRotation;
+			rot.setRotation(btVector3{ 0.0f,1.0f,0.0f }, (btScalar)Math::PI / 2);
+			msWorlds[roomID]->SetPlayerTransform(i, mStartPosition, rot);
 		}
 		else
 		{
-			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition);
-			msWorlds[roomID]->SetPlayerRotation(i, mStartRotation);
+			msWorlds[roomID]->SetPlayerTransform(i, mStartPosition, mStartRotation);
 		}
-
 		msWorlds[roomID]->CreateRigidbodies(i, 500.0f, *mBtCarShape, 1.0f, *mMissileShape);
 	}
 	msWorlds[roomID]->InitMapRigidBody(*mMapShape.get(), *mCheckpointShape.get());
