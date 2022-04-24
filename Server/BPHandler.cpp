@@ -42,13 +42,16 @@ void BPHandler::Flush()
 		for (int i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 		{
 			btCollisionObject* obj = mBtDynamicsWorld->getCollisionObjectArray()[i];
-			btRigidBody* body = btRigidBody::upcast(obj);
-			if (body && body->getMotionState())
+			if (obj)
 			{
-				delete body->getMotionState();
+				btRigidBody* body = btRigidBody::upcast(obj);
+				if (body && body->getMotionState())
+				{
+					delete body->getMotionState();
+				}
+				mBtDynamicsWorld->removeCollisionObject(obj);
+				delete obj;
 			}
-			mBtDynamicsWorld->removeCollisionObject(obj);
-			if (obj) delete obj;
 		}
 	}
 }
