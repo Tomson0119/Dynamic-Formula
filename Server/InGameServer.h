@@ -43,6 +43,7 @@ public:
 		const int LapFinishPoint = 2500;
 
 		const float InvincibleDuration = 3.0f;
+		const float SpawnInterval = InvincibleDuration / 2.0f;
 	};
 
 public:
