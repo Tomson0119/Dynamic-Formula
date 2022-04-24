@@ -6,6 +6,7 @@
 #include "LoginServer.h"
 #include "RigidBody.h"
 #include "Timer.h"
+#include "ObjectMask.h"
 
 GameWorld::GameWorld(std::shared_ptr<InGameServer::GameConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
@@ -46,14 +47,9 @@ void GameWorld::InitPlayerList(WaitRoom* room, int cpCount)
 	}
 }
 
-void GameWorld::SetPlayerPosition(int idx, const btVector3& pos)
+void GameWorld::SetPlayerTransform(int idx, const btVector3& pos, const btQuaternion& quat)
 {
-	mPlayerList[idx]->SetPosition(pos);
-}
-
-void GameWorld::SetPlayerRotation(int idx, const btQuaternion& quat)
-{
-	mPlayerList[idx]->SetRotation(quat);
+	mPlayerList[idx]->SetTransform(pos, quat);
 }
 
 void GameWorld::CreateRigidbodies(int idx,
@@ -74,13 +70,12 @@ void GameWorld::UpdatePhysicsWorld()
 	{
 		mPhysics.StepSimulation(elapsed);
 		CheckCollision();
-		for (Player* player : GetPlayerList())
-		{
-			if (player->NeedUpdate())
-			{
-				player->Update(elapsed, mPhysics);
-			}
-		}
+
+		// TEST
+		TestVehicleSpawn();
+		// TEST
+
+		UpdatePlayers(elapsed);
 		mMap.Update(elapsed, mPhysics);
 	}
 	mUpdateTick += 1;
@@ -88,6 +83,38 @@ void GameWorld::UpdatePhysicsWorld()
 	{
 		BroadcastAllTransform();
 		mUpdateTick = 0;
+	}
+}
+
+void GameWorld::UpdatePlayers(float elapsed)
+{
+	for (int i=0; Player* player : GetPlayerList())
+	{
+		if (player->NeedUpdate())
+		{
+			player->Update(elapsed, mPhysics);
+			if (player->IsInvincible())
+			{
+				player->UpdateInvincibleDuration(elapsed);
+				float duration = player->GetInvincibleDuration();
+
+				if (player->IsActive() == false 
+					&& duration <= mConstantPtr->SpawnInterval)
+				{
+					player->Activate();
+					player->StopVehicle();
+					SpawnToCheckpoint(*player);					
+					SendSpawnPacket(i);
+				}
+				if (duration <= 0.0f)
+				{
+					// TODO: need test if client calculation matches servers
+					player->ReleaseInvincible();
+					player->ChangeVehicleMaskGroup(OBJ_MASK_GROUP::VEHICLE, mPhysics);
+				}
+			}
+		}
+		i += 1;
 	}
 }
 
@@ -124,6 +151,12 @@ void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 		mPlayerList[idx]->ToggleKeyValue(key, pressed);
 		break;
 
+	case 'Q': // TEST
+	{
+		bool b = false;
+		mTestFlag.compare_exchange_strong(b, true);
+		break;
+	}
 	default:
 		std::cout << "Invalid key input.\n";
 		return;
@@ -143,7 +176,7 @@ void GameWorld::SendGameStartSuccess()
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
 		const btVector3& pos = mPlayerList[i]->GetVehicleRigidBody().GetPosition();
-		const btQuaternion& quat = mPlayerList[i]->GetVehicleRigidBody().GetQuaternion();
+		const btQuaternion& quat = mPlayerList[i]->GetVehicleRigidBody().GetRotation();
 
 		info_pck.px[i] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 		info_pck.py[i] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
@@ -162,7 +195,6 @@ void GameWorld::SendStartSignal()
 #ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "[room id: " << mID << "] Sending start signal packet.\n";
 #endif
-
 	SC::packet_start_signal pck{};
 	pck.size = sizeof(SC::packet_start_signal);
 	pck.type = SC::START_SIGNAL;
@@ -200,7 +232,7 @@ void GameWorld::PushVehicleTransformPacket(int target, int receiver)
 
 	const auto& vehicle = mPlayerList[target]->GetVehicleRigidBody();
 	const btVector3& pos = vehicle.GetPosition();
-	const btQuaternion& quat = vehicle.GetQuaternion();
+	const btQuaternion& quat = vehicle.GetRotation();
 	const btVector3& lvel = vehicle.GetLinearVelocity();
 	const btVector3& avel = vehicle.GetAngularVelocity();
 
@@ -237,7 +269,7 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 
 	const auto& missile = mPlayerList[target]->GetMissileRigidBody();
 	const btVector3& pos = missile.GetPosition();
-	const btQuaternion& quat = missile.GetQuaternion();
+	const btQuaternion& quat = missile.GetRotation();
 	const btVector3& lvel = missile.GetLinearVelocity();
 
 	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
@@ -268,6 +300,47 @@ void GameWorld::SendMissileRemovePacket(int target)
 	pck.type = SC::REMOVE_MISSILE;
 	pck.world_id = mID;
 	pck.missile_idx = target;
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void GameWorld::SendInvincibleOnPacket(int target)
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[room id: " << mID << "] Send invincible on packet. [" << target << "]\n";
+#endif
+	SC::packet_invincible_on pck{};
+	pck.size = sizeof(SC::packet_invincible_on);
+	pck.type = SC::INVINCIBLE_ON;
+	pck.world_id = mID;
+	pck.player_idx = target;
+	pck.duration = (int)(mConstantPtr->InvincibleDuration * FIXED_FLOAT_LIMIT);
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void GameWorld::SendSpawnPacket(int target)
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[room id: " << mID << "] Send spawn packet. [" << target << "\n";
+#endif
+	SC::packet_spawn_transform pck{};
+	pck.size = sizeof(SC::packet_spawn_transform);
+	pck.type = SC::SPAWN_TRANSFORM;
+	pck.world_id = mID;
+	pck.player_idx = target;
+	
+	const auto& vehicle = mPlayerList[target]->GetVehicleRigidBody();
+	const btVector3& pos = vehicle.GetPosition();
+	const btQuaternion& quat = vehicle.GetRotation();
+
+	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
+	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
+	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+
+	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
+	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
+
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -311,6 +384,21 @@ void GameWorld::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instS
 	}
 }
 
+void GameWorld::TestVehicleSpawn()
+{
+	if (mTestFlag)
+	{
+		if (mPlayerList[0]->IsInvincible() == false)
+		{
+			HandleInvincibleMode(0);
+		}
+		else
+		{
+			mTestFlag = false;
+		}
+	}
+}
+
 void GameWorld::CheckCollision()
 {
 	int numManifolds = mPhysics.GetNumManifolds();
@@ -325,6 +413,7 @@ void GameWorld::CheckCollision()
 
 		if (objA == nullptr || objB == nullptr) continue;
 
+
 		GameObject* gameObjA = reinterpret_cast<GameObject*>(objA->getUserPointer());
 		GameObject* gameObjB = reinterpret_cast<GameObject*>(objB->getUserPointer());
 
@@ -337,29 +426,49 @@ void GameWorld::HandleCollision(const btCollisionObject& objA, const btCollision
 {
 	if (int idx = GetPlayerIndex(gameObjA); idx >= 0)
 	{
-		auto aTag = gameObjA.GetTag(objA);
-		auto bTag = gameObjB.GetTag(objB);
+		int aMask = gameObjA.GetMask(objA);
+		int bMask = gameObjB.GetMask(objB);
 
 		if (&gameObjB == &mMap)
-			HandleCollisionWithMap(idx, mMap.GetCheckpointIndex(objB), aTag);
+			HandleCollisionWithMap(idx, mMap.GetCheckpointIndex(objB), aMask);
 		else
-			HandleCollisionWithPlayer(idx, GetPlayerIndex(gameObjB), aTag, bTag);
+			HandleCollisionWithPlayer(idx, GetPlayerIndex(gameObjB), aMask, bMask);
 	}
 }
 
-void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, const GameObject::OBJ_TAG& tag)
+void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, int mask)
 {
-	switch (tag)
+	switch (mask)
 	{
-	case GameObject::OBJ_TAG::VEHICLE:
+	case OBJ_MASK::VEHICLE:
 	{
 		if (cpIdx >= 0)
 		{
-			mPlayerList[idx]->HandleCheckpointCollision(cpIdx);
+			auto player = mPlayerList[idx];
+			if (player->IsNextCheckpoint(cpIdx))
+			{
+				player->MarkNextCheckpoint(cpIdx);
+				// TODO: may got the point so sort player idx list by point.
+				// And send rank of each player to each player.
+			}
+			else
+			{
+				int cnt = player->GetReverseDriveCount(cpIdx);
+				if (cnt == 1)
+				{
+					// TODO: Send warning packet to this!! player.
+				}
+				else if(cnt == 2)
+				{
+					// player->ResetReverseCount();
+					// TODO: Spawn back to last checkpoint.
+					// and send spawn packet to all player.
+				}
+			}
 		}
 		break;
 	}
-	case GameObject::OBJ_TAG::MISSILE:
+	case OBJ_MASK::MISSILE:
 	{
 		if (cpIdx < 0)
 		{
@@ -367,45 +476,50 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, const GameObject::OBJ
 			SendMissileRemovePacket(idx);
 		}
 		break;
-	}
-	default:
-		std::cout << "Wrong tag!" << std::endl;
-		break;
-	}
+	}}
 }
 
-void GameWorld::HandleCollisionWithPlayer(int aIdx, int bIdx, const GameObject::OBJ_TAG aTag, const GameObject::OBJ_TAG bTag)
+void GameWorld::HandleCollisionWithPlayer(int aIdx, int bIdx, int aMask, int bMask)
 {
-	switch (aTag)
+	switch (aMask)
 	{
-	case GameObject::OBJ_TAG::VEHICLE:
+	case OBJ_MASK::VEHICLE:
 	{
-		if (bTag == GameObject::OBJ_TAG::MISSILE)
+		if (bMask == OBJ_MASK::MISSILE)
 		{
-			if (mPlayerList[aIdx]->IsInvincible() == false)
-			{
-				mPlayerList[aIdx]->SetInvincible();
-				// TODO: Waits for 1.5 second and send spawn packet.
-				// and waits another 1.5 second and release invincible mode.
-				std::cout << "Hit by missile.\n";
-			}
+			HandleInvincibleMode(aIdx);
 		}
 		break;
 	}
-	case GameObject::OBJ_TAG::MISSILE:
+	case OBJ_MASK::MISSILE:
 	{
-		if (bTag == GameObject::OBJ_TAG::VEHICLE)
+		if (bMask == OBJ_MASK::VEHICLE)
 		{
 			mPlayerList[aIdx]->IncreasePoint(mConstantPtr->MissileHitPoint);
 			mPlayerList[aIdx]->DisableMissile();
 			SendMissileRemovePacket(aIdx);
+			// TODO: player got point so sort player idx list by point.
+			// and send rank of each player to the player
 		}
 		break;
-	}
-	default:
-		std::cout << "Wrong tag!" << std::endl;
-		break;
-	}
+	}}
+}
+
+void GameWorld::HandleInvincibleMode(int idx)
+{
+	SendInvincibleOnPacket(idx);
+
+	mPlayerList[idx]->SetInvincible();
+	mPlayerList[idx]->ClearVehicleComponent();
+	mPlayerList[idx]->ChangeVehicleMaskGroup(OBJ_MASK_GROUP::INVINCIBLE, mPhysics);
+}
+
+void GameWorld::SpawnToCheckpoint(Player& player)
+{
+	int currentCPIndex = player.GetCurrentCPIndex();
+	if (currentCPIndex < 0) currentCPIndex = mMap.GetCheckpointSize() - 1;
+	const RigidBody& cp = mMap.GetCheckpointRigidBody(currentCPIndex);
+	player.SetTransform(cp.GetPosition(), cp.GetRotation());
 }
 
 int GameWorld::GetPlayerIndex(const GameObject& obj)

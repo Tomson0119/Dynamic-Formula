@@ -3,6 +3,7 @@
 #include "BtCompoundShape.h"
 #include "RigidBody.h"
 #include "Map.h"
+#include "ObjectMask.h"
 
 Player::Player()
 	: Empty{ true }, 
@@ -12,13 +13,15 @@ Player::Player()
 	  Name{ }, 
 	  LoadDone{ false }, 
 	  mCurrentCPIndex{ -1 },
+	  mReverseDriveCount{ 0 },
 	  mLapCount{ 0 },
 	  mDriftGauge{ 0.0f },
 	  mInvincibleDuration{ 0.0f },
 	  mInvincible{ false },
+	  mActive{ true },
 	  mPoint{ 0 },
 	  mItemCount{ 0 }, 
-	  mBoosterToggle{ false } 
+	  mBoosterToggle{ false }
 {
 	mKeyMap[VK_UP]	   = false;
 	mKeyMap[VK_DOWN]   = false;
@@ -27,16 +30,10 @@ Player::Player()
 	mKeyMap[VK_LSHIFT] = false;
 }
 
-void Player::SetPosition(const btVector3& pos)
+void Player::SetTransform(const btVector3& pos, const btQuaternion& quat)
 {
-	mVehicleRigidBody.SetPosition(pos);
-	mMissileRigidBody.SetPosition(pos);
-}
-
-void Player::SetRotation(const btQuaternion& quat)
-{
-	mVehicleRigidBody.SetRotation(quat);
-	mMissileRigidBody.SetRotation(quat);
+	mVehicleRigidBody.SetTransform(pos, quat);
+	mMissileRigidBody.SetTransform(pos, quat);
 }
 
 void Player::SetGameConstant(std::shared_ptr<InGameServer::GameConstant> constantPtr)
@@ -47,6 +44,7 @@ void Player::SetGameConstant(std::shared_ptr<InGameServer::GameConstant> constan
 
 void Player::CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShape& shape)
 {	
+	mVehicleRigidBody.SetMaskBits(OBJ_MASK_GROUP::VEHICLE, OBJ_MASK::VEHICLE);
 	mVehicleRigidBody.CreateRigidBody(mass,	shape.GetCompoundShape(), this);
 
 	mVehicleRigidBody.CreateRaycastVehicle(
@@ -58,15 +56,30 @@ void Player::CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShap
 }
 
 void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape& shape)
-{	
+{
+	mMissileRigidBody.SetMaskBits(OBJ_MASK_GROUP::MISSILE, OBJ_MASK::MISSILE);
 	mMissileRigidBody.CreateRigidBody(mass, shape.GetCollisionShape(), this);
 	mMissileRigidBody.SetNoResponseCollision();	
 }
 
+void Player::StopVehicle()
+{
+	mVehicleRigidBody.SetLinearVelocity(btVector3{ 0.0f,0.0f,0.0f });
+}
+
+void Player::ChangeVehicleMaskGroup(int maskGroup, BPHandler& physics)
+{
+	// Note: This shouldn't interrupt simulation.
+	// So it should be executed before or after the simulation.
+	mVehicleRigidBody.RemoveRigidBody(physics);
+	mVehicleRigidBody.SetMaskBits(maskGroup, OBJ_MASK::VEHICLE);
+	mVehicleRigidBody.AppendRigidBody(physics);
+}
+
+
 void Player::Update(float elapsed, BPHandler& physics)
 {
 	UpdateVehicleComponent(elapsed);
-	UpdateInvincibleDuration(elapsed);
 	mVehicleRigidBody.Update(physics);
 	mMissileRigidBody.Update(physics);
 }
@@ -86,6 +99,7 @@ void Player::DisableMissile()
 void Player::SetInvincible()
 {
 	mInvincible = true;
+	mActive = false;
 	mInvincibleDuration = mConstantPtr->InvincibleDuration;
 }
 
@@ -96,39 +110,54 @@ void Player::Reset(BPHandler& physics)
 	mMissileRigidBody.RemoveRigidBody(physics);
 }
 
-GameObject::OBJ_TAG Player::GetTag(const btCollisionObject& obj) const
+int Player::GetMask(const btCollisionObject& obj) const
 {
 	if (&obj == mVehicleRigidBody.GetRigidBody())
 	{
-		return OBJ_TAG::VEHICLE;
+		return OBJ_MASK::VEHICLE;
 	}
 	else if (&obj == mMissileRigidBody.GetRigidBody()
 		&& mMissileRigidBody.IsActive())
 	{
-		return OBJ_TAG::MISSILE;
+		return OBJ_MASK::MISSILE;
 	}
-	return OBJ_TAG::NONE;
+	return OBJ_MASK::NONE;
 }
 
-void Player::HandleCheckpointCollision(int cpIndex)
+bool Player::IsNextCheckpoint(int cpIndex)
 {
 	int nextIdx = (mCurrentCPIndex + 1) % mCPPassed.size();
-	if (nextIdx == cpIndex && mCPPassed[nextIdx] == false)
+	return (nextIdx == cpIndex && mCPPassed[nextIdx] == false);
+}
+
+void Player::MarkNextCheckpoint(int cpIndex)
+{
+	std::cout << "Hit checkpoint: " << cpIndex << std::endl;
+	if (mCurrentCPIndex >= 0)
 	{
-		std::cout << "Hit checkpoint: " << nextIdx << std::endl;
-		if (mCurrentCPIndex >= 0)
+		mCPPassed[mCurrentCPIndex] = false;
+		if (cpIndex == 0)
 		{
-			mCPPassed[mCurrentCPIndex] = false;
-			if (nextIdx == 0)
-			{
-				mLapCount += 1;
-				mPoint += mConstantPtr->LapFinishPoint;
-				std::cout << "Gets point!" << std::endl;
-			}
+			mLapCount += 1;
+			mPoint += mConstantPtr->LapFinishPoint;
+			std::cout << "Lap finished! got point!" << std::endl;
 		}
-		mCurrentCPIndex = nextIdx;
-		mCPPassed[nextIdx] = true;
 	}
+	mCurrentCPIndex = cpIndex;
+	mCPPassed[cpIndex] = true;
+}
+
+int Player::GetReverseDriveCount(int cpIndex)
+{
+	if (cpIndex < mCurrentCPIndex)
+	{
+		mReverseDriveCount += 1;
+		// TODO: increase warning of reverse drive
+		// mReverseDrive += 1;
+		// if(mReverseDrive > 1)
+		// send spawn packet and set last checkpoint(which is mCurrentCPIndex)
+	}
+	return mReverseDriveCount;
 }
 
 bool Player::NeedUpdate()
@@ -172,15 +201,7 @@ void Player::UpdateVehicleComponent(float elapsed)
 
 void Player::UpdateInvincibleDuration(float elapsed)
 {
-	if (mInvincible == false) return;
-
 	mInvincibleDuration -= elapsed;
-	if (mInvincibleDuration <= 0.0f)
-	{
-		mInvincible = false;
-		mInvincibleDuration = 0.0f;
-		std::cout << "(ID " << ID << ") " << "Invincible disabled.\n";
-	}
 }
 
 void Player::UpdateDriftGauge(float elapsed)
@@ -272,7 +293,7 @@ void Player::UpdateSteering(float elapsed)
 			0.0f);
 	}
 	if (mKeyMap[VK_LEFT])
-	{		
+	{
 		comp.VehicleSteering = std::max(
 			comp.VehicleSteering - mConstantPtr->SteeringIncrement * scale * elapsed,
 			-mConstantPtr->SteeringClamp);
@@ -330,6 +351,8 @@ void Player::UpdateEngineForce()
 
 void Player::ToggleKeyValue(uint8_t key, bool pressed)
 {
+	if (mActive == false) return;
+
 	if ((key == 'Z' || key == 'X'))
 	{
 		if (pressed && IsItemAvailable())

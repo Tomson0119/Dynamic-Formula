@@ -14,15 +14,17 @@ public:
 
 	virtual void Update(float elapsed, BPHandler& physics) override;
 	virtual void Reset(BPHandler& physics) override;
-	virtual OBJ_TAG GetTag(const btCollisionObject& obj) const override;
+	virtual int GetMask(const btCollisionObject& obj) const override;
 
 public:
 	void SetGameConstant(std::shared_ptr<InGameServer::GameConstant> constantPtr);
-	void SetPosition(const btVector3& pos);
-	void SetRotation(const btQuaternion& quat);
+	void SetTransform(const btVector3& pos, const btQuaternion& quat);
 
 	void CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShape& shape);
 	void CreateMissileRigidBody(btScalar mass, BtBoxShape& shape);
+
+	void StopVehicle();
+	void ChangeVehicleMaskGroup(int maskGroup, BPHandler& physics);
 
 	void SetDeletionFlag();
 	void DisableMissile();
@@ -30,18 +32,21 @@ public:
 	void SetInvincible();
 
 	void UpdateWorldTransform();
+	void UpdateInvincibleDuration(float elapsed);
+
 	void ToggleKeyValue(uint8_t key, bool pressed);
 	bool CheckMissileExist() const;
 
-	void HandleCheckpointCollision(int cpIndex);
+	bool IsNextCheckpoint(int cpIndex);
+	void MarkNextCheckpoint(int cpIndex);
+	int GetReverseDriveCount(int cpIndex);
 
 	bool NeedUpdate();
 
-private:
 	void ClearVehicleComponent();
 
+private:
 	void UpdateVehicleComponent(float elapsed);
-	void UpdateInvincibleDuration(float elapsed);
 	void UpdateDriftGauge(float elapsed);
 	void UpdateBooster(float elapsed);
 	void UpdateSteering(float elapsed);
@@ -51,10 +56,18 @@ private:
 	bool IsItemAvailable();
 
 public:
+	void Activate() { mActive = true; }
+	void Deactivate() { mActive = false; }
+	bool IsActive() const { return mActive; }
+
 	void IncreasePoint(int point) { mPoint += point; }
 	void SetCheckpointCount(int count) { mCPPassed.resize(count, false); }
 
+	void ReleaseInvincible() { mInvincible = false; mInvincibleDuration = 0.0f; }
 	bool IsInvincible() const { return mInvincible; }
+	float GetInvincibleDuration() const { return mInvincibleDuration; }
+
+	int GetCurrentCPIndex() const { return mCurrentCPIndex; }
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
 	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
 	
@@ -75,11 +88,15 @@ private:
 	MissileRigidBody mMissileRigidBody;
 
 	int mCurrentCPIndex;
+	int mReverseDriveCount;
 	int mLapCount;
+
 	float mDriftGauge;
+
 	float mInvincibleDuration;
 	bool mInvincible;
 
+	std::atomic_bool mActive;
 	std::atomic_int mPoint;
 	std::atomic_int mItemCount;
 	std::atomic_bool mBoosterToggle;

@@ -7,6 +7,7 @@
 
 class Player;
 class WaitRoom;
+struct OBJ_MASK;
 
 class GameWorld
 {
@@ -19,8 +20,7 @@ public:
 	void InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape);
 	void InitPlayerList(WaitRoom* room, int cpCount);
 
-	void SetPlayerPosition(int idx, const btVector3& pos);
-	void SetPlayerRotation(int idx, const btQuaternion& quat);
+	void SetPlayerTransform(int idx, const btVector3& pos, const btQuaternion& quat);
 
 	void CreateRigidbodies(int idx,
 		btScalar carMass, BtCarShape& carShape,
@@ -31,10 +31,6 @@ public:
 	void RemovePlayerRigidBody(int idx);
 
 	void HandleKeyInput(int idx, uint8_t key, bool pressed);
-
-	void SendGameStartSuccess();
-	void SendStartSignal();
-
 	bool CheckIfAllLoaded(int idx);
 
 public:
@@ -46,6 +42,7 @@ public:
 
 private:
 	void CheckCollision();
+	void UpdatePlayers(float elapsed);
 
 	void HandleCollision(
 		const btCollisionObject& objA,
@@ -53,30 +50,38 @@ private:
 		GameObject& gameObjA, 
 		GameObject& gameObjB);
 
-	void HandleCollisionWithMap(
-		int idx, int cpIdx,
-		const GameObject::OBJ_TAG& tag);
+	void HandleCollisionWithMap(int idx, int cpIdx,	int mask);
+	void HandleCollisionWithPlayer(int aIdx, int bIdx, int aMask, int bMask);
 
-	void HandleCollisionWithPlayer(
-		int aIdx, int bIdx,
-		const GameObject::OBJ_TAG aTag, 
-		const GameObject::OBJ_TAG bTag);
-
+	void HandleInvincibleMode(int idx);
+	void SpawnToCheckpoint(Player& player);
 	int GetPlayerIndex(const GameObject& obj);
+
+public:
+	void SendGameStartSuccess();
+	void SendStartSignal();
 
 private:
 	void BroadcastAllTransform();
 	void PushVehicleTransformPacket(int target, int receiver);
 	void PushMissileTransformPacket(int target, int receiver);
 	void SendMissileRemovePacket(int target);
+	void SendInvincibleOnPacket(int target);
+	void SendSpawnPacket(int target);
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
 	
+	//TEST
+	void TestVehicleSpawn();
+
 private:
 	int mID;
 	WSAOVERLAPPEDEX mPhysicsOverlapped;
 
 	std::atomic_int mPlayerCount;
 	std::atomic_bool mActive;
+
+	// TEST
+	std::atomic_bool mTestFlag = false;
 
 	int mUpdateTick;
 	
