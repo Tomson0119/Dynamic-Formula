@@ -137,6 +137,8 @@ namespace SC
 	const char PLAYER_TRANSFORM	  = 14;
 	const char MISSILE_TRANSFORM  = 15;
 	const char REMOVE_MISSILE	  = 16;
+	const char INVINCIBLE_ON	  = 17;
+	const char SPAWN_TRANSFORM	  = 18;
 
 	struct packet_force_logout : packet_header { };
 
@@ -252,6 +254,21 @@ namespace SC
 	{
 		int world_id;
 		int missile_idx;
+	};
+
+	struct packet_invincible_on : packet_header
+	{
+		int world_id;
+		int player_idx;
+		int duration;
+	};
+
+	struct packet_spawn_transform : packet_header
+	{
+		int world_id;
+		int player_idx;
+		int position[3];
+		int quaternion[4];
 	};
 }
 #pragma pack(pop)
