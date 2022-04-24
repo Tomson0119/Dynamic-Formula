@@ -22,12 +22,12 @@ public:
 	RigidBody();
 	virtual ~RigidBody();
 
+	void SetMaskBits(int maskGroup, int mask);
 	void SetNoResponseCollision();
 	void CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr);
 
-	void SetPosition(const btVector3& pos) { mPosition = pos; }
-	void SetRotation(const btQuaternion& quat) { mQuaternion = quat; }
-
+	void SetTransform(const btVector3& pos, const btQuaternion& quat);
+	void SetLinearVelocity(const btVector3& vec);
 	void SetAngularVelocity(const btVector3& vel);
 
 	void Update(BPHandler& physics);
@@ -45,7 +45,7 @@ public:
 
 public:
 	const btVector3& GetPosition() const { return mPosition; }
-	const btQuaternion& GetQuaternion() const { return mQuaternion; }
+	const btQuaternion& GetRotation() const { return mQuaternion; }
 	const btVector3& GetLinearVelocity() const { return mLinearVelocity; }
 	const btVector3& GetAngularVelocity() const { return mAngularVelocity; }
 
@@ -58,6 +58,9 @@ protected:
 	btVector3 mLinearVelocity;
 	btVector3 mAngularVelocity;
 
+	int mMaskGroup;
+	int mMask;
+	
 	std::atomic<UPDATE_FLAG> mFlag;
 };
 
@@ -88,6 +91,21 @@ private:
 	bool mActive;
 	VehicleRigidBody* mVehiclePtr;
 	std::shared_ptr<InGameServer::GameConstant> mConstantPtr;
+};
+
+class CustomVehicleRaycaster : public btVehicleRaycaster
+{
+public:
+	CustomVehicleRaycaster(btDynamicsWorld* dynamicsWorld);
+	virtual ~CustomVehicleRaycaster() = default;
+	virtual void* castRay(const btVector3& from, const btVector3& to, btVehicleRaycasterResult& result) override;
+	
+	void SetMaskBits(int maskGroup, int mask);
+
+private:
+	int mMaskGroup;
+	int mMask;
+	btDynamicsWorld* mDynamicsWorld;
 };
 
 class VehicleRigidBody : public RigidBody
@@ -134,6 +152,6 @@ public:
 private:
 	Tuning mTuning;
 	VehicleComponent mComponent;
-	std::unique_ptr<btVehicleRaycaster> mVehicleRayCaster;
+	std::unique_ptr<CustomVehicleRaycaster> mVehicleRayCaster;
 	std::unique_ptr<btRaycastVehicle> mVehicle;
 };

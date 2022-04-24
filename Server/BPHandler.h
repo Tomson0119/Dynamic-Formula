@@ -13,7 +13,7 @@ public:
 	void Flush();
 
 public:
-	void AddRigidBody(btRigidBody* rigidbody) { mBtDynamicsWorld->addRigidBody(rigidbody); }
+	void AddRigidBody(btRigidBody* rigidbody, int maskGroup, int mask) { mBtDynamicsWorld->addRigidBody(rigidbody, maskGroup, mask); }
 	void AddVehicle(btRaycastVehicle* vehicle) { mBtDynamicsWorld->addVehicle(vehicle); }
 	void RemoveRigidBody(btRigidBody* rigidbody) { mBtDynamicsWorld->removeRigidBody(rigidbody); }
 	void RemoveVehicle(btRaycastVehicle* vehicle) { mBtDynamicsWorld->removeVehicle(vehicle); }

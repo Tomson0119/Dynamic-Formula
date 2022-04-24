@@ -8,6 +8,8 @@ RigidBody::RigidBody()
 	  mQuaternion{ 0.0f, 0.0f, 0.0f, 1.0f },
 	  mLinearVelocity{ 0.0f, 0.0f, 0.0f },
 	  mAngularVelocity{ 0.0f, 0.0f, 0.0f },
+	  mMaskGroup{ 0 },
+	  mMask{ 0 },
 	  mFlag{ UPDATE_FLAG::NONE }
 {
 }
@@ -24,10 +26,20 @@ RigidBody::~RigidBody()
 	}
 }
 
+void RigidBody::SetMaskBits(int maskGroup, int mask)
+{
+	mMaskGroup = maskGroup;
+	mMask = mask;
+}
+
 void RigidBody::SetNoResponseCollision()
 {
-	Helper::Assert(mRigidBody, "SetNoResponseCollision failed: RigidBody is null.\n");
-	if(mRigidBody) mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	if (mRigidBody)
+	{
+		mRigidBody->setCollisionFlags(
+			mRigidBody->getCollisionFlags() |
+			btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	}
 }
 
 void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr)
@@ -50,6 +62,30 @@ void RigidBody::CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObje
 	mRigidBody->setUserPointer(objPtr);
 }
 
+void RigidBody::SetTransform(const btVector3& pos, const btQuaternion& quat)
+{
+	if (mRigidBody)
+	{
+		btTransform transform = btTransform::getIdentity();
+		transform.setOrigin(pos);
+		transform.setRotation(quat);
+		mRigidBody->setWorldTransform(transform);
+		mRigidBody->getMotionState()->setWorldTransform(transform);
+	}
+	mPosition = pos;
+	mQuaternion = quat;
+}
+
+void RigidBody::SetLinearVelocity(const btVector3& vel)
+{
+	mRigidBody->setLinearVelocity(vel);
+}
+
+void RigidBody::SetAngularVelocity(const btVector3& vel)
+{
+	mRigidBody->setAngularVelocity(vel);
+}
+
 void RigidBody::Update(BPHandler& physics)
 {
 	auto flag = GetUpdateFlag();
@@ -58,7 +94,7 @@ void RigidBody::Update(BPHandler& physics)
 	case RigidBody::UPDATE_FLAG::CREATION:
 		AppendRigidBody(physics);
 		SetUpdateFlag(UPDATE_FLAG::UPDATE);
-		[[fallthrough]];
+		break;
 
 	case RigidBody::UPDATE_FLAG::UPDATE:
 		UpdateRigidBody();		
@@ -92,7 +128,8 @@ void RigidBody::AppendRigidBody(BPHandler& physics)
 {
 	if (mRigidBody)
 	{
-		physics.AddRigidBody(mRigidBody);
+		Helper::Assert((mMaskGroup > 0 && mMask > 0), "Mask bits are not assigned.");
+		physics.AddRigidBody(mRigidBody, mMaskGroup, mMask);
 	}
 }
 
@@ -107,11 +144,6 @@ void RigidBody::RemoveRigidBody(BPHandler& physics)
 	{
 		physics.RemoveRigidBody(mRigidBody);
 	}
-}
-
-void RigidBody::SetAngularVelocity(const btVector3& vel)
-{
-	mRigidBody->setAngularVelocity(vel);
 }
 
 bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
@@ -176,14 +208,56 @@ void MissileRigidBody::SetMissileComponents()
 	forward *= mConstantPtr->MissileForwardMag;
 
 	newTransform.setOrigin(position + forward);
-	newTransform.setRotation(mVehiclePtr->GetQuaternion());
+	newTransform.setRotation(mVehiclePtr->GetRotation());
 
 	mRigidBody->getMotionState()->setWorldTransform(newTransform);
 	mRigidBody->setWorldTransform(newTransform);
 	mRigidBody->setGravity(mConstantPtr->MissileGravity);
 
 	btVector3 velocity = forward.normalize() * mConstantPtr->MissileSpeed;
-	mRigidBody->setLinearVelocity(velocity);
+	SetLinearVelocity(velocity);
+}
+
+
+//
+// CustomVehicleRaycaster
+//
+CustomVehicleRaycaster::CustomVehicleRaycaster(btDynamicsWorld* dynamicsWorld)
+	: mDynamicsWorld{ dynamicsWorld }, mMaskGroup{ 0 }, mMask{ 0 }
+{
+}
+
+void* CustomVehicleRaycaster::castRay(const btVector3& from, const btVector3& to, btVehicleRaycasterResult& result)
+{
+	btCollisionWorld::ClosestRayResultCallback rayCallback(from, to);
+
+	if (mMaskGroup > 0 && mMask)
+	{
+		rayCallback.m_collisionFilterGroup = mMaskGroup;
+		rayCallback.m_collisionFilterMask = mMask;
+	}
+	
+	mDynamicsWorld->rayTest(from, to, rayCallback);
+
+	if (rayCallback.hasHit())
+	{
+		const btRigidBody* body = btRigidBody::upcast(rayCallback.m_collisionObject);
+		if (body && body->hasContactResponse())
+		{
+			result.m_hitPointInWorld = rayCallback.m_hitPointWorld;
+			result.m_hitNormalInWorld = rayCallback.m_hitNormalWorld;
+			result.m_hitNormalInWorld.normalize();
+			result.m_distFraction = rayCallback.m_closestHitFraction;
+			return (void*)body;
+		}
+	}
+	return 0;
+}
+
+void CustomVehicleRaycaster::SetMaskBits(int maskGroup, int mask)
+{
+	mMaskGroup = maskGroup;
+	mMask = mask;
 }
 
 
@@ -204,7 +278,7 @@ void VehicleRigidBody::CreateRaycastVehicle(
 	{
 		mRigidBody->setActivationState(DISABLE_DEACTIVATION);
 
-		mVehicleRayCaster = std::make_unique<btDefaultVehicleRaycaster>(physics.GetDynamicsWorld());
+		mVehicleRayCaster = std::make_unique<CustomVehicleRaycaster>(physics.GetDynamicsWorld());
 		mVehicle = std::make_unique<btRaycastVehicle>(mTuning, mRigidBody, mVehicleRayCaster.get());
 		mVehicle->setCoordinateSystem(0, 1, 2);
 
@@ -255,7 +329,11 @@ void VehicleRigidBody::AddWheel(const btVector3& bodyExtents, const BtCarShape::
 void VehicleRigidBody::AppendRigidBody(BPHandler& physics)
 {
 	RigidBody::AppendRigidBody(physics);
-	if(mVehicle) physics.AddVehicle(mVehicle.get());
+	if (mVehicle) 
+	{
+		mVehicleRayCaster->SetMaskBits(mMaskGroup, mMask);
+		physics.AddVehicle(mVehicle.get());
+	}
 }
 
 void VehicleRigidBody::RemoveRigidBody(BPHandler& physics)
@@ -263,6 +341,7 @@ void VehicleRigidBody::RemoveRigidBody(BPHandler& physics)
 	RigidBody::RemoveRigidBody(physics);
 	if (mVehicle) 
 	{
+
 		physics.RemoveVehicle(mVehicle.get());
 	}
 }
