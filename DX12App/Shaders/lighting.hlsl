@@ -32,6 +32,12 @@ float Pow5(float x)
     return (x * x * x * x * x);
 }
 
+float DoAttenuation(float distance, float range)
+{
+    float att = saturate(1.0f - (distance * distance / (range * range)));
+    return att * att;
+}
+
 static const float BayerMatrix8[8][8] =
 {
     { 1.0 / 65.0, 49.0 / 65.0, 13.0 / 65.0, 61.0 / 65.0, 4.0 / 65.0, 52.0 / 65.0, 16.0 / 65.0, 64.0 / 65.0 },

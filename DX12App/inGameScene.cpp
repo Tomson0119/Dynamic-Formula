@@ -785,12 +785,12 @@ void InGameScene::UpdateVolumetricConstant()
 	VolumetricConstants volumeConst;
 
 	volumeConst.gInvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
-	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetInverseView());
+	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetView());
 
 	for(int i = 0; i < NUM_LIGHTS; ++i)
 		volumeConst.gLights[i] = mMainLight.Lights[i];
 
-	volumeConst.gVolumetricStrength = 10.0f;
+	volumeConst.gVolumetricStrength = 1.0f;
 
 	mVolumetricCB->CopyData(0, volumeConst);
 }
@@ -1207,7 +1207,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 			XMFLOAT3(0.6f, 0.6f, 0.6f),
 			pos,
 			direction,
-			0.0f, 100.0f, 10.0f,
+			0.0f, 20.0f, 10.0f,
 			0.0f, SPOT_LIGHT);;
 
 		mLights.push_back(l);
