@@ -91,7 +91,7 @@ void RigidBody::Update(BPHandler& physics)
 	auto flag = GetUpdateFlag();
 	switch (flag)
 	{
-	case RigidBody::UPDATE_FLAG::CREATION:
+	case RigidBody::UPDATE_FLAG::CREATE:
 		AppendRigidBody(physics);
 		SetUpdateFlag(UPDATE_FLAG::UPDATE);
 		break;
@@ -100,9 +100,15 @@ void RigidBody::Update(BPHandler& physics)
 		UpdateRigidBody();		
 		break;
 
-	case RigidBody::UPDATE_FLAG::DELETION:
+	case RigidBody::UPDATE_FLAG::REMOVE:
 		RemoveRigidBody(physics);
 		SetUpdateFlag(UPDATE_FLAG::NONE);
+		break;
+
+	case RigidBody::UPDATE_FLAG::CHANGE_MASK:
+		RemoveRigidBody(physics);
+		AppendRigidBody(physics);
+		SetUpdateFlag(RigidBody::UPDATE_FLAG::UPDATE);
 		break;
 
 	case RigidBody::UPDATE_FLAG::NONE:
@@ -151,9 +157,9 @@ bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 	if (mFlag.compare_exchange_strong(expected, desired) == false)
 	{
 		// DELETION flag must be a priority.
-		if (desired == UPDATE_FLAG::DELETION)
+		if (desired == UPDATE_FLAG::REMOVE)
 		{
-			mFlag = UPDATE_FLAG::DELETION;
+			mFlag = UPDATE_FLAG::REMOVE;
 			return true;
 		}
 		return false;
@@ -341,7 +347,6 @@ void VehicleRigidBody::RemoveRigidBody(BPHandler& physics)
 	RigidBody::RemoveRigidBody(physics);
 	if (mVehicle) 
 	{
-
 		physics.RemoveVehicle(mVehicle.get());
 	}
 }

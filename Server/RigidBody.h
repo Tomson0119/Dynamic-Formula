@@ -13,9 +13,10 @@ public:
 	enum class UPDATE_FLAG : uint8_t
 	{
 		NONE = 0,
-		CREATION,
+		CREATE,
 		UPDATE,
-		DELETION
+		REMOVE,
+		CHANGE_MASK,
 	};
 
 public:
