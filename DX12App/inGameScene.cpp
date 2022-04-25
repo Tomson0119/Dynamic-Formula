@@ -1113,7 +1113,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
-			obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
 		}
 
 		btTransform btLocalTransform;
@@ -1121,7 +1121,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
 		btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));
 
-		auto& meshes = obj->GetMesh();
+		auto& meshes = mMeshList[objName];
 		for (auto i = meshes.begin(); i < meshes.end(); ++i)
 		{
 			if (i->get()->GetMeshShape())
@@ -1130,9 +1130,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
-
-		mMeshList[objName] = obj->GetMesh();
-
+		
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
 		convexObjPath.assign(tmpstr.begin(), tmpstr.end());

@@ -82,7 +82,10 @@ PixelOut PS(VertexOut pin)
     }
     float4 result = ambient + directLight;
 
-    result.a = diffuse.a;
+    if (diffuse.a > 0.1f)
+        result.a = 1.0f;
+    else
+        result.a = diffuse.a;
     
     pout.f4Color = result;
     pout.f4Direction = float4((pin.newPosWVP.xyz / pin.newPosWVP.z) - (pin.oldPosWVP.xyz / pin.oldPosWVP.z), 1.0f);

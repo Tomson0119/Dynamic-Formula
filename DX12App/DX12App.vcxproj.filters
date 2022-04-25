@@ -249,7 +249,7 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="Shaders\volumetricScattering.hlsl">
-      <Filter>리소스 파일</Filter>
+      <Filter>소스 파일\Helper</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
