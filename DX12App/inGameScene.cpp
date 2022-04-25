@@ -194,7 +194,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
 	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
 	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
-	//auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
+	auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
 
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
@@ -246,8 +246,8 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), blurShader.get());
 	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), bloomMergeShader.get());
 
-	//mPostProcessingPipelines[Layer::VolumetricScattering] = make_unique<VolumetricScatteringPipeline>();
-	//mPostProcessingPipelines[Layer::VolumetricScattering]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), volumetricScatteringShader.get(), true);
+	mPostProcessingPipelines[Layer::VolumetricScattering] = make_unique<VolumetricScatteringPipeline>();
+	mPostProcessingPipelines[Layer::VolumetricScattering]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), volumetricScatteringShader.get(), true);
 
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
@@ -262,7 +262,7 @@ void InGameScene::BuildConstantBuffers()
 	mLightCB = std::make_unique<ConstantBuffer<LightConstants>>(mDevice.Get(), 2);
 	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(mDevice.Get(), 10); // 메인 카메라 1개, 그림자 매핑 카메라 3개, 다이나믹 큐브매핑 카메라 6개
 	mGameInfoCB = std::make_unique<ConstantBuffer<GameInfoConstants>>(mDevice.Get(), 1);
-	//mVolumetricCB = std::make_unique<ConstantBuffer<VolumetricConstants>>(mDevice.Get(), 1);
+	mVolumetricCB = std::make_unique<ConstantBuffer<VolumetricConstants>>(mDevice.Get(), 1);
 
 	for (const auto& [_, pso] : mPipelines)
 	{
@@ -629,28 +629,10 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mBloomEnable = !mBloomEnable;
 		}
-		/*if (wParam == 'V')
+		if (wParam == 'V')
 		{
 			mVolumetricEnable = !mVolumetricEnable;
 		}
-
-		if (wParam == 'U')
-			mAbsorptionTau += 0.001f;
-
-		if (wParam == 'J')
-			mAbsorptionTau -= 0.001f;
-
-		if (wParam == 'I')
-			mScatteringTau += 0.001f;
-
-		if (wParam == 'K')
-			mScatteringTau -= 0.001f;
-
-		wstring abs = std::to_wstring(mAbsorptionTau);
-		wstring scat = std::to_wstring(mScatteringTau);*/
-
-		//OutputDebugStringW((L"mAbsorptionTau : " + abs + L"\n").c_str());
-		//OutputDebugStringW((L"mScatteringTau : " + scat + L"\n\n").c_str());
 
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
@@ -798,32 +780,26 @@ void InGameScene::UpdateCameraConstant(int idx, Camera* camera)
 	mCameraCB->CopyData(idx, camera->GetConstants());
 }
 
-//void InGameScene::UpdateVolumetricConstant()
-//{
-//	VolumetricConstants volumeConst;
-//
-//	volumeConst.CameraPos = mCurrentCamera->GetPosition();
-//	volumeConst.gInvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
-//	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetInverseView());
-//
-//	for(int i = 0; i < NUM_LIGHTS; ++i)
-//		volumeConst.gLights[i] = mMainLight.Lights[i];
-//
-//	volumeConst.absorptionColor = { 0.5f, 0.5f, 0.5f };
-//	volumeConst.absorptionTau = mAbsorptionTau;
-//	volumeConst.scatteringSamples = 50;
-//	volumeConst.scatteringTau = mScatteringTau;
-//	volumeConst.scatteringZFar = 2000.0f;
-//	volumeConst.scatteringColor = { 1.0f, 1.0f, 1.0f };
-//	
-//	mVolumetricCB->CopyData(0, volumeConst);
-//}
+void InGameScene::UpdateVolumetricConstant()
+{
+	VolumetricConstants volumeConst;
+
+	volumeConst.gInvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
+	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetInverseView());
+
+	for(int i = 0; i < NUM_LIGHTS; ++i)
+		volumeConst.gLights[i] = mMainLight.Lights[i];
+
+	volumeConst.gVolumetricStrength = 10.0f;
+
+	mVolumetricCB->CopyData(0, volumeConst);
+}
 
 void InGameScene::UpdateConstants(const GameTimer& timer)
 {
 	UpdateCameraConstant(0, mCurrentCamera);
 	UpdateLightConstants();
-	//UpdateVolumetricConstant();
+	UpdateVolumetricConstant();
 
 	GameInfoConstants gameInfo{};
 	gameInfo.RandFloat4 = XMFLOAT4(
@@ -891,10 +867,10 @@ void InGameScene::SetGraphicsCBV(ID3D12GraphicsCommandList* cmdList, int cameraC
 	cmdList->SetGraphicsRootConstantBufferView(2, mGameInfoCB->GetGPUVirtualAddress(0));
 }
 
-//void InGameScene::SetComputeCBV(ID3D12GraphicsCommandList* cmdList)
-//{
-//	cmdList->SetComputeRootConstantBufferView(3, mVolumetricCB->GetGPUVirtualAddress(0));
-//}
+void InGameScene::SetComputeCBV(ID3D12GraphicsCommandList* cmdList)
+{
+	cmdList->SetComputeRootConstantBufferView(3, mVolumetricCB->GetGPUVirtualAddress(0));
+}
 
 void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
 {
@@ -944,7 +920,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 		mPostProcessingPipelines[Layer::Bloom]->CopyMapToRT(cmdList, backBuffer);
 	}
 
-	/*if (mVolumetricEnable)
+	if (mVolumetricEnable)
 	{
 		SetComputeCBV(cmdList);
 
@@ -954,7 +930,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 		mPostProcessingPipelines[Layer::VolumetricScattering]->Dispatch(cmdList);
 
 		mPostProcessingPipelines[Layer::VolumetricScattering]->CopyMapToRT(cmdList, backBuffer);
-	}*/
+	}
 
 	mpUI.get()->Draw(nFrame);
 }
