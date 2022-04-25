@@ -161,7 +161,7 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bo
         for (int i = 0; i < static_cast<int>(GradientCnt); ++i)
         {
             if (IsOutlined[i])
-                mpd2dDeviceContext->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mvd2dSolidBrush[i].Get());
+                mpd2dDeviceContext->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), md2dLinearGradientBrush.Get());
             mpd2dDeviceContext->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), md2dLinearGradientBrush.Get());
         }
     }
@@ -180,7 +180,7 @@ void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT bias, UI
         for (int i = 0; i < static_cast<int>(GradientCnt); ++i)
         {
             if (IsOutlined[i])
-                mpd2dDeviceContext->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[i].Get());
+                mpd2dDeviceContext->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), md2dLinearGradientBrush.Get());
             mpd2dDeviceContext->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), md2dLinearGradientBrush.Get());
         }
     }
@@ -202,7 +202,7 @@ void UI::EndDraw(UINT nFrame)
 
 void UI::Flush()
 {
-    //if(mpd3d11DeviceContext)
+    if(mpd3d11DeviceContext)
         mpd3d11DeviceContext->Flush();
 }
 
@@ -329,7 +329,7 @@ void UI::Reset()
 
     mpd2dWriteFactory.Reset();
 
-    mWICFactoryPtr->Release();
+    //mWICFactoryPtr->Release();
 
     mdwFontFile.Reset();
     mdwFontSetBuilder.Reset();
