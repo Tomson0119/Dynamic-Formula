@@ -251,7 +251,8 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	UINT MyRank = 1;
 	mvTextBlocks[2].strText.push_back(('0' + MyRank));
 
-	switch (MyRank % 10)
+
+	switch (MyRank)
 	{
 	case 1:
 		mvTextBlocks[2].strText.push_back('s');
@@ -486,7 +487,7 @@ void InGameUI::CreateFontFormat()
 
 	std::vector<float> fFontSize;
 	fFontSize.push_back(GetFrameHeight() * 0.04f); 
-	fFontSize.push_back(GetFrameHeight() * 0.05f);
+	fFontSize.push_back(GetFrameHeight() * 0.06f);
 	fFontSize.push_back(GetFrameHeight() * 0.07f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
@@ -510,7 +511,7 @@ void InGameUI::CreateFontFormat()
 void InGameUI::SetTextRect()
 {//Time, Lap, Rank, Speed, km/h, 321 Go! GetFrameWidth() * 0.25f, GetFrameHeight() * 0.13f)
     mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.22f, GetFrameHeight() * 0.19f);
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.02f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.15f, GetFrameHeight() * 0.15f);
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.02f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.15f, GetFrameHeight() * 0.14f);
     mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, 0.0f, GetFrameWidth(), GetFrameHeight() * 0.16f);
     mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.90f);
     mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.95f);

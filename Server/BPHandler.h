@@ -10,10 +10,16 @@ public:
 	void Init(float gravity);
 	void AddRigidBody(btRigidBody* rigidbody) { mBtDynamicsWorld->addRigidBody(rigidbody); }
 	void StepSimulation(float elapsed);
-	
-	void Flush();
 
+	void Flush();
+	
+private:
+	void CheckCollision();
+
+public:
 	btDiscreteDynamicsWorld* GetDynamicsWorld() const { return mBtDynamicsWorld.get(); }
+	int GetNumManifolds() const { return mBtDynamicsWorld->getDispatcher()->getNumManifolds(); }
+	btPersistentManifold* GetPersistentManifold(int idx) const { return mBtDynamicsWorld->getDispatcher()->getManifoldByIndexInternal(idx); }
 
 private:
 	std::unique_ptr<btDefaultCollisionConfiguration> mBtCollisionConfiguration;
@@ -22,6 +28,4 @@ private:
 	std::unique_ptr<btSequentialImpulseConstraintSolver> mBtSolver;
 
 	std::unique_ptr<btDiscreteDynamicsWorld> mBtDynamicsWorld;
-
-	/*btClock mPhysicsTimer;*/
 };

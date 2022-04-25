@@ -129,10 +129,15 @@ void BtCarShape::BuildCompoundShape(std::string_view filename)
 // BtMeshShape
 // 
 BtMeshShape::BtMeshShape(BtMeshShape&& other) noexcept
+	: mTriangleVertexArray{ nullptr }
 {
 	if (other.mMeshShape)
 	{
 		mMeshShape = std::move(other.mMeshShape);
+	}
+	if (other.mTriangleVertexArray)
+	{
+		mTriangleVertexArray = std::move(other.mTriangleVertexArray);
 	}
 }
 
@@ -151,26 +156,36 @@ void BtMeshShape::LoadMesh(std::ifstream& file, const std::vector<btVector3>& po
 {
 	std::vector<std::vector<int>> temp;
 
+	std::streampos last = 0;
 	std::string info;
-	while (file >> info)
+	while (std::getline(file, info))
 	{
-		if (info == "f")
+		std::stringstream ss(info);
+		std::string type;
+		ss >> type;
+
+		if (type == "f")
 		{
 			char ignore[2];
 			int v, vt, vn;
 
 			temp.emplace_back();
-			while (file >> v >> ignore[0] >> vt >> ignore[1] >> vn)
+			while (ss >> v >> ignore[0] >> vt >> ignore[1] >> vn)
 			{
-				temp.back().push_back(v);
+				temp.back().push_back(v-1);
 			}
+			last = file.tellg();
 		}
-		else if (info == "usemtl") break;
+		else if (type == "usemtl")
+		{
+			file.seekg(last);
+			break;
+		}
 	}
 
 	std::vector<btVector3> vertices;
-	std::vector<uint16_t> indices;
-	uint16_t k = 0;
+	std::vector<uint32_t> indices;
+	uint32_t k = 0;
 	for (const std::vector<int>& face : temp)
 	{
 		for (int i = 0; i < face.size(); i++)
@@ -188,7 +203,7 @@ void BtMeshShape::LoadMesh(std::ifstream& file, const std::vector<btVector3>& po
 	BuildMeshShape(vertices, indices);
 }
 
-void BtMeshShape::BuildMeshShape(const std::vector<btVector3> vertices, const std::vector<uint16_t> indices)
+void BtMeshShape::BuildMeshShape(const std::vector<btVector3>& vertices, const std::vector<uint32_t>& indices)
 {
 	mTriangleVertexArray = std::make_unique<btTriangleIndexVertexArray>();
 
@@ -289,7 +304,9 @@ void BtMapShape::BuildCompoundShape(std::string_view filename)
 		std::string objPath2 = "Resource\\Models\\" + objName + "_Transparent.obj";
 
 		LoadModel(objPath1, localTransform, scale);
-		LoadModel(objPath2, localTransform, scale);
+		
+		std::ifstream transFile{ objPath2, std::ios::binary };
+		if(transFile.is_open()) LoadModel(transFile, localTransform, scale);
 	}
 }
 
@@ -299,21 +316,31 @@ void BtMapShape::LoadModel(
 	const btVector3& localScale)
 {
 	std::ifstream file = Helper::OpenFile(filename);
+	LoadModel(file, localTransform, localScale);
+}
+
+void BtMapShape::LoadModel(std::ifstream& fileStream, const btTransform& localTransform, const btVector3& localScale)
+{
 	std::vector<btVector3> positions;
 
 	std::string info;
-	while (file >> info)
+	while (std::getline(fileStream, info))
 	{
-		if (info == "v")
+		std::stringstream ss(info);
+		std::string type;
+		ss >> type;
+
+		if (type == "v")
 		{
 			float x, y, z;
-			file >> x >> y >> z;
+			ss >> x >> y >> z;
+			z *= -1.0f;
 			positions.push_back({ x,y,z });
 		}
-		else if (info == "usemtl")
+		else if (type == "usemtl")
 		{
 			mMeshShapes.emplace_back();
-			mMeshShapes.back().LoadMesh(file, positions);
+			mMeshShapes.back().LoadMesh(fileStream, positions);
 			mMeshShapes.back().SetLocalScale(localScale);
 			mCompoundShape->addChildShape(localTransform, mMeshShapes.back().GetMeshShape());
 		}

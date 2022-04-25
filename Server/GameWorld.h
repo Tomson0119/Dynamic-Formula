@@ -3,6 +3,7 @@
 #include "BPHandler.h"
 #include "RigidBody.h"
 #include "InGameServer.h"
+#include "Map.h"
 
 class Player;
 class WaitRoom;
@@ -15,9 +16,8 @@ public:
 	~GameWorld();
 	
 	void InitPhysics(float gravity);
-	//void InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes);
-	void InitMapRigidBody(const BtMapShape& mapShape);
-	void InitPlayerList(WaitRoom* room);
+	void InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape);
+	void InitPlayerList(WaitRoom* room, int cpCount);
 
 	void SetPlayerPosition(int idx, const btVector3& pos);
 	void SetPlayerRotation(int idx, const btQuaternion& quat);
@@ -27,7 +27,6 @@ public:
 		btScalar missileMass, BtBoxShape* missileShape);
 	void UpdatePhysicsWorld();
 	void FlushPhysicsWorld();
-
 	void RemovePlayerRigidBody(int idx);
 
 	void HandleKeyInput(int idx, uint8_t key, bool pressed);
@@ -60,8 +59,7 @@ private:
 
 	int mUpdateTick;
 	
-	RigidBody mMapRigidBody;
-	//MapRigidBody mMapRigidBody;
+	Map mMap;
 	PlayerList mPlayerList;
 
 	BPHandler mPhysics;

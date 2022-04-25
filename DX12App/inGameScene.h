@@ -42,19 +42,23 @@ public:
 		const GameTimer& timer,
 		const std::shared_ptr<BulletWrapper>& physics) override;
 	
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame) override;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame) override;
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 
 public:
 	void UpdateLight(float elapsed);
+	void AddParticleObject();
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
+	void UpdateVolumetricConstant();
 	void UpdateConstants(const GameTimer& timer);
 	void UpdateDynamicsWorld();
 
-	void SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
+	void SetGraphicsCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
+
+	void SetComputeCBV(ID3D12GraphicsCommandList* cmdList);
 
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0, bool cubeMapping=false);
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0, bool cubeMapping = false);
@@ -79,6 +83,7 @@ private:
 
 	void BuildCarObject(
 		const XMFLOAT3& position,
+		const XMFLOAT4& rotation,
 		char color,
 		bool isPlayer,
 		ID3D12GraphicsCommandList* cmdList, 
@@ -99,6 +104,8 @@ private:
 	void UpdatePlayerObjects();
 
 	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path);
+	void LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
+	void LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
 
@@ -129,6 +136,7 @@ private:
 	std::unique_ptr<ConstantBuffer<CameraConstants>> mCameraCB;
 	std::unique_ptr<ConstantBuffer<LightConstants>> mLightCB;
 	std::unique_ptr<ConstantBuffer<GameInfoConstants>> mGameInfoCB;
+	std::unique_ptr<ConstantBuffer<VolumetricConstants>> mVolumetricCB;
 
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
@@ -170,10 +178,25 @@ private:
 		(XMFLOAT4)Colors::Orange, (XMFLOAT4)Colors::Yellow
 	};
 
+	// wheel offset
+	const XMFLOAT3 mWheelOffset = { 1.25f, -0.2f, 1.85f };
+
 	UINT mMsaa4xQualityLevels = 0;
 	bool mMsaa4xEnable = false;
 
 	bool mMotionBlurEnable = true;
 
+	bool mCheckPointEnable = false;
+
+	bool mBloomEnable = true;
+
+	bool mVolumetricEnable = false;
+
 	btRigidBody* mTrackRigidBody = NULL;
+
+	std::vector<LightInfo> mLights;
+	LightInfo mDirectionalLight;
+
+	//float mAbsorptionTau = -0.061f;
+	//float mScatteringTau = 0.059f;
 };

@@ -39,6 +39,19 @@ void InGameScene::OnResize(float aspect)
 		mMainCamera->SetLens(aspect);
 	if (mDirectorCamera)
 		mDirectorCamera->SetLens(aspect);
+
+	CreateMsaaViews();
+	CreateVelocityMapViews();
+
+	ComputePipeline* p = mPostProcessingPipelines[Layer::Bloom].get();
+	auto bloom = dynamic_cast<BloomPipeline*>(p);
+	bloom->CreateTextures(mDevice.Get());
+	bloom->BuildSRVAndUAV(mDevice.Get());
+
+	p = mPostProcessingPipelines[Layer::MotionBlur].get();
+	auto motionBlur = dynamic_cast<MotionBlurPipeline*>(p);
+	motionBlur->CreateTextures(mDevice.Get());
+	motionBlur->BuildSRVAndUAV(mDevice.Get());
 }
 
 void InGameScene::BuildObjects(
@@ -52,7 +65,7 @@ void InGameScene::BuildObjects(
 	mDevice = device;
 
 	mMainCamera = make_unique<Camera>();
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
@@ -65,22 +78,11 @@ void InGameScene::BuildObjects(
 	mCurrentCamera = mDirectorCamera.get();
 
 	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
-	mMainLight.Lights[0].SetInfo(
-		XMFLOAT3(0.6f, 0.6f, 0.6f),
+
+	mDirectionalLight.SetInfo(
+		XMFLOAT3(0.3f, 0.3f, 0.3f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
-		0.0f, 0.0f, 0.0f,
-		3000.0f, DIRECTIONAL_LIGHT);
-	mMainLight.Lights[1].SetInfo(
-		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(-1.0f, 0.75f, -1.0f),
-		0.0f, 0.0f, 0.0f,
-		3000.0f, DIRECTIONAL_LIGHT);
-	mMainLight.Lights[2].SetInfo(
-		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(-1.0f, 0.75f, 1.0f),
 		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
 
@@ -155,12 +157,17 @@ void InGameScene::BuildComputeRootSignature()
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
-	D3D12_ROOT_PARAMETER parameters[3];
+	D3D12_ROOT_PARAMETER parameters[4];
 	parameters[0] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);    // Inputs
 	parameters[1] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);    // Output																   
-	parameters[2] = Extension::Constants(2, 0, D3D12_SHADER_VISIBILITY_ALL);					   // 32bit Constant
+	parameters[2] = Extension::Constants(6, 0, D3D12_SHADER_VISIBILITY_ALL);					   // 32bit Constant
+	parameters[3] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_ALL);    // CameraCB
+
+	D3D12_STATIC_SAMPLER_DESC samplerDesc[1];
+	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_COMPARISON_FUNC_NEVER, D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE, D3D12_SHADER_VISIBILITY_ALL);
+
 	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = Extension::RootSignatureDesc(_countof(parameters), parameters,
-		0, nullptr , D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+		_countof(samplerDesc), samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	ComPtr<ID3DBlob> rootSigBlob = nullptr;
 	ComPtr<ID3DBlob> errorBlob = nullptr;
@@ -182,6 +189,12 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
+	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
+	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl");
+	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
+	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
+	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
+	auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
 
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
@@ -189,8 +202,10 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
+	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
+	//mPipelines[Layer::Particle] = make_unique<StreamOutputPipeline>();
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera);
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.Direction);
 
 	if (mMsaa4xEnable)
 	{
@@ -207,6 +222,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
 	mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
 
+	mPipelines[Layer::Color]->SetAlphaBlending();
 	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());
 	
 	mPipelines[Layer::Instancing]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), instancingShader.get());
@@ -216,16 +232,29 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Transparent]->SetAlphaBlending();
 	mPipelines[Layer::Transparent]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), instancingShader.get());
 
-	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<ComputePipeline>(mDevice.Get());
-	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get());
+	mPipelines[Layer::CheckPoint]->SetWiredFrame(true);
+	mPipelines[Layer::CheckPoint]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), simpleShader.get());
 
-	//mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
+	//mPipelines[Layer::Particle]->SetAlphaBlending();
+	//mPipelines[Layer::Particle]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), particleShader.get());
+
+	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<MotionBlurPipeline>();
+	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get(), true);
+
+	mPostProcessingPipelines[Layer::Bloom] = make_unique<BloomPipeline>();
+	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), downSampleShader.get(), true);
+	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), blurShader.get());
+	mPostProcessingPipelines[Layer::Bloom]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), bloomMergeShader.get());
+
+	mPostProcessingPipelines[Layer::VolumetricScattering] = make_unique<VolumetricScatteringPipeline>();
+	mPostProcessingPipelines[Layer::VolumetricScattering]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), volumetricScatteringShader.get(), true);
+
+	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
 	//mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Instancing, mPipelines[Layer::Instancing].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Transparent, mPipelines[Layer::Transparent].get());
 	mShadowMapRenderer->BuildPipeline(mDevice.Get(), mRootSignature.Get());
-
 }
 
 void InGameScene::BuildConstantBuffers()
@@ -233,6 +262,7 @@ void InGameScene::BuildConstantBuffers()
 	mLightCB = std::make_unique<ConstantBuffer<LightConstants>>(mDevice.Get(), 2);
 	mCameraCB = std::make_unique<ConstantBuffer<CameraConstants>>(mDevice.Get(), 10); // 메인 카메라 1개, 그림자 매핑 카메라 3개, 다이나믹 큐브매핑 카메라 6개
 	mGameInfoCB = std::make_unique<ConstantBuffer<GameInfoConstants>>(mDevice.Get(), 1);
+	mVolumetricCB = std::make_unique<ConstantBuffer<VolumetricConstants>>(mDevice.Get(), 1);
 
 	for (const auto& [_, pso] : mPipelines)
 	{
@@ -314,7 +344,6 @@ void InGameScene::CreateMsaaDescriptorHeaps()
 		IID_PPV_ARGS(&mMsaaRtvDescriptorHeap)));
 }
 
-
 void InGameScene::CreateMsaaViews()
 {
 	D3D12_CLEAR_VALUE clearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, {0.0f,0.0f,0.0f,0.0f} };
@@ -339,7 +368,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 {
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
-	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 5.f, 5.f, 5.f));
+	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
 	// 지형 스케일에는 정수를 넣는 것을 권장
 	/*auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
@@ -351,13 +380,13 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
 	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
 	mPipelines[Layer::Terrain]->AppendObject(terrain);*/
-#ifdef STANDALONE
 	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
-#endif
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
+	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
+	LoadLights(cmdList, L"Map\\Lights.tmap");
 
 #ifdef STANDALONE
-	BuildCarObject({ 6000.0f, 10.0f, 500.0f }, 4, true, cmdList, physics, 0);
+	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
 #else
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
@@ -365,7 +394,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		if (info.Empty == false)
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
-			BuildCarObject(info.StartPosition, info.Color, isPlayer, cmdList, physics, i);
+			BuildCarObject(info.StartPosition, info.StartRotation, info.Color, isPlayer, cmdList, physics, i);
 			BuildMissileObject(cmdList, info.StartPosition, i);
 		}
 		i++;
@@ -373,12 +402,19 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
-	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 4000.0f);
+	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
 	mCurrentCamera = mMainCamera.get();
+
+	for (const auto& [_, pso] : mPipelines)
+	{
+		if (pso)
+			pso->SortMeshes();
+	}
 }
 
 void InGameScene::BuildCarObject(
 	const XMFLOAT3& position,
+	const XMFLOAT4& rotation,
 	char color,
 	bool isPlayer,
 	ID3D12GraphicsCommandList* cmdList, 
@@ -387,6 +423,7 @@ void InGameScene::BuildCarObject(
 {
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
+	carObj->SetQuaternion(rotation);
 
 	if (mMeshList["Car_Body.obj"].empty())
 		mMeshList["Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
@@ -398,17 +435,16 @@ void InGameScene::BuildCarObject(
 	{
 		auto wheelObj = make_shared<WheelObject>(*carObj.get());
 
-		float x = 7.6f, y = -1.2f, z = 11.0f;
+		XMFLOAT3 wheelOffset = mWheelOffset;
 		if (i >= 2)
 		{
-			z *= -1.0f;
+			wheelOffset.z *= -1.0f;
 		}
 		if (i % 2 == 0)
 		{
-			x *= -1.0f;
+			wheelOffset.x *= -1.0f;
 		}
-		wheelObj->SetLocalOffset({ x, y, z });
-
+		wheelObj->SetLocalOffset(wheelOffset);
 
 		if (i % 2 == 0)
 		{
@@ -424,7 +460,7 @@ void InGameScene::BuildCarObject(
 			else
 				wheelObj->CopyMeshes(mMeshList["Car_Wheel_R.obj"]);
 		}
-
+		
 		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
@@ -520,8 +556,14 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (missile)
 		{
 			if (missile->IsActive() == false)
+			{
 				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
-			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
+				missile->SetInitialTransform(pck, mNetPtr->GetLatency());
+			}
+			else
+			{
+				missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
+			}
 		}
 		break;
 	}
@@ -570,9 +612,28 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			if (mCurrentCamera == mDirectorCamera.get())
 				mCurrentCamera = mMainCamera.get();
-			else
+			else {
+				mDirectorCamera->SetPosition(mMainCamera->GetPosition());
 				mCurrentCamera = mDirectorCamera.get();
+			}
 		}
+		if (wParam == 'M')
+		{
+			mMotionBlurEnable = !mMotionBlurEnable;
+		}
+		if (wParam == 'N')
+		{
+			mCheckPointEnable = !mCheckPointEnable;
+		}
+		if (wParam == 'B')
+		{
+			mBloomEnable = !mBloomEnable;
+		}
+		if (wParam == 'V')
+		{
+			mVolumetricEnable = !mVolumetricEnable;
+		}
+
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 		break;
@@ -584,14 +645,9 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 {
 	if (mHwnd != GetFocus()) return;
 
-	if (GetAsyncKeyState('M') & 1)
-	{
-		mMotionBlurEnable = 1 - mMotionBlurEnable;
-	}
-
 	if (mCurrentCamera == mDirectorCamera.get())
 	{
-		const float dist = 500.0f;
+		const float dist = 50.0f;
 		if (GetAsyncKeyState('A') & 0x8000)
 			mDirectorCamera->Strafe(-dist * elapsed);
 		if (GetAsyncKeyState('D') & 0x8000)
@@ -619,7 +675,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		mMissileInterval -= elapsed;
 	}
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
-	
+
 #ifndef STANDALONE
 	for (auto& [key, val] : mKeyMap)
 	{
@@ -647,15 +703,15 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
 
-	UpdateMissileObject();
 	UpdatePlayerObjects();
+	UpdateMissileObject();
 	OnPreciseKeyInput(cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
 	mCurrentCamera->Update(elapsed);
 
 	mShadowMapRenderer->UpdateSplitFrustum(mCurrentCamera);
-	mShadowMapRenderer->UpdateDepthCamera(cmdList, mMainLight);
+	mShadowMapRenderer->UpdateDepthCamera(cmdList);
 
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
@@ -669,10 +725,51 @@ void InGameScene::UpdateLight(float elapsed)
 {
 }
 
+void InGameScene::AddParticleObject()
+{
+	
+}
+
 void InGameScene::UpdateLightConstants()
 {
 	for(int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
 		mMainLight.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(i));
+
+	auto playerPos = mPlayer->GetPosition();
+
+	for (auto i = mLights.begin(); i < mLights.end();)
+	{
+		if (i->pad0 == 1.0f)
+			i = mLights.erase(i);
+		else
+			++i;
+	}
+
+	for (int i = 0; i < mPlayerObjects.size(); ++i)
+	{
+		if (mPlayerObjects[i])
+		{
+			LightInfo* frontLights;
+			frontLights = mPlayerObjects[i]->GetLightInfo();
+
+			mLights.push_back(frontLights[0]);
+			mLights.push_back(frontLights[1]);
+		}
+	}
+
+	std::sort(mLights.begin(), mLights.end(),
+		[playerPos](LightInfo l1, LightInfo l2)
+		{
+			return Vector3::Distance(l1.Position, playerPos) < Vector3::Distance(l2.Position, playerPos);
+		}
+	);
+
+	for (int i = 1; i < NUM_LIGHTS; ++i)
+	{
+		mMainLight.Lights[i] = mLights[i - 1];
+	}
+
+	mMainLight.Lights[0] = mDirectionalLight;
 
 	mLightCB->CopyData(0, mMainLight);
 }
@@ -683,10 +780,26 @@ void InGameScene::UpdateCameraConstant(int idx, Camera* camera)
 	mCameraCB->CopyData(idx, camera->GetConstants());
 }
 
+void InGameScene::UpdateVolumetricConstant()
+{
+	VolumetricConstants volumeConst;
+
+	volumeConst.gInvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
+	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetInverseView());
+
+	for(int i = 0; i < NUM_LIGHTS; ++i)
+		volumeConst.gLights[i] = mMainLight.Lights[i];
+
+	volumeConst.gVolumetricStrength = 10.0f;
+
+	mVolumetricCB->CopyData(0, volumeConst);
+}
+
 void InGameScene::UpdateConstants(const GameTimer& timer)
 {
 	UpdateCameraConstant(0, mCurrentCamera);
-	UpdateLightConstants();	
+	UpdateLightConstants();
+	UpdateVolumetricConstant();
 
 	GameInfoConstants gameInfo{};
 	gameInfo.RandFloat4 = XMFLOAT4(
@@ -747,14 +860,19 @@ void InGameScene::UpdateDynamicsWorld()
 	}
 }
 
-void InGameScene::SetCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
+void InGameScene::SetGraphicsCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex)
 {
 	cmdList->SetGraphicsRootConstantBufferView(0, mCameraCB->GetGPUVirtualAddress(cameraCBIndex));
 	cmdList->SetGraphicsRootConstantBufferView(1, mLightCB->GetGPUVirtualAddress(0));
 	cmdList->SetGraphicsRootConstantBufferView(2, mGameInfoCB->GetGPUVirtualAddress(0));
 }
 
-void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
+void InGameScene::SetComputeCBV(ID3D12GraphicsCommandList* cmdList)
+{
+	cmdList->SetComputeRootConstantBufferView(3, mVolumetricCB->GetGPUVirtualAddress(0));
+}
+
+void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
 {
 	const XMFLOAT4& velocity = { 0.0f, 0.0f, 0.0f, 0.0f };
 	cmdList->ClearRenderTargetView(mMsaaVelocityMapRtvHandle, (FLOAT*)&velocity, 0, nullptr);
@@ -793,12 +911,33 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 		mPostProcessingPipelines[Layer::MotionBlur]->CopyMapToRT(cmdList, backBuffer);
 	}
 
+	if (mBloomEnable)
+	{
+		mPostProcessingPipelines[Layer::Bloom]->SetInput(cmdList, backBuffer, 1);
+
+		mPostProcessingPipelines[Layer::Bloom]->Dispatch(cmdList);
+
+		mPostProcessingPipelines[Layer::Bloom]->CopyMapToRT(cmdList, backBuffer);
+	}
+
+	if (mVolumetricEnable)
+	{
+		SetComputeCBV(cmdList);
+
+		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, backBuffer, 0);
+		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, depthBuffer, 1, true);
+
+		mPostProcessingPipelines[Layer::VolumetricScattering]->Dispatch(cmdList);
+
+		mPostProcessingPipelines[Layer::VolumetricScattering]->CopyMapToRT(cmdList, backBuffer);
+	}
+
 	mpUI.get()->Draw(nFrame);
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex, bool cubeMapping)
 {	
-	SetCBV(cmdList, cameraCBIndex);
+	SetGraphicsCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
 
 	for (const auto& [layer, pso] : mPipelines)
@@ -809,7 +948,18 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
 
-		if (cubeMapping && layer == Layer::Color)
+		if (layer == Layer::CheckPoint && !cubeMapping)
+		{
+			if (mCheckPointEnable)
+			{
+				pso->SetAndDraw(cmdList, true, true, cubeMapping);
+			}
+			else
+			{
+				continue;
+			}
+		}
+		else if (cubeMapping && layer == Layer::Color)
 		{
 			continue;
 		}
@@ -820,7 +970,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex, bool cubeMapping)
 {
-	SetCBV(cmdList, cameraCBIndex);
+	SetGraphicsCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
 
 	for (const auto& [layer, pso] : mPipelines)
@@ -852,7 +1002,6 @@ void InGameScene::UpdateMissileObject()
 			missile->SetActive(true);
 			mPipelines[Layer::Default]->AppendObject(mMissileObjects[i]);
 			missile->SetUpdateFlag(UPDATE_FLAG::NONE);
-
 			flag = true;
 			break;
 		}
@@ -861,7 +1010,7 @@ void InGameScene::UpdateMissileObject()
 			flag = true;
 			missile->SetActive(false);
 			missile->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Default]);
-			//mMissileObjects[i].reset();
+			mMissileObjects[i].reset();
 			break;
 		}
 		case UPDATE_FLAG::NONE:
@@ -889,7 +1038,7 @@ void InGameScene::UpdatePlayerObjects()
 		case UPDATE_FLAG::REMOVE:
 		{
 			removed_flag = true;
-			mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+			if(mMissileObjects[i]) mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			player->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Color]);
 			mPlayerObjects[i].reset();
 			break;
@@ -924,7 +1073,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		XMFLOAT3 scale;
 		ss >> scale.x >> scale.y >> scale.z;
 
-		auto tmpstr = std::string("Models\\") + objName;
+		auto tmpstr = std::string("Models\\") + objName + std::string(".obj");
 
 		auto transparentpath = tmpstr;
 		transparentpath.replace(tmpstr.find(".obj"), 4, "_Transparent.obj");
@@ -940,7 +1089,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
-			obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
 		}
 
 		btTransform btLocalTransform;
@@ -948,7 +1097,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
 		btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));
 
-		auto& meshes = obj->GetMesh();
+		auto& meshes = mMeshList[objName];
 		for (auto i = meshes.begin(); i < meshes.end(); ++i)
 		{
 			if (i->get()->GetMeshShape())
@@ -957,9 +1106,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
-
-		mMeshList[objName] = obj->GetMesh();
-
+		
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
 		convexObjPath.assign(tmpstr.begin(), tmpstr.end());
@@ -1002,4 +1149,67 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
 
 	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+}
+
+void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
+{
+	std::ifstream in_file{ path };
+	std::string info;
+
+	std::getline(in_file, info);
+	std::stringstream extss(info);
+
+	XMFLOAT3 extent;
+
+	extss >> extent.x >> extent.y >> extent.z;
+
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+
+		XMFLOAT3 pos;
+		ss >> pos.x >> pos.y >> pos.z;
+
+		XMFLOAT4 quaternion;
+		ss >> quaternion.x >> quaternion.y >> quaternion.z >> quaternion.w;
+
+		auto obj = make_shared<StaticObject>();
+
+		std::shared_ptr<BoxMesh> mesh = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, extent.x * 2, extent.y * 2, extent.z * 2);
+		mesh->SetSrvIndex(0);
+		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
+		obj->SetMesh(mesh);
+		obj->SetPosition(pos);
+		obj->SetQuaternion(quaternion);
+
+		mPipelines[Layer::CheckPoint]->AppendObject(obj);
+	}
+}
+
+void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
+{
+	std::ifstream in_file{ path };
+	std::string info;
+
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+
+		XMFLOAT3 pos;
+		ss >> pos.x >> pos.y >> pos.z;
+
+		XMFLOAT3 direction;
+		ss >> direction.x >> direction.y >> direction.z;
+
+		LightInfo l;
+
+		l.SetInfo(
+			XMFLOAT3(0.6f, 0.6f, 0.6f),
+			pos,
+			direction,
+			0.0f, 100.0f, 10.0f,
+			0.0f, SPOT_LIGHT);;
+
+		mLights.push_back(l);
+	}
 }

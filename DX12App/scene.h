@@ -9,6 +9,7 @@
 
 class NetModule;
 class UI;
+
 enum class SCENE_STAT : char
 {
 	NONE = 0,
@@ -51,7 +52,7 @@ public:
 		const GameTimer& timer,
 		const std::shared_ptr<BulletWrapper>& physics) = 0;
 
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame) = 0;
+	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame) = 0;
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) = 0;
 
 	virtual void OnResize(float aspect) { }

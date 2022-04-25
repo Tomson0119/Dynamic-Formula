@@ -162,7 +162,7 @@ void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& tim
 	mpUI.get()->Update(timer.TotalTime(), WTexts);
 }
 
-void LoginScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
+void LoginScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
 {
 	mpUI.get()->Draw(nFrame);
 }

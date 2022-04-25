@@ -1,73 +1,29 @@
-Texture2D gScreen0 : register(t0);
-Texture2D gScreen1 : register(t1);
-RWTexture2D<float4> gOutput : register(u0);
+#define GAUSSIAN_RADIUS 7
 
-groupshared float4 gCache[32 + 2][32 + 2];
+Texture2D<float4> inputTexture : register(t0);
+RWTexture2D<float4> outputTexture : register(u0);
 
-
-void AddTextureIntoCache(int3 groupThreadID : SV_GroupThreadID,
-                         int3 dispatchThreadID : SV_DispatchThreadID)
+cbuffer BlurParams : register(b0)
 {
-    const float ratio = 0.8f;
-    
-    gCache[groupThreadID.x + 1][groupThreadID.y + 1]
-        = lerp(gScreen0[dispatchThreadID.xy], gScreen1[dispatchThreadID.xy], ratio);
-    
-    if (groupThreadID.x == 0 && groupThreadID.y == 0)
-        gCache[0][0] = lerp(gScreen0[int2(dispatchThreadID.x - 1, dispatchThreadID.y - 1)],
-                            gScreen1[int2(dispatchThreadID.x - 1, dispatchThreadID.y - 1)],
-                            ratio);
-    if (groupThreadID.x == 31 && groupThreadID.y == 0)
-        gCache[33][0] = lerp(gScreen0[int2(dispatchThreadID.x + 1, dispatchThreadID.y - 1)],
-                             gScreen1[int2(dispatchThreadID.x + 1, dispatchThreadID.y - 1)],
-                             ratio);
-    if (groupThreadID.x == 0 && groupThreadID.y == 31)
-        gCache[0][33] = lerp(gScreen0[int2(dispatchThreadID.x - 1, dispatchThreadID.y + 1)],
-                             gScreen1[int2(dispatchThreadID.x - 1, dispatchThreadID.y + 1)],
-                             ratio);
-    if (groupThreadID.x == 31 && groupThreadID.y == 31)
-        gCache[33][33] = lerp(gScreen0[int2(dispatchThreadID.x + 1, dispatchThreadID.y + 1)],
-                              gScreen1[int2(dispatchThreadID.x + 1, dispatchThreadID.y + 1)],
-                              ratio);
-    
-    if (groupThreadID.x == 0)
-        gCache[0][groupThreadID.y + 1] = lerp(gScreen0[int2(dispatchThreadID.x - 1, dispatchThreadID.y)],
-                                              gScreen1[int2(dispatchThreadID.x - 1, dispatchThreadID.y)],
-                                              ratio);
-    if (groupThreadID.y == 0)
-        gCache[groupThreadID.x + 1][0] = lerp(gScreen0[int2(dispatchThreadID.x, dispatchThreadID.y - 1)],
-                                              gScreen1[int2(dispatchThreadID.x, dispatchThreadID.y - 1)],
-                                              ratio);
-    if (groupThreadID.x == 31)
-        gCache[33][groupThreadID.y + 1] = lerp(gScreen0[int2(dispatchThreadID.x + 1, dispatchThreadID.y)],
-                                               gScreen1[int2(dispatchThreadID.x + 1, dispatchThreadID.y)],
-                                               ratio);
-    if (groupThreadID.y == 31)
-        gCache[groupThreadID.x + 1][33] = lerp(gScreen0[int2(dispatchThreadID.x, dispatchThreadID.y + 1)],
-                                               gScreen1[int2(dispatchThreadID.x, dispatchThreadID.y + 1)],
-                                               ratio);
+    float4 coefficients[(GAUSSIAN_RADIUS + 1) / 4] : packoffset(c0);
+    int2 radiusAndDirection : packoffset(c1);
 }
 
 [numthreads(32, 32, 1)]
-void CS(int3 groupThreadID : SV_GroupThreadID,
-        int3 dispatchThreadID : SV_DispatchThreadID)
+void CS(uint3 dispatchID : SV_DispatchThreadID)
 {
-    AddTextureIntoCache(groupThreadID, dispatchThreadID);    
-    
-    GroupMemoryBarrierWithGroupSync();
-    
-    float3 color = float3(0, 0, 0);
-    int i = 0;
-    int j = 0;
-    [unroll]
-    for (i = -1; i <= 1; i++)
+    int2 pixel = int2(dispatchID.x, dispatchID.y);
+
+    int radius = radiusAndDirection.x;
+    int2 dir = int2(1 - radiusAndDirection.y, radiusAndDirection.y);
+
+    float4 accumulatedValue = float4(0.0, 0.0, 0.0, 0.0);
+
+    for (int i = -radius; i <= radius; ++i)
     {
-        [unroll]
-        for (j = -1; j <= 1; j++)
-        {
-            color += gCache[groupThreadID.x + 1 + j][groupThreadID.y + 1 + i].rgb * 0.1f;
-        }
+        uint cIndex = (uint) abs(i);
+        accumulatedValue += coefficients[cIndex >> 2][cIndex & 3] * inputTexture[mad(i, dir, pixel)];
     }
-    
-    gOutput[dispatchThreadID.xy] = float4(color, 1.0f);
+
+    outputTexture[pixel] = accumulatedValue;
 }

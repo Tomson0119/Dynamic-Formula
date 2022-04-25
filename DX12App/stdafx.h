@@ -134,7 +134,7 @@ inline std::wstring AnsiToWString(const std::string& str)
 
 ////////////////////////////////////////////////////////////////////////////
 //
-#define NUM_LIGHTS 3
+#define NUM_LIGHTS 32
 
 #define POINT_LIGHT		  1
 #define SPOT_LIGHT		  2
@@ -148,8 +148,10 @@ struct LightInfo
 	float    FalloffEnd = 0.0f;
 	XMFLOAT3 Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	float    SpotPower = 0.0f;
-	float    Range;
-	int		 Type;
+	float    Range = 0.f;
+	int		 Type = 0;
+	int		 pad0 = 0;
+	int		 pad1 = 0;
 	
 	void SetInfo(
 		const XMFLOAT3& diffuse,
@@ -176,6 +178,20 @@ struct LightConstants
 	XMFLOAT4X4 ShadowTransform[3];
 	XMFLOAT4 Ambient;
 	LightInfo Lights[NUM_LIGHTS];
+};
+
+struct VolumetricConstants
+{
+	XMFLOAT4X4 gInvProj;
+	XMFLOAT4X4 gInvView;
+
+	float gVolumetricStrength;
+
+	int pad0 = 0;
+	int pad1 = 0;
+	int pad2 = 0;
+
+	LightInfo gLights[NUM_LIGHTS];
 };
 
 struct CameraConstants
@@ -215,6 +231,7 @@ struct ObjectConstants
 	int32_t cubemapOn;
 	int32_t motionBlurOn;
 	int32_t rimLightOn;
+	int32_t invincibleOn;
 };
 
 struct MaterialConstants
@@ -238,6 +255,22 @@ struct InstancingInfo
 };
 
 
+inline void Print(const std::string& info, const XMFLOAT3& vec)
+{
+	std::stringstream ss;
+	ss << info;
+	ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << "]\n";
+	OutputDebugStringA(ss.str().c_str());
+}
+
+inline void Print(const std::string& info, const XMFLOAT4& vec)
+{
+	std::stringstream ss;
+	ss << info;
+	ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << "]\n";
+	OutputDebugStringA(ss.str().c_str());
+}
+
 ////////////////////////////////////////////////////////////////////////////
 //
 struct AtomicInt3
@@ -257,6 +290,12 @@ struct AtomicInt3
 		x.store(other.x);
 		y.store(other.y);
 		z.store(other.z);
+		return *this;
+	}
+
+	AtomicInt3& operator=(const XMFLOAT3& other)
+	{
+		SetValue(other);
 		return *this;
 	}
 
@@ -295,6 +334,15 @@ struct AtomicInt3
 			(int)(xmf3.x * FIXED_FLOAT_LIMIT),
 			(int)(xmf3.y * FIXED_FLOAT_LIMIT),
 			(int)(xmf3.z * FIXED_FLOAT_LIMIT));
+	}
+
+	void Extrapolate(int dx, int dy, int dz, float dt)
+	{
+		XMFLOAT3& val = GetXMFloat3();
+		val.x += dx / FIXED_FLOAT_LIMIT * dt;
+		val.y += dy / FIXED_FLOAT_LIMIT * dt;
+		val.z += dz / FIXED_FLOAT_LIMIT * dt;
+		SetValue(val);
 	}
 
 	btVector3 GetBtVector3() const
@@ -339,6 +387,12 @@ struct AtomicInt4
 		return *this;
 	}
 
+	AtomicInt4& operator=(const XMFLOAT4& other)
+	{
+		SetValue(other);
+		return *this;
+	}
+
 	void SetValue(int x_, int y_, int z_, int w_)
 	{
 		x = x_;
@@ -363,6 +417,22 @@ struct AtomicInt4
 			(int)(quat.y * FIXED_FLOAT_LIMIT),
 			(int)(quat.z * FIXED_FLOAT_LIMIT),
 			(int)(quat.w * FIXED_FLOAT_LIMIT));
+	}
+
+	void Extrapolate(int dx, int dy, int dz, float dt)
+	{
+		XMFLOAT3 vec = {
+			dx / FIXED_FLOAT_LIMIT * dt,
+			dy / FIXED_FLOAT_LIMIT * dt,
+			dz / FIXED_FLOAT_LIMIT * dt };
+		
+		XMVECTOR a = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&vec));
+
+		XMFLOAT4 origin = GetXMFloat4();
+		XMVECTOR nextQuat = XMVector4Normalize(XMQuaternionMultiply(a, XMLoadFloat4(&origin)));
+		
+		XMStoreFloat4(&origin, nextQuat);
+		SetValue(origin);
 	}
 
 	bool IsZero() const
@@ -443,6 +513,11 @@ namespace Math
 
 namespace Vector3
 {
+	inline float Distance(const XMFLOAT3& v1, const XMFLOAT3& v2)
+	{
+		return (float)sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2) + pow(v1.z - v2.z, 2));
+	}
+
 	inline XMFLOAT3 btVectorToXM(const btVector3& v)
 	{
 		return XMFLOAT3(v.x(), v.y(), v.z());

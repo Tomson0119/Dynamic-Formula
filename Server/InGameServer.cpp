@@ -17,6 +17,7 @@ InGameServer::InGameServer()
 	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin", "Resource\\Models\\Car_Body_Convex_Hull.obj");
 	mMissileShape = std::make_unique<BtBoxShape>("Resource\\Missile_Data.bin");
 	mMapShape = std::make_unique<BtMapShape>("Resource\\MapData.tmap");
+	mCheckpointShape = std::make_unique<CheckpointShape>("Resource\\Checkpoint.tmap");
 }
 
 void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
@@ -27,13 +28,14 @@ void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
 		msWorlds[i] = std::make_unique<GameWorld>(mBulletConstants);
-		msWorlds[i]->InitPhysics(-10.0f);	
-		msWorlds[i]->InitPlayerList(roomList[i].get());
+		msWorlds[i]->InitPhysics(-9.8f);	
+		msWorlds[i]->InitPlayerList(roomList[i].get(), (int)mCheckpointShape->GetInfos().size());
 	}
 }
 
 void InGameServer::PrepareToStartGame(int roomID)
 {
+	btVector3 offset = { 0.0f,0.0f,0.0f };
 	const auto& players = msWorlds[roomID]->GetPlayerList();
 	for (int i = 0; i < players.size(); i++)
 	{
@@ -46,28 +48,32 @@ void InGameServer::PrepareToStartGame(int roomID)
 			continue;
 		}
 
-		// Test
-		if (i == 1)
+		/*float offsetZ = (i % 2 == 1) ? -5.0f : 0.0f;
+		offset.setZ(offsetZ);
+		offset.setX(10.0f * i);*/
+
+		// test
+		if (i == 0)
 		{
-			btVector3 pos = mStartPosition;
-			pos.setZ(pos.z() + 100.0f);
-
-			btQuaternion quat = btQuaternion::getIdentity();
-			quat.setRotation({ 0.0f,1.0f,0.0f }, (btScalar)Math::PI);
-
-			msWorlds[roomID]->SetPlayerPosition(i, pos);
-			msWorlds[roomID]->SetPlayerRotation(i, quat);
+			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + btVector3(20.0f, 0.0f, 0.0f));
+			msWorlds[roomID]->SetPlayerRotation(i, mStartRotation);
+		}
+		else if(i == 1)
+		{
+			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition);
+			btQuaternion temp = mStartRotation;
+			temp.setRotation(btVector3{ 0.0f,1.0f,0.0f }, (btScalar)Math::PI / 2);
+			msWorlds[roomID]->SetPlayerRotation(i, temp);
 		}
 		else
 		{
-			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * (btScalar)i);
-			msWorlds[roomID]->SetPlayerRotation(i, { 0.0f,0.0f,0.0f,1.0f });
+			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition);
+			msWorlds[roomID]->SetPlayerRotation(i, mStartRotation);
 		}
-		// Test
 
-		msWorlds[roomID]->CreateRigidbodies(i, 1000.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
+		msWorlds[roomID]->CreateRigidbodies(i, 500.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
 	}
-	msWorlds[roomID]->InitMapRigidBody(*mMapShape.get());
+	msWorlds[roomID]->InitMapRigidBody(*mMapShape.get(), *mCheckpointShape.get());
 	msWorlds[roomID]->SendGameStartSuccess();
 }
 

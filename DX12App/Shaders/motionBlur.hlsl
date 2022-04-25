@@ -14,14 +14,14 @@ cbuffer CommonCB : register(b0)
     int gFrameHeight : packoffset(c0.y);
 }
 
-[numthreads(32, 30, 1)]
+[numthreads(32, 32, 1)]
 void CS(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
 {
-    int numSample = 10;
+    int numSample = 50;
 
     float Depth = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].b;
 
-    int BlurConst = 50;
+    int BlurConst = 1;
 
     float Blur = VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].a;
     float2 Velocity = -VelocityMap[int2(n3DispatchThreadID.x, n3DispatchThreadID.y)].rg * BlurConst;

@@ -47,6 +47,7 @@ public:
 	virtual void ChangeCurrentRenderTarget() {}
 
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
+	void SortMeshes();
 
 protected:
 	virtual void UpdateTransform();
@@ -133,6 +134,8 @@ public:
 	void Scale(const XMFLOAT3& scale);
 	void Scale(float scale);
 
+	void SetTransparent(bool transparent) { mTransparentOn = transparent; }
+
 public:
 	XMFLOAT3 GetPosition() const { return mPosition; }
 	XMFLOAT3 GetRight() const { return mRight; }
@@ -159,7 +162,13 @@ public:
 
 	void ChangeUpdateFlag(UPDATE_FLAG expected, const UPDATE_FLAG& desired);
 	void SetUpdateFlag(const UPDATE_FLAG& flag) { mUpdateFlag = flag; }
+
+	void SetRimLight(bool rimlight) { mRimLightOn = rimlight; }
+
 	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
+
+	// test
+	const XMFLOAT4& GetMeshDiffuse(const std::string& name);
 
 protected:
 	XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
@@ -208,6 +217,7 @@ protected:
 	bool mCubemapOn = false;
 	bool mMotionBlurOn = true;
 	bool mRimLightOn = false;
+	bool mTransparentOn = false;
 
 	std::string mName;
 };
@@ -298,9 +308,10 @@ public:
 	float GetDuration() { return mDuration; }
 
 	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
+	void SetInitialTransform(SC::packet_missile_transform* pck, float latency);
 
 public:
-	void SetActive(bool state) { mActive = state; }
+	void SetActive(bool state);
 	bool IsActive() const { return mActive; }
 
 private:
@@ -314,8 +325,8 @@ private:
 class StaticObject : public GameObject
 {
 public:
-	StaticObject();
-	virtual ~StaticObject();
+	StaticObject() = default;
+	virtual ~StaticObject() = default;
 
 	virtual void Update(float elapsedTime, float updateRate) override;
 };

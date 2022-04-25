@@ -175,6 +175,19 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 		camera = std::make_unique<Camera>();
 		camera->SetLens(0.5f * Math::PI, 1.0f, 0.1f, 100.0f);
 	}
+
+	for (int i = 0; i < 2; ++i)
+	{
+		// Falloff는 전부 미터 단위임에 주의할 것
+		mFrontLight[i].SetInfo(
+			XMFLOAT3(0.6f, 0.6f, 0.6f),
+			XMFLOAT3(0.0f, 0.0f, 0.0f),
+			XMFLOAT3(-0.3f, 0.0f, -1.0f),
+			0.0f, 5000.0f, 100.0f,
+			0.0f, SPOT_LIGHT);;
+
+		mFrontLight[i].pad0 = 1.0f;
+	}
 }
 
 PhysicsPlayer::~PhysicsPlayer()
@@ -218,7 +231,7 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityXZ = 25.5f;
 		mMaxVelocityY = 40.0f;
 
-		mCamera->SetOffset(0.0f, 10.0f, -45.0f);
+		mCamera->SetOffset(0.0f, 1.6f, -7.5f);
 		mCamera->SetTimeLag(0.1f);
 		break;
 
@@ -251,15 +264,22 @@ void PhysicsPlayer::OnCameraUpdate(float elapsedTime)
 
 void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 {
+#ifdef STANDALONE
 	if (mVehicle)
 		mCurrentSpeed = mVehicle->getCurrentSpeedKmHour();
 
 	mEngineForce = 0.0f;
 	mBreakingForce = 10.0f;
 
+	bool accel = false;
+
 	if (mBoosterLeft > 0.0f)
 	{
-		mMaxSpeed = 1500.0f;
+		mMaxEngineForce = mBoosterEngineForce;
+
+		accel = true;
+		mMaxSpeed = 400.0f;
+		mEngineForce = mMaxEngineForce;
 		mBoosterLeft -= Elapsed;
 
 		mRimLightOn = true;
@@ -267,7 +287,9 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 	if (mBoosterLeft < 0.0f)
 	{
-		mMaxSpeed = 1000.0f;
+		mMaxEngineForce = mBaseEngineForce;
+
+		mMaxSpeed = 350.0f;
 		mBoosterLeft = 0.0f;
 
 		mRimLightOn = false;
@@ -299,31 +321,27 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 	{
-		mVehicleSteering += mSteeringIncrement * 2 * Elapsed;
+		mVehicleSteering += mSteeringIncrement * 2  * Elapsed;
 		if (mVehicleSteering > mSteeringClamp)
 			mVehicleSteering = mSteeringClamp;
 	}
 	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
-		if (mCurrentSpeed < 0.0f)
-			mBreakingForce = 150.0f;
-		else if (mMaxSpeed > mCurrentSpeed)
+		accel = true;
+		if (mMaxSpeed > mCurrentSpeed)
 			mEngineForce = mMaxEngineForce;
 		else
 		{
-			mBreakingForce = 100.0f;
 			mEngineForce = 0.0f;
 		}
 	}
 	if (GetAsyncKeyState(VK_DOWN) & 0x8000)
 	{
-		if (mCurrentSpeed > 0.0f)
-			mBreakingForce = 150.0f;
-		else if (-mMaxSpeed < mCurrentSpeed)
-			mEngineForce = -mMaxBackwardEngineForce;
+		accel = true;
+		if (-mMaxSpeed < mCurrentSpeed)
+			mEngineForce = -mMaxEngineForce;
 		else
 		{
-			mBreakingForce = 100.0f;
 			mEngineForce = 0.0f;
 		}
 	}
@@ -337,18 +355,30 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		//mItemNum-=1;
 		//ItemUsingTime 처리
 	}
+	if (GetAsyncKeyState(VK_LCONTROL) & 0x8000)
+	{
+	}
+
 	// if (GetAsyncKeyState('X') & 0x8000/*&&mItemNum>0*/)
 	//{
 	//
 	//}
 	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
-	{		
-		for (int i = 2; i < 4; ++i)
+	{	
+		accel = true;
+		for (int i = 0; i < 2; ++i)
 		{
-			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 4.0f;
+			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 1.5f;
 		}
 
-		float Epsilon = 50.0f / 180.0f;
+		for (int i = 2; i < 4; ++i)
+		{
+			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 0.0f;
+		}
+
+		float DriftLimit = 30.0f / 180.0f;
+
+		float AngleLimit = 50.0f / 180.0f;
 
 		auto camLook = mCamera->GetLook();
 		camLook.y = 0.0f;
@@ -360,10 +390,16 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 		float angle = acos(Vector3::Dot(camLook, playerLook) / (Vector3::Length(camLook) * Vector3::Length(playerLook)));
 
-		if (Epsilon < angle && mDriftGauge < 1.0f)
+		if (DriftLimit < angle && mDriftGauge < 1.0f)
 		{
 			mDriftGauge += Elapsed / 2.0f;
 		}
+
+		if (AngleLimit < angle && mDriftGauge < 1.0f)
+		{
+			mBtRigidBody->setAngularVelocity(btVector3(0, 0, 0));
+		}
+
 		if (mDriftGauge > 1.0f)
 		{
 			mDriftGauge = 0.0f;
@@ -373,14 +409,20 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	else
 	{
-		for (int i = 2; i < 4; ++i)
+		for (int i = 0; i < 4; ++i)
 		{
-			if(mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 25.0f;
+			if(mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = mWheelFriction;
 		}
 	}
 
 	if (mBoosterLeft && mMaxSpeed < mCurrentSpeed)
 		mEngineForce = mBoosterEngineForce;
+
+	if (!accel)
+	{
+		mEngineForce = 0.f;
+		mBreakingForce = 15.f;
+	}
 
 	for (int i = 0; i < 2; ++i)
 	{
@@ -398,12 +440,16 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		wheelIndex = 1;
 		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	}
+#endif
 }
 
 void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 {
 	GameObject::Update(elapsedTime, updateRate);
 	
+	for (int i = 0; i < 4; ++i)
+		mWheel[i]->SetTransparent(mTransparentOn);
+
 	for (int i = 0; i < 4; ++i)
 	{
 		if (mVehicle)
@@ -416,6 +462,11 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 			if(i < 2) mWheel[i]->SetSteeringAngle(mVehicleSteering);
 		}
 	}
+
+	UpdateFrontLight();
+
+	//btVector3 linearVel = mBtRigidBody->getLinearVelocity();
+	//mBtRigidBody->applyCentralImpulse(btVector3(0, -linearVel.length() / 10, 0));
 
 	if (mBoosterLeft > 0.0f)
 	{
@@ -437,6 +488,16 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 		mCamera->SetFovCoefficient(mFovCoefficient);
 		mCamera->SetLens(mCamera->GetAspect());
 	}
+
+	if (mHit)
+	{
+		mTransparentTime -= elapsedTime;
+		if (mTransparentTime < 0.f)
+		{
+			mTransparentOn = !mTransparentOn;
+			mTransparentTime = 0.5f;
+		}
+	}
 }
 
 void PhysicsPlayer::SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
@@ -453,7 +514,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 {
 	auto dynamicsWorld = physics->GetDynamicsWorld();
 
-	mOOBB.Extents = { 10.0f, 4.0f, 14.0f };
+	mOOBB.Extents = { 10.0f / 6.0f, 4.0f / 6.0f, 14.0f / 6.0f };
 
 	XMFLOAT3 vehicleExtents = mOOBB.Extents;
 	XMFLOAT3 wheelExtents = mWheel[0]->GetBoundingBox().Extents;
@@ -461,15 +522,17 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	btTransform btCarTransform;
 	btCarTransform.setIdentity();
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
+	btCarTransform.setRotation(btQuaternion(mQuaternion.x, mQuaternion.y, mQuaternion.z, mQuaternion.w));
 
 	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", physics);
 
-	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, mBtCollisionShape);
+	mBtRigidBody = physics->CreateRigidBody(500.0f, btCarTransform, mBtCollisionShape);
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld);
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 	mBtRigidBody = mVehicle->getRigidBody();
 
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
+	//mBtRigidBody->setGravity(btVector3(0, -20, 0));
 	dynamicsWorld->addVehicle(mVehicle.get());
 
 	mVehicle->setCoordinateSystem(0, 1, 2);
@@ -479,30 +542,30 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 
 	float wheelWidth = wheelExtents.x;
 	float wheelRadius = wheelExtents.z;
-	float wheelFriction = 25.0f;
-	float suspensionStiffness = 20.f;
-	float suspensionDamping = 2.3f;
+	float wheelFriction = mWheelFriction;
+	float suspensionStiffness = 20.0f;
+	float suspensionDamping = 2.5f;
 	float suspensionCompression = 4.4f;
-	float rollInfluence = 0.01f;  //1.0f;
+	float rollInfluence = 0.001f;  //1.0f;
 
 	// 앞바퀴
 	bool isFrontWheel = true;
-	float connectionHeight = -0.9f;
+	float connectionHeight = -0.4f;
 
-	btVector3 connectionPointCS0(vehicleExtents.x - 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
+	btVector3 connectionPointCS0(vehicleExtents.x - 0.4f, connectionHeight, vehicleExtents.z - 0.5f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.1f, wheelRadius, mTuning, isFrontWheel);
 
-	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.5f, connectionHeight, vehicleExtents.z - 2.8f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 0.4f, connectionHeight, vehicleExtents.z - 0.5f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.1f, wheelRadius, mTuning, isFrontWheel);
 
 	// 뒷바퀴
 	isFrontWheel = false;
 
-	connectionPointCS0 = btVector3(vehicleExtents.x - 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
+	connectionPointCS0 = btVector3(vehicleExtents.x - 0.4f, connectionHeight, -vehicleExtents.z + 0.5f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.1f, wheelRadius, mTuning, isFrontWheel);
 
-	connectionPointCS0 = btVector3(-vehicleExtents.x + 2.3f, connectionHeight, -vehicleExtents.z + 2.6f);
-	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.6f, wheelRadius, mTuning, isFrontWheel);
+	connectionPointCS0 = btVector3(-vehicleExtents.x + 0.4f, connectionHeight, -vehicleExtents.z + 0.5f);
+	mVehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, 0.1f, wheelRadius, mTuning, isFrontWheel);
 
 	for (int i = 0; i < mVehicle->getNumWheels(); i++)
 	{
@@ -634,16 +697,27 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 	mPrevQuat = mCorrectionQuat;
 
 	mCorrectionOrigin.SetValue(
-		(int)(pck->position[0] + pck->linear_vel[0] * latency),
-		(int)(pck->position[1] + pck->linear_vel[1] * latency),
-		(int)(pck->position[2] + pck->linear_vel[2] * latency));
+		pck->position[0],
+		pck->position[1], 
+		pck->position[2]);
 
-	// Convert to left-handed
+	mCorrectionOrigin.Extrapolate(
+		pck->linear_vel[0],
+		pck->linear_vel[1],
+		pck->linear_vel[2],
+		latency);
+
 	mCorrectionQuat.SetValue(
 		pck->quaternion[0],
-		(int)(pck->quaternion[1] * (1 + 0.5f * latency * pck->angular_vel[0])),
-		(int)(pck->quaternion[2] * (1 + 0.5f * latency * pck->angular_vel[1])),
-		(int)(pck->quaternion[3] * (1 + 0.5f * latency * pck->angular_vel[2])));
+		pck->quaternion[1],
+		pck->quaternion[2],
+		pck->quaternion[3]);
+
+	mCorrectionQuat.Extrapolate(
+		pck->angular_vel[0],
+		pck->angular_vel[1],
+		pck->angular_vel[2],
+		latency);
 	
 	mLinearVelocity.SetValue(pck->linear_vel[0], pck->linear_vel[1], pck->linear_vel[2]);
 }
@@ -703,6 +777,19 @@ void PhysicsPlayer::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipelin
 
 		if (!wheel_removed)
 			iter++;
+	}
+}
+
+void PhysicsPlayer::UpdateFrontLight()
+{
+	XMMATRIX R = XMMatrixRotationQuaternion(XMLoadFloat4(&mQuaternion));
+	for (int i = 0; i < 2; ++i)
+	{
+		mFrontLight[i].Position = Vector3::Transform(mLightOffset[i], XMLoadFloat4x4(&mWorld));
+
+		auto dir = mLook;
+		dir.y -= 0.3f;
+		mFrontLight[i].Direction = dir;
 	}
 }
 

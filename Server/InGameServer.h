@@ -18,27 +18,29 @@ public:
 	{
 		const float MaxBoosterTime = 5.0f;
 
-		const float MaxEngineForce = 8000.f;
-		const float MaxBackwardEngineForce = 10000.0f;
-		const float BoosterEngineForce = 300000.f;
+		const float MaxEngineForce = 1000.f;
+		const float BoosterEngineForce = 3000.f;
 
-		const float SteeringIncrement = 8.0f;
-		const float SteeringClamp = 0.5f;
+		const float SteeringIncrement = 5.0f;
+		const float SteeringClamp = 0.15f;
 
-		const float	WheelDriftFriction = 4.0f;
-		const float WheelDefaultFriction = 25.0f;
+		const float FrontWheelDriftFriction = 1.5f;
+		const float	RearWheelDriftFriction = 0.0f;
+		const float WheelDefaultFriction = 5.0f;
 		const float MinSpeedForDrift = 100.0f;
 
-		const float DefaultMaxSpeed = 1000.0f;
-		const float BoostedMaxSpeed = 1500.0f;
+		const float DefaultMaxSpeed = 350.0f;
+		const float BoostedMaxSpeed = 400.0f;
 
 		const float DefaultBreakingForce = 10.0f;
-		const float MaxBreakingForce = 150.0f;
-		const float SubBreakingForce = 100.0f;
 
-		const float MissileForwardOffset = 15.0f;
-		const float MissileSpeed = 1000.0f;
+		const float MissileSpeed = 10.0f;
+		const btVector3 MissileOffset = { 0.0f, 2.0f, 0.0f };
+		const float MissileForwardMag = 10.0f;
 		const btVector3 MissileGravity = { 0.0f, 0.0f, 0.0f };
+
+		const int MissileHitPoint = 1000;
+		const int LapFinishPoint = 2500;
 	};
 
 public:
@@ -66,13 +68,13 @@ private:
 	
 	std::unique_ptr<BtCarShape> mBtCarShape;
 	std::unique_ptr<BtBoxShape> mMissileShape;
-
-	//std::array<std::unique_ptr<BtTerrainShape>, 2> mTerrainShapes;
 	std::unique_ptr<BtMapShape> mMapShape;
+	std::unique_ptr<CheckpointShape> mCheckpointShape;
 
 	std::shared_ptr<BulletConstant> mBulletConstants;
 
-	const btVector3 mStartPosition = { 500.0f, 10.0f, 500.0f };
+	const btVector3 mStartPosition = { -306.5f, 1.0f, 253.7f };
+	const btQuaternion mStartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
 	const btVector3 mOffset = { 20.0f, 0.0f, 0.0f };
 
 	const int mPhysicsDuration = 16;

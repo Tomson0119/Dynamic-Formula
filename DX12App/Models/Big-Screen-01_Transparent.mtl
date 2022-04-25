@@ -1,0 +1,26 @@
+# Blender MTL File: 'None'
+# Material Count: 2
+
+newmtl Atlas-01.012
+Ns 86.470579
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 0.000000
+illum 9
+map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Atlas-01.psd
+map_d C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Atlas-01.psd
+
+newmtl Atlas-02.003
+Ns 86.470579
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 0.200000
+illum 9
+map_Kd C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Atlas-02.psd
+map_d C:\\Users\\kcjse\\Desktop\\mapEditor\\Assets\\RTG 1.3\\Textures\\Atlas-02.psd

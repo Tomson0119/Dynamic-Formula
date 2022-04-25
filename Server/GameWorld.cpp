@@ -7,7 +7,6 @@
 #include "RigidBody.h"
 #include "Timer.h"
 
-
 GameWorld::GameWorld(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
 	: mID{ -1 }, mActive{ false },
 	  mPlayerCount{ 0 }, mUpdateTick{ 0 },
@@ -28,18 +27,13 @@ void GameWorld::InitPhysics(float gravity)
 	mPhysics.Init(gravity);
 }
 
-//void GameWorld::InitMapRigidBody(BtTerrainShape* terrainShape, const std::vector<std::unique_ptr<BtBoxShape>>& objShapes)
-//{
-//	//mMapRigidBody.CreateTerrainRigidBody(terrainShape);
-//	// TODO: CreateStaticObjectRigidBodies;
-//}
-
-void GameWorld::InitMapRigidBody(const BtMapShape& mapShape)
+void GameWorld::InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape)
 {
-	mMapRigidBody.CreateRigidBody(0.0f, mapShape.GetCompoundShape());
+	mMap.CreateTrackRigidBody(mapShape.GetCompoundShape());
+	mMap.CreateCheckpoints(cpShape.GetCollisionShape(), cpShape.GetInfos());
 }
 
-void GameWorld::InitPlayerList(WaitRoom* room)
+void GameWorld::InitPlayerList(WaitRoom* room, int cpCount)
 {
 	mID = room->GetID();
 
@@ -47,6 +41,7 @@ void GameWorld::InitPlayerList(WaitRoom* room)
 	{
 		player = room->GetPlayerPtr(i);
 		player->SetBulletConstant(mConstantPtr);
+		player->SetCheckpointCount(cpCount);
 		i++;
 	}
 }
@@ -75,18 +70,19 @@ void GameWorld::UpdatePhysicsWorld()
 	mTimer.Tick();
 	float elapsed = mTimer.GetElapsed();
 
-	if(elapsed > 0.0f)
+	if (elapsed > 0.0f)
+	{
 		mPhysics.StepSimulation(elapsed);
 
-	for (Player* player : GetPlayerList())
-	{
-		if (player->Empty == false)
+		for (Player* player : GetPlayerList())
 		{
-			player->UpdateRigidbodies(elapsed, mPhysics.GetDynamicsWorld());
+			if (player->Empty == false)
+			{
+				player->Update(elapsed, mPhysics.GetDynamicsWorld());
+			}
 		}
+		mMap.Update(elapsed, mPhysics.GetDynamicsWorld());
 	}
-	mMapRigidBody.UpdateRigidBody();
-
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
 	{
@@ -99,9 +95,9 @@ void GameWorld::FlushPhysicsWorld()
 {
 	for (Player* player : GetPlayerList())
 	{
-		player->ResetPlayer(mPhysics.GetDynamicsWorld());
+		player->Reset(mPhysics.GetDynamicsWorld());
 	}
-	mMapRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+	mMap.Reset(mPhysics.GetDynamicsWorld());
 	mPhysics.Flush();
 }
 
@@ -147,9 +143,16 @@ void GameWorld::SendGameStartSuccess()
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
 		const btVector3& pos = mPlayerList[i]->GetVehicleRigidBody().GetPosition();
-		info_pck.x[i] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
-		info_pck.y[i] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
-		info_pck.z[i] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+		const btQuaternion& quat = mPlayerList[i]->GetVehicleRigidBody().GetQuaternion();
+
+		info_pck.px[i] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
+		info_pck.py[i] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
+		info_pck.pz[i] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+
+		info_pck.rx[i] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
+		info_pck.ry[i] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
+		info_pck.rz[i] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
+		info_pck.rw[i] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
 	}
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&info_pck), info_pck.size);
 }
@@ -183,8 +186,6 @@ void GameWorld::PushVehicleTransformPacket(int target, int receiver)
 	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
-
-	//std::cout << pos.x() << " " << pos.y() << " " << pos.z() << "\n";
 
 	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
@@ -221,8 +222,6 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
-
-	//std::cout << pck.position[0] << " " << pck.position[1] << " " << pck.position[2] << "\n";
 
 	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
 	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);

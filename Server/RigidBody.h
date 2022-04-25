@@ -4,6 +4,8 @@
 #include "BtCompoundShape.h"
 #include "InGameServer.h"
 
+class GameObject;
+
 class RigidBody
 {
 public:
@@ -19,7 +21,8 @@ public:
 	RigidBody();
 	virtual ~RigidBody() = default;
 
-	virtual void CreateRigidBody(btScalar mass, btCollisionShape& shape);
+	void SetNoResponseCollision();
+	void CreateRigidBody(btScalar mass, btCollisionShape& shape, GameObject* objPtr);
 
 	void SetPosition(const btVector3& pos) { mPosition = pos; }
 	void SetRotation(const btQuaternion& quat) { mQuaternion = quat; }
@@ -61,21 +64,19 @@ public:
 	MissileRigidBody();
 	virtual ~MissileRigidBody() = default;
 
-public:
-	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
-
 	void SetVehicleAndConstantPtr(
 		class VehicleRigidBody* vehiclePtr, 
 		std::shared_ptr<InGameServer::BulletConstant> constantPtr);
 
-	void SetMissileComponents(
-		const btVector3& position, 
-		const btVector3& forward,
-		const btQuaternion& rotation,
-		const btVector3& gravity,
-		float forwardOffset, float speed);
+public:
+	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void UpdateRigidBody() override;
 
 private:
+	void SetMissileComponents();
+
+private:
+	btVector3 mConstantVelocity;
 	VehicleRigidBody* mVehiclePtr;
 	std::shared_ptr<InGameServer::BulletConstant> mConstantPtr;
 };
@@ -113,6 +114,7 @@ public:
 	virtual void AppendRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
 	virtual void UpdateRigidBody() override;
 	virtual void RemoveRigidBody(btDiscreteDynamicsWorld* physicsWorld) override;
+	virtual void SetAngularVelocity(const btVector3& angularVelocity);
 
 public:
 	btRaycastVehicle* GetVehicle() const { return mVehicle.get(); }
@@ -126,20 +128,4 @@ private:
 	VehicleComponent mComponent;
 	std::unique_ptr<btVehicleRaycaster> mVehicleRayCaster;
 	std::unique_ptr<btRaycastVehicle> mVehicle;
-};
-
-class MapRigidBody
-{
-public:
-	MapRigidBody() = default;
-	~MapRigidBody() = default;
-	
-	void CreateTerrainRigidBody(BtTerrainShape* shape);
-	void CreateStaticRigidBodies(std::string_view filename,	btCollisionShape* shape);
-
-	void UpdateRigidBodies(float elapsed, btDiscreteDynamicsWorld* physicsWorld);
-	void RemoveRigidBodies(btDiscreteDynamicsWorld* physicsWorld);
-
-private:
-	std::deque<RigidBody> mStaticRigidBodies;
 };

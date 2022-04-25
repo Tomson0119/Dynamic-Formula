@@ -1,6 +1,6 @@
 #pragma once
 #include "UI.h"
-constexpr float START_DELAY_TIME = 17.5f;
+constexpr float START_DELAY_TIME = 41.5f;
 class InGameUI : public UI
 {
 public:

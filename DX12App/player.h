@@ -105,6 +105,8 @@ public:
 	virtual void ChangeCurrentRenderTarget() { mCurrentRenderTarget = 1 - mCurrentRenderTarget; }
 
 	virtual void RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& pipeline) override;
+	
+	virtual void UpdateFrontLight();
 
 public:
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
@@ -127,8 +129,13 @@ public:
 
 	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
 
+	LightInfo* GetLightInfo() { return mFrontLight; }
+
 private:
 	static const int RtvCounts = 12;
+
+	const float mWheelFriction = 5.0f;
+	const float mWheelDriftFriction = 0.0f;
 
 	ULONG mCubeMapSize = 500;
 
@@ -162,16 +169,16 @@ private:
 
 	float mEngineForce = 0.f;
 
-	float mMaxEngineForce = 8000.f;
-	float mMaxBackwardEngineForce = 10000.f;
-	float mBoosterEngineForce = 300000.f;
+	float mMaxEngineForce = 1000.f;
+	const float mBoosterEngineForce = 3000.f;
+	const float mBaseEngineForce = 1000.f;
 
 	float mVehicleSteering = 0.f;
-	float mSteeringIncrement = 8.0f;
-	float mSteeringClamp = 0.5f;
+	float mSteeringIncrement = 5.0f;
+	float mSteeringClamp = 0.15f;
 
 	float mCurrentSpeed = 0.0f;
-	float mMaxSpeed = 1000.0f;
+	float mMaxSpeed = 350.0f;
 
 	float mBreakingForce = 0.0f;
 
@@ -179,4 +186,10 @@ private:
 
 	int mItemNum = 0;
 	float mDriftGauge = 0.0f;
+
+	bool mHit = false;
+	float mTransparentTime = 0.5f;
+
+	XMFLOAT3 mLightOffset[2] = { {1.0f, 0.0f, 1.5f}, {-1.0f, 0.0f, 1.5f} };
+	LightInfo mFrontLight[2];
 };

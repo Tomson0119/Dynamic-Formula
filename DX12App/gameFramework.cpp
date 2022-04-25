@@ -85,10 +85,8 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_F9:
-			mScenes.top().get()->GetUI()->Reset();
 			D3DFramework::ChangeFullScreenState();
 			mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
-
 
 			break;
 		}
@@ -141,11 +139,6 @@ void GameFramework::InitScene(SCENE_STAT state)
 	WaitUntilGPUComplete();
 }
 
-void GameFramework::OnPreciseKeyInput()
-{
-
-}
-
 void GameFramework::CheckAndChangeScene()
 {
 	switch (mScenes.top()->GetSceneChangeFlag())
@@ -177,9 +170,6 @@ void GameFramework::CheckAndChangeScene()
 void GameFramework::Update()
 {
 	D3DFramework::UpdateFrameStates();
-	
-	OnPreciseKeyInput();
-
 	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
@@ -215,7 +205,7 @@ void GameFramework::Draw()
 
 	// 렌더링할 버퍼를 구체적으로 설정한다.
 
-	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer(), mCurrBackBufferIndex);
+	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer(), mDepthStencilBuffer.Get(), mCurrBackBufferIndex);
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
@@ -232,7 +222,7 @@ void GameFramework::Draw()
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 
-	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
+		ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	
 	
 	// 다음 후면버퍼 위치로 이동한 후 다시 기다린다.
@@ -240,4 +230,3 @@ void GameFramework::Draw()
 	
 	WaitUntilGPUComplete();
 }
-
