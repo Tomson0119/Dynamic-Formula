@@ -19,9 +19,9 @@ enum class Layer : int
 	Bloom,
 	VolumetricScattering,
 	Instancing,
+	Color,
 	CheckPoint,
-	Transparent,
-	Color
+	Transparent
 };
 
 class Pipeline

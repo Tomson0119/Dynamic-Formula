@@ -448,6 +448,9 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 	GameObject::Update(elapsedTime, updateRate);
 	
 	for (int i = 0; i < 4; ++i)
+		mWheel[i]->SetTransparent(mTransparentOn);
+
+	for (int i = 0; i < 4; ++i)
 	{
 		if (mVehicle)
 		{
