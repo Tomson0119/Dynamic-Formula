@@ -26,7 +26,7 @@ public:
 	void StopVehicle();
 	void ChangeVehicleMaskGroup(int maskGroup, BPHandler& physics);
 
-	void SetDeletionFlag();
+	void SetRemoveFlag();
 	void DisableMissile();
 
 	void SetInvincible();
@@ -42,7 +42,6 @@ public:
 	int GetReverseDriveCount(int cpIndex);
 
 	bool NeedUpdate();
-
 	void ClearVehicleComponent();
 
 private:

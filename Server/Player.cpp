@@ -52,7 +52,7 @@ void Player::CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShap
 		shape.GetWheelInfo());
 
 	ClearVehicleComponent();
-	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
+	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATE);
 }
 
 void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape& shape)
@@ -69,13 +69,9 @@ void Player::StopVehicle()
 
 void Player::ChangeVehicleMaskGroup(int maskGroup, BPHandler& physics)
 {
-	// Note: This shouldn't interrupt simulation.
-	// So it should be executed before or after the simulation.
-	mVehicleRigidBody.RemoveRigidBody(physics);
+	mVehicleRigidBody.ChangeUpdateFlag(RigidBody::UPDATE_FLAG::UPDATE, RigidBody::UPDATE_FLAG::CHANGE_MASK);
 	mVehicleRigidBody.SetMaskBits(maskGroup, OBJ_MASK::VEHICLE);
-	mVehicleRigidBody.AppendRigidBody(physics);
 }
-
 
 void Player::Update(float elapsed, BPHandler& physics)
 {
@@ -84,16 +80,16 @@ void Player::Update(float elapsed, BPHandler& physics)
 	mMissileRigidBody.Update(physics);
 }
 
-void Player::SetDeletionFlag()
+void Player::SetRemoveFlag()
 {
-	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::REMOVE);
 	DisableMissile();
 }
 
 void Player::DisableMissile()
 {
 	mMissileRigidBody.Deactivate();
-	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::REMOVE);
 }
 
 void Player::SetInvincible()
@@ -162,8 +158,8 @@ int Player::GetReverseDriveCount(int cpIndex)
 
 bool Player::NeedUpdate()
 {
-	if (mVehicleRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::DELETION
-		|| mMissileRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::DELETION)
+	if (mVehicleRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::REMOVE
+		|| mMissileRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::REMOVE)
 	{
 		return true;
 	}
@@ -386,7 +382,7 @@ bool Player::UseItem(uint8_t key)
 	{
 		if (mMissileRigidBody.ChangeUpdateFlag(
 			RigidBody::UPDATE_FLAG::NONE,
-			RigidBody::UPDATE_FLAG::CREATION))
+			RigidBody::UPDATE_FLAG::CREATE))
 		{
 			mMissileRigidBody.Activate();
 			return true;
