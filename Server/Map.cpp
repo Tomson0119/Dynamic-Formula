@@ -10,7 +10,7 @@ void Map::CreateTrackRigidBody(btCollisionShape& shape)
 {
 	mTrack.SetMaskBits(OBJ_MASK_GROUP::TRACK, OBJ_MASK::TRACK);
 	mTrack.CreateRigidBody(0.0f, shape, this);
-	mTrack.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
+	mTrack.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATE);
 }
 
 void Map::CreateCheckpoints(btCollisionShape& shape, const std::vector<CheckpointShape::CheckpointInfo>& infos)
@@ -22,7 +22,7 @@ void Map::CreateCheckpoints(btCollisionShape& shape, const std::vector<Checkpoin
 		mCheckpoints.back().SetMaskBits(OBJ_MASK_GROUP::CHECKPOINT, OBJ_MASK::CHECKPOINT);
 		mCheckpoints.back().CreateRigidBody(0.0f, shape, this);
 		mCheckpoints.back().SetNoResponseCollision();
-		mCheckpoints.back().SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
+		mCheckpoints.back().SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATE);
 	}
 }
 

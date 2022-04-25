@@ -72,7 +72,7 @@ void GameWorld::UpdatePhysicsWorld()
 		CheckCollision();
 
 		// TEST
-		TestVehicleSpawn();
+		//TestVehicleSpawn();
 		// TEST
 
 		UpdatePlayers(elapsed);
@@ -130,7 +130,7 @@ void GameWorld::FlushPhysicsWorld()
 
 void GameWorld::RemovePlayerRigidBody(int idx)
 {
-	mPlayerList[idx]->SetDeletionFlag();
+	mPlayerList[idx]->SetRemoveFlag();
 	mPlayerCount -= 1;
 
 	if (mPlayerCount == 0)
