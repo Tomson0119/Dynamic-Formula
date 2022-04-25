@@ -27,6 +27,7 @@ public:
 
     virtual HRESULT LoadBitmapResourceFromFile(std::wstring ImageName, int index);
     virtual void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
+    virtual void DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpNum, const float aOpacities[]);
 
     virtual void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
     virtual void BuildBrush(D2D1::ColorF* ColorList, 
@@ -52,7 +53,7 @@ public:
     void BeginDraw(UINT nFrame);
     void TextDraw(UINT nFrame, const std::vector<TextBlock> &mvTextBlocks);
     void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
-    void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT bias, UINT GradientCnt, bool IsOutlined[]);
+    void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
     void RoundedRectDraw() {}
     void EndDraw(UINT nFrame);
     void Flush();
@@ -69,7 +70,7 @@ public:
    
 
    //Frame
-   void SetFrame(float H, float W) { mfHeight = H; mfWidth = W; }
+   void SetFrame(float W, float H) { mfHeight = H; mfWidth = W; }
    std::pair<float, float> GetFrame() const { return std::make_pair(mfWidth, mfHeight); }
    float GetFrameWidth() { return mfWidth; }
    float GetFrameHeight() { return mfHeight; }

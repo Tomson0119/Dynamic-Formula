@@ -9,10 +9,13 @@ InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 {
 	SetTextCnt(6);
 	SetRectCnt(3);
+	SetBitmapCnt(6);
 	SetGradientCnt(1);
 	SetUICnt();
-    SetVectorSize(nFrame, GetTextCnt());
+    SetVectorSize(nFrame);
     Initialize(device, pd3dCommandQueue);
+	for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
+		LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
 }
 
 InGameUI::~InGameUI()
@@ -20,13 +23,23 @@ InGameUI::~InGameUI()
 
 }
 
-void InGameUI::SetVectorSize(UINT nFrame, UINT TextCnt)
+void InGameUI::SetVectorSize(UINT nFrame)
 {
     UI::SetVectorSize(nFrame);
-    mvTextBlocks.resize(TextCnt);
-	ResizeFontSize(TextCnt);
-	ResizeFonts(TextCnt);
+    mvTextBlocks.resize(GetTextCnt());
+	ResizeFontSize(GetTextCnt());
+	ResizeFonts(GetTextCnt());
     //mvd2dLinearGradientBrush.resize(TextCnt);
+
+	std::vector<std::wstring> BitmapFileNames;
+	BitmapFileNames.push_back(L"Resources\\3.png");
+	BitmapFileNames.push_back(L"Resources\\2.png");
+	BitmapFileNames.push_back(L"Resources\\1.png");
+	BitmapFileNames.push_back(L"Resources\\G.png");
+	BitmapFileNames.push_back(L"Resources\\O.png");
+	BitmapFileNames.push_back(L"Resources\\!.png");
+
+	SetBitmapFileNames(BitmapFileNames);
 
 	std::vector<std::wstring> Fonts;
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); //Time
@@ -36,6 +49,8 @@ void InGameUI::SetVectorSize(UINT nFrame, UINT TextCnt)
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); //Speed
 	Fonts.push_back(L"Fonts\\Blazed.ttf"); // 321 Go!
 	
+	//LTRB.resize(GetBitmapCnt());
+
 	FontLoad(Fonts);
 }
 
@@ -49,6 +64,88 @@ void InGameUI::StartPrint(const std::string& strUIText)
     mvTextBlocks[GetTextCnt() - 1].strText = strUIText;
 }
 
+void InGameUI::StartAnimation(float GTime)
+{
+	if (mbIsStartUI[3])
+	{
+		if (AnimEndTime - GTime > 0.1f)
+		{
+			if (fOpacities[3] < 1.0f)
+				fOpacities[3] += 0.05f;
+
+			if (fOpacities[4] < 1.0f)
+				fOpacities[4] += 0.05f;
+
+			if (fOpacities[5] < 1.0f)
+				fOpacities[5] += 0.05f;
+		}
+		else
+		{
+			fOpacities[3] = 0.0f;
+			fOpacities[4] = 0.0f;
+			fOpacities[5] = 0.0f;
+			
+		}
+	}
+	else if (mbIsStartUI[2])
+	{
+		if (AnimEndTime - GTime > 0.1f)
+		{
+			LTRB[2].y += 0.5f;
+			LTRB[2].w += 0.5f;
+
+			if (fOpacities[2] < 1.0f)
+				fOpacities[2] += 0.05f;
+		}
+		else
+		{
+			LTRB[2].x += 0.1f;
+			LTRB[2].z += 0.1f;
+
+			if (fOpacities[2] > 0.0f)
+				fOpacities[2] -= 1.5f;
+		}
+	}
+	else if (mbIsStartUI[1])
+	{
+		if (AnimEndTime - GTime > 0.1f)
+		{
+			LTRB[1].y += 0.5f;
+			LTRB[1].w += 0.5f;
+
+			if (fOpacities[1] < 1.0f)
+				fOpacities[1] += 0.05f;
+		}
+		else
+		{
+			LTRB[1].y += 0.1f;
+			LTRB[1].w += 0.1f;
+
+			if (fOpacities[1] > 0.0f)
+				fOpacities[1] -= 1.5f;
+		}
+	}
+	else if (mbIsStartUI[0])
+	{
+		if (AnimEndTime - GTime > 0.1f)
+		{
+			LTRB[0].y += 0.5f;
+			LTRB[0].w += 0.5f;
+
+			if (fOpacities[0] < 1.0f)
+				fOpacities[0] += 0.05f;
+		}
+		else
+		{
+			LTRB[0].x += 0.1f;
+			LTRB[0].z += 0.1f;
+
+			if (fOpacities[0] > 0.0f)
+				fOpacities[0] -= 1.5f;
+		}
+	}
+}
+
 void InGameUI::Update(float GTime, Player* mPlayer)
 {
 	/*TextUI.clear();
@@ -57,22 +154,31 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	//StartTime Set
 	UINT Countdown = 3;
 	float CountdownTime = START_DELAY_TIME;
-	if (GTime > START_DELAY_TIME - 1.0f)
+	if (GTime > START_DELAY_TIME - 1.5f)
 	{
-		for (auto &wc : L"Go!")
-			mvTextBlocks[5].strText.push_back(wc);
+		if (!mbIsStartUI[3]) AnimEndTime = GTime + 1.5f;
+		mbIsStartUI[3] = true;
+		/*for (auto &wc : L"Go!")
+			mvTextBlocks[5].strText.push_back(wc);*/
 	}
-	else if (GTime > START_DELAY_TIME - 2.0f)
+	else if (GTime > START_DELAY_TIME - 2.5f)
 	{
-		mvTextBlocks[5].strText.push_back('0' + Countdown - (Countdown - 1));
+		if (!mbIsStartUI[2]) AnimEndTime = GTime + 1.0f;
+		mbIsStartUI[2] = true;
+		//mvTextBlocks[5].strText.push_back('0' + Countdown - (Countdown - 1));
 	}
-	else if (GTime > START_DELAY_TIME - 3.0f)
+	else if (GTime > START_DELAY_TIME - 3.5f)
 	{
-		mvTextBlocks[5].strText.push_back('0' + Countdown - (Countdown - 2));
+		if (!mbIsStartUI[1]) AnimEndTime = GTime + 1.0f;
+		mbIsStartUI[1] = true;
+		//mvTextBlocks[5].strText.push_back('0' + Countdown - (Countdown - 2));
 	}
-	else if (GTime > START_DELAY_TIME - 4.0f)
+	else if (GTime > START_DELAY_TIME - 4.5f)
 	{
-		mvTextBlocks[5].strText.push_back('0' + Countdown - (Countdown-3));
+		//3
+		if (!mbIsStartUI[0]) AnimEndTime = GTime + 1.0f;
+		mbIsStartUI[0] = true;
+		//mvTextBlocks[5].strText.push_back('0' + Countdown - (Countdown-3));
 	}
 
 
@@ -80,8 +186,17 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	if (GTime < CountdownTime)
 	{
 		StartPrint(mvTextBlocks[5].strText);
+		StartAnimation(GTime);
 		return;
 	}
+	if (mbIsStartUI[3])
+	{
+		for (auto& Op : mfOpacities)
+			Op = 0.0f;
+		for (auto& IsStartUI : mbIsStartUI)
+			IsStartUI = false;
+	}
+
 	/*if (mIsBoost || mIsShootingMissile)
 	{
 		mItemOffStart = GTime;
@@ -297,8 +412,60 @@ void InGameUI::Draw(UINT nFrame)
 			GetFrameHeight() * (8.0f / 9.0f)
         }//Item2 UI
     };
+	
 	bool IsOutlined[3] = { true, true, true };
+	XMFLOAT4 LTRB[7] =
+	{
+		{
+			GetFrameWidth() * 0.4f,
+			GetFrameHeight() * 0.4f,
+			GetFrameWidth() * 0.6f,
+			GetFrameHeight() * 0.6f
+		},
+		{
+			GetFrameWidth() * 0.4f,
+			GetFrameHeight() * 0.4f,
+			GetFrameWidth() * 0.6f,
+			GetFrameHeight() * 0.6f
+		},
+		{
+			GetFrameWidth() * 0.4f,
+			GetFrameHeight() * 0.4f,
+			GetFrameWidth() * 0.6f,
+			GetFrameHeight() * 0.6f
+		},
+		{
+			GetFrameWidth() * 0.4f,
+			GetFrameHeight() * 0.4f,
+			GetFrameWidth() * 0.6f,
+			GetFrameHeight() * 0.6f
+		},
+		{
+			GetFrameWidth() * 0.4f,
+			GetFrameHeight() * 0.4f,
+			GetFrameWidth() * 0.6f,
+			GetFrameHeight() * 0.6f
+		},
+		{
+			GetFrameWidth() * 0.4f,
+			GetFrameHeight() * 0.4f,
+			GetFrameWidth() * 0.6f,
+			GetFrameHeight() * 0.6f
+		},
+		{
+			GetFrameWidth() * 0.4f,
+			GetFrameHeight() * 0.4f,
+			GetFrameWidth() * 0.6f,
+			GetFrameHeight() * 0.6f
+		}
+	};
+	/*mfOpacities.push_back(0.0f);
+	mfOpacities.push_back(0.0f);
+	mfOpacities.push_back(0.0f);
+	mfOpacities.push_back(0.0f);*/
+
 	UI::RectDraw(RectLTRB, FillLTRB, 1, IsOutlined);
+	UI::DrawBmp(GetLTRB(), 0, 6, fOpacities);
 	UI::TextDraw(nFrame, mvTextBlocks);
     //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 	UI::EndDraw(nFrame);
@@ -356,6 +523,17 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	SetFrame(static_cast<float>(nWidth), static_cast<float>(nHeight));
 
     UI::BuildObjects(ppd3dRenderTargets, nWidth, nHeight);
+
+	std::vector<XMFLOAT4> LTRB2;
+	LTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.55f });
+	LTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.55f });
+	LTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.55f });
+	LTRB2.push_back({ GetFrameWidth() * 0.31f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.51f, GetFrameHeight() * 0.6f });
+	LTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.6f });
+	LTRB2.push_back({ GetFrameWidth() * 0.49f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.69f, GetFrameHeight() * 0.6f });
+
+	SetLTRB(LTRB2);
+
     CreateFontFormat();
 
 	const float	gradient_Alpha = 0.6f;
@@ -382,6 +560,7 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 void InGameUI::Reset()
 {
     UI::Reset();
+	GetBitmapFileNames().clear();
 }
 
 void InGameUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
@@ -389,6 +568,8 @@ void InGameUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device
 {
 	UI::Initialize(device, pd3dCommandQueue);
 	//Reset();
-    SetVectorSize(nFrame, GetTextCnt());
+    SetVectorSize(nFrame);
+	for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
+		LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
     BuildObjects(ppd3dRenderTargets, width, height);
 }

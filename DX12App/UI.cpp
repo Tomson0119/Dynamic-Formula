@@ -153,6 +153,11 @@ void UI::DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aO
         mpd2dDeviceContext->DrawBitmap(mvBitmaps[i].Get(), D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), aOpacities[i], D2D1_INTERPOLATION_MODE_LINEAR);
 }
 
+void UI::DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpNum, const float aOpacities[])
+{
+    for (int i = static_cast<int>(StartNum); i < static_cast<int>(StartNum + BmpNum); ++i)
+        mpd2dDeviceContext->DrawBitmap(mvBitmaps[i].Get(), D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), aOpacities[i], D2D1_INTERPOLATION_MODE_LINEAR);
+}
 
 void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[])
 {
@@ -173,7 +178,7 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bo
     }
 }
 
-void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT bias, UINT GradientCnt, bool IsOutlined[])
+void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[],  UINT GradientCnt, bool IsOutlined[])
 {
     if (md2dLinearGradientBrush.Get())
     {
@@ -188,7 +193,7 @@ void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT bias, UI
     {
         if (IsOutlined[i])
             mpd2dDeviceContext->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[i + miTextCnt].Get());
-        mpd2dDeviceContext->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[i + miTextCnt].Get());
+        mpd2dDeviceContext->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[i+ miTextCnt].Get());
     }
     
 
@@ -328,8 +333,8 @@ void UI::Reset()
     mpd2dDeviceContext.Reset();
 
     mpd2dWriteFactory.Reset();
-
-    //mWICFactoryPtr->Release();
+    if(mWICFactoryPtr)
+     mWICFactoryPtr->Release();
 
     mdwFontFile.Reset();
     mdwFontSetBuilder.Reset();

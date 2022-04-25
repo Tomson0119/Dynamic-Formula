@@ -442,7 +442,7 @@ void LoginUI::Draw(UINT nFrame)
     };
     float aOpacities[2] = { 0.5f, 1.0f };
     UI::DrawBmp(LTRB,0 , GetBitmapCnt(), aOpacities);
-    UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, 0, IsOutlined);
+    UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
     UI::TextDraw(nFrame, GetTextBlock());
     UI::EndDraw(nFrame);
 }

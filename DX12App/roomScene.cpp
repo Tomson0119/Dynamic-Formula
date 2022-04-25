@@ -4,11 +4,11 @@
 #include "RoomUI.h"
 
 RoomScene::RoomScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::ROOM, (XMFLOAT4)Colors::Chocolate, netPtr }
+	: Scene{ hwnd, SCENE_STAT::ROOM, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"Room Scene Entered.\n");
 #ifdef STANDALONE
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #elif defined(START_GAME_INSTANT)
 	mStartTime = std::chrono::high_resolution_clock::now();
 	mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
