@@ -186,8 +186,8 @@ PhysicsPlayer::PhysicsPlayer(UINT netID)
 			XMFLOAT3(0.6f, 0.6f, 0.6f),
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
 			XMFLOAT3(-0.3f, 0.0f, -1.0f),
-			0.0f, 30.0f, 50.0f,
-			0.0f, SPOT_LIGHT);
+			0.0f, 5000.0f, 100.0f,
+			0.0f, SPOT_LIGHT);;
 
 		mFrontLight[i].pad0 = 1;
 	}
@@ -477,6 +477,9 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 
 	GameObject::Update(elapsedTime, updateRate);
 	
+	for (int i = 0; i < 4; ++i)
+		mWheel[i]->SetTransparent(mTransparentOn);
+
 	for (int i = 0; i < 4; ++i)
 	{
 		if (mVehicle)

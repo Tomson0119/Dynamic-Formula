@@ -134,6 +134,8 @@ public:
 	void Scale(const XMFLOAT3& scale);
 	void Scale(float scale);
 
+	void SetTransparent(bool transparent) { mTransparentOn = transparent; }
+
 public:
 	const XMFLOAT3& GetPosition() const { return mPosition; }
 	const XMFLOAT3& GetRight() const { return mRight; }

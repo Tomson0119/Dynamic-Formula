@@ -7,8 +7,9 @@ Texture2DArray gTexture : register(t0);
 
 struct VertexIn
 {
-	float3 PosL      : POSITION;
+    float3 PosL      : POSITION;
     float2 Size      : SIZE;
+    float4 Color     : COLOR;
     float3 Direction : DIRECTION;
     float2 Age       : LIFETIME;
     float  Speed     : SPEED;
@@ -19,6 +20,7 @@ struct GeoOut
 {
     float4 PosH     : SV_POSITION;
     uint   PrimID   : SV_PrimitiveID;
+    float4 Color    : COLOR;
     float3 PosW     : POSITION;
     float3 NormalW  : NORMAL;
     float2 TexCoord : TEXCOORD;
@@ -104,7 +106,7 @@ void GSRender(point VertexIn gin[1],
 
     GeoOut gout;
     [unroll]
-    for (int i = 0; i < 4;i++)
+    for (int i = 0; i < 4; i++)
     {
         gout.PosH = mul(v[i], gViewProj);
         gout.PosW = v[i].xyz;
@@ -113,6 +115,7 @@ void GSRender(point VertexIn gin[1],
         gout.PrimID = primID;
         gout.Type = gin[0].Type;
         gout.Age = gin[0].Age;
+        gout.Color = gin[0].Color;
         
         triStream.Append(gout);
     }
@@ -121,7 +124,7 @@ void GSRender(point VertexIn gin[1],
 float4 PSRender(GeoOut pin) : SV_Target
 {
     float3 uvw = float3(pin.TexCoord, pin.PrimID % 4);
-    float4 diffuse = gTexture.Sample(gAnisotropicWrap, uvw) * gMat.Diffuse;
+    float4 diffuse = gTexture.Sample(gAnisotropicWrap, uvw) * pin.Color;
     
     clip(diffuse.a - 0.1f);
     

@@ -35,6 +35,7 @@ struct BillboardVertex
 {
 	XMFLOAT3 Position;
 	XMFLOAT2 Size;
+	XMFLOAT4 Color;
 	XMFLOAT3 Direction;
 	XMFLOAT2 Age;
 	float	 Speed;
