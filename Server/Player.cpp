@@ -13,13 +13,13 @@ Player::Player()
 	  Name{ }, 
 	  LoadDone{ false }, 
 	  mCurrentCPIndex{ -1 },
-	  mReverseDriveCount{ 0 },
 	  mLapCount{ 0 },
+	  mPoint{ 0 },
+	  mReverseDriveCount{ 0 },
 	  mDriftGauge{ 0.0f },
 	  mInvincibleDuration{ 0.0f },
 	  mInvincible{ false },
 	  mActive{ true },
-	  mPoint{ 0 },
 	  mItemCount{ 0 }, 
 	  mBoosterToggle{ false }
 {
@@ -84,6 +84,7 @@ void Player::SetRemoveFlag()
 {
 	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::REMOVE);
 	DisableMissile();
+	// TODO: reset all the in game info.
 }
 
 void Player::DisableMissile()
@@ -92,11 +93,11 @@ void Player::DisableMissile()
 	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::REMOVE);
 }
 
-void Player::SetInvincible()
+void Player::SetInvincible(float duration)
 {
 	mInvincible = true;
 	mActive = false;
-	mInvincibleDuration = mConstantPtr->InvincibleDuration;
+	mInvincibleDuration = duration;
 }
 
 void Player::Reset(BPHandler& physics)
@@ -128,32 +129,34 @@ bool Player::IsNextCheckpoint(int cpIndex)
 
 void Player::MarkNextCheckpoint(int cpIndex)
 {
-	std::cout << "Hit checkpoint: " << cpIndex << std::endl;
 	if (mCurrentCPIndex >= 0)
 	{
 		mCPPassed[mCurrentCPIndex] = false;
-		if (cpIndex == 0)
-		{
-			mLapCount += 1;
-			mPoint += mConstantPtr->LapFinishPoint;
-			std::cout << "Lap finished! got point!" << std::endl;
-		}
 	}
 	mCurrentCPIndex = cpIndex;
 	mCPPassed[cpIndex] = true;
+	ResetReverseCount();
 }
 
 int Player::GetReverseDriveCount(int cpIndex)
 {
-	if (cpIndex < mCurrentCPIndex)
+	int prevFirstIndex = std::max(0, mCurrentCPIndex) - 1;
+	int prevSecondIndex = std::max(0, mCurrentCPIndex) - 2;
+
+	if (prevFirstIndex < 0) prevFirstIndex = (int)mCPPassed.size() + prevFirstIndex;
+	if (prevSecondIndex < 0) prevSecondIndex = (int)mCPPassed.size() + prevSecondIndex;
+
+	if (cpIndex <= prevSecondIndex && mReverseDriveCount == 1)
 	{
 		mReverseDriveCount += 1;
-		// TODO: increase warning of reverse drive
-		// mReverseDrive += 1;
-		// if(mReverseDrive > 1)
-		// send spawn packet and set last checkpoint(which is mCurrentCPIndex)
+		return mReverseDriveCount;
 	}
-	return mReverseDriveCount;
+	if (cpIndex == prevFirstIndex && mReverseDriveCount == 0)
+	{
+		mReverseDriveCount += 1;
+		return mReverseDriveCount;
+	}
+	return 0;
 }
 
 bool Player::NeedUpdate()

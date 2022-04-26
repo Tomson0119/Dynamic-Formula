@@ -29,7 +29,7 @@ public:
 	void SetRemoveFlag();
 	void DisableMissile();
 
-	void SetInvincible();
+	void SetInvincible(float duration);
 
 	void UpdateWorldTransform();
 	void UpdateInvincibleDuration(float elapsed);
@@ -59,6 +59,8 @@ public:
 	void Deactivate() { mActive = false; }
 	bool IsActive() const { return mActive; }
 
+	void ResetReverseCount() { mReverseDriveCount = 0; }
+	void IncreaseLapCount() { mLapCount += 1; }
 	void IncreasePoint(int point) { mPoint += point; }
 	void SetCheckpointCount(int count) { mCPPassed.resize(count, false); }
 
@@ -66,7 +68,10 @@ public:
 	bool IsInvincible() const { return mInvincible; }
 	float GetInvincibleDuration() const { return mInvincibleDuration; }
 
+	int GetLapCount() const { return mLapCount; }
+	int GetPoint() const { return mPoint; }
 	int GetCurrentCPIndex() const { return mCurrentCPIndex; }
+
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
 	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
 	
@@ -87,8 +92,9 @@ private:
 	MissileRigidBody mMissileRigidBody;
 
 	int mCurrentCPIndex;
-	int mReverseDriveCount;
 	int mLapCount;
+	int mPoint;
+	int mReverseDriveCount;
 
 	float mDriftGauge;
 
@@ -96,7 +102,6 @@ private:
 	bool mInvincible;
 
 	std::atomic_bool mActive;
-	std::atomic_int mPoint;
 	std::atomic_int mItemCount;
 	std::atomic_bool mBoosterToggle;
 
