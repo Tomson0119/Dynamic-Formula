@@ -194,6 +194,10 @@ private:
 
 	btRigidBody* mTrackRigidBody = NULL;
 
-	std::vector<LightInfo> mLights;
+	/*float mVolumetricOuter = 7.0f;
+	float mVolumetricInner = 6.0f;
+	float mVolumetricRange = 20.0f;*/
+	
+	std::vector<LightBundle> mLights;
 	LightInfo mDirectionalLight;
 };

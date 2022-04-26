@@ -4,14 +4,24 @@ Texture2D<float4> inputTexture : register(t0);
 Texture2D<float> depthTexture : register(t1);
 RWTexture2D<float4> outputTexture : register(u0);
 
+struct VolumetricInfo
+{
+    float3 Direction;
+    int Type;
+    float3 Position;
+    float Range;
+    float3 Color;
+    float innerCosine;
+    float VolumetricStrength;
+    float outerCosine;
+};
+
 cbuffer VolumetricCB : register(b1)
 {
     matrix gInvProj : packoffset(c0);
     matrix gView : packoffset(c4);
     
-    float gVolumetricStrength : packoffset(c8.x);
-    
-    Light gLights[NUM_LIGHTS] : packoffset(c9);
+    VolumetricInfo gLights[NUM_LIGHTS] : packoffset(c8);
 }
 
 float3 GetPositionVS(float2 texcoord, float depth)
@@ -76,20 +86,23 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
                 const float dist = sqrt(dist2);
                 L /= dist;
 
-                float SpotFactor = dot(L, normalize(-gLights[i].Direction.xyz));
-                float spotCutOff = cos(gLights[i].FalloffEnd);
+                //float3 viewDir = mul(float4(gLights[i].Direction, 1.0f), gView).xyz;
+                float3 viewDir = gLights[i].Direction;
+                
+                float SpotFactor = dot(L, -normalize(viewDir));
+                float spotCutOff = gLights[i].outerCosine;
 
 		        [branch]
                 if (SpotFactor > spotCutOff)
                 {
-                    float attenuation = DoAttenuation(dist, 20.0f);
+                    float attenuation = DoAttenuation(dist, gLights[i].Range);
                 
-                    float conAtt = saturate((SpotFactor - cos(gLights[i].FalloffEnd)) / (cos(gLights[i].FalloffStart) - cos(gLights[i].FalloffEnd)));
+                    float conAtt = saturate((SpotFactor - gLights[i].outerCosine) / (gLights[i].innerCosine - gLights[i].outerCosine));
                     conAtt *= conAtt;
 
                     attenuation *= conAtt;
                     
-                    //attenuation *= ExponentialFog(cameraDistance - marchedDistance);
+                    attenuation *= ExponentialFog(cameraDistance - marchedDistance);
                     
                     accumulation += attenuation;
                 }
@@ -99,7 +112,7 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
             }
             accumulation /= sampleCount;
     
-            result += max(0, float4(accumulation * gLights[i].Diffuse.rgb * gVolumetricStrength, 1));
+            result += max(0, float4(accumulation * gLights[i].Color * gLights[i].VolumetricStrength, 1));
         }
     }
     

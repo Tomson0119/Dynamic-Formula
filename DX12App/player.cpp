@@ -182,14 +182,23 @@ PhysicsPlayer::PhysicsPlayer(UINT netID)
 	for (int i = 0; i < 2; ++i)
 	{
 		// Falloff는 전부 미터 단위임에 주의할 것
-		mFrontLight[i].SetInfo(
+		mFrontLight[i].light.SetInfo(
 			XMFLOAT3(0.6f, 0.6f, 0.6f),
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
 			XMFLOAT3(-0.3f, 0.0f, -1.0f),
 			0.0f, 5000.0f, 100.0f,
 			0.0f, SPOT_LIGHT);;
 
-		mFrontLight[i].pad0 = 1;
+		mFrontLight[i].light.pad0 = 1;
+
+		mFrontLight[i].volumetric.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		mFrontLight[i].volumetric.Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		mFrontLight[i].volumetric.innerCosine = cos(20.0f);
+		mFrontLight[i].volumetric.outerCosine = cos(30.0f);
+		mFrontLight[i].volumetric.Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		mFrontLight[i].volumetric.Range = 30.0f;
+		mFrontLight[i].volumetric.Type = SPOT_LIGHT;
+		mFrontLight[i].volumetric.VolumetricStrength = 1.0f;
 	}
 }
 
@@ -835,11 +844,13 @@ void PhysicsPlayer::UpdateFrontLight()
 	XMMATRIX R = XMMatrixRotationQuaternion(XMLoadFloat4(&mQuaternion));
 	for (int i = 0; i < 2; ++i)
 	{
-		mFrontLight[i].Position = Vector3::Transform(mLightOffset[i], XMLoadFloat4x4(&mWorld));
-
+		mFrontLight[i].light.Position = Vector3::Transform(mLightOffset[i], XMLoadFloat4x4(&mWorld));
+		mFrontLight[i].volumetric.Position = Vector3::Transform(mLightOffset[i], XMLoadFloat4x4(&mWorld));
+		
 		auto dir = mLook;
 		dir.y -= 0.3f;
-		mFrontLight[i].Direction = dir;
+		mFrontLight[i].light.Direction = dir;
+		mFrontLight[i].volumetric.Direction = dir;
 	}
 }
 

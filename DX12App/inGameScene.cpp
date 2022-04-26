@@ -693,6 +693,35 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			mVolumetricEnable = !mVolumetricEnable;
 		}
 
+		/*if (wParam == 'U')
+		{
+			mVolumetricInner += 1.0f;
+		}
+		if (wParam == 'J')
+		{
+			mVolumetricInner -= 1.0f;
+		}
+		if (wParam == 'I')
+		{
+			mVolumetricOuter += 1.0f;
+		}
+		if (wParam == 'K')
+		{
+			mVolumetricOuter -= 1.0f;
+		}
+		if (wParam == 'O')
+		{
+			mVolumetricRange += 1.0f;
+		}
+		if (wParam == 'L')
+		{
+			mVolumetricRange -= 1.0f;
+		}
+
+		OutputDebugStringW((L"Inner : " + std::to_wstring(mVolumetricInner) + L"\n").c_str());
+		OutputDebugStringW((L"outer : " + std::to_wstring(mVolumetricOuter) + L"\n").c_str());
+		OutputDebugStringW((L"range : " + std::to_wstring(mVolumetricRange) + L"\n\n").c_str());*/
+
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 		break;
@@ -798,7 +827,7 @@ void InGameScene::UpdateLightConstants()
 
 	for (auto i = mLights.begin(); i < mLights.end();)
 	{
-		if (i->pad0 == 1.0f)
+		if (i->light.pad0 == 1.0f)
 			i = mLights.erase(i);
 		else
 			++i;
@@ -808,8 +837,8 @@ void InGameScene::UpdateLightConstants()
 	{
 		if (mPlayerObjects[i])
 		{
-			LightInfo* frontLights;
-			frontLights = mPlayerObjects[i]->GetLightInfo();
+			LightBundle* frontLights;
+			frontLights = mPlayerObjects[i]->GetLightBundle();
 
 			mLights.push_back(frontLights[0]);
 			mLights.push_back(frontLights[1]);
@@ -817,15 +846,15 @@ void InGameScene::UpdateLightConstants()
 	}
 
 	std::sort(mLights.begin(), mLights.end(),
-		[playerPos](LightInfo l1, LightInfo l2)
+		[playerPos](LightBundle l1, LightBundle l2)
 		{
-			return Vector3::Distance(l1.Position, playerPos) < Vector3::Distance(l2.Position, playerPos);
+			return Vector3::Distance(l1.light.Position, playerPos) < Vector3::Distance(l2.light.Position, playerPos);
 		}
 	);
 
 	for (int i = 1; i < NUM_LIGHTS; ++i)
 	{
-		mMainLight.Lights[i] = mLights[i - 1];
+		mMainLight.Lights[i] = mLights[i - 1].light;
 	}
 
 	mMainLight.Lights[0] = mDirectionalLight;
@@ -843,13 +872,23 @@ void InGameScene::UpdateVolumetricConstant()
 {
 	VolumetricConstants volumeConst;
 
-	volumeConst.gInvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
-	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetView());
+	volumeConst.InvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
+	volumeConst.View = Matrix4x4::Transpose(mCurrentCamera->GetView());
 
-	for(int i = 0; i < NUM_LIGHTS; ++i)
-		volumeConst.gLights[i] = mMainLight.Lights[i];
-
-	volumeConst.gVolumetricStrength = 1.0f;
+	int j = 0;
+	for (int i = 0; i < NUM_LIGHTS;)
+	{
+		for (; j < mLights.size(); j++)
+		{
+			if (mLights[j].volumetric.Type == SPOT_LIGHT && mLights[j].light.pad0 == 0.0f)
+			{
+				volumeConst.Lights[i] = mLights[j].volumetric;
+				++i;
+				++j;
+				break;
+			}
+		}
+	}
 
 	mVolumetricCB->CopyData(0, volumeConst);
 }
@@ -1260,6 +1299,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 		XMFLOAT3 direction;
 		ss >> direction.x >> direction.y >> direction.z;
 
+		LightBundle bundle;
 		LightInfo l;
 
 		l.SetInfo(
@@ -1269,6 +1309,21 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 			0.0f, 20.0f, 10.0f,
 			0.0f, SPOT_LIGHT);;
 
-		mLights.push_back(l);
+		bundle.light = l;
+
+		VolumetricInfo v;
+
+		v.Direction = direction;
+		v.Position = pos;
+		v.Range = 30.0f;
+		v.VolumetricStrength = 1.0f;
+		v.outerCosine = cos(7.0f);
+		v.innerCosine = cos(6.0f);
+		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		v.Type = SPOT_LIGHT;
+		
+		bundle.volumetric = v;
+
+		mLights.push_back(bundle);
 	}
 }

@@ -133,7 +133,7 @@ public:
 
 	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
 
-	LightInfo* GetLightInfo() { return mFrontLight; }
+	LightBundle* GetLightBundle() { return mFrontLight; }
 
 private:
 	static const int RtvCounts = 12;
@@ -204,5 +204,5 @@ private:
 	float mTransparentTime = TransparentInterval;
 
 	XMFLOAT3 mLightOffset[2] = { {1.0f, 0.0f, 1.5f}, {-1.0f, 0.0f, 1.5f} };
-	LightInfo mFrontLight[2];
+	LightBundle mFrontLight[2];
 };

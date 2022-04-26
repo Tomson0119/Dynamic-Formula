@@ -138,6 +138,7 @@ inline std::wstring AnsiToWString(const std::string& str)
 #define SPOT_LIGHT		  2
 #define DIRECTIONAL_LIGHT 3
 
+
 struct LightInfo
 {
 	XMFLOAT3 Diffuse = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -171,6 +172,21 @@ struct LightInfo
 	}
 };
 
+struct VolumetricInfo
+{
+	XMFLOAT3 Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	int Type = 0;
+	XMFLOAT3 Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float Range = 0.f;
+	XMFLOAT3 Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float innerCosine = 0.0f;
+	float VolumetricStrength = 0.0f;
+	float outerCosine = 0.0f;
+
+	int pad0 = 0;
+	int pad1 = 0;
+};
+
 struct LightConstants
 {
 	XMFLOAT4X4 ShadowTransform[3];
@@ -180,16 +196,17 @@ struct LightConstants
 
 struct VolumetricConstants
 {
-	XMFLOAT4X4 gInvProj;
-	XMFLOAT4X4 gInvView;
+	XMFLOAT4X4 InvProj;
+	XMFLOAT4X4 View;
 
-	float gVolumetricStrength;
+	VolumetricInfo Lights[NUM_LIGHTS];
+};
 
-	int pad0 = 0;
-	int pad1 = 0;
-	int pad2 = 0;
 
-	LightInfo gLights[NUM_LIGHTS];
+struct LightBundle
+{
+	LightInfo light;
+	VolumetricInfo volumetric;
 };
 
 struct CameraConstants
