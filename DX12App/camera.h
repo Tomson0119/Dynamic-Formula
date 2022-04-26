@@ -73,6 +73,7 @@ public:
 	const XMFLOAT4X4& GetOldView() const;
 	const XMFLOAT4X4& GetInverseView() const;
 	const XMFLOAT4X4& GetProj() const { return mProj; }
+	XMFLOAT4X4 GetInverseProj() const;
 
 	CameraConstants GetConstants() const;
 
