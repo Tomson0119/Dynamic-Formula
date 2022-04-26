@@ -9,13 +9,6 @@ BPHandler::BPHandler(float gravity)
 
 BPHandler::~BPHandler()
 {
-	if (mBtDynamicsWorld)
-	{
-		for (int i = mBtDynamicsWorld->getNumConstraints() - 1; i >= 0; i--)
-		{
-			mBtDynamicsWorld->removeConstraint(mBtDynamicsWorld->getConstraint(i));
-		}
-	}
 	Flush();
 }
 
@@ -38,7 +31,11 @@ void BPHandler::StepSimulation(float elapsed)
 void BPHandler::Flush()
 {
 	if (mBtDynamicsWorld)
-	{				
+	{		
+		for (int i = mBtDynamicsWorld->getNumConstraints() - 1; i >= 0; i--)
+		{
+			mBtDynamicsWorld->removeConstraint(mBtDynamicsWorld->getConstraint(i));
+		}
 		for (int i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 		{
 			btCollisionObject* obj = mBtDynamicsWorld->getCollisionObjectArray()[i];
