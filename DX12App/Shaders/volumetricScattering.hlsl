@@ -86,8 +86,8 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
                 const float dist = sqrt(dist2);
                 L /= dist;
 
-                //float3 viewDir = mul(float4(gLights[i].Direction, 1.0f), gView).xyz;
-                float3 viewDir = gLights[i].Direction;
+                float3 viewDir = mul(float4(gLights[i].Direction, 0.0f), gView).xyz;
+                //float3 viewDir = gLights[i].Direction;
                 
                 float SpotFactor = dot(L, -normalize(viewDir));
                 float spotCutOff = gLights[i].outerCosine;

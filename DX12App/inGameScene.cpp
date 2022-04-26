@@ -880,7 +880,7 @@ void InGameScene::UpdateVolumetricConstant()
 	{
 		for (; j < mLights.size(); j++)
 		{
-			if (mLights[j].volumetric.Type == SPOT_LIGHT && mLights[j].light.pad0 == 0.0f)
+			if (mLights[j].volumetric.Type == SPOT_LIGHT)
 			{
 				volumeConst.Lights[i] = mLights[j].volumetric;
 				++i;
