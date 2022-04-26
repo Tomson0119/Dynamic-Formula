@@ -26,7 +26,7 @@ GameWorld::GameWorld(std::shared_ptr<InGameServer::GameConstant> constantPtr)
 
 GameWorld::~GameWorld()
 {
-	mPhysics.Flush();
+	std::cout << "Destroy game world: " << mID << "\n";
 }
 
 void GameWorld::InitPhysics(float gravity)
@@ -495,11 +495,13 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, int mask)
 		if (cpIdx >= 0)
 		{
 			auto player = mPlayerList[idx];
+			std::cout << "Hit checkpoint: " << cpIdx << "\n";
 			if (player->IsNextCheckpoint(cpIdx))
 			{
 				player->MarkNextCheckpoint(cpIdx);
 				if (player->GetCurrentCPIndex() >= 0 && cpIdx == 0)
 				{
+					std::cout << "Lap finished.\n";
 					player->IncreaseLapCount();
 					player->IncreasePoint(mConstantPtr->LapFinishPoint);
 					HandlePointUpdate(idx);
