@@ -81,9 +81,6 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	}
 	case CS::PRESS_READY:
 	{
-	#ifdef DEBUG_PACKET_TRANSFER
-		std::cout << "[" << id << "] Received press ready.\n";
-	#endif
 		CS::packet_press_ready* pck = reinterpret_cast<CS::packet_press_ready*>(packet);
 		
 		int roomID = gClients[id]->RoomID;

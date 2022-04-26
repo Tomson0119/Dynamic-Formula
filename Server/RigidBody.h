@@ -111,8 +111,7 @@ private:
 
 class VehicleRigidBody : public RigidBody
 {
-	using Tuning = btRaycastVehicle::btVehicleTuning;
-	
+	using Tuning = btRaycastVehicle::btVehicleTuning;	
 public:
 	struct VehicleComponent
 	{
