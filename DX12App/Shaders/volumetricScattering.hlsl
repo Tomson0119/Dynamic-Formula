@@ -27,7 +27,7 @@ float3 GetPositionVS(float2 texcoord, float depth)
 
 float ExponentialFog(float dist)
 {
-    float fog_dist = max(dist - 0.0f, 0.0);
+    float fog_dist = max(dist - 1.0f, 0.0);
     
     float fog = exp(-fog_dist * 10.0f);
     return 1 - fog;
@@ -82,14 +82,14 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
 		        [branch]
                 if (SpotFactor > spotCutOff)
                 {
-                    float attenuation = DoAttenuation(dist, 30.0f);
+                    float attenuation = DoAttenuation(dist, 20.0f);
                 
                     float conAtt = saturate((SpotFactor - cos(gLights[i].FalloffEnd)) / (cos(gLights[i].FalloffStart) - cos(gLights[i].FalloffEnd)));
                     conAtt *= conAtt;
 
                     attenuation *= conAtt;
                     
-                    attenuation *= ExponentialFog(cameraDistance - marchedDistance);
+                    //attenuation *= ExponentialFog(cameraDistance - marchedDistance);
                     
                     accumulation += attenuation;
                 }

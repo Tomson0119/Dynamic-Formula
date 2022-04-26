@@ -132,7 +132,7 @@ inline std::wstring AnsiToWString(const std::string& str)
 
 ////////////////////////////////////////////////////////////////////////////
 //
-#define NUM_LIGHTS 32
+#define NUM_LIGHTS 16
 
 #define POINT_LIGHT		  1
 #define SPOT_LIGHT		  2

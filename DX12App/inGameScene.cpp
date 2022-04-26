@@ -53,6 +53,11 @@ void InGameScene::OnResize(float aspect)
 	auto motionBlur = dynamic_cast<MotionBlurPipeline*>(p);
 	motionBlur->CreateTextures(mDevice.Get());
 	motionBlur->BuildSRVAndUAV(mDevice.Get());
+
+	p = mPostProcessingPipelines[Layer::VolumetricScattering].get();
+	auto volumetric = dynamic_cast<VolumetricScatteringPipeline*>(p);
+	volumetric->CreateTextures(mDevice.Get());
+	volumetric->BuildSRVAndUAV(mDevice.Get());
 }
 
 void InGameScene::BuildObjects(
