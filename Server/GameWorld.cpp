@@ -9,13 +9,19 @@
 #include "ObjectMask.h"
 
 GameWorld::GameWorld(std::shared_ptr<InGameServer::GameConstant> constantPtr)
-	: mID{ -1 }, mActive{ false },
-	  mPlayerCount{ 0 }, mUpdateTick{ 0 },
+	: mID{ -1 }, 
+	  mUpdateTick{ 0 },
+	  mActive{ false },
+	  mPlayerCount{ 0 }, 
 	  mPhysicsOverlapped{ OP::PHYSICS }
 {
-	for (int i = 0; i < mPlayerList.size(); i++)
-		mPlayerList[i] = nullptr;
+	mPrevRanks.resize(mPlayerList.size(), 1);
+	mCurrRanks.resize(mPlayerList.size(), 1);
 	mConstantPtr = constantPtr;
+	for (int i = 0; i < mPlayerList.size(); i++)
+	{
+		mPlayerList[i] = nullptr;
+	}
 }
 
 GameWorld::~GameWorld()
@@ -93,28 +99,34 @@ void GameWorld::UpdatePlayers(float elapsed)
 		if (player->NeedUpdate())
 		{
 			player->Update(elapsed, mPhysics);
-			if (player->IsInvincible())
-			{
-				player->UpdateInvincibleDuration(elapsed);
-				float duration = player->GetInvincibleDuration();
-
-				if (player->IsActive() == false 
-					&& duration <= mConstantPtr->SpawnInterval)
-				{
-					player->Activate();
-					player->StopVehicle();
-					SpawnToCheckpoint(*player);					
-					SendSpawnPacket(i);
-				}
-				if (duration <= 0.0f)
-				{
-					// TODO: need test if client calculation matches servers
-					player->ReleaseInvincible();
-					player->ChangeVehicleMaskGroup(OBJ_MASK_GROUP::VEHICLE, mPhysics);
-				}
-			}
+			UpdateInvincibleState(i, elapsed);
 		}
 		i += 1;
+	}
+}
+
+void GameWorld::UpdateInvincibleState(int idx, float elapsed)
+{
+	Player& player = *mPlayerList[idx];
+	if (player.IsInvincible())
+	{
+		player.UpdateInvincibleDuration(elapsed);
+		float duration = player.GetInvincibleDuration();
+
+		if (player.IsActive() == false
+			&& duration <= mConstantPtr->SpawnInterval)
+		{
+			player.Activate();
+			player.StopVehicle();
+			SpawnToCheckpoint(player);
+			SendSpawnPacket(idx);
+		}
+		if (duration <= 0.0f)
+		{
+			// TODO: need test if client calculation matches servers
+			player.ReleaseInvincible();
+			player.ChangeVehicleMaskGroup(OBJ_MASK_GROUP::VEHICLE, mPhysics);
+		}
 	}
 }
 
@@ -320,7 +332,7 @@ void GameWorld::SendInvincibleOnPacket(int target)
 void GameWorld::SendSpawnPacket(int target)
 {
 #ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "[room id: " << mID << "] Send spawn packet. [" << target << "\n";
+	std::cout << "(room id: " << mID << ") Send spawn packet. [" << target << "]\n";
 #endif
 	SC::packet_spawn_transform pck{};
 	pck.size = sizeof(SC::packet_spawn_transform);
@@ -342,6 +354,43 @@ void GameWorld::SendSpawnPacket(int target)
 	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
 
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void GameWorld::SendWarningMessage(int target, bool instSend)
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "(room id: " << mID << ") Send warning message to player[" << target << "]\n";
+#endif
+	SC::packet_warning_message pck{};
+	pck.size = sizeof(SC::packet_warning_message);
+	pck.type = SC::WARNING_MESSAGE;
+	pck.world_id = mID;
+
+	int id = mPlayerList[target]->ID;
+	if (id < 0) return;
+
+	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if (instSend) gClients[id]->SendMsg();
+}
+
+void GameWorld::SendInGameInfo(int target, bool instSend)
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "(room id: " << mID << ") Send in-game info packet [" << target << "]\n";
+#endif
+	SC::packet_ingame_info pck{};
+	pck.size = sizeof(SC::packet_ingame_info);
+	pck.type = SC::INGAME_INFO;
+	pck.player_idx = target;
+	pck.rank = mCurrRanks[target];
+	pck.lap_count = mPlayerList[target]->GetLapCount();
+	pck.point = mPlayerList[target]->GetPoint();
+
+	int id = mPlayerList[target]->ID;
+	if (id < 0) return;
+
+	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if (instSend) gClients[id]->SendMsg();
 }
 
 bool GameWorld::CheckIfAllLoaded(int idx)
@@ -384,13 +433,14 @@ void GameWorld::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instS
 	}
 }
 
+// TEST
 void GameWorld::TestVehicleSpawn()
 {
 	if (mTestFlag)
 	{
 		if (mPlayerList[0]->IsInvincible() == false)
 		{
-			HandleInvincibleMode(0);
+			SetInvincibleState(0, mConstantPtr->InvincibleDuration);
 		}
 		else
 		{
@@ -448,21 +498,24 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, int mask)
 			if (player->IsNextCheckpoint(cpIdx))
 			{
 				player->MarkNextCheckpoint(cpIdx);
-				// TODO: may got the point so sort player idx list by point.
-				// And send rank of each player to each player.
+				if (player->GetCurrentCPIndex() >= 0 && cpIdx == 0)
+				{
+					player->IncreaseLapCount();
+					player->IncreasePoint(mConstantPtr->LapFinishPoint);
+					HandlePointUpdate(idx);
+				}
 			}
 			else
 			{
 				int cnt = player->GetReverseDriveCount(cpIdx);
 				if (cnt == 1)
 				{
-					// TODO: Send warning packet to this!! player.
+					SendWarningMessage(idx);
 				}
 				else if(cnt == 2)
 				{
-					// player->ResetReverseCount();
-					// TODO: Spawn back to last checkpoint.
-					// and send spawn packet to all player.
+					SetInvincibleState(idx, mConstantPtr->SpawnInterval);
+					player->ResetReverseCount();
 				}
 			}
 		}
@@ -487,7 +540,7 @@ void GameWorld::HandleCollisionWithPlayer(int aIdx, int bIdx, int aMask, int bMa
 	{
 		if (bMask == OBJ_MASK::MISSILE)
 		{
-			HandleInvincibleMode(aIdx);
+			SetInvincibleState(aIdx, mConstantPtr->InvincibleDuration);
 		}
 		break;
 	}
@@ -498,18 +551,17 @@ void GameWorld::HandleCollisionWithPlayer(int aIdx, int bIdx, int aMask, int bMa
 			mPlayerList[aIdx]->IncreasePoint(mConstantPtr->MissileHitPoint);
 			mPlayerList[aIdx]->DisableMissile();
 			SendMissileRemovePacket(aIdx);
-			// TODO: player got point so sort player idx list by point.
-			// and send rank of each player to the player
+			HandlePointUpdate(aIdx);
 		}
 		break;
 	}}
 }
 
-void GameWorld::HandleInvincibleMode(int idx)
+void GameWorld::SetInvincibleState(int idx, float duration)
 {
 	SendInvincibleOnPacket(idx);
 
-	mPlayerList[idx]->SetInvincible();
+	mPlayerList[idx]->SetInvincible(duration);
 	mPlayerList[idx]->ClearVehicleComponent();
 	mPlayerList[idx]->ChangeVehicleMaskGroup(OBJ_MASK_GROUP::INVINCIBLE, mPhysics);
 }
@@ -517,9 +569,15 @@ void GameWorld::HandleInvincibleMode(int idx)
 void GameWorld::SpawnToCheckpoint(Player& player)
 {
 	int currentCPIndex = player.GetCurrentCPIndex();
-	if (currentCPIndex < 0) currentCPIndex = mMap.GetCheckpointSize() - 1;
-	const RigidBody& cp = mMap.GetCheckpointRigidBody(currentCPIndex);
-	player.SetTransform(cp.GetPosition(), cp.GetRotation());
+	if (currentCPIndex >= 0)
+	{
+		const RigidBody& cp = mMap.GetCheckpointRigidBody(currentCPIndex);
+		player.SetTransform(cp.GetPosition(), cp.GetRotation());
+	}
+	else
+	{
+		player.SetTransform(mConstantPtr->StartPosition, mConstantPtr->StartRotation);
+	}	
 }
 
 int GameWorld::GetPlayerIndex(const GameObject& obj)
@@ -530,4 +588,47 @@ int GameWorld::GetPlayerIndex(const GameObject& obj)
 		i += 1;
 	}
 	return -1;
+}
+
+void GameWorld::HandlePointUpdate(int target)
+{
+	SortPlayerRanks();
+	for (int i = 0; i < mPlayerList.size(); i++)
+	{
+		const auto& player = mPlayerList[i];
+		if (player->Empty == false)
+		{
+			if (i == target || mPrevRanks[i] != mCurrRanks[i])
+			{
+				SendInGameInfo(i);
+			}
+		}
+	}
+	mPrevRanks = mCurrRanks;
+}
+
+void GameWorld::SortPlayerRanks()
+{
+	std::vector<int> indexes(mPlayerList.size());
+	std::iota(indexes.begin(), indexes.end(), 0);
+
+	std::stable_sort(indexes.begin(), indexes.end(),
+		[this](int a, int b)
+		{
+			return mPlayerList[a]->GetPoint() > mPlayerList[b]->GetPoint();
+		});
+
+	for (int i = 0, rank = 1; i < indexes.size(); i++)
+	{
+		if (i > 0)
+		{
+			int prevPoint = mPlayerList[indexes[i-1]]->GetPoint();
+			int currPoint = mPlayerList[indexes[i]]->GetPoint();
+			if (prevPoint > currPoint)
+			{
+				rank += 1;
+			}
+		}
+		mCurrRanks[indexes[i]] = rank;
+	}
 }

@@ -43,6 +43,7 @@ public:
 private:
 	void CheckCollision();
 	void UpdatePlayers(float elapsed);
+	void UpdateInvincibleState(int idx, float elapsed);
 
 	void HandleCollision(
 		const btCollisionObject& objA,
@@ -53,9 +54,12 @@ private:
 	void HandleCollisionWithMap(int idx, int cpIdx,	int mask);
 	void HandleCollisionWithPlayer(int aIdx, int bIdx, int aMask, int bMask);
 
-	void HandleInvincibleMode(int idx);
+	void SetInvincibleState(int idx, float duration);
 	void SpawnToCheckpoint(Player& player);
 	int GetPlayerIndex(const GameObject& obj);
+
+	void HandlePointUpdate(int target);
+	void SortPlayerRanks();
 
 public:
 	void SendGameStartSuccess();
@@ -65,9 +69,13 @@ private:
 	void BroadcastAllTransform();
 	void PushVehicleTransformPacket(int target, int receiver);
 	void PushMissileTransformPacket(int target, int receiver);
+	
 	void SendMissileRemovePacket(int target);
 	void SendInvincibleOnPacket(int target);
 	void SendSpawnPacket(int target);
+	void SendWarningMessage(int target, bool instSend=true);
+	void SendInGameInfo(int target, bool instSend=true);
+
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
 	
 	//TEST
@@ -75,15 +83,15 @@ private:
 
 private:
 	int mID;
-	WSAOVERLAPPEDEX mPhysicsOverlapped;
+	int mUpdateTick;
 
-	std::atomic_int mPlayerCount;
 	std::atomic_bool mActive;
+	std::atomic_int mPlayerCount;
+
+	WSAOVERLAPPEDEX mPhysicsOverlapped;
 
 	// TEST
 	std::atomic_bool mTestFlag = false;
-
-	int mUpdateTick;
 	
 	Map mMap;
 	PlayerList mPlayerList;
@@ -91,5 +99,7 @@ private:
 	BPHandler mPhysics;
 	class Timer mTimer;
 
+	std::vector<int> mPrevRanks;
+	std::vector<int> mCurrRanks;
 	std::shared_ptr<InGameServer::GameConstant> mConstantPtr;
 };
