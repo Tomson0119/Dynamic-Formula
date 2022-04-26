@@ -44,6 +44,9 @@ public:
 
 		const float InvincibleDuration = 3.0f;
 		const float SpawnInterval = InvincibleDuration / 2.0f;
+
+		const btVector3 StartPosition = { -306.5f, 1.0f, 253.7f };
+		const btQuaternion StartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
 	};
 
 public:
@@ -76,9 +79,6 @@ private:
 
 	std::shared_ptr<GameConstant> mGameConstants;
 
-	const btVector3 mStartPosition = { -306.5f, 1.0f, 253.7f };
-	const btQuaternion mStartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
 	const btVector3 mOffset = { 20.0f, 0.0f, 0.0f };
-
 	const int mPhysicsDuration = 16;
 };

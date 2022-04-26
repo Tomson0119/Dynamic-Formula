@@ -52,18 +52,20 @@ void InGameServer::PrepareToStartGame(int roomID)
 		if (i == 0)
 		{
 			msWorlds[roomID]->SetPlayerTransform(i, 
-				mStartPosition + btVector3(20.0f, 0.0f, 0.0f),
-				mStartRotation);
+				mGameConstants->StartPosition + mOffset,
+				mGameConstants->StartRotation);
 		}
 		else if(i == 1)
 		{
-			btQuaternion rot = mStartRotation;
+			btQuaternion rot = mGameConstants->StartRotation;
 			rot.setRotation(btVector3{ 0.0f,1.0f,0.0f }, (btScalar)Math::PI / 2);
-			msWorlds[roomID]->SetPlayerTransform(i, mStartPosition, rot);
+			msWorlds[roomID]->SetPlayerTransform(i, mGameConstants->StartPosition, rot);
 		}
 		else
 		{
-			msWorlds[roomID]->SetPlayerTransform(i, mStartPosition, mStartRotation);
+			msWorlds[roomID]->SetPlayerTransform(i, 
+				mGameConstants->StartPosition, 
+				mGameConstants->StartRotation);
 		}
 		msWorlds[roomID]->CreateRigidbodies(i, 500.0f, *mBtCarShape, 1.0f, *mMissileShape);
 	}
