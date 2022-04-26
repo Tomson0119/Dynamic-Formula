@@ -588,7 +588,31 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player) player->SetSpawnTransform(pck);
 		break;
-	}}
+	}
+	case SC::WARNING_MESSAGE:
+	{
+		SC::packet_warning_message* pck = reinterpret_cast<SC::packet_warning_message*>(packet);
+		OutputDebugStringA("Reverse drive warning!\n");
+		break;
+	}
+	case SC::INGAME_INFO:
+	{
+		SC::packet_ingame_info* pck = reinterpret_cast<SC::packet_ingame_info*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if (player.get() == mPlayer)
+		{
+			std::stringstream ss;
+			ss << "Lap count: " << (int)pck->lap_count << "\n";
+			ss << "Point: " << pck->point << "\n";
+			ss << "Rank: " << (int)pck->rank << "\n";
+			OutputDebugStringA(ss.str().c_str());
+		}
+		break;
+	}
+	default:
+		OutputDebugStringA("Invalid packet.\n");
+		return false;
+	}
 	return true;
 }
 

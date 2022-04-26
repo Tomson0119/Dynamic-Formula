@@ -139,6 +139,8 @@ namespace SC
 	const char REMOVE_MISSILE	  = 16;
 	const char INVINCIBLE_ON	  = 17;
 	const char SPAWN_TRANSFORM	  = 18;
+	const char WARNING_MESSAGE	  = 19;
+	const char INGAME_INFO		  = 20;
 
 	struct packet_force_logout : packet_header { };
 
@@ -234,7 +236,7 @@ namespace SC
 	struct packet_player_transform : packet_header
 	{
 		int world_id;
-		int player_idx;
+		uint8_t player_idx;
 		int position[3];
 		int quaternion[4];
 		int linear_vel[3];
@@ -244,7 +246,7 @@ namespace SC
 	struct packet_missile_transform : packet_header
 	{
 		int world_id;
-		int missile_idx;
+		uint8_t missile_idx;
 		int position[3];
 		int quaternion[4];
 		int linear_vel[3];
@@ -253,22 +255,36 @@ namespace SC
 	struct packet_remove_missile : packet_header
 	{
 		int world_id;
-		int missile_idx;
+		uint8_t missile_idx;
 	};
 
 	struct packet_invincible_on : packet_header
 	{
 		int world_id;
-		int player_idx;
+		uint8_t player_idx;
 		int duration;
 	};
 
 	struct packet_spawn_transform : packet_header
 	{
 		int world_id;
-		int player_idx;
+		uint8_t player_idx;
 		int position[3];
 		int quaternion[4];
+	};
+
+	struct packet_warning_message : packet_header
+	{
+		int world_id;
+	};
+
+	struct packet_ingame_info : packet_header
+	{
+		int world_id;
+		uint8_t player_idx;
+		uint8_t lap_count;
+		uint8_t rank;
+		int point;
 	};
 }
 #pragma pack(pop)
