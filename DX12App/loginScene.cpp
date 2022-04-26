@@ -19,7 +19,7 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	}
 	else OutputDebugStringW(L"Failed to connect to server.\n");
 #else
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #endif
 }
 
@@ -145,21 +145,21 @@ void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& tim
 	if (Texts[0].empty())
 	{
 		Texts[0].assign("ID");
-		mpUI->ChangeTextAlignment(0, 1);
+		mpUI->ChangeTextAlignment(0, 1/*Center*/); // 1== Center(CenterAllignment), 0 == Leading(LeftSideAllignment)
 	}
 	if (Texts[1].empty())
 	{
 		Texts[1].assign("Password");
-		mpUI->ChangeTextAlignment(1, 1);
+		mpUI->ChangeTextAlignment(1, 1/*Center*/); 
 	}
 
-	std::vector<std::wstring> WTexts;
+	std::vector<std::string> vTexts;
 
-	WTexts.resize(Texts.size());
+	vTexts.resize(Texts.size());
 	for(int i=0;i<Texts.size();++i)
-		WTexts[i].assign(Texts[i].begin(), Texts[i].end());
+		vTexts[i].assign(Texts[i].begin(), Texts[i].end());
 
-	mpUI.get()->Update(timer.TotalTime(), WTexts);
+	mpUI->Update(timer.TotalTime(), vTexts);
 }
 
 void LoginScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)

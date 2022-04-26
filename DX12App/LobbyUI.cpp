@@ -353,7 +353,7 @@ void LobbyUI::Draw(UINT nFrame)
     UI::DrawBmp(LTRB, 0, 2, aOpacities);
     UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
     UI::DrawBmp(LTRB, 2, 1, aOpacities);
-    UI::TextDraw(nFrame, GetTextBlock());
+    UI::TextDraw(GetTextBlock());
     UI::EndDraw(nFrame);
 }
 
@@ -523,7 +523,6 @@ void LobbyUI::Reset()
 {
     UI::Reset();
     GetBitmapFileNames().clear();
-
 }
 
 void LobbyUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,

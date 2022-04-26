@@ -2,7 +2,7 @@
 #include "RoomUI.h"
 RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue)
-    // Text: 11, RoundRect: 13
+    // Text: 11, RoundRect: 12
     //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
     //UI: NicknameBox[8], StartBox, CarSelectBox[2], MapSelectBox[2]
 {
@@ -294,7 +294,7 @@ void RoomUI::Draw(UINT nFrame)
         GetFrameHeight() * 0.625f
         }
     };
-    bool IsOutlined[12] = { true, true, true, true, true, true, true, true, true, true, true };
+    bool IsOutlined[12] = { false, };
     float aOpacities[9] = { 1.0f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f };
 
     UI::BeginDraw(nFrame); 
@@ -302,7 +302,7 @@ void RoomUI::Draw(UINT nFrame)
     UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
     UI::DrawBmp(LTRB, 1, 8, aOpacities);
 
-    UI::TextDraw(nFrame, GetTextBlock());
+    UI::TextDraw(GetTextBlock());
     UI::EndDraw(nFrame);
 }
 
@@ -396,7 +396,7 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     colorList.push_back(D2D1::ColorF::Black);
     colorList.push_back(D2D1::ColorF::Black);
 
-    colorList.push_back(D2D1::ColorF(D2D1::ColorF::LightGray, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Gold , 0.9f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Orange, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f));

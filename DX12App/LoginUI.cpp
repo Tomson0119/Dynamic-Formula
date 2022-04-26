@@ -266,12 +266,6 @@ void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
     }*/
 }
 
-void LoginUI::Update(std::vector<std::string>& Texts) 
-{
-    GetTextBlock()[2].strText.assign(Texts[0].begin(), Texts[0].end());
-    GetTextBlock()[3].strText.assign(Texts[1].begin(), Texts[1].end());
-}
-
 void LoginUI::ChangeTextAlignment(UINT uNum, UINT uState)
 {
     if (uNum == 0) {
@@ -443,7 +437,7 @@ void LoginUI::Draw(UINT nFrame)
     float aOpacities[2] = { 0.5f, 1.0f };
     UI::DrawBmp(LTRB,0 , GetBitmapCnt(), aOpacities);
     UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
-    UI::TextDraw(nFrame, GetTextBlock());
+    UI::TextDraw(GetTextBlock());
     UI::EndDraw(nFrame);
 }
 
@@ -554,7 +548,6 @@ void LoginUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
 void LoginUI::Reset()
 {
     UI::Reset();
-    GetBitmapFileNames().clear();
 }
 
 void LoginUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,

@@ -150,6 +150,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 {
 	/*TextUI.clear();
 	TextUI.resize(5);*/
+	
 	mvTextBlocks[5].strText.clear();
 	//StartTime Set
 	UINT Countdown = 3;
@@ -303,12 +304,6 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	//fDriftGauge = mPlayer->GetDriftGauge();
 	uItemCnt = mPlayer->GetItemNum();
     SetDraftGage();
-}
-
-void InGameUI::Update(float GTime, std::vector<std::string> Texts)
-{
-	for (auto &text : Texts[0])
-		mvTextBlocks[2].strText.push_back(text);
 }
 
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -467,7 +462,7 @@ void InGameUI::Draw(UINT nFrame)
 
 	UI::RectDraw(RectLTRB, FillLTRB, 1, IsOutlined);
 	UI::DrawBmp(GetLTRB(), 0, 6, fOpacities);
-	UI::TextDraw(nFrame, mvTextBlocks);
+	UI::TextDraw(mvTextBlocks);
     //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 	UI::EndDraw(nFrame);
 }
@@ -511,7 +506,7 @@ void InGameUI::CreateFontFormat()
 void InGameUI::SetTextRect()
 {//Time, Lap, Rank, Speed, km/h, 321 Go! GetFrameWidth() * 0.25f, GetFrameHeight() * 0.13f)
     mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.22f, GetFrameHeight() * 0.19f);
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.02f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.15f, GetFrameHeight() * 0.14f);
+    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.02f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.16f, GetFrameHeight() * 0.14f);
     mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, 0.0f, GetFrameWidth(), GetFrameHeight() * 0.16f);
     mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.90f);
     mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.95f);
@@ -547,7 +542,7 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
-	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
 
 
     //D2D1::ColorF colorList[8] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f),D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f), D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f), D2D1::ColorF(D2D1::ColorF::Red, 1.0f), D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f) };

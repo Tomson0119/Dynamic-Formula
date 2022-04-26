@@ -19,21 +19,18 @@ class UI
 public:
     explicit UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     ~UI();
-    virtual void Update(float GTime, Player* mPlayer) {};
-    virtual void Update(float GTime, std::vector<std::wstring>& Texts) {}
-    virtual void Update(std::vector<std::wstring>& Texts) {}
-    virtual void Update(float GTime);
+    virtual void Update(float GTime, Player* mPlayer) {}
+    virtual void Update(float GTime, std::vector<std::string>& Texts) {} 
+    virtual void Update(std::vector<std::string>& Texts) {}
+    virtual void Update(float GTime) {}
     virtual void Draw(UINT nFrame);
 
     virtual HRESULT LoadBitmapResourceFromFile(std::wstring ImageName, int index);
     virtual void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
     virtual void DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpNum, const float aOpacities[]);
-
     virtual void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
-    virtual void BuildBrush(D2D1::ColorF* ColorList, 
-        UINT gradientCnt, D2D1::ColorF* gradientColors);
-    virtual void BuildBrush(std::vector<D2D1::ColorF>& ColorList,
-        UINT gradientCnt, D2D1::ColorF* gradientColors);
+    virtual void BuildBrush(D2D1::ColorF* ColorList, UINT gradientCnt, D2D1::ColorF* gradientColors);
+    virtual void BuildBrush(std::vector<D2D1::ColorF>& ColorList, UINT gradientCnt, D2D1::ColorF* gradientColors);
     virtual void BuildSolidBrush(D2D1::ColorF* ColorList);
     virtual void BuildSolidBrush(const std::vector<D2D1::ColorF>& ColorList);
     virtual void BuildLinearGradientBrush(UINT ColorCnt, D2D1::ColorF* ColorList);
@@ -44,31 +41,30 @@ public:
     virtual void SetVectorSize(UINT nFrame);
     virtual void CreateFontFormat(float vFontSize, const std::vector<std::wstring>& Fonts, const std::vector<DWRITE_TEXT_ALIGNMENT>& Alignment);
     virtual void CreateFontFormat(std::vector<float>& vFontSize, const std::vector<std::wstring>& Fonts, const std::vector<DWRITE_TEXT_ALIGNMENT>& Alignment);
+    virtual  void SetTextRect() {}
 
     virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) {}
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) {}
     virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) {  }
     virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y) { return 0; }
+
     void BeginDraw(UINT nFrame);
-    void TextDraw(UINT nFrame, const std::vector<TextBlock> &mvTextBlocks);
+    void TextDraw(const std::vector<TextBlock> &mvTextBlocks);
     void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
     void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
-    void RoundedRectDraw() {}
     void EndDraw(UINT nFrame);
     void Flush();
 
     virtual void ChangeTextAlignment(UINT uNum, UINT uState) {}
 
-    //?
    ID3D11Resource* GetRenderTarget() const { return mvWrappedRenderTargets[0].Get(); }
    UINT GetRenderTargetsCount() const { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
-   //?
+   
    virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair("", ""); }
    virtual int GetLobbyPacket() { return -1; }
    virtual int GetRoomPacket() { return -1; }
    
-
    //Frame
    void SetFrame(float W, float H) { mfHeight = H; mfWidth = W; }
    std::pair<float, float> GetFrame() const { return std::make_pair(mfWidth, mfHeight); }
@@ -102,7 +98,7 @@ public:
    // Bitmap
    UINT GetBitmapCnt() { return miBitmapCnt; }
    void SetBitmapCnt(UINT n) { miBitmapCnt = n; }
-   void SetBitmapsSize(int size) { mvBitmaps.resize(size); }
+   void SetBitmapsSize(UINT size) { mvBitmaps.resize(size); }
 
   //Font Size
    void ResizeFontSize(UINT n) { mvfFontSizes.resize(n); }
@@ -149,53 +145,43 @@ private:
     UINT miEllipseCnt = 0;
     UINT miGradientCnt = 0;
     UINT miBitmapCnt = 0;
-    
     UINT miUICnt = 0;
-    //FontSize
-    std::vector<float> mvfFontSizes;
-    //Fonts
-    std::vector<std::wstring> mvwsFonts;
-    //BitmapFileNames
-    std::vector<std::wstring> mvBitmapFileNames;
-    //Bitmaps
-    std::vector<ComPtr<ID2D1Bitmap1>> mvBitmaps;
-    //TextBlocks
-    std::vector<TextBlock>          mvTextBlocks;
-    //Colors
-    std::vector<D2D1::ColorF> mvColors;
-    //TextAllignments
-    std::vector<DWRITE_TEXT_ALIGNMENT> mvdwTextAlignments;
+    
+    std::vector<float> mvfFontSizes; //FontSize
+    std::vector<std::wstring> mvwsFonts; //Fonts
+    std::vector<std::wstring> mvBitmapFileNames; //BitmapFileNames
+    std::vector<ComPtr<ID2D1Bitmap1>> mvBitmaps; //Bitmaps
+    std::vector<TextBlock>          mvTextBlocks; //TextBlocks
+    std::vector<D2D1::ColorF> mvColors; //Colors
+    std::vector<DWRITE_TEXT_ALIGNMENT> mvdwTextAlignments;  //TextAllignments
 
     GradientColors* pGradientColors;
 
-
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
+    ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;
     ComPtr<ID2D1Factory3> mpd2dFactory;
     ComPtr<ID2D1Device2> mpd2dDevice;
     ComPtr<ID3D11Device> pd3d11Device;
     ComPtr<IDXGIDevice> pdxgiDevice;
-    ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
 
     ComPtr<IDWriteFactory5> mpd2dWriteFactory;
-
     ComPtr<IDWriteFontFile> mdwFontFile;
     ComPtr<IDWriteFontSetBuilder1> mdwFontSetBuilder;
     ComPtr<IDWriteInMemoryFontFileLoader> mdwInMemoryFontFileLoader;
     ComPtr<IDWriteFontSet> mdwFontSet;
-    std::vector<ComPtr<IDWriteFontCollection1>> mdwFontCollection;
-
     ComPtr<IDWriteFontFamily> mdwFontFamily;
     ComPtr<IDWriteLocalizedStrings> mdwLocalizedStrings;
+    
+    ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
+
+    std::vector<ComPtr<IDWriteFontCollection1>> mdwFontCollection;
+    std::vector<ComPtr<IDWriteTextFormat>> mvdwTextFormat;
+    std::vector<ComPtr<ID2D1SolidColorBrush>> mvd2dSolidBrush;
+    std::vector<ComPtr<ID3D11Resource>>    mvWrappedRenderTargets;
+    std::vector<ComPtr<ID2D1Bitmap1>>      mvd2dRenderTargets;
+
     TCHAR mtcFontName[50];
 
     IWICImagingFactory* mWICFactoryPtr;
-
-
-    std::vector<ComPtr<IDWriteTextFormat>> mvdwTextFormat;
-
-    std::vector<ComPtr<ID2D1SolidColorBrush>> mvd2dSolidBrush;
-    ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
-    std::vector<ComPtr<ID3D11Resource>>    mvWrappedRenderTargets;
-    std::vector<ComPtr<ID2D1Bitmap1>>      mvd2dRenderTargets;
 };

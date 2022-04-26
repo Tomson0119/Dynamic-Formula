@@ -12,6 +12,9 @@ UI::~UI()
     mvBitmapFileNames.clear();
     mvTextBlocks.clear();
     mvColors.clear();
+
+    //mvWrappedRenderTargets.clear();
+    //mvd2dRenderTargets.clear();
 }
 
 void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
@@ -88,7 +91,7 @@ void UI::BeginDraw(UINT nFrame)
     mpd2dDeviceContext->BeginDraw();
 }
 
-void UI::TextDraw(UINT nFrame, const std::vector<TextBlock> &mvTextBlocks)
+void UI::TextDraw(const std::vector<TextBlock> &mvTextBlocks)
 {
     std::wstring Text;
 
@@ -185,15 +188,15 @@ void UI::RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[],  UINT Gradien
         for (int i = 0; i < static_cast<int>(GradientCnt); ++i)
         {
             if (IsOutlined[i])
-                mpd2dDeviceContext->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), md2dLinearGradientBrush.Get());
-            mpd2dDeviceContext->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), md2dLinearGradientBrush.Get());
+                mpd2dDeviceContext->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 20.0f, 20.0f), md2dLinearGradientBrush.Get());
+            mpd2dDeviceContext->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 20.0f, 20.0f), md2dLinearGradientBrush.Get());
         }
     }
     for (int i = GradientCnt ; i < mvd2dSolidBrush.size() - miTextCnt; ++i)
     {
         if (IsOutlined[i])
-            mpd2dDeviceContext->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[i + miTextCnt].Get());
-        mpd2dDeviceContext->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 10.0f, 10.0f), mvd2dSolidBrush[i+ miTextCnt].Get());
+            mpd2dDeviceContext->DrawRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), 20.0f, 20.0f), mvd2dSolidBrush[i + miTextCnt].Get());
+        mpd2dDeviceContext->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), 20.0f, 20.0f), mvd2dSolidBrush[i+ miTextCnt].Get());
     }
     
 
@@ -211,11 +214,6 @@ void UI::Flush()
         mpd3d11DeviceContext->Flush();
 }
 
-void UI::Update(float GTime)
-{
-
-}
-
 void UI::Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<TextBlock> &mvTextBlocks,
     XMFLOAT4 RectLTRB[],  XMFLOAT4 FillLTRB[]*/)
 {
@@ -224,11 +222,10 @@ void UI::Draw(UINT nFrame/*, UINT TextCnt, UINT GradientCnt, const std::vector<T
 
 void UI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
 {
-    mfWidth = static_cast<float>(width);
-    mfHeight = static_cast<float>(height);
+    SetFrame(static_cast<float>(width), static_cast<float>(height));
 
     D2D1_BITMAP_PROPERTIES1 d2dBitmapProperties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
-        D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), mfWidth, mfHeight);
+        D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), GetFrameWidth(), GetFrameHeight());
     
     ComPtr<IDXGISurface> pdxgiSurface;
     for (UINT i = 0; i < GetRenderTargetsCount(); ++i)
@@ -294,9 +291,9 @@ void UI::BuildSolidBrush(D2D1::ColorF* ColorList)
 
 void UI::BuildSolidBrush(const std::vector<D2D1::ColorF>& ColorList)
 {
-    mvd2dSolidBrush.resize(miTextCnt + miUICnt);
+    mvd2dSolidBrush.resize(static_cast<size_t>(miTextCnt + miUICnt));
     //ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[0]));
-    for (size_t i = 0; i < miTextCnt + miUICnt; ++i)
+    for (size_t i = 0; i < static_cast<size_t>(miTextCnt + miUICnt); ++i)
         ThrowIfFailed(mpd2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(ColorList[i]), (ID2D1SolidColorBrush**)&mvd2dSolidBrush[i]));
 }
 
@@ -364,6 +361,7 @@ void UI::Reset()
     mvWrappedRenderTargets.clear();
     mvd2dRenderTargets.clear();
     mvBitmaps.clear();
+    mvBitmapFileNames.clear();
     mvColors.clear();
 }
 
