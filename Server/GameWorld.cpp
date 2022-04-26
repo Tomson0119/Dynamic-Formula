@@ -463,7 +463,6 @@ void GameWorld::CheckCollision()
 
 		if (objA == nullptr || objB == nullptr) continue;
 
-
 		GameObject* gameObjA = reinterpret_cast<GameObject*>(objA->getUserPointer());
 		GameObject* gameObjB = reinterpret_cast<GameObject*>(objB->getUserPointer());
 
@@ -495,10 +494,8 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, int mask)
 		if (cpIdx >= 0)
 		{
 			auto player = mPlayerList[idx];
-			std::cout << "Hit checkpoint: " << cpIdx << "\n";
 			if (player->IsNextCheckpoint(cpIdx))
 			{
-				player->MarkNextCheckpoint(cpIdx);
 				if (player->GetCurrentCPIndex() >= 0 && cpIdx == 0)
 				{
 					std::cout << "Lap finished.\n";
@@ -506,6 +503,7 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, int mask)
 					player->IncreasePoint(mConstantPtr->LapFinishPoint);
 					HandlePointUpdate(idx);
 				}
+				player->MarkNextCheckpoint(cpIdx);
 			}
 			else
 			{
