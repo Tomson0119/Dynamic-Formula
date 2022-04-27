@@ -4,7 +4,7 @@
 #include "LobbyUI.h"
 
 LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::Black, netPtr }
+	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
 #ifdef STANDALONE

@@ -73,9 +73,7 @@ void RoomUI::SetStartOrReady()
 void RoomUI::Update(float GTime)
 {
     for (UINT i = 0; i < GetTextCnt(); ++i)
-    {
         GetTextBlock()[i].strText.clear();
-    }
     for (auto& wc : std::string{ "Start" })
         GetTextBlock()[0].strText.push_back(wc);
     for (auto& wc : std::string{ "Car" })

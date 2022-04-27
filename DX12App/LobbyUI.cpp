@@ -344,7 +344,7 @@ void LobbyUI::Draw(UINT nFrame)
     float aOpacities[3] = { 0.5f, 1.0f, 0.5f };
     UI::BeginDraw(nFrame);
     UI::DrawBmp(LTRB, 0, 2, aOpacities);
-    //UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
+    UI::RectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
     UI::DrawBmp(LTRB, 2, 1, aOpacities);
     UI::TextDraw(GetTextBlock());
     UI::EndDraw(nFrame);

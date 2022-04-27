@@ -430,7 +430,7 @@ void LoginUI::Draw(UINT nFrame)
 
     UI::BeginDraw(nFrame);
     UI::DrawBmp(LTRB,0 , 1, aOpacities);
-    UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
+    UI::RectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
     UI::TextDraw(GetTextBlock());
     UI::EndDraw(nFrame);
 }

@@ -5,7 +5,7 @@
 
 
 LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::LOGIN, (XMFLOAT4)Colors::Black, netPtr }
+	: Scene{ hwnd, SCENE_STAT::LOGIN, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"Login Scene Entered.\n");
 	Texts.resize(2);
@@ -31,6 +31,7 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
 	const std::shared_ptr<BulletWrapper>& physics)
 {
+	
 	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
 	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
