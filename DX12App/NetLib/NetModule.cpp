@@ -57,6 +57,7 @@ void NetModule::NetworkFunc(NetModule& net)
 			if (over_ex == nullptr)
 			{
 				net.mLoop = false;
+				net.mNetClient->Disconnect();
 				continue;
 			}
 			if (info.success == FALSE)
@@ -163,7 +164,10 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
 	case OP::SEND:
 	{
 		if (bytes != over->WSABuffer.len)
-			PostDisconnect();
+		{
+			// NEED TEST
+			// PostDisconnect();
+		}
 		delete over;
 		break;
 	}
