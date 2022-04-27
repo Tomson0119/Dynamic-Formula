@@ -2,10 +2,10 @@
 
 #include "BtCollisionShape.h"
 #include "BtCompoundShape.h"
-#include "InGameServer.h"
 
 class GameObject;
 class BPHandler;
+struct GameConstant;
 
 class RigidBody
 {
@@ -22,6 +22,8 @@ public:
 public:
 	RigidBody();
 	virtual ~RigidBody();
+
+	void Flush();
 
 	void SetMaskBits(int maskGroup, int mask);
 	void SetNoResponseCollision();
@@ -73,7 +75,7 @@ public:
 
 	void SetGameConstantPtr(
 		class VehicleRigidBody* vehiclePtr, 
-		std::shared_ptr<InGameServer::GameConstant> constantPtr);
+		std::shared_ptr<GameConstant> constantPtr);
 
 public:
 	virtual void AppendRigidBody(BPHandler& physics) override;
@@ -91,7 +93,7 @@ private:
 private:
 	bool mActive;
 	VehicleRigidBody* mVehiclePtr;
-	std::shared_ptr<InGameServer::GameConstant> mConstantPtr;
+	std::shared_ptr<GameConstant> mConstantPtr;
 };
 
 class CustomVehicleRaycaster : public btVehicleRaycaster
