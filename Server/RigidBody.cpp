@@ -1,6 +1,7 @@
 #include "common.h"
 #include "RigidBody.h"
 #include "BPHandler.h"
+#include "InGameServer.h"
 
 RigidBody::RigidBody()
 	: mRigidBody{ nullptr }, 
@@ -16,11 +17,15 @@ RigidBody::RigidBody()
 
 RigidBody::~RigidBody()
 {
+	Flush();
+}
+
+void RigidBody::Flush()
+{
 	if (mRigidBody)
 	{
 		auto motionState = mRigidBody->getMotionState();
 		if (motionState) delete motionState;
-			
 		delete mRigidBody;
 		mRigidBody = nullptr;
 	}
@@ -195,7 +200,7 @@ void MissileRigidBody::RemoveRigidBody(BPHandler& physics)
 
 void MissileRigidBody::SetGameConstantPtr(
 	VehicleRigidBody* vehiclePtr,
-	std::shared_ptr<InGameServer::GameConstant> constantPtr)
+	std::shared_ptr<GameConstant> constantPtr)
 {
 	mVehiclePtr = vehiclePtr;
 	mConstantPtr = constantPtr;

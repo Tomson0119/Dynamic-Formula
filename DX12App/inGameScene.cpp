@@ -21,7 +21,7 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	mKeyMap[VK_LSHIFT] = false;
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
-	mKeyMap['Q'] = false;
+	mKeyMap['P'] = false;
 
 #ifdef STANDALONE
 	mGameStarted = true;
@@ -376,17 +376,6 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
-	// 지형 스케일에는 정수를 넣는 것을 권장
-	/*auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
-	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 129, 129);
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\rocky.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\road.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
-	mPipelines[Layer::Terrain]->AppendObject(terrain);*/
-	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 	LoadLights(cmdList, L"Map\\Lights.tmap");
@@ -585,6 +574,22 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
+	case SC::DRIFT_GAUGE:
+	{
+		SC::packet_drift_gauge* pck = reinterpret_cast<SC::packet_drift_gauge*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if (player)
+		{
+			float drift_gauge = pck->gauge / FIXED_FLOAT_LIMIT;
+			if (drift_gauge > 0.0f)
+			{
+				std::stringstream ss;
+				ss << "Drift gauge: " << drift_gauge << "\n";
+				OutputDebugStringA(ss.str().c_str());
+			}
+		}
+		break;
+	}
 	case SC::INVINCIBLE_ON:
 	{
 		SC::packet_invincible_on* pck = reinterpret_cast<SC::packet_invincible_on*>(packet);
@@ -593,6 +598,16 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 			int duration = pck->duration - (int)(mNetPtr->GetLatency() * FIXED_FLOAT_LIMIT);
 			player->SetInvincibleOn(duration);
+		}
+		break;
+	}
+	case SC::ITEM_INCREASED:
+	{
+		SC::packet_item_increased* pck = reinterpret_cast<SC::packet_item_increased*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if(player)
+		{
+			OutputDebugStringA("Item increased.\n");
 		}
 		break;
 	}
@@ -620,6 +635,25 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			ss << "Point: " << pck->point << "\n";
 			ss << "Rank: " << (int)pck->rank << "\n";
 			OutputDebugStringA(ss.str().c_str());
+		}
+		break;
+	}
+	case SC::GAME_END:
+	{
+		SC::packet_game_end* pck = reinterpret_cast<SC::packet_game_end*>(packet);
+		for (int i = 0; i < mPlayerObjects.size(); i++)
+		{
+			if (mPlayerObjects[i])
+			{
+				std::stringstream ss;
+				ss << "idx: " << i << "\n";
+				ss << "Rank: " << (int)pck->rank[i] << "\n";
+				ss << "Name: " << mNetPtr->GetPlayersInfo()[i].Name << "\n";
+				ss << "Point: " << pck->point[i] << "\n";
+				ss << "Lap count: " << (int)pck->lap_count[i] << "\n";
+				ss << "Hit count: " << (int)pck->hit_count[i] << "\n";
+				OutputDebugStringA(ss.str().c_str());
+			}
 		}
 		break;
 	}

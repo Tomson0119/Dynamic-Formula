@@ -1,13 +1,9 @@
 #include "common.h"
 #include "InGameServer.h"
 #include "LoginServer.h"
-#include "WaitRoom.h"
 #include "Client.h"
 #include "Player.h"
-#include "GameWorld.h"
 #include "RigidBody.h"
-
-InGameServer::WorldList InGameServer::msWorlds;
 
 InGameServer::InGameServer()
 	: mLoginPtr{ nullptr }
@@ -135,6 +131,7 @@ void InGameServer::StartMatch(int roomID)
 {
 	msWorlds[roomID]->SetActive(true);
 	msWorlds[roomID]->SendStartSignal();
+	msWorlds[roomID]->SetFinishTime(mGameConstants->GameRunningTime);
 	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
 }
 

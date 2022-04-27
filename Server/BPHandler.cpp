@@ -31,12 +31,14 @@ void BPHandler::StepSimulation(float elapsed)
 void BPHandler::Flush()
 {
 	if (mBtDynamicsWorld)
-	{		
+	{
 		for (int i = mBtDynamicsWorld->getNumConstraints() - 1; i >= 0; i--)
 		{
 			mBtDynamicsWorld->removeConstraint(mBtDynamicsWorld->getConstraint(i));
 		}
-		for (int i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+
+		// NOTE: prevent double delete
+		/*for (int i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 		{
 			btCollisionObject* obj = mBtDynamicsWorld->getCollisionObjectArray()[i];
 			if (obj)
@@ -45,10 +47,11 @@ void BPHandler::Flush()
 				if (body && body->getMotionState())
 				{
 					delete body->getMotionState();
+					body->setMotionState(nullptr);
 				}
 				mBtDynamicsWorld->removeCollisionObject(obj);
 				delete obj;
 			}
-		}
+		}*/
 	}
 }

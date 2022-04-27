@@ -2,9 +2,9 @@
 
 #include "GameObject.h"
 #include "RigidBody.h"
-#include "InGameServer.h"
 
 class BtCarShape;
+struct GameConstant;
 
 class Player : public GameObject
 {
@@ -17,7 +17,7 @@ public:
 	virtual int GetMask(const btCollisionObject& obj) const override;
 
 public:
-	void SetGameConstant(std::shared_ptr<InGameServer::GameConstant> constantPtr);
+	void SetGameConstant(std::shared_ptr<GameConstant> constantPtr);
 	void SetTransform(const btVector3& pos, const btQuaternion& quat);
 
 	void CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShape& shape);
@@ -43,6 +43,7 @@ public:
 
 	bool NeedUpdate();
 	void ClearVehicleComponent();
+	void ClearAllGameInfo();
 
 private:
 	void UpdateVehicleComponent(float elapsed);
@@ -60,17 +61,27 @@ public:
 	bool IsActive() const { return mActive; }
 
 	void ResetReverseCount() { mReverseDriveCount = 0; }
+	void IncreaseHitCount() { mHitCount += 1; }
 	void IncreaseLapCount() { mLapCount += 1; }
 	void IncreasePoint(int point) { mPoint += point; }
 	void SetCheckpointCount(int count) { mCPPassed.resize(count, false); }
 
 	void ReleaseInvincible() { mInvincible = false; mInvincibleDuration = 0.0f; }
 	bool IsInvincible() const { return mInvincible; }
-	float GetInvincibleDuration() const { return mInvincibleDuration; }
+	float GetInvincibleDuration() const { return mInvincibleDuration; }	
 
+	int GetHitCount() const { return mHitCount; }
 	int GetLapCount() const { return mLapCount; }
 	int GetPoint() const { return mPoint; }
 	int GetCurrentCPIndex() const { return mCurrentCPIndex; }
+
+	float GetDriftGauge() const { return mDriftGauge; }
+
+	void ResetManualRespawnFlag() { mManualRespawn = false; }
+	bool NeedManualRespawn() const { return mManualRespawn; }
+
+	void ResetItemFlag() { mItemIncreased = false; }
+	bool ItemIncreased() const { return mItemIncreased; }
 
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
 	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
@@ -93,6 +104,7 @@ private:
 
 	int mCurrentCPIndex;
 	int mLapCount;
+	int mHitCount;
 	int mPoint;
 	int mReverseDriveCount;
 
@@ -100,10 +112,12 @@ private:
 
 	float mInvincibleDuration;
 	bool mInvincible;
+	bool mItemIncreased;
 
+	std::atomic_bool mManualRespawn;
 	std::atomic_bool mActive;
 	std::atomic_int mItemCount;
 	std::atomic_bool mBoosterToggle;
 
-	std::shared_ptr<InGameServer::GameConstant> mConstantPtr;
+	std::shared_ptr<GameConstant> mConstantPtr;
 };
