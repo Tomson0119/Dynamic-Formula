@@ -136,11 +136,14 @@ namespace SC
 	const char TRANSFER_TIME	  = 13;
 	const char PLAYER_TRANSFORM	  = 14;
 	const char MISSILE_TRANSFORM  = 15;
-	const char REMOVE_MISSILE	  = 16;
-	const char INVINCIBLE_ON	  = 17;
-	const char SPAWN_TRANSFORM	  = 18;
-	const char WARNING_MESSAGE	  = 19;
-	const char INGAME_INFO		  = 20;
+	const char DRIFT_GAUGE		  = 16;
+	const char REMOVE_MISSILE	  = 17;
+	const char INVINCIBLE_ON	  = 18;
+	const char SPAWN_TRANSFORM	  = 19;
+	const char WARNING_MESSAGE	  = 20;
+	const char INGAME_INFO		  = 21;
+	const char GAME_END			  = 22;
+	const char ITEM_INCREASED	  = 23;
 
 	struct packet_force_logout : packet_header { };
 
@@ -222,10 +225,7 @@ namespace SC
 		int rw[MAX_ROOM_CAPACITY];
 	};
 
-	struct packet_start_signal : packet_header
-	{
-		int world_id;
-	};
+	struct packet_start_signal : packet_header { };
 
 	struct packet_transfer_time : packet_header
 	{
@@ -235,7 +235,6 @@ namespace SC
 
 	struct packet_player_transform : packet_header
 	{
-		int world_id;
 		uint8_t player_idx;
 		int position[3];
 		int quaternion[4];
@@ -245,46 +244,57 @@ namespace SC
 
 	struct packet_missile_transform : packet_header
 	{
-		int world_id;
 		uint8_t missile_idx;
 		int position[3];
 		int quaternion[4];
 		int linear_vel[3];
 	};
 
+	struct packet_drift_gauge : packet_header
+	{
+		uint8_t player_idx;
+		int gauge;
+	};
+
 	struct packet_remove_missile : packet_header
 	{
-		int world_id;
 		uint8_t missile_idx;
 	};
 
 	struct packet_invincible_on : packet_header
 	{
-		int world_id;
 		uint8_t player_idx;
 		int duration;
 	};
 
 	struct packet_spawn_transform : packet_header
 	{
-		int world_id;
 		uint8_t player_idx;
 		int position[3];
 		int quaternion[4];
 	};
 
-	struct packet_warning_message : packet_header
-	{
-		int world_id;
-	};
+	struct packet_warning_message : packet_header { };
 
 	struct packet_ingame_info : packet_header
 	{
-		int world_id;
 		uint8_t player_idx;
 		uint8_t lap_count;
 		uint8_t rank;
 		int point;
+	};
+
+	struct packet_game_end : packet_header
+	{
+		uint8_t rank[MAX_ROOM_CAPACITY];
+		uint8_t lap_count[MAX_ROOM_CAPACITY];
+		uint8_t hit_count[MAX_ROOM_CAPACITY];
+		int point[MAX_ROOM_CAPACITY];
+	};
+
+	struct packet_item_increased : packet_header 
+	{
+		int player_idx;
 	};
 }
 #pragma pack(pop)

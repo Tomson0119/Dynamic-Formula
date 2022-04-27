@@ -4,11 +4,11 @@
 #include "Player.h"
 #include "Client.h"
 #include "LoginServer.h"
+#include "InGameServer.h"
 #include "RigidBody.h"
-#include "Timer.h"
 #include "ObjectMask.h"
 
-GameWorld::GameWorld(std::shared_ptr<InGameServer::GameConstant> constantPtr)
+GameWorld::GameWorld(std::shared_ptr<GameConstant> constantPtr)
 	: mID{ -1 }, 
 	  mUpdateTick{ 0 },
 	  mActive{ false },
@@ -22,11 +22,6 @@ GameWorld::GameWorld(std::shared_ptr<InGameServer::GameConstant> constantPtr)
 	{
 		mPlayerList[i] = nullptr;
 	}
-}
-
-GameWorld::~GameWorld()
-{
-	std::cout << "Destroy game world: " << mID << "\n";
 }
 
 void GameWorld::InitPhysics(float gravity)
@@ -53,6 +48,11 @@ void GameWorld::InitPlayerList(WaitRoom* room, int cpCount)
 	}
 }
 
+void GameWorld::SetFinishTime(std::chrono::seconds sec)
+{
+	mFinishTime = Clock::now() + sec;
+}
+
 void GameWorld::SetPlayerTransform(int idx, const btVector3& pos, const btQuaternion& quat)
 {
 	mPlayerList[idx]->SetTransform(pos, quat);
@@ -75,14 +75,12 @@ void GameWorld::UpdatePhysicsWorld()
 	if (elapsed > 0.0f)
 	{
 		mPhysics.StepSimulation(elapsed);
+		CheckRunningTime(elapsed);
 		CheckCollision();
-
-		// TEST
-		//TestVehicleSpawn();
-		// TEST
 
 		UpdatePlayers(elapsed);
 		mMap.Update(elapsed, mPhysics);
+
 	}
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
@@ -100,6 +98,16 @@ void GameWorld::UpdatePlayers(float elapsed)
 		{
 			player->Update(elapsed, mPhysics);
 			UpdateInvincibleState(i, elapsed);
+			if (player->NeedManualRespawn())
+			{
+				player->ResetManualRespawnFlag();
+				SetInvincibleState(i, mConstantPtr->SpawnInterval);
+			}
+			if (player->ItemIncreased())
+			{
+				player->ResetItemFlag();
+				SendItemIncreasePacket(i);
+			}
 		}
 		i += 1;
 	}
@@ -134,7 +142,7 @@ void GameWorld::FlushPhysicsWorld()
 {
 	for (Player* player : GetPlayerList())
 	{
-		player->Reset(mPhysics);
+		if(player) player->Reset(mPhysics);
 	}
 	mMap.Reset(mPhysics);
 	mPhysics.Flush();
@@ -210,7 +218,6 @@ void GameWorld::SendStartSignal()
 	SC::packet_start_signal pck{};
 	pck.size = sizeof(SC::packet_start_signal);
 	pck.type = SC::START_SIGNAL;
-	pck.world_id = mID;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -228,6 +235,7 @@ void GameWorld::BroadcastAllTransform()
 				PushMissileTransformPacket(target, receiver);
 			}
 		}
+		PushDriftGaugePacket(receiver);
 
 		int id = mPlayerList[receiver]->ID;
 		if (id < 0) continue;
@@ -302,6 +310,18 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
 
+void GameWorld::PushDriftGaugePacket(int target)
+{
+	SC::packet_drift_gauge pck{};
+	pck.size = sizeof(SC::packet_drift_gauge);;
+	pck.type = SC::DRIFT_GAUGE;
+	pck.gauge = (int)(mPlayerList[target]->GetDriftGauge() * FIXED_FLOAT_LIMIT);
+
+	int hostID = mPlayerList[target]->ID;
+	if (hostID < 0) return;
+	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
+}
+
 void GameWorld::SendMissileRemovePacket(int target)
 {
 #ifdef DEBUG_PACKET_TRANSFER
@@ -310,7 +330,6 @@ void GameWorld::SendMissileRemovePacket(int target)
 	SC::packet_remove_missile pck{};
 	pck.size = sizeof(SC::packet_remove_missile);
 	pck.type = SC::REMOVE_MISSILE;
-	pck.world_id = mID;
 	pck.missile_idx = target;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
@@ -323,7 +342,6 @@ void GameWorld::SendInvincibleOnPacket(int target)
 	SC::packet_invincible_on pck{};
 	pck.size = sizeof(SC::packet_invincible_on);
 	pck.type = SC::INVINCIBLE_ON;
-	pck.world_id = mID;
 	pck.player_idx = target;
 	pck.duration = (int)(mConstantPtr->InvincibleDuration * FIXED_FLOAT_LIMIT);
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
@@ -337,7 +355,6 @@ void GameWorld::SendSpawnPacket(int target)
 	SC::packet_spawn_transform pck{};
 	pck.size = sizeof(SC::packet_spawn_transform);
 	pck.type = SC::SPAWN_TRANSFORM;
-	pck.world_id = mID;
 	pck.player_idx = target;
 	
 	const auto& vehicle = mPlayerList[target]->GetVehicleRigidBody();
@@ -356,7 +373,7 @@ void GameWorld::SendSpawnPacket(int target)
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
-void GameWorld::SendWarningMessage(int target, bool instSend)
+void GameWorld::SendWarningMsgPacket(int target, bool instSend)
 {
 #ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "(room id: " << mID << ") Send warning message to player[" << target << "]\n";
@@ -364,7 +381,6 @@ void GameWorld::SendWarningMessage(int target, bool instSend)
 	SC::packet_warning_message pck{};
 	pck.size = sizeof(SC::packet_warning_message);
 	pck.type = SC::WARNING_MESSAGE;
-	pck.world_id = mID;
 
 	int id = mPlayerList[target]->ID;
 	if (id < 0) return;
@@ -373,7 +389,7 @@ void GameWorld::SendWarningMessage(int target, bool instSend)
 	if (instSend) gClients[id]->SendMsg();
 }
 
-void GameWorld::SendInGameInfo(int target, bool instSend)
+void GameWorld::SendInGameInfoPacket(int target, bool instSend)
 {
 #ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "(room id: " << mID << ") Send in-game info packet [" << target << "]\n";
@@ -391,6 +407,42 @@ void GameWorld::SendInGameInfo(int target, bool instSend)
 
 	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if (instSend) gClients[id]->SendMsg();
+}
+
+void GameWorld::SendGameEndPacket()
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "(room id: " << mID << ") Send game end packet.\n";
+#endif
+	SC::packet_game_end pck{};
+	pck.size = sizeof(SC::packet_game_end);
+	pck.type = SC::GAME_END;
+	
+	for (int i = 0; i < mPlayerList.size(); i++)
+	{
+		pck.rank[i] = mCurrRanks[i];
+		pck.lap_count[i] = mPlayerList[i]->GetLapCount();
+		pck.hit_count[i] = mPlayerList[i]->GetLapCount();
+		pck.point[i] = mPlayerList[i]->GetPoint();
+	}
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void GameWorld::SendItemIncreasePacket(int target, bool instSend)
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "(room id: " << mID << ") Send game end packet.\n";
+#endif
+	SC::packet_item_increased pck{};
+	pck.size = sizeof(SC::packet_item_increased);
+	pck.type = SC::ITEM_INCREASED;
+	pck.player_idx = target;
+
+	int idx = mPlayerList[target]->ID;
+	if (idx < 0) return;
+
+	gClients[idx]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if (instSend) gClients[idx]->SendMsg();
 }
 
 bool GameWorld::CheckIfAllLoaded(int idx)
@@ -411,6 +463,7 @@ void GameWorld::SetActive(bool active)
 	mActive = active;
 	if (active)
 	{
+		// TODO: Timer needs to be singleton.
 		mTimer.Start();
 	}
 }
@@ -433,19 +486,14 @@ void GameWorld::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instS
 	}
 }
 
-// TEST
-void GameWorld::TestVehicleSpawn()
+void GameWorld::CheckRunningTime(float elapsed)
 {
-	if (mTestFlag)
+	auto now = Clock::now();
+	if (now >= mFinishTime)
 	{
-		if (mPlayerList[0]->IsInvincible() == false)
-		{
-			SetInvincibleState(0, mConstantPtr->InvincibleDuration);
-		}
-		else
-		{
-			mTestFlag = false;
-		}
+		SetActive(false);
+		SendGameEndPacket();
+		std::cout << "Finished\n";
 	}
 }
 
@@ -510,7 +558,7 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, int mask)
 				int cnt = player->GetReverseDriveCount(cpIdx);
 				if (cnt == 1)
 				{
-					SendWarningMessage(idx);
+					SendWarningMsgPacket(idx);
 				}
 				else if(cnt == 2)
 				{
@@ -549,6 +597,7 @@ void GameWorld::HandleCollisionWithPlayer(int aIdx, int bIdx, int aMask, int bMa
 		if (bMask == OBJ_MASK::VEHICLE)
 		{
 			mPlayerList[aIdx]->IncreasePoint(mConstantPtr->MissileHitPoint);
+			mPlayerList[aIdx]->IncreaseHitCount();
 			mPlayerList[aIdx]->DisableMissile();
 			SendMissileRemovePacket(aIdx);
 			HandlePointUpdate(aIdx);
@@ -600,7 +649,7 @@ void GameWorld::HandlePointUpdate(int target)
 		{
 			if (i == target || mPrevRanks[i] != mCurrRanks[i])
 			{
-				SendInGameInfo(i);
+				SendInGameInfoPacket(i);
 			}
 		}
 	}

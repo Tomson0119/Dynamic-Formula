@@ -2,24 +2,26 @@
 
 #include "BPHandler.h"
 #include "RigidBody.h"
-#include "InGameServer.h"
 #include "Map.h"
+#include "Timer.h"
 
 class Player;
 class WaitRoom;
 struct OBJ_MASK;
+struct GameConstant;
 
 class GameWorld
 {
 	using PlayerList = std::array<Player*, MAX_ROOM_CAPACITY>;
 public:
-	GameWorld(std::shared_ptr<InGameServer::GameConstant> constantsPtr);
-	~GameWorld();
+	GameWorld(std::shared_ptr<GameConstant> constantsPtr);
+	~GameWorld() = default;
 	
 	void InitPhysics(float gravity);
 	void InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape);
 	void InitPlayerList(WaitRoom* room, int cpCount);
 
+	void SetFinishTime(std::chrono::seconds sec);
 	void SetPlayerTransform(int idx, const btVector3& pos, const btQuaternion& quat);
 
 	void CreateRigidbodies(int idx,
@@ -41,6 +43,8 @@ public:
 	WSAOVERLAPPEDEX* GetPhysicsOverlapped();
 
 private:
+	void CheckRunningTime(float elapsed);
+
 	void CheckCollision();
 	void UpdatePlayers(float elapsed);
 	void UpdateInvincibleState(int idx, float elapsed);
@@ -69,21 +73,22 @@ private:
 	void BroadcastAllTransform();
 	void PushVehicleTransformPacket(int target, int receiver);
 	void PushMissileTransformPacket(int target, int receiver);
-	
+	void PushDriftGaugePacket(int target);
+
 	void SendMissileRemovePacket(int target);
 	void SendInvincibleOnPacket(int target);
 	void SendSpawnPacket(int target);
-	void SendWarningMessage(int target, bool instSend=true);
-	void SendInGameInfo(int target, bool instSend=true);
+	void SendWarningMsgPacket(int target, bool instSend=true);
+	void SendInGameInfoPacket(int target, bool instSend=true);
+	void SendGameEndPacket();
+	void SendItemIncreasePacket(int target, bool instSend=true);
 
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
-	
-	//TEST
-	void TestVehicleSpawn();
 
 private:
 	int mID;
 	int mUpdateTick;
+	Clock::time_point mFinishTime;
 
 	std::atomic_bool mActive;
 	std::atomic_int mPlayerCount;
@@ -97,9 +102,9 @@ private:
 	PlayerList mPlayerList;
 
 	BPHandler mPhysics;
-	class Timer mTimer;
+	Timer mTimer;
 
 	std::vector<int> mPrevRanks;
 	std::vector<int> mCurrRanks;
-	std::shared_ptr<InGameServer::GameConstant> mConstantPtr;
+	std::shared_ptr<GameConstant> mConstantPtr;
 };
