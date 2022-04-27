@@ -880,7 +880,7 @@ void InGameScene::UpdateLightConstants()
 	}
 
 	std::sort(mLights.begin(), mLights.end(),
-		[playerPos](LightBundle l1, LightBundle l2)
+		[playerPos](const LightBundle& l1, const LightBundle& l2)
 		{
 			return Vector3::Distance(l1.light.Position, playerPos) < Vector3::Distance(l2.light.Position, playerPos);
 		}
