@@ -142,6 +142,7 @@ private:
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
 
 	std::map<std::string, std::vector<std::shared_ptr<Mesh>>> mMeshList;
+	std::map<std::string, BoundingOrientedBox> mOOBBList;
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
 	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;

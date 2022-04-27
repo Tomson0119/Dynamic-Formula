@@ -94,6 +94,8 @@ public:
 	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes = meshes; }
 	void CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
 
+	void SetBoudingBox(BoundingOrientedBox oobb);
+
 	void SetBoudingBoxFromMeshes();
 
 	void SetRotation(XMFLOAT3& axis, float speed);

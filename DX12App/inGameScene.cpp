@@ -1188,7 +1188,10 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
 			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+			mOOBBList[objName] = obj->GetBoundingBox();
 		}
+		else
+			obj->SetBoudingBox(mOOBBList[objName]);
 
 		btTransform btLocalTransform;
 		btLocalTransform.setIdentity();
@@ -1215,6 +1218,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		obj->Scale(scale);
 		obj->SetName(objName);
 
+		obj->Update(0, 0);
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
 
@@ -1237,6 +1241,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			transparentObj->Scale(scale);
 			transparentObj->SetName(objName);
 
+			transparentObj->Update(0, 0);
 			mPipelines[Layer::Transparent]->AppendObject(transparentObj);
 			static_cast<InstancingPipeline*>(mPipelines[Layer::Transparent].get())->mInstancingCount[objName]++;
 		}
@@ -1282,6 +1287,23 @@ void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::
 
 		mPipelines[Layer::CheckPoint]->AppendObject(obj);
 	}
+
+	/*auto objects = mPipelines[Layer::Instancing]->GetRenderObjects();
+	for (int i = 0; i < objects.size(); ++i)
+	{
+		auto obj = make_shared<StaticObject>();
+		auto oobb = objects[i]->GetBoundingBox();
+		oobb.Transform(oobb, XMLoadFloat4x4(&objects[i]->GetWorld()));
+
+		std::shared_ptr<BoxMesh> mesh = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, oobb.Extents.x * 2, oobb.Extents.y * 2, oobb.Extents.z * 2);
+		mesh->SetSrvIndex(0);
+		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
+		obj->SetMesh(mesh);
+		obj->SetPosition(oobb.Center);
+		obj->SetQuaternion(oobb.Orientation);
+
+		mPipelines[Layer::CheckPoint]->AppendObject(obj);
+	}*/
 }
 
 void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
