@@ -37,6 +37,9 @@ private:
 	std::string LoginOrSignup = "Login";
 	std::string LoginOrSignupReverse = "Signup";
 
+	//For Packet
+	
+
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
 

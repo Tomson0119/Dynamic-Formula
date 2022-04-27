@@ -58,35 +58,45 @@ void RoomUI::SetVectorSize(UINT nFrame)
     Fonts.push_back(L"Fonts\\abberancy.ttf");
     Fonts.push_back(L"Fonts\\abberancy.ttf");
 
-
     FontLoad(Fonts);
+}
+
+void RoomUI::SetStartOrReady()
+{
+    GetTextBlock()[0].strText.clear();
+    if (mbIsRoomMaster)
+        GetTextBlock()[0].strText.assign("START");
+    else
+        GetTextBlock()[0].strText.assign("READY");
 }
 
 void RoomUI::Update(float GTime)
 {
-    for (int i = 0; i < 11; ++i)
+    for (UINT i = 0; i < GetTextCnt(); ++i)
+    {
         GetTextBlock()[i].strText.clear();
-    for (auto& wc : std::wstring{ L"Start" })
+    }
+    for (auto& wc : std::string{ "Start" })
         GetTextBlock()[0].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Car" })
+    for (auto& wc : std::string{ "Car" })
         GetTextBlock()[1].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Map" })
+    for (auto& wc : std::string{ "Map" })
         GetTextBlock()[2].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname1" })
+    for (auto& wc : std::string{ masNicknames[0] })
         GetTextBlock()[3].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname2" })
+    for (auto& wc : std::string{ masNicknames[1] })
         GetTextBlock()[4].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname3" })
+    for (auto& wc : std::string{ masNicknames[2] })
         GetTextBlock()[5].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname4" })
+    for (auto& wc : std::string{ masNicknames[3] })
         GetTextBlock()[6].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname5" })
+    for (auto& wc : std::string{ masNicknames[4] })
         GetTextBlock()[7].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname6" })
+    for (auto& wc : std::string{ masNicknames[5] })
         GetTextBlock()[8].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname7" })
+    for (auto& wc : std::string{ masNicknames[6] })
         GetTextBlock()[9].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname8" })
+    for (auto& wc : std::string{ masNicknames[7] })
         GetTextBlock()[10].strText.push_back(wc);
     
 }
@@ -294,10 +304,11 @@ void RoomUI::Draw(UINT nFrame)
         GetFrameHeight() * 0.625f
         }
     };
-    bool IsOutlined[12] = { false, };
+    bool IsOutlined[12] = { false,false,false,false,false,false,false,false,false,false,false,false };
     float aOpacities[9] = { 1.0f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f };
 
     UI::BeginDraw(nFrame); 
+    
     UI::DrawBmp(LTRB, 0, 1, aOpacities);
     UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
     UI::DrawBmp(LTRB, 1, 8, aOpacities);
@@ -309,11 +320,9 @@ void RoomUI::Draw(UINT nFrame)
 void RoomUI::CreateFontFormat()
 {
     std::vector<float> fFontSize;
-
     fFontSize.push_back(GetFrameHeight() * 0.07f);  //Start
     fFontSize.push_back(GetFrameHeight() * 0.07f); //CarSelect
     fFontSize.push_back(GetFrameHeight() * 0.07f); //MapSelect
-
     fFontSize.push_back(GetFrameHeight() * 0.05f);
     fFontSize.push_back(GetFrameHeight() * 0.05f);
     fFontSize.push_back(GetFrameHeight() * 0.05f);
@@ -322,38 +331,36 @@ void RoomUI::CreateFontFormat()
     fFontSize.push_back(GetFrameHeight() * 0.05f);
     fFontSize.push_back(GetFrameHeight() * 0.05f);
     fFontSize.push_back(GetFrameHeight() * 0.05f);
-
     SetFontSize(fFontSize);
 
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Blazed");
-     Fonts.push_back(L"Xenogears");
-     Fonts.push_back(L"abberancy");
-     Fonts.push_back(L"abberancy");
-     Fonts.push_back(L"abberancy");
-     Fonts.push_back(L"abberancy");
-     Fonts.push_back(L"abberancy");
-     Fonts.push_back(L"abberancy");
-     Fonts.push_back(L"abberancy");
-     Fonts.push_back(L"abberancy");
-     Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"Xenogears");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    SetFonts(Fonts);
 
-     SetFonts(Fonts);
-
-     std::vector<DWRITE_TEXT_ALIGNMENT> TextAlignments;
-     TextAlignments.resize(GetTextCnt());
-     TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[7] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[8] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[9] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[10] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     SetTextAllignments(TextAlignments);
+    std::vector<DWRITE_TEXT_ALIGNMENT> TextAlignments;
+    TextAlignments.resize(GetTextCnt());
+    TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[7] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[8] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[9] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[10] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    SetTextAllignments(TextAlignments);
 
     UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextAlignment());
 }
@@ -380,13 +387,13 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
 
     UI::BuildObjects(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
-    //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
-    //UI:  StartBox, CarSelectBox[2], NicknameBox[8], MapSelectBox[2]
+    
     std::vector<D2D1::ColorF> colorList;
+    /*Text*/
+    //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
     colorList.push_back(D2D1::ColorF::FloralWhite);
     colorList.push_back(D2D1::ColorF::Beige);
     colorList.push_back(D2D1::ColorF::Beige);
-
     colorList.push_back(D2D1::ColorF::Black);
     colorList.push_back(D2D1::ColorF::Black);
     colorList.push_back(D2D1::ColorF::Black);
@@ -395,7 +402,8 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     colorList.push_back(D2D1::ColorF::Black);
     colorList.push_back(D2D1::ColorF::Black);
     colorList.push_back(D2D1::ColorF::Black);
-
+    /*UI*/
+    //UI:  StartBox, CarSelectBox[2], NicknameBox[8], MapSelectBox[2]
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Gold , 0.9f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Orange, 1.0f));
@@ -405,64 +413,74 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Navy, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Violet, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Pink, 1.0f));
-
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Green, 1.0f));
-    
-
-    //D2D1::ColorF colorList[24] = { D2D1::ColorF::Black, D2D1::ColorF::Black, D2D1::ColorF::Black, 
-    //    D2D1::ColorF::Red, D2D1::ColorF::Orange, D2D1::ColorF::Yellow, D2D1::ColorF::Green, 
-    //    D2D1::ColorF::Blue, D2D1::ColorF::Navy, D2D1::ColorF::Violet, D2D1::ColorF::Pink,//Text
-    //D2D1::ColorF(D2D1::ColorF::Red, 0.5f), D2D1::ColorF(D2D1::ColorF::Blue, 0.5f), 
-    //    D2D1::ColorF(D2D1::ColorF::Green, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-    //    D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-    //    D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-    //   D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-    //    D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-    //    D2D1::ColorF(D2D1::ColorF::Gray, 0.5f)/*UI*/
-    //};
     SetColors(colorList);
-    //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
+
     UI::BuildSolidBrush(GetColors());
 
     SetTextRect(); 
-    for (auto& wc : std::wstring{ L"Start" })
+    for (auto& wc : std::string{ "Start" })
         GetTextBlock()[0].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Car" })
+    for (auto& wc : std::string{ "Car" })
         GetTextBlock()[1].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Map" })
+    for (auto& wc : std::string{ "Map" })
         GetTextBlock()[2].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname1" })
+
+    for (auto& wc : std::string{ "Nickname1" })
+    {
         GetTextBlock()[3].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname2" })
+        masNicknames[0].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname2" })
+    {
         GetTextBlock()[4].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname3" })
+        masNicknames[1].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname3" })
+    {
         GetTextBlock()[5].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname4" })
+        masNicknames[2].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname4" })
+    {
         GetTextBlock()[6].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname5" })
+        masNicknames[3].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname5" })
+    {
         GetTextBlock()[7].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname6" })
+        masNicknames[4].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname6" })
+    {
         GetTextBlock()[8].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname7" })
+        masNicknames[5].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname7" })
+    {
         GetTextBlock()[9].strText.push_back(wc);
-    for (auto& wc : std::wstring{ L"Nickname8" })
+        masNicknames[6].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname8" })
+    {
         GetTextBlock()[10].strText.push_back(wc);
+        masNicknames[7].push_back(wc);
+    }
 }
 
 void RoomUI::Reset()
 {
     UI::Reset();
-    GetBitmapFileNames().clear();
-
+    for (auto& NickName : masNicknames)
+        NickName.clear();
 }
 
 void RoomUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     UI::Initialize(device, pd3dCommandQueue);
-    //Reset();
     SetVectorSize(nFrame);
     for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
         LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);

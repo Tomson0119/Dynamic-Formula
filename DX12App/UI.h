@@ -160,6 +160,7 @@ private:
     ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
     ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
     ComPtr<ID3D11On12Device> mpd3d11On12Device;
+    
     ComPtr<ID2D1Factory3> mpd2dFactory;
     ComPtr<ID2D1Device2> mpd2dDevice;
     ComPtr<ID3D11Device> pd3d11Device;

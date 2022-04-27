@@ -19,8 +19,24 @@ public:
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height) override;
 	void CreateFontFormat();
 	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y)  override { return 0; }
+
+	//For Packet
+	void SetStartOrReady();
+	void UpdatePlayerState(int index, bool state) { mabIsInRoom[index] = state; }
+	void UpdatePlayerNickName(int index, const std::string& name) { masNicknames[index] = name; }
 private:
 	void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue) override;
+
+	//For Packet
+	int miMyRoomID = -1;
+	bool mbIsRoomMaster = false;
+	bool mbIsReady = false;
+
+	int miMapNum = -1;
+	//std::array<D2D1::ColorF, 8> maColors;
+
+	std::array<bool, 8> mabIsInRoom;
+	std::array<std::string, 8> masNicknames;
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

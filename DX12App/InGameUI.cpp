@@ -42,7 +42,7 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	SetBitmapFileNames(BitmapFileNames);
 
 	std::vector<std::wstring> Fonts;
-	Fonts.push_back(L"Fonts\\abberancy.ttf"); //Time
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Time
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Lap
 	Fonts.push_back(L"Fonts\\Xenogears.ttf"); // Rank
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); //Speed
@@ -302,8 +302,8 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	
 		//DraftGage Set
 	//fDriftGauge = mPlayer->GetDriftGauge();
-	uItemCnt = mPlayer->GetItemNum();
-    SetDraftGage();
+	muItemCnt = mPlayer->GetItemNum();
+    UpdateDraftGauge();
 }
 
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -356,11 +356,11 @@ void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 	}
 }
 
-void InGameUI::SetDraftGage()
+void InGameUI::UpdateDraftGauge()
 {
-    fDriftGauge += 0.001f;
-	if (fDriftGauge > 1.0f)
-		fDriftGauge = 0.0f;
+    mfDriftGauge += 0.001f;
+	if (mfDriftGauge > 1.0f)
+		mfDriftGauge = 0.0f;
 }
 
 void InGameUI::Draw(UINT nFrame)
@@ -392,7 +392,7 @@ void InGameUI::Draw(UINT nFrame)
         {
 			GetFrameWidth()* (3.0f / 16.0f),
 			GetFrameHeight() * (5.0f / 6.0f), 
-			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * fDriftGauge,
+			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * mfDriftGauge,
 			GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
         {
@@ -471,7 +471,7 @@ void InGameUI::CreateFontFormat()
 {
 	
     std::vector<std::wstring> Fonts;
-    Fonts.push_back(L"abberancy"); // Time
+    Fonts.push_back(L"FivoSans-Regular"); // Time
     Fonts.push_back(L"abberancy"); //Lap
     Fonts.push_back(L"Xenogears"); // Rank
     Fonts.push_back(L"abberancy"); // Speed

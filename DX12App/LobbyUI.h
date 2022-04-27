@@ -21,8 +21,12 @@ public:
 	int OnProcessMouseClick(WPARAM buttonState, int x, int y) override;
 	void CreateFontFormat();
 	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
+	void SetRoomNums(int num, int index) { mviRoomNums[index] = num; }
+	void UpdateRoomNumsText();
 private:
 	void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue) override;
+	std::array<int, 6> mviRoomNums;
+	//std::vector<std::string>  RoomNum;
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

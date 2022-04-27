@@ -33,21 +33,21 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 {
 	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void LoginScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 {
 	float dx = static_cast<float>(x);
 	float dy = static_cast<float>(y);
-	mpUI.get()->OnProcessMouseMove(btnState, x, y);
+	mpUI->OnProcessMouseMove(btnState, x, y);
 }
 
 void LoginScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
 	if (buttonState&MK_LBUTTON) 
 	{
-		if (mpUI.get()->OnProcessMouseClick(buttonState, x, y) == 1) //LoginFail
+		if (mpUI->OnProcessMouseClick(buttonState, x, y) == 1) //LoginFail
 		{
 #ifndef STADNALONE
 			mNetPtr->Client()->RequestLogin(mID, mPWD);
@@ -55,14 +55,14 @@ void LoginScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 #endif
 
 		}
-		else if (mpUI.get()->OnProcessMouseClick(buttonState, x, y) == 2) // Sign-up
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Sign-up
 		{
 #ifndef STADNALONE
 			mNetPtr->Client()->RequestRegister(mID, mPWD);
 #else
 #endif
 		}
-		else if (mpUI.get()->OnProcessMouseClick(buttonState, x, y) == 0) //LoginSuccess
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 0) //LoginSuccess
 		{
 
 		}
@@ -164,7 +164,7 @@ void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& tim
 
 void LoginScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
 {
-	mpUI.get()->Draw(nFrame);
+	mpUI->Draw(nFrame);
 }
 
 bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)

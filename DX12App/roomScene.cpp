@@ -22,7 +22,7 @@ void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandL
 {
 	mDevice = device;
 	mpUI = std::make_unique<RoomUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void RoomScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -44,7 +44,7 @@ void RoomScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 
 void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
-	mpUI.get()->Update(timer.TotalTime());
+	mpUI->Update(timer.TotalTime());
 	// TEST
 #ifdef START_GAME_INSTANT
 	// send start packet again until game actually start
@@ -58,7 +58,7 @@ void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& time
 
 void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
 {
-	mpUI.get()->Draw(nFrame);
+	mpUI->Draw(nFrame);
 }
 
 bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)

@@ -9,8 +9,9 @@ LoginUI::LoginUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 {
     SetTextCnt(7);
     SetRoundRectCnt(9);
-    SetBitmapCnt(2);
+    SetBitmapCnt(1);
     SetUICnt();
+
     SetVectorSize(nFrame);
     Initialize(device, pd3dCommandQueue);
     for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
@@ -32,7 +33,6 @@ void LoginUI::SetVectorSize(UINT nFrame)
     UI::SetVectorSize(nFrame);
 
     std::vector<std::wstring> BitmapFileNames;
-    BitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
     BitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
 
     SetBitmapFileNames(BitmapFileNames);
@@ -339,22 +339,22 @@ void LoginUI::Draw(UINT nFrame)
             GetFrameHeight() * 0.60f
         },
         {
-            GetFrameWidth() / 5 * 1,
-            GetFrameHeight() / 128 * 43,
-            GetFrameWidth() / 5 * 2,
-            GetFrameHeight() / 128 * 68
+            GetFrameWidth() * 0.2f,
+            GetFrameHeight() * 0.33f,
+            GetFrameWidth() * 0.4f,
+            GetFrameHeight() * 0.52f
         },
         {
-            GetFrameWidth() / 5 * 2,
-            GetFrameHeight() / 128 * 43,
-            GetFrameWidth() / 5 * 3,
-            GetFrameHeight() / 128 * 68
+            GetFrameWidth() * 0.4f,
+            GetFrameHeight() * 0.33f,
+            GetFrameWidth() * 0.6f,
+            GetFrameHeight() * 0.52f
         },
         {
             GetFrameWidth() * 0.66f,
-            GetFrameHeight() / 128 * 43,
+            GetFrameHeight() * 0.33f,
             GetFrameWidth() * 0.69f,
-            GetFrameHeight() / 128 * 68
+            GetFrameHeight() * 0.52f
         }
     };
     //RoundedRectFill
@@ -397,36 +397,27 @@ void LoginUI::Draw(UINT nFrame)
             GetFrameHeight() * 0.60f
         },
         {
-            GetFrameWidth() / 5 * 1,
-            GetFrameHeight() / 128 * 43,
-            GetFrameWidth() / 5 * 2,
-            GetFrameHeight() / 128 * 68
+            GetFrameWidth() * 0.2f,
+            GetFrameHeight() * 0.33f,
+            GetFrameWidth() * 0.4f,
+            GetFrameHeight() * 0.52f
         },
         {
-            GetFrameWidth() / 5 * 2,
-            GetFrameHeight() / 128 * 43,
-            GetFrameWidth() / 5 * 3,
-            GetFrameHeight() / 128 * 68
+            GetFrameWidth() * 0.4f,
+            GetFrameHeight() * 0.33f,
+            GetFrameWidth() * 0.6f,
+            GetFrameHeight() * 0.52f
         },
         {
             GetFrameWidth() * 0.66f,
-            GetFrameHeight() / 128 * 43,
+            GetFrameHeight() * 0.33f,
             GetFrameWidth() * 0.69f,
-            GetFrameHeight() / 128 * 68
+            GetFrameHeight() * 0.52f
         }
     };
-    bool IsOutlined[9] = {true,true, true, true, true,false,false, false,false};
-    UI::BeginDraw(nFrame);
-    
     //bitmap
     XMFLOAT4 LTRB[] =
     {
-        {
-            390.0f,
-            290.0f,
-            410.0f,
-            310.0f
-        },
         {
             0.0f,
             0.0f,
@@ -434,8 +425,11 @@ void LoginUI::Draw(UINT nFrame)
             GetFrameHeight()
         }
     };
-    float aOpacities[2] = { 0.5f, 1.0f };
-    UI::DrawBmp(LTRB,0 , GetBitmapCnt(), aOpacities);
+    float aOpacities[1] = { 1.0f };
+    bool IsOutlined[9] = { true,true, true, true, true,false,false, false,false };
+
+    UI::BeginDraw(nFrame);
+    UI::DrawBmp(LTRB,0 , 1, aOpacities);
     UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
     UI::TextDraw(GetTextBlock());
     UI::EndDraw(nFrame);
@@ -444,14 +438,13 @@ void LoginUI::Draw(UINT nFrame)
 void LoginUI::CreateFontFormat()
 {
     std::vector<float> vfFontSizes;
-    vfFontSizes.resize(GetTextCnt());
-    vfFontSizes[0] = GetFrameHeight() * 0.05f;
-    vfFontSizes[1] = GetFrameHeight() * 0.04f;
-    vfFontSizes[2] = GetFrameHeight() * 0.04f;
-    vfFontSizes[3] = GetFrameHeight() * 0.04f;
-    vfFontSizes[4] = GetFrameHeight() * 0.04f;
-    vfFontSizes[5] = GetFrameHeight() * 0.04f;
-    vfFontSizes[6] = GetFrameHeight() * 0.04f;
+    vfFontSizes.push_back(GetFrameHeight() * 0.05f);
+    vfFontSizes.push_back(GetFrameHeight() * 0.04f);
+    vfFontSizes.push_back(GetFrameHeight() * 0.04f);
+    vfFontSizes.push_back(GetFrameHeight() * 0.04f);
+    vfFontSizes.push_back(GetFrameHeight() * 0.04f);
+    vfFontSizes.push_back(GetFrameHeight() * 0.04f);
+    vfFontSizes.push_back(GetFrameHeight() * 0.04f);
     SetFontSize(vfFontSizes);
 
     std::vector<std::wstring> Fonts;
@@ -465,9 +458,6 @@ void LoginUI::CreateFontFormat()
     Fonts.push_back(L"abberancy"); // Login Fail
     SetFonts(Fonts);
 
-    //DWRITE_TEXT_ALIGNMENT TextAlignments[6];
-    //TextAlignments.resize(GetTextCnt());
-
     std::vector<DWRITE_TEXT_ALIGNMENT> TextAlignments;
     TextAlignments.resize(GetTextCnt());
     TextAlignments[0]=  DWRITE_TEXT_ALIGNMENT_CENTER;
@@ -477,8 +467,8 @@ void LoginUI::CreateFontFormat()
     TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_LEADING;
     TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_LEADING;
     TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
-
     SetTextAllignments(TextAlignments);
+
     UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextAlignment());
 }
 
@@ -487,24 +477,22 @@ void LoginUI::SetTextRect()
  // SignID, SignPWD
     GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.25f, GetFrameWidth()  * 0.75f, GetFrameHeight() * 0.375f);
     GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.625f, GetFrameHeight() * 0.4375f, GetFrameWidth() * 0.725f, GetFrameHeight() * 0.55f);
-    GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.401f, GetFrameHeight() * 0.4375f,  GetFrameWidth() * 0.599f,  GetFrameHeight() * 0.499f);
-    GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.401f,  GetFrameHeight() * 0.501f, GetFrameWidth() * 0.599f,  GetFrameHeight() * 0.5615f);
+    GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.28f, GetFrameHeight() * 0.43f, GetFrameWidth() * 0.58f, GetFrameHeight() * 0.485f);
+    GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.28f, GetFrameHeight() * 0.49f, GetFrameWidth() * 0.58f, GetFrameHeight() * 0.545f);
     GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.68f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.45f);
-
-    GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.4f, GetFrameHeight() * 0.5635f, GetFrameWidth() * 0.52f , GetFrameHeight() * 0.625f);
+    GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.4f, GetFrameHeight() * 0.5635f, GetFrameWidth() * 0.52f, GetFrameHeight() * 0.625f);
     GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.41f, GetFrameHeight() * 0.40f, GetFrameWidth() * 0.59f, GetFrameHeight() * 0.60f);
 }
 
 void LoginUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
-    //SetFrame(static_cast<float>(nWidth), static_cast<float>(nHeight));
+    
     UI::BuildObjects(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
-    //Logo, 
+
     std::vector < D2D1::ColorF > colorList;
     /*Text*/
     //Text - BigBackGround, SmallBackGround Title logo, Login, ID, PWD, Exit, Sign-up, LoginFail
-    //colorList.push_back();
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Tomato, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.5f));
@@ -523,14 +511,10 @@ void LoginUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
-    
     SetColors(colorList);
-    
-    //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
     
     UI::BuildSolidBrush(GetColors());
 
-    //std::vector<TextBlock> TextBlocks;
     SetTextRect();
     for (auto wc : std::string{ "Dynamic Fomula" })
         GetTextBlock()[0].strText.push_back(wc);
@@ -553,7 +537,6 @@ void LoginUI::Reset()
 void LoginUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
-    //Reset();
     UI::Initialize(device, pd3dCommandQueue);
     SetVectorSize(nFrame);
     for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)

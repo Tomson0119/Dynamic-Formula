@@ -22,7 +22,7 @@ void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 {
 	mDevice = device;
 	mpUI = std::make_unique<LobbyUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -46,7 +46,7 @@ void LobbyScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 {
 	float dx = static_cast<float>(x);
 	float dy = static_cast<float>(y);
-	mpUI.get()->OnProcessMouseMove(btnState, x, y);
+	mpUI->OnProcessMouseMove(btnState, x, y);
 }
 
 void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
@@ -61,12 +61,12 @@ void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
-	mpUI.get()->Update(timer.TotalTime());
+	mpUI->Update(timer.TotalTime());
 }
 
 void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
 {
-	mpUI.get()->Draw(nFrame);
+	mpUI->Draw(nFrame);
 }
 
 bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
