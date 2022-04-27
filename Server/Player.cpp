@@ -4,6 +4,8 @@
 #include "RigidBody.h"
 #include "Map.h"
 #include "ObjectMask.h"
+#include "InGameServer.h"
+
 
 Player::Player()
 	: Empty{ true }, 
@@ -14,13 +16,16 @@ Player::Player()
 	  LoadDone{ false }, 
 	  mCurrentCPIndex{ -1 },
 	  mLapCount{ 0 },
+	  mHitCount{ 0 },
 	  mPoint{ 0 },
 	  mReverseDriveCount{ 0 },
 	  mDriftGauge{ 0.0f },
 	  mInvincibleDuration{ 0.0f },
 	  mInvincible{ false },
+	  mManualRespawn{ false },
 	  mActive{ true },
-	  mItemCount{ 0 }, 
+	  mItemCount{ 0 },
+	  mItemIncreased{ false },
 	  mBoosterToggle{ false }
 {
 	mKeyMap[VK_UP]	   = false;
@@ -36,7 +41,7 @@ void Player::SetTransform(const btVector3& pos, const btQuaternion& quat)
 	mMissileRigidBody.SetTransform(pos, quat);
 }
 
-void Player::SetGameConstant(std::shared_ptr<InGameServer::GameConstant> constantPtr)
+void Player::SetGameConstant(std::shared_ptr<GameConstant> constantPtr)
 {
 	mConstantPtr = constantPtr;
 	mMissileRigidBody.SetGameConstantPtr(&mVehicleRigidBody, constantPtr);
@@ -52,6 +57,8 @@ void Player::CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShap
 		shape.GetWheelInfo());
 
 	ClearVehicleComponent();
+	ClearAllGameInfo();
+
 	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATE);
 }
 
@@ -80,11 +87,11 @@ void Player::Update(float elapsed, BPHandler& physics)
 	mMissileRigidBody.Update(physics);
 }
 
+// NOTE: Not thread-safe.
 void Player::SetRemoveFlag()
 {
 	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::REMOVE);
 	DisableMissile();
-	// TODO: reset all the in game info.
 }
 
 void Player::DisableMissile()
@@ -105,6 +112,8 @@ void Player::Reset(BPHandler& physics)
 	LoadDone = false;
 	mVehicleRigidBody.RemoveRigidBody(physics);
 	mMissileRigidBody.RemoveRigidBody(physics);
+	mVehicleRigidBody.Flush();
+	mMissileRigidBody.Flush();
 }
 
 int Player::GetMask(const btCollisionObject& obj) const
@@ -190,6 +199,27 @@ void Player::ClearVehicleComponent()
 	for (auto& [key, val] : mKeyMap) val = false;
 }
 
+void Player::ClearAllGameInfo()
+{
+	for (int i = 0; i < mCPPassed.size(); i++)
+	{
+		mCPPassed[i] = false;
+	}
+	mCurrentCPIndex		= -1;
+	mLapCount			= 0;
+	mHitCount			= 0;
+	mPoint				= 0;
+	mReverseDriveCount	= 0;
+	mItemCount			= 0;
+	mDriftGauge			= 0.0f;
+	mInvincibleDuration = 0.0f;
+	mInvincible			= false;
+	mItemIncreased		= false;
+	mManualRespawn		= false;
+	mActive				= true;
+	mBoosterToggle		= false;
+}
+
 void Player::UpdateVehicleComponent(float elapsed)
 {
 	UpdateDriftGauge(elapsed);
@@ -237,7 +267,12 @@ void Player::UpdateDriftGauge(float elapsed)
 			if (mDriftGauge > 1.0f)
 			{
 				mDriftGauge = 0.0f;
-				if (mItemCount < 2)	mItemCount += 1;	
+				if (mItemCount < 2)
+				{
+					mItemCount += 1;
+					mItemIncreased = true;
+					std::cout << "Item increased.\n";
+				}
 			}
 		}
 
@@ -356,9 +391,14 @@ void Player::ToggleKeyValue(uint8_t key, bool pressed)
 	{
 		if (pressed && IsItemAvailable())
 		{
-			//if (UseItem(key)) mItemCount -= 1;
-			UseItem(key);
+			if (UseItem(key)) mItemCount -= 1;
+			//UseItem(key);
 		}
+	}
+	else if (key == 'P' && pressed)
+	{
+		bool expected = false;
+		mManualRespawn.compare_exchange_strong(expected, true);
 	}
 	else
 	{
@@ -368,8 +408,8 @@ void Player::ToggleKeyValue(uint8_t key, bool pressed)
 
 bool Player::IsItemAvailable()
 {
-	//return (mItemCount > 0);
-	return true;
+	return (mItemCount > 0);
+	//return true;
 }
 
 bool Player::UseItem(uint8_t key)
