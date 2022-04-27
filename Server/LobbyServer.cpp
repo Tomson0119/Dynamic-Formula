@@ -4,8 +4,6 @@
 #include "Client.h"
 #include "LobbyServer.h"
 
-LobbyServer::RoomList LobbyServer::msRooms;
-
 LobbyServer::LobbyServer()
 	: mLoginPtr{ nullptr }
 {
@@ -16,9 +14,9 @@ void LobbyServer::Init(LoginServer* ptr)
 	mLoginPtr = ptr;
 
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
-		msRooms[i] = std::make_unique<WaitRoom>(i);
+		mRooms[i] = std::make_unique<WaitRoom>(i);
 
-	mInGameServer.Init(ptr, msRooms);
+	mInGameServer.Init(ptr, mRooms);
 }
 
 void LobbyServer::TakeOverNewPlayer(int hostID)
@@ -59,7 +57,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		if (TryEnterRoom(pck->room_id, id))
 			AcceptEnterRoom(pck->room_id, id);
 		else
-			gClients[id]->SendAccessRoomDeny(msRooms[pck->room_id]->GetRoomState());
+			gClients[id]->SendAccessRoomDeny(mRooms[pck->room_id]->GetRoomState());
 
 		break;
 	}
@@ -76,7 +74,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 			mLoginPtr->Disconnect(id);
 			break;
 		}
-		msRooms[roomID]->SwitchMap(id);
+		mRooms[roomID]->SwitchMap(id);
 		break;
 	}
 	case CS::PRESS_READY:
@@ -114,15 +112,15 @@ bool LobbyServer::TryOpenRoom(int hostID)
 		return false;
 	}
 
-	if (int roomCount = mRoomCount; msRooms[roomCount]->OpenRoom())
+	if (int roomCount = mRoomCount; mRooms[roomCount]->OpenRoom())
 	{
 		if (gClients[hostID]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
 		{
-			msRooms[roomCount]->CloseRoom();	// if it fails : logic error
+			mRooms[roomCount]->CloseRoom();	// if it fails : logic error
 			mLoginPtr->Disconnect(hostID);
 			return false;
 		}
-		return msRooms[roomCount]->AddPlayer(hostID); // if it fails : logic error
+		return mRooms[roomCount]->AddPlayer(hostID); // if it fails : logic error
 	}
 	return false; // logic error
 }
@@ -132,22 +130,22 @@ void LobbyServer::AcceptEnterRoom(int roomID, int hostID)
 	mLobbyPlayerCount.fetch_sub(1);
 
 	gClients[hostID]->SendAccessRoomAccept(roomID, false);
-	msRooms[roomID]->SendRoomInsideInfo(hostID);
-	msRooms[roomID]->SendUpdatePlayerInfoToAll(hostID, hostID);
+	mRooms[roomID]->SendRoomInsideInfo(hostID);
+	mRooms[roomID]->SendUpdatePlayerInfoToAll(hostID, hostID);
 	
 	SendRoomInfoToLobbyPlayers(roomID);
 }
 
 bool LobbyServer::TryEnterRoom(int roomID, int hostID)
 {
-	if (msRooms[roomID]->Available())
+	if (mRooms[roomID]->Available())
 	{
 		if (gClients[hostID]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
 		{
 			mLoginPtr->Disconnect(hostID);
 			return false;
 		}
-		return msRooms[roomID]->AddPlayer(hostID); // if it fails : logic error.
+		return mRooms[roomID]->AddPlayer(hostID); // if it fails : logic error.
 	}
 	return false;
 }
@@ -164,7 +162,7 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 
 		if (roomID < 0 || gClients[hostID]->PlayerIndex < 0 
 			|| gClients[hostID]->ChangeState(currentState, CLIENT_STAT::LOBBY) == false
-			|| msRooms[roomID]->RemovePlayer(hostID) == false)
+			|| mRooms[roomID]->RemovePlayer(hostID) == false)
 		{
 			mLoginPtr->Disconnect(hostID);
 			break;
@@ -174,14 +172,14 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 			mInGameServer.RemovePlayer(roomID, hostID);
 		
 		// Packet must be sended before initializing client.
-		msRooms[roomID]->SendRemovePlayerInfoToAll(hostID);
+		mRooms[roomID]->SendRemovePlayerInfoToAll(hostID);
 		SendRoomInfoToLobbyPlayers(roomID, hostID);
 
 		// Clearing information after packet transfer
 		gClients[hostID]->RoomID = -1;
 		gClients[hostID]->PlayerIndex = -1;
 
-		if (msRooms[roomID]->Closed()) mRoomCount.fetch_sub(1);
+		if (mRooms[roomID]->Closed()) mRoomCount.fetch_sub(1);
 		if (logout == false)
 		{
 			IncreasePlayerCount();
@@ -203,14 +201,14 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 
 void LobbyServer::PressStartOrReady(int roomID, int hostID)
 {
-	if (msRooms[roomID]->Closed() || msRooms[roomID]->GameRunning())
+	if (mRooms[roomID]->Closed() || mRooms[roomID]->GameRunning())
 		return;
 
-	if (msRooms[roomID]->IsAdmin(hostID))
+	if (mRooms[roomID]->IsAdmin(hostID))
 	{
-		if (msRooms[roomID]->TryGameStart())
+		if (mRooms[roomID]->TryGameStart())
 		{
-			msRooms[roomID]->ChangeRoomState(ROOM_STAT::AVAILABLE, ROOM_STAT::GAME_STARTED);
+			mRooms[roomID]->ChangeRoomState(ROOM_STAT::AVAILABLE, ROOM_STAT::GAME_STARTED);
 
 			// update game started flag of room
 			SendRoomInfoToLobbyPlayers(roomID);
@@ -218,9 +216,9 @@ void LobbyServer::PressStartOrReady(int roomID, int hostID)
 			// Hand over this room to in game server
 			mInGameServer.PrepareToStartGame(roomID);
 		}
-		else msRooms[roomID]->SendGameStartFail();
+		else mRooms[roomID]->SendGameStartFail();
 	}
-	else msRooms[roomID]->ToggleReady(hostID);
+	else mRooms[roomID]->ToggleReady(hostID);
 }
 
 void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, int ignore, bool instSend)
@@ -230,7 +228,7 @@ void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, int ignore, bool instSe
 	{
 		if (gClients[i]->GetCurrentState() == CLIENT_STAT::LOBBY && i != ignore)
 		{
-			msRooms[roomID]->SendRoomOutsideInfo(i);
+			mRooms[roomID]->SendRoomOutsideInfo(i);
 			lobbyPlayers -= 1;
 		}
 	}
@@ -241,9 +239,9 @@ void LobbyServer::SendExistingRoomList(int id)
 	int rooms = mRoomCount;
 	for (int i = 0; i < MAX_ROOM_SIZE && rooms > 0; i++)
 	{
-		if (msRooms[i]->Closed() == false)
+		if (mRooms[i]->Closed() == false)
 		{
-			msRooms[i]->SendRoomOutsideInfo(id, false);
+			mRooms[i]->SendRoomOutsideInfo(id, false);
 			rooms -= 1;
 		}
 	}
