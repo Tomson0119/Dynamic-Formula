@@ -21,6 +21,7 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	mKeyMap[VK_LSHIFT] = false;
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
+	mKeyMap['P'] = false;
 
 #ifdef STANDALONE
 	mGameStarted = true;
@@ -52,6 +53,11 @@ void InGameScene::OnResize(float aspect)
 	auto motionBlur = dynamic_cast<MotionBlurPipeline*>(p);
 	motionBlur->CreateTextures(mDevice.Get());
 	motionBlur->BuildSRVAndUAV(mDevice.Get());
+
+	p = mPostProcessingPipelines[Layer::VolumetricScattering].get();
+	auto volumetric = dynamic_cast<VolumetricScatteringPipeline*>(p);
+	volumetric->CreateTextures(mDevice.Get());
+	volumetric->BuildSRVAndUAV(mDevice.Get());
 }
 
 void InGameScene::BuildObjects(
@@ -77,10 +83,10 @@ void InGameScene::BuildObjects(
 
 	mCurrentCamera = mDirectorCamera.get();
 
-	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
+	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
 	mDirectionalLight.SetInfo(
-		XMFLOAT3(0.3f, 0.3f, 0.3f),
+		XMFLOAT3(0.1f, 0.1f, 0.1f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		0.0f, 0.0f, 0.0f,
@@ -190,7 +196,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
 	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
-	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl");
+	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl", true);
 	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
 	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
 	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
@@ -370,17 +376,6 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
-	// 지형 스케일에는 정수를 넣는 것을 권장
-	/*auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
-	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 129, 129);
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\rocky.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\road.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
-	mPipelines[Layer::Terrain]->AppendObject(terrain);*/
-	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
 	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 	LoadLights(cmdList, L"Map\\Lights.tmap");
@@ -424,6 +419,8 @@ void InGameScene::BuildCarObject(
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
 	carObj->SetQuaternion(rotation);
+	Print("Position: ", position);
+	Print("Rotation: ", rotation);
 
 	if (mMeshList["Car_Body.obj"].empty())
 		mMeshList["Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
@@ -525,8 +522,15 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 		mNetPtr->RemovePlayer(pck);
 
-		auto player = mPlayerObjects[pck->player_idx];
+		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player)	player->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+		break;
+	}
+	case SC::REMOVE_MISSILE:
+	{
+		SC::packet_remove_missile* pck = reinterpret_cast<SC::packet_remove_missile*>(packet);
+		const auto& missile = mMissileObjects[pck->missile_idx];
+		if (missile) missile->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 		break;
 	}
 	case SC::TRANSFER_TIME:
@@ -539,7 +543,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::PLAYER_TRANSFORM:
 	{
 		SC::packet_player_transform* pck = reinterpret_cast<SC::packet_player_transform*>(packet);
-		auto player = mPlayerObjects[pck->player_idx];
+		const auto& player = mPlayerObjects[pck->player_idx];
 		
 		if (player)
 		{
@@ -551,14 +555,17 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::MISSILE_TRANSFORM:
 	{
 		SC::packet_missile_transform* pck = reinterpret_cast<SC::packet_missile_transform*>(packet);
-		auto& missile = mMissileObjects[pck->missile_idx];
+		const auto& missile = mMissileObjects[pck->missile_idx];
 		
 		if (missile)
 		{
 			if (missile->IsActive() == false)
 			{
+				const XMFLOAT3& pos = mPlayerObjects[pck->missile_idx]->GetPosition();
+				const XMFLOAT4& quat = mPlayerObjects[pck->missile_idx]->GetQuaternion();
+				missile->SetPosition(pos);
+				missile->SetQuaternion(quat);
 				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
-				missile->SetInitialTransform(pck, mNetPtr->GetLatency());
 			}
 			else
 			{
@@ -567,6 +574,92 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
+	case SC::DRIFT_GAUGE:
+	{
+		SC::packet_drift_gauge* pck = reinterpret_cast<SC::packet_drift_gauge*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if (player)
+		{
+			float drift_gauge = pck->gauge / FIXED_FLOAT_LIMIT;
+			if (drift_gauge > 0.0f)
+			{
+				std::stringstream ss;
+				ss << "Drift gauge: " << drift_gauge << "\n";
+				OutputDebugStringA(ss.str().c_str());
+			}
+		}
+		break;
+	}
+	case SC::INVINCIBLE_ON:
+	{
+		SC::packet_invincible_on* pck = reinterpret_cast<SC::packet_invincible_on*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if (player)
+		{
+			int duration = pck->duration - (int)(mNetPtr->GetLatency() * FIXED_FLOAT_LIMIT);
+			player->SetInvincibleOn(duration);
+		}
+		break;
+	}
+	case SC::ITEM_INCREASED:
+	{
+		SC::packet_item_increased* pck = reinterpret_cast<SC::packet_item_increased*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if(player)
+		{
+			OutputDebugStringA("Item increased.\n");
+		}
+		break;
+	}
+	case SC::SPAWN_TRANSFORM:
+	{
+		SC::packet_spawn_transform* pck = reinterpret_cast<SC::packet_spawn_transform*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if (player) player->SetSpawnTransform(pck);
+		break;
+	}
+	case SC::WARNING_MESSAGE:
+	{
+		SC::packet_warning_message* pck = reinterpret_cast<SC::packet_warning_message*>(packet);
+		OutputDebugStringA("Reverse drive warning!\n");
+		break;
+	}
+	case SC::INGAME_INFO:
+	{
+		SC::packet_ingame_info* pck = reinterpret_cast<SC::packet_ingame_info*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if (player.get() == mPlayer)
+		{
+			std::stringstream ss;
+			ss << "Lap count: " << (int)pck->lap_count << "\n";
+			ss << "Point: " << pck->point << "\n";
+			ss << "Rank: " << (int)pck->rank << "\n";
+			OutputDebugStringA(ss.str().c_str());
+		}
+		break;
+	}
+	case SC::GAME_END:
+	{
+		SC::packet_game_end* pck = reinterpret_cast<SC::packet_game_end*>(packet);
+		for (int i = 0; i < mPlayerObjects.size(); i++)
+		{
+			if (mPlayerObjects[i])
+			{
+				std::stringstream ss;
+				ss << "idx: " << i << "\n";
+				ss << "Rank: " << (int)pck->rank[i] << "\n";
+				ss << "Name: " << mNetPtr->GetPlayersInfo()[i].Name << "\n";
+				ss << "Point: " << pck->point[i] << "\n";
+				ss << "Lap count: " << (int)pck->lap_count[i] << "\n";
+				ss << "Hit count: " << (int)pck->hit_count[i] << "\n";
+				OutputDebugStringA(ss.str().c_str());
+			}
+		}
+		break;
+	}
+	default:
+		OutputDebugStringA("Invalid packet.\n");
+		return false;
 	}
 	return true;
 }
@@ -674,6 +767,22 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 	{
 		mMissileInterval -= elapsed;
 	}
+
+	if (mParticleInterval < 0.0f)
+	{
+		if(GetAsyncKeyState(VK_LSHIFT) & 0x8000)
+		{
+			mParticleInterval = 0.1f;
+			
+			if(mPipelines[Layer::Particle]->GetRenderObjects().size() == 0)
+				AddParticleObject();
+		}
+	}
+	else
+	{
+		mParticleInterval -= elapsed;
+	}
+	
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 
 #ifndef STANDALONE
@@ -727,6 +836,16 @@ void InGameScene::UpdateLight(float elapsed)
 
 void InGameScene::AddParticleObject()
 {
+	auto obj = std::make_shared<GameObject>();
+
+	auto particleEmittor = std::make_shared<ParticleMesh>();
+	obj->SetMesh(particleEmittor);
+	
+	mPipelines[Layer::Particle]->AppendObject(obj);
+}
+
+void InGameScene::DestroyParticleObject()
+{
 	
 }
 
@@ -739,7 +858,7 @@ void InGameScene::UpdateLightConstants()
 
 	for (auto i = mLights.begin(); i < mLights.end();)
 	{
-		if (i->pad0 == 1.0f)
+		if (i->light.pad0 == 1.0f)
 			i = mLights.erase(i);
 		else
 			++i;
@@ -749,8 +868,8 @@ void InGameScene::UpdateLightConstants()
 	{
 		if (mPlayerObjects[i])
 		{
-			LightInfo* frontLights;
-			frontLights = mPlayerObjects[i]->GetLightInfo();
+			LightBundle* frontLights;
+			frontLights = mPlayerObjects[i]->GetLightBundle();
 
 			mLights.push_back(frontLights[0]);
 			mLights.push_back(frontLights[1]);
@@ -758,15 +877,15 @@ void InGameScene::UpdateLightConstants()
 	}
 
 	std::sort(mLights.begin(), mLights.end(),
-		[playerPos](LightInfo l1, LightInfo l2)
+		[playerPos](const LightBundle& l1, const LightBundle& l2)
 		{
-			return Vector3::Distance(l1.Position, playerPos) < Vector3::Distance(l2.Position, playerPos);
+			return Vector3::Distance(l1.light.Position, playerPos) < Vector3::Distance(l2.light.Position, playerPos);
 		}
 	);
 
 	for (int i = 1; i < NUM_LIGHTS; ++i)
 	{
-		mMainLight.Lights[i] = mLights[i - 1];
+		mMainLight.Lights[i] = mLights[i - 1].light;
 	}
 
 	mMainLight.Lights[0] = mDirectionalLight;
@@ -784,13 +903,23 @@ void InGameScene::UpdateVolumetricConstant()
 {
 	VolumetricConstants volumeConst;
 
-	volumeConst.gInvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
-	volumeConst.gInvView = Matrix4x4::Transpose(mCurrentCamera->GetInverseView());
+	volumeConst.InvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
+	volumeConst.View = Matrix4x4::Transpose(mCurrentCamera->GetView());
 
-	for(int i = 0; i < NUM_LIGHTS; ++i)
-		volumeConst.gLights[i] = mMainLight.Lights[i];
-
-	volumeConst.gVolumetricStrength = 10.0f;
+	int j = 0;
+	for (int i = 0; i < NUM_LIGHTS;)
+	{
+		for (; j < mLights.size(); j++)
+		{
+			if (mLights[j].volumetric.Type == SPOT_LIGHT)
+			{
+				volumeConst.Lights[i] = mLights[j].volumetric;
+				++i;
+				++j;
+				break;
+			}
+		}
+	}
 
 	mVolumetricCB->CopyData(0, volumeConst);
 }
@@ -1010,11 +1139,11 @@ void InGameScene::UpdateMissileObject()
 			flag = true;
 			missile->SetActive(false);
 			missile->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Default]);
-			mMissileObjects[i].reset();
+			missile->SetUpdateFlag(UPDATE_FLAG::NONE);
 			break;
 		}
 		case UPDATE_FLAG::NONE:
-			continue;
+			break;
 		}
 	}
 	if (flag) mPipelines[Layer::Default]->ResetPipeline(mDevice.Get());
@@ -1040,11 +1169,11 @@ void InGameScene::UpdatePlayerObjects()
 			removed_flag = true;
 			if(mMissileObjects[i]) mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			player->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Color]);
-			mPlayerObjects[i].reset();
+			player->SetUpdateFlag(UPDATE_FLAG::NONE);
 			break;
 		}
 		case UPDATE_FLAG::NONE:
-			continue;
+			break;
 		}
 	}
 	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
@@ -1090,7 +1219,10 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
 			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+			mOOBBList[objName] = obj->GetBoundingBox();
 		}
+		else
+			obj->SetBoudingBox(mOOBBList[objName]);
 
 		btTransform btLocalTransform;
 		btLocalTransform.setIdentity();
@@ -1117,6 +1249,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		obj->Scale(scale);
 		obj->SetName(objName);
 
+		obj->Update(0, 0);
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
 
@@ -1139,6 +1272,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			transparentObj->Scale(scale);
 			transparentObj->SetName(objName);
 
+			transparentObj->Update(0, 0);
 			mPipelines[Layer::Transparent]->AppendObject(transparentObj);
 			static_cast<InstancingPipeline*>(mPipelines[Layer::Transparent].get())->mInstancingCount[objName]++;
 		}
@@ -1184,6 +1318,23 @@ void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::
 
 		mPipelines[Layer::CheckPoint]->AppendObject(obj);
 	}
+
+	/*auto objects = mPipelines[Layer::Instancing]->GetRenderObjects();
+	for (int i = 0; i < objects.size(); ++i)
+	{
+		auto obj = make_shared<StaticObject>();
+		auto oobb = objects[i]->GetBoundingBox();
+		oobb.Transform(oobb, XMLoadFloat4x4(&objects[i]->GetWorld()));
+
+		std::shared_ptr<BoxMesh> mesh = std::make_shared<BoxMesh>(mDevice.Get(), cmdList, oobb.Extents.x * 2, oobb.Extents.y * 2, oobb.Extents.z * 2);
+		mesh->SetSrvIndex(0);
+		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
+		obj->SetMesh(mesh);
+		obj->SetPosition(oobb.Center);
+		obj->SetQuaternion(oobb.Orientation);
+
+		mPipelines[Layer::CheckPoint]->AppendObject(obj);
+	}*/
 }
 
 void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
@@ -1201,15 +1352,31 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 		XMFLOAT3 direction;
 		ss >> direction.x >> direction.y >> direction.z;
 
+		LightBundle bundle;
 		LightInfo l;
 
 		l.SetInfo(
 			XMFLOAT3(0.6f, 0.6f, 0.6f),
 			pos,
 			direction,
-			0.0f, 100.0f, 10.0f,
+			0.0f, 20.0f, 10.0f,
 			0.0f, SPOT_LIGHT);;
 
-		mLights.push_back(l);
+		bundle.light = l;
+
+		VolumetricInfo v;
+
+		v.Direction = direction;
+		v.Position = pos;
+		v.Range = 30.0f;
+		v.VolumetricStrength = 1.0f;
+		v.outerCosine = cos(7.0f);
+		v.innerCosine = cos(6.0f);
+		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		v.Type = SPOT_LIGHT;
+		
+		bundle.volumetric = v;
+
+		mLights.push_back(bundle);
 	}
 }

@@ -143,5 +143,8 @@
     <ClInclude Include="GameObject.h">
       <Filter>헤더 파일\GameObject</Filter>
     </ClInclude>
+    <ClInclude Include="ObjectMask.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

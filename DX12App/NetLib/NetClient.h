@@ -4,7 +4,7 @@ class NetClient
 {	
 public:
 	NetClient();
-	~NetClient() = default;
+	~NetClient();
 
 public:
 	bool Connect(const char* ip, short port);

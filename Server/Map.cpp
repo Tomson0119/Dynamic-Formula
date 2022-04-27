@@ -1,5 +1,6 @@
 #include "common.h"
 #include "Map.h"
+#include "ObjectMask.h"
 
 Map::Map()
 {
@@ -7,8 +8,9 @@ Map::Map()
 
 void Map::CreateTrackRigidBody(btCollisionShape& shape)
 {
+	mTrack.SetMaskBits(OBJ_MASK_GROUP::TRACK, OBJ_MASK::TRACK);
 	mTrack.CreateRigidBody(0.0f, shape, this);
-	mTrack.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
+	mTrack.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATE);
 }
 
 void Map::CreateCheckpoints(btCollisionShape& shape, const std::vector<CheckpointShape::CheckpointInfo>& infos)
@@ -16,45 +18,43 @@ void Map::CreateCheckpoints(btCollisionShape& shape, const std::vector<Checkpoin
 	for (const auto& info : infos)
 	{
 		mCheckpoints.emplace_back();
-		mCheckpoints.back().SetPosition(info.position);
-		mCheckpoints.back().SetRotation(info.rotation);
+		mCheckpoints.back().SetTransform(info.position, info.rotation);
+		mCheckpoints.back().SetMaskBits(OBJ_MASK_GROUP::CHECKPOINT, OBJ_MASK::CHECKPOINT);
 		mCheckpoints.back().CreateRigidBody(0.0f, shape, this);
 		mCheckpoints.back().SetNoResponseCollision();
-		mCheckpoints.back().SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
+		mCheckpoints.back().SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATE);
 	}
 }
 
-void Map::Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
+void Map::Update(float elapsed, BPHandler& physics)
 {
-	mTrack.Update(physicsWorld);
+	mTrack.Update(physics);
 	for (auto& cp : mCheckpoints)
 	{
-		cp.Update(physicsWorld);
+		cp.Update(physics);
 	}
 }
 
-void Map::Reset(btDiscreteDynamicsWorld* physicsWorld)
+void Map::Reset(BPHandler& physics)
 {
-	mTrack.RemoveRigidBody(physicsWorld);
+	mTrack.RemoveRigidBody(physics);
+	mTrack.Flush();
 	for (auto& cp : mCheckpoints)
 	{
-		cp.RemoveRigidBody(physicsWorld);
+		cp.RemoveRigidBody(physics);
+		cp.Flush();
 	}
 }
 
-void Map::HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj)
-{
-}
-
-GameObject::OBJ_TAG Map::GetTag(const btCollisionObject& obj) const
+int Map::GetMask(const btCollisionObject& obj) const
 {
 	if (&obj == mTrack.GetRigidBody())
 	{
-		return OBJ_TAG::TRACK;
+		return OBJ_MASK::TRACK;
 	}
 	else
 	{
-		return OBJ_TAG::CHECKPOINT;
+		return OBJ_MASK::CHECKPOINT;
 	}
 }
 
@@ -68,4 +68,11 @@ int Map::GetCheckpointIndex(const btCollisionObject& obj) const
 		}
 		i += 1;
 	}
+	return -1;
+}
+
+const RigidBody& Map::GetCheckpointRigidBody(int idx) const
+{
+	Helper::Assert((0 <= idx && idx < mCheckpoints.size()), "Checkpoint index out of bound.");
+	return mCheckpoints[idx];
 }

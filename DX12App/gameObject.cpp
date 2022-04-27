@@ -337,7 +337,7 @@ void GameObject::Update(float elapsedTime, float updateRate)
 		UpdateTransform();
 	}
 
-	UpdateBoundingBox();
+	//UpdateBoundingBox();
 }
 
 void GameObject::Draw(
@@ -651,6 +651,11 @@ void GameObject::CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
 		mMeshes.push_back(std::make_shared<Mesh>(*meshes[i]));
 	}
 	SetBoudingBoxFromMeshes();
+}
+
+void GameObject::SetBoudingBox(BoundingOrientedBox oobb)
+{
+	mOOBB = oobb;
 }
 
 void GameObject::SetBoudingBoxFromMeshes()
@@ -994,13 +999,6 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 		pck->quaternion[3]);
 }
 
-void MissileObject::SetInitialTransform(SC::packet_missile_transform* pck, float latency)
-{
-	SetCorrectionTransform(pck, latency);
-	mPrevOrigin = mCorrectionOrigin;
-	mPrevQuat = mCorrectionQuat;
-}
-
 void MissileObject::SetActive(bool state)
 {
 	mActive = state;
@@ -1022,5 +1020,5 @@ void StaticObject::Update(float elapsedTime, float updateRate)
 
 	UpdateTransform();
 
-	UpdateBoundingBox();
+	//UpdateBoundingBox();
 }

@@ -14,6 +14,11 @@ NetClient::NetClient()
 	mUDPSocket.Init(SocketType::UDP);
 }
 
+NetClient::~NetClient()
+{
+	Disconnect();
+}
+
 bool NetClient::Connect(const char* ip, short port)
 {
 	mServerEp = EndPoint(ip, port);
@@ -23,18 +28,18 @@ bool NetClient::Connect(const char* ip, short port)
 
 void NetClient::Disconnect()
 {
-	OutputDebugStringA("Disconnecting...\n");
-
 	if (mTCPSendOverlapped)
 	{
 		delete mTCPSendOverlapped;
 		mTCPSendOverlapped = nullptr;
 	}
-
-	mTCPSocket.Close();
-	mUDPSocket.Close();
-
-	mIsConnected = false;
+	if (mIsConnected)
+	{
+		OutputDebugStringA("Disconnecting...\n");
+		mTCPSocket.Close();
+		mUDPSocket.Close();
+		mIsConnected = false;
+	}
 }
 
 void NetClient::BindUDPSocket(short port)

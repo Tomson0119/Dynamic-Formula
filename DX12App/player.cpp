@@ -161,8 +161,11 @@ void Player::Update(float elapsedTime, float updateRate)
 	GameObject::Update(elapsedTime, updateRate);
 }
 
+const float PhysicsPlayer::TransparentInterval = 0.3f;
 
-PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
+PhysicsPlayer::PhysicsPlayer(UINT netID) 
+	: Player(), 
+	  mNetID(netID)
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
@@ -179,19 +182,37 @@ PhysicsPlayer::PhysicsPlayer(UINT netID) : Player(), mNetID(netID)
 	for (int i = 0; i < 2; ++i)
 	{
 		// Falloff는 전부 미터 단위임에 주의할 것
-		mFrontLight[i].SetInfo(
+		mFrontLight[i].light.SetInfo(
 			XMFLOAT3(0.6f, 0.6f, 0.6f),
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
 			XMFLOAT3(-0.3f, 0.0f, -1.0f),
-			0.0f, 5000.0f, 100.0f,
+			0.0f, 100.0f, 100.0f,
 			0.0f, SPOT_LIGHT);;
 
-		mFrontLight[i].pad0 = 1.0f;
+		mFrontLight[i].light.pad0 = 1;
+
+		mFrontLight[i].volumetric.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		mFrontLight[i].volumetric.Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		mFrontLight[i].volumetric.innerCosine = cos(6.0f);
+		mFrontLight[i].volumetric.outerCosine = cos(7.0f);
+		mFrontLight[i].volumetric.Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		mFrontLight[i].volumetric.Range = 30.0f;
+		mFrontLight[i].volumetric.Type = SPOT_LIGHT;
+		mFrontLight[i].volumetric.VolumetricStrength = 0.7f;
 	}
 }
 
 PhysicsPlayer::~PhysicsPlayer()
 {
+}
+
+void PhysicsPlayer::SetSpawnTransform(SC::packet_spawn_transform* pck)
+{
+	mSpawnFlag = true;
+	mSpawnPosition.SetValue(pck->position[0], pck->position[1], pck->position[2]);
+	mSpawnRotation.SetValue(
+		pck->quaternion[0], pck->quaternion[1],
+		pck->quaternion[2], pck->quaternion[3]);
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
@@ -204,6 +225,12 @@ void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::sh
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& Mesh)
 {
 	GameObject::SetMesh(Mesh);
+}
+
+void PhysicsPlayer::SetInvincibleOn(int duration)
+{
+	mInvincibleOnFlag = true;
+	mInvincibleInterval = duration;
 }
 
 Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
@@ -377,7 +404,6 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		}
 
 		float DriftLimit = 30.0f / 180.0f;
-
 		float AngleLimit = 50.0f / 180.0f;
 
 		auto camLook = mCamera->GetLook();
@@ -445,6 +471,18 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 {
+	if (mSpawnFlag)
+	{
+		mSpawnFlag = false;
+		SetPosition(mSpawnPosition.GetXMFloat3());
+		SetQuaternion(mSpawnRotation.GetXMFloat4());
+		if (mCamera)
+		{
+			mCamera->SetPosition(mPosition);
+			mCamera->Update(elapsedTime);
+		}
+	}
+
 	GameObject::Update(elapsedTime, updateRate);
 	
 	for (int i = 0; i < 4; ++i)
@@ -489,13 +527,33 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 		mCamera->SetLens(mCamera->GetAspect());
 	}
 
-	if (mHit)
+	UpdateInvincibleState(elapsedTime);
+}
+
+void PhysicsPlayer::UpdateInvincibleState(float elapsed)
+{
+	if (mInvincibleOnFlag)
 	{
-		mTransparentTime -= elapsedTime;
-		if (mTransparentTime < 0.f)
+		mInvincibleOnFlag = false;
+		mInvincible = true;
+		mInvincibleDuration = (float)mInvincibleInterval / FIXED_FLOAT_LIMIT;
+	}
+
+	if (mInvincible)
+	{
+		mInvincibleDuration -= elapsed;
+		mTransparentTime -= elapsed;
+		if (mTransparentTime <= 0.f)
 		{
 			mTransparentOn = !mTransparentOn;
-			mTransparentTime = 0.5f;
+			mTransparentTime = TransparentInterval;
+		}
+		if (mInvincibleDuration <= 0.0f)
+		{
+			mInvincibleDuration = 0.0f;
+			mTransparentTime = TransparentInterval;
+			mTransparentOn = false;
+			mInvincible = false;
 		}
 	}
 }
@@ -785,11 +843,13 @@ void PhysicsPlayer::UpdateFrontLight()
 	XMMATRIX R = XMMatrixRotationQuaternion(XMLoadFloat4(&mQuaternion));
 	for (int i = 0; i < 2; ++i)
 	{
-		mFrontLight[i].Position = Vector3::Transform(mLightOffset[i], XMLoadFloat4x4(&mWorld));
-
+		mFrontLight[i].light.Position = Vector3::Transform(mLightOffset[i], XMLoadFloat4x4(&mWorld));
+		mFrontLight[i].volumetric.Position = Vector3::Transform(mLightOffset[i], XMLoadFloat4x4(&mWorld));
+		
 		auto dir = mLook;
 		dir.y -= 0.3f;
-		mFrontLight[i].Direction = dir;
+		mFrontLight[i].light.Direction = dir;
+		mFrontLight[i].volumetric.Direction = dir;
 	}
 }
 

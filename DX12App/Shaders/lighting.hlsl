@@ -1,4 +1,4 @@
-#define NUM_LIGHTS 32
+#define NUM_LIGHTS 16
 
 #define POINT_LIGHT       1
 #define SPOT_LIGHT        2
@@ -30,6 +30,12 @@ struct Light
 float Pow5(float x)
 {
     return (x * x * x * x * x);
+}
+
+float DoAttenuation(float distance, float range)
+{
+    float att = saturate(1.0f - (distance * distance / (range * range)));
+    return att * att;
 }
 
 static const float BayerMatrix8[8][8] =

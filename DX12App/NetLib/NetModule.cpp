@@ -38,9 +38,8 @@ void NetModule::PostDisconnect()
 {	
 	if (mNetClient->IsConnected())
 	{
-		// Post disconnect operation to get out of the thread loop	
-		WSAOVERLAPPEDEX* over = new WSAOVERLAPPEDEX(OP::DISCONNECT);
-		mIOCP.PostToCompletionQueue(over, 0);
+		mIOCP.PostToCompletionQueue(nullptr, -1);
+		OutputDebugStringA("Posting disconnection operation.\n");
 	}
 }
 
@@ -57,7 +56,8 @@ void NetModule::NetworkFunc(NetModule& net)
 			
 			if (over_ex == nullptr)
 			{
-				net.PostDisconnect();
+				net.mLoop = false;
+				net.mNetClient->Disconnect();
 				continue;
 			}
 			if (info.success == FALSE)
@@ -164,15 +164,10 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
 	case OP::SEND:
 	{
 		if (bytes != over->WSABuffer.len)
-			PostDisconnect();
-		delete over;
-		break;
-	}
-	case OP::DISCONNECT:
-	{
-		bool b = true;
-		mLoop.compare_exchange_strong(b, false);
-		mNetClient->Disconnect();
+		{
+			// NEED TEST
+			// PostDisconnect();
+		}
 		delete over;
 		break;
 	}

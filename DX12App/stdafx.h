@@ -134,11 +134,12 @@ inline std::wstring AnsiToWString(const std::string& str)
 
 ////////////////////////////////////////////////////////////////////////////
 //
-#define NUM_LIGHTS 32
+#define NUM_LIGHTS 16
 
 #define POINT_LIGHT		  1
 #define SPOT_LIGHT		  2
 #define DIRECTIONAL_LIGHT 3
+
 
 struct LightInfo
 {
@@ -173,6 +174,21 @@ struct LightInfo
 	}
 };
 
+struct VolumetricInfo
+{
+	XMFLOAT3 Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	int Type = 0;
+	XMFLOAT3 Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float Range = 0.f;
+	XMFLOAT3 Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float innerCosine = 0.0f;
+	float VolumetricStrength = 0.0f;
+	float outerCosine = 0.0f;
+
+	int pad0 = 0;
+	int pad1 = 0;
+};
+
 struct LightConstants
 {
 	XMFLOAT4X4 ShadowTransform[3];
@@ -182,16 +198,17 @@ struct LightConstants
 
 struct VolumetricConstants
 {
-	XMFLOAT4X4 gInvProj;
-	XMFLOAT4X4 gInvView;
+	XMFLOAT4X4 InvProj;
+	XMFLOAT4X4 View;
 
-	float gVolumetricStrength;
+	VolumetricInfo Lights[NUM_LIGHTS];
+};
 
-	int pad0 = 0;
-	int pad1 = 0;
-	int pad2 = 0;
 
-	LightInfo gLights[NUM_LIGHTS];
+struct LightBundle
+{
+	LightInfo light;
+	VolumetricInfo volumetric;
 };
 
 struct CameraConstants
@@ -287,9 +304,7 @@ struct AtomicInt3
 
 	AtomicInt3& operator=(const AtomicInt3& other)
 	{
-		x.store(other.x);
-		y.store(other.y);
-		z.store(other.z);
+		SetValue(other.GetXMFloat3());
 		return *this;
 	}
 
@@ -301,6 +316,7 @@ struct AtomicInt3
 
 	void SetZero()
 	{
+		std::scoped_lock<std::mutex> lock(mut);
 		x = 0;
 		y = 0;
 		z = 0;
@@ -308,11 +324,13 @@ struct AtomicInt3
 
 	bool IsZero()
 	{
+		std::scoped_lock<std::mutex> lock(mut);
 		return (x == 0 && y == 0 && z == 0);
 	}
 
 	void SetValue(int x_, int y_, int z_)
 	{
+		std::scoped_lock<std::mutex> lock(mut);
 		x = x_;
 		y = y_;
 		z = z_;
@@ -347,6 +365,7 @@ struct AtomicInt3
 
 	btVector3 GetBtVector3() const
 	{
+		std::scoped_lock<std::mutex> lock(mut);
 		return btVector3{ 
 			x / FIXED_FLOAT_LIMIT, 
 			y / FIXED_FLOAT_LIMIT, 
@@ -355,15 +374,17 @@ struct AtomicInt3
 
 	XMFLOAT3 GetXMFloat3() const
 	{
+		std::scoped_lock<std::mutex> lock(mut);
 		return XMFLOAT3{ 
 			x / FIXED_FLOAT_LIMIT, 
 			y / FIXED_FLOAT_LIMIT, 
 			z / FIXED_FLOAT_LIMIT };
 	}
 
-	std::atomic_int x;
-	std::atomic_int y;
-	std::atomic_int z;
+	int x;
+	int y;
+	int z;
+	mutable std::mutex mut;
 };
 
 struct AtomicInt4
@@ -380,10 +401,7 @@ struct AtomicInt4
 
 	AtomicInt4& operator=(const AtomicInt4& other)
 	{
-		x.store(other.x);
-		y.store(other.y);
-		z.store(other.z);
-		w.store(other.w);
+		SetValue(other.GetXMFloat4());
 		return *this;
 	}
 
@@ -395,6 +413,7 @@ struct AtomicInt4
 
 	void SetValue(int x_, int y_, int z_, int w_)
 	{
+		std::scoped_lock<std::mutex> lock(mut);
 		x = x_;
 		y = y_;
 		z = z_;
@@ -437,11 +456,13 @@ struct AtomicInt4
 
 	bool IsZero() const
 	{
+		std::scoped_lock<std::mutex> lock(mut);
 		return (x == 0.0f && y == 0.0f && z == 0.0f && w == 0.0f);
 	}
 
 	btQuaternion GetBtQuaternion() const
 	{
+		std::scoped_lock<std::mutex> lock(mut);
 		return btQuaternion{
 			x / FIXED_FLOAT_LIMIT,
 			y / FIXED_FLOAT_LIMIT,
@@ -451,6 +472,7 @@ struct AtomicInt4
 
 	XMFLOAT4 GetXMFloat4() const
 	{
+		std::scoped_lock<std::mutex> lock(mut);
 		return XMFLOAT4{
 			x / FIXED_FLOAT_LIMIT,
 			y / FIXED_FLOAT_LIMIT,
@@ -458,10 +480,11 @@ struct AtomicInt4
 			w / FIXED_FLOAT_LIMIT };
 	}
 
-	std::atomic_int x;
-	std::atomic_int y;
-	std::atomic_int z;
-	std::atomic_int w;
+	int x;
+	int y;
+	int z;
+	int w;
+	mutable std::mutex mut;
 };
 
 
@@ -559,7 +582,7 @@ namespace Vector3
 		return ret;
 	}
 
-	inline XMFLOAT3 MultiplyAdd(float delta, XMFLOAT3& src, XMFLOAT3& dst)
+	inline XMFLOAT3 MultiplyAdd(float delta, const XMFLOAT3& src, const XMFLOAT3& dst)
 	{		
 		XMVECTOR v1 = XMLoadFloat3(&Replicate(delta));
 		XMVECTOR v2 = XMLoadFloat3(&src);
@@ -587,48 +610,48 @@ namespace Vector3
 		return VectorToFloat3(XMVector3Normalize(XMLoadFloat3(&v)));
 	}
 
-	inline XMFLOAT3 Subtract(XMFLOAT3& v1, XMFLOAT3& v2)
+	inline XMFLOAT3 Subtract(const XMFLOAT3& v1, const XMFLOAT3& v2)
 	{
 		return VectorToFloat3(XMVectorSubtract(XMLoadFloat3(&v1), XMLoadFloat3(&v2)));
 	}
 
-	inline XMFLOAT3 ScalarProduct(XMFLOAT3& v, float scalar)
+	inline XMFLOAT3 ScalarProduct(const XMFLOAT3& v, float scalar)
 	{
 		return VectorToFloat3(XMLoadFloat3(&v) * scalar);
 	}
 
-	inline XMFLOAT3 Cross(XMFLOAT3& v1, XMFLOAT3& v2)
+	inline XMFLOAT3 Cross(const XMFLOAT3& v1, const XMFLOAT3& v2)
 	{
 		return VectorToFloat3(XMVector3Cross(XMLoadFloat3(&v1), XMLoadFloat3(&v2)));
 	}
 
-	inline float Length(XMFLOAT3& v)
+	inline float Length(const XMFLOAT3& v)
 	{
 		XMFLOAT3 ret = VectorToFloat3(XMVector3Length(XMLoadFloat3(&v)));
 		return ret.x;
 	}
 
-	inline float Dot(XMFLOAT3& v1, XMFLOAT3& v2)
+	inline float Dot(const XMFLOAT3& v1, const XMFLOAT3& v2)
 	{
 		return XMVectorGetX(XMVector3Dot(XMLoadFloat3(&v1), XMLoadFloat3(&v2)));
 	}
 
-	inline XMFLOAT3 Add(XMFLOAT3& v, float value)
+	inline XMFLOAT3 Add(const XMFLOAT3& v, float value)
 	{
 		return VectorToFloat3(XMVectorAdd(XMLoadFloat3(&v), XMVectorReplicate(value)));
 	}
 
-	inline XMFLOAT3 Add(XMFLOAT3& v1, XMFLOAT3& v2)
+	inline XMFLOAT3 Add(const XMFLOAT3& v1, const XMFLOAT3& v2)
 	{
 		return VectorToFloat3(XMLoadFloat3(&v1) + XMLoadFloat3(&v2));
 	}
 
-	inline XMFLOAT3 Add(XMFLOAT3& v1, XMFLOAT3& v2, float distance)
+	inline XMFLOAT3 Add(const XMFLOAT3& v1, const XMFLOAT3& v2, float distance)
 	{
 		return VectorToFloat3(XMLoadFloat3(&v1) + XMLoadFloat3(&v2) * distance);
 	}
 
-	inline XMFLOAT3 ClampFloat3(XMFLOAT3& input, XMFLOAT3& min, XMFLOAT3& max)
+	inline XMFLOAT3 ClampFloat3(const XMFLOAT3& input, const XMFLOAT3& min, const XMFLOAT3& max)
 	{
 		XMFLOAT3 ret;
 		ret.x = (min.x > input.x) ? min.x : ((max.x < input.x) ? max.x : input.x);
@@ -715,21 +738,21 @@ namespace Matrix4x4
 		return ret;
 	}
 
-	inline XMFLOAT4X4 Transpose(XMFLOAT4X4& mat)
+	inline XMFLOAT4X4 Transpose(const XMFLOAT4X4& mat)
 	{
 		XMFLOAT4X4 ret;
 		XMStoreFloat4x4(&ret, XMMatrixTranspose(XMLoadFloat4x4(&mat)));
 		return ret;
 	}
 
-	inline XMFLOAT4X4 Multiply(XMFLOAT4X4& mat1, XMFLOAT4X4& mat2)
+	inline XMFLOAT4X4 Multiply(const XMFLOAT4X4& mat1, const XMFLOAT4X4& mat2)
 	{
 		XMFLOAT4X4 ret;
 		XMStoreFloat4x4(&ret, XMMatrixMultiply(XMLoadFloat4x4(&mat1), XMLoadFloat4x4(&mat2)));
 		return ret;
 	}
 
-	inline XMFLOAT4X4 Multiply(FXMMATRIX& mat1, XMFLOAT4X4& mat2)
+	inline XMFLOAT4X4 Multiply(const FXMMATRIX& mat1, const XMFLOAT4X4& mat2)
 	{
 		XMFLOAT4X4 ret;
 		XMStoreFloat4x4(&ret, mat1 * XMLoadFloat4x4(&mat2));

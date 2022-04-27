@@ -90,8 +90,6 @@ public:
 	PhysicsPlayer(UINT netID);
 	virtual ~PhysicsPlayer();
 
-	//virtual void UpdateTransform() override;
-
 	virtual void OnCameraUpdate(float elapsedTime);
 	virtual void Update(float elapsedTime, float updateRate) override;
 	virtual void OnPreciseKeyInput(float Elapsed) override;
@@ -109,13 +107,19 @@ public:
 	virtual void UpdateFrontLight();
 
 public:
+	void SetSpawnTransform(SC::packet_spawn_transform* pck);
+
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
 	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
 	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
+	void SetInvincibleOn(int duration);
 
 	void BuildCameras();
 
 	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
+
+private:
+	void UpdateInvincibleState(float elapsed);
 
 public:
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
@@ -129,11 +133,12 @@ public:
 
 	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
 
-	LightInfo* GetLightInfo() { return mFrontLight; }
+	LightBundle* GetLightBundle() { return mFrontLight; }
 
 private:
 	static const int RtvCounts = 12;
-
+	static const float TransparentInterval;
+	
 	const float mWheelFriction = 5.0f;
 	const float mWheelDriftFriction = 0.0f;
 
@@ -141,9 +146,9 @@ private:
 
 	std::array<std::unique_ptr<Camera>, RtvCounts / 2> mCameras;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE mRtvCPUDescriptorHandles[RtvCounts];
-	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE mSrvCPUDescriptorHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mRtvCPUDescriptorHandles[RtvCounts]{};
+	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle{};
+	D3D12_CPU_DESCRIPTOR_HANDLE mSrvCPUDescriptorHandle{};
 
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
 	std::unique_ptr<Texture> mCubeMap[2];
@@ -187,9 +192,17 @@ private:
 	int mItemNum = 0;
 	float mDriftGauge = 0.0f;
 
-	bool mHit = false;
-	float mTransparentTime = 0.5f;
+	std::atomic_bool mSpawnFlag = false;
+	AtomicInt3 mSpawnPosition;
+	AtomicInt4 mSpawnRotation;
+
+	std::atomic_bool mInvincibleOnFlag = false;
+	std::atomic_int mInvincibleInterval = 0;
+	
+	bool mInvincible = false;
+	float mInvincibleDuration = 0.0f;
+	float mTransparentTime = TransparentInterval;
 
 	XMFLOAT3 mLightOffset[2] = { {1.0f, 0.0f, 1.5f}, {-1.0f, 0.0f, 1.5f} };
-	LightInfo mFrontLight[2];
+	LightBundle mFrontLight[2];
 };

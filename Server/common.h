@@ -15,6 +15,8 @@
 #include <fstream>
 #include <csignal>
 #include <deque>
+#include <format>
+#include <numeric>
 #include <chrono>
 #include <concurrent_priority_queue.h>
 

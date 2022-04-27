@@ -34,12 +34,12 @@ public:
 	
 	void SetFovCoefficient(float AspectCoefficient);
 
-	void LookAt(XMFLOAT3& pos, XMFLOAT3& target, XMFLOAT3& up);
-	void LookAt(XMFLOAT3& target);
+	void LookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT3& up);
+	void LookAt(const XMFLOAT3& target);
 	void LookAt(float x, float y, float z);
 
 	virtual void Move(float dx, float dy, float dz);
-	virtual void Move(XMFLOAT3& dir, float dist);
+	virtual void Move(const XMFLOAT3& dir, float dist);
 
 	void Strafe(float dist);
 	void Walk(float dist);
@@ -54,32 +54,32 @@ public:
 	bool IsInFrustum(BoundingOrientedBox& boundBox);
 
 public:
-	XMFLOAT3 GetPosition() const { return mPosition; }
-	XMFLOAT3 GetRight() const { return mRight; }
-	XMFLOAT3 GetUp() const { return mUp; }
-	XMFLOAT3 GetLook() const { return mLook; }
+	const XMFLOAT3& GetPosition() const { return mPosition; }
+	const XMFLOAT3& GetRight() const { return mRight; }
+	const XMFLOAT3& GetUp() const { return mUp; }
+	const XMFLOAT3& GetLook() const { return mLook; }
 
-	XMFLOAT3 GetOffset() const { return mOffset; }
+	const XMFLOAT3& GetOffset() const { return mOffset; }
 
 	float GetNearZ() const { return mNearZ; }
 	float GetFarZ() const { return mFarZ; }
 	float GetAspect() const { return mAspect; }
 
-	XMFLOAT2 GetFov() const { return mFov; }
-	XMFLOAT2 GetNearWindow() const { return mNearWindow; }
-	XMFLOAT2 GetFarWindow() const { return mFarWindow; }
+	const XMFLOAT2& GetFov() const { return mFov; }
+	const XMFLOAT2& GetNearWindow() const { return mNearWindow; }
+	const XMFLOAT2& GetFarWindow() const { return mFarWindow; }
 
-	XMFLOAT4X4 GetView() const;
-	XMFLOAT4X4 GetOldView() const;
-	XMFLOAT4X4 GetInverseView() const;
+	const XMFLOAT4X4& GetView() const;
+	const XMFLOAT4X4& GetOldView() const;
+	const XMFLOAT4X4& GetInverseView() const;
+	const XMFLOAT4X4& GetProj() const { return mProj; }
 	XMFLOAT4X4 GetInverseProj() const;
-	XMFLOAT4X4 GetProj() const { return mProj; }
 
 	CameraConstants GetConstants() const;
 
-	CameraMode GetMode() const { return mMode; }
-	BoundingFrustum GetWorldFrustum() const { return mFrustumWorld; }
-	BoundingFrustum GetViewFrustum() const { return mFrustumView; }
+	const CameraMode& GetMode() const { return mMode; }
+	const BoundingFrustum& GetWorldFrustum() const { return mFrustumWorld; }
+	const BoundingFrustum& GetViewFrustum() const { return mFrustumView; }
 
 protected:
 	bool mViewDirty = false;

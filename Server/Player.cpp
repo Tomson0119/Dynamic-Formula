@@ -3,6 +3,9 @@
 #include "BtCompoundShape.h"
 #include "RigidBody.h"
 #include "Map.h"
+#include "ObjectMask.h"
+#include "InGameServer.h"
+
 
 Player::Player()
 	: Empty{ true }, 
@@ -13,11 +16,17 @@ Player::Player()
 	  LoadDone{ false }, 
 	  mCurrentCPIndex{ -1 },
 	  mLapCount{ 0 },
-	  mDriftGauge{ 0.0f },
+	  mHitCount{ 0 },
 	  mPoint{ 0 },
-	  mItemCount{ 0 }, 
+	  mReverseDriveCount{ 0 },
+	  mDriftGauge{ 0.0f },
+	  mInvincibleDuration{ 0.0f },
 	  mInvincible{ false },
-	  mBoosterToggle{ false } 
+	  mManualRespawn{ false },
+	  mActive{ true },
+	  mItemCount{ 0 },
+	  mItemIncreased{ false },
+	  mBoosterToggle{ false }
 {
 	mKeyMap[VK_UP]	   = false;
 	mKeyMap[VK_DOWN]   = false;
@@ -26,152 +35,147 @@ Player::Player()
 	mKeyMap[VK_LSHIFT] = false;
 }
 
-void Player::SetPosition(const btVector3& pos)
+void Player::SetTransform(const btVector3& pos, const btQuaternion& quat)
 {
-	mVehicleRigidBody.SetPosition(pos);
-	mMissileRigidBody.SetPosition(pos);
+	mVehicleRigidBody.SetTransform(pos, quat);
+	mMissileRigidBody.SetTransform(pos, quat);
 }
 
-void Player::SetRotation(const btQuaternion& quat)
-{
-	mVehicleRigidBody.SetRotation(quat);
-	mMissileRigidBody.SetRotation(quat);
-}
-
-void Player::SetBulletConstant(std::shared_ptr<InGameServer::BulletConstant> constantPtr)
+void Player::SetGameConstant(std::shared_ptr<GameConstant> constantPtr)
 {
 	mConstantPtr = constantPtr;
-	mMissileRigidBody.SetVehicleAndConstantPtr(&mVehicleRigidBody, constantPtr);
+	mMissileRigidBody.SetGameConstantPtr(&mVehicleRigidBody, constantPtr);
 }
 
-void Player::CreateVehicleRigidBody(
-	btScalar mass,
-	btDiscreteDynamicsWorld* physicsWorld, 
-	BtCarShape* shape)
+void Player::CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShape& shape)
+{	
+	mVehicleRigidBody.SetMaskBits(OBJ_MASK_GROUP::VEHICLE, OBJ_MASK::VEHICLE);
+	mVehicleRigidBody.CreateRigidBody(mass,	shape.GetCompoundShape(), this);
+
+	mVehicleRigidBody.CreateRaycastVehicle(
+		physics, shape.GetExtents(),
+		shape.GetWheelInfo());
+
+	ClearVehicleComponent();
+	ClearAllGameInfo();
+
+	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATE);
+}
+
+void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape& shape)
 {
-	if (shape && physicsWorld)
-	{
-		mVehicleRigidBody.CreateRigidBody(mass,	shape->GetCompoundShape(), this);
-
-		mVehicleRigidBody.CreateRaycastVehicle(
-			physicsWorld, shape->GetExtents(),
-			shape->GetWheelInfo());
-
-		ClearVehicleComponent();
-
-		mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATION);
-	}
+	mMissileRigidBody.SetMaskBits(OBJ_MASK_GROUP::MISSILE, OBJ_MASK::MISSILE);
+	mMissileRigidBody.CreateRigidBody(mass, shape.GetCollisionShape(), this);
+	mMissileRigidBody.SetNoResponseCollision();	
 }
 
-void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape* shape)
+void Player::StopVehicle()
 {
-	if (shape)
-	{
-		mMissileRigidBody.CreateRigidBody(mass, shape->GetCollisionShape(), this);
-		mMissileRigidBody.SetNoResponseCollision();
-	}
+	mVehicleRigidBody.SetLinearVelocity(btVector3{ 0.0f,0.0f,0.0f });
 }
 
-void Player::Update(float elapsed, btDiscreteDynamicsWorld* physicsWorld)
+void Player::ChangeVehicleMaskGroup(int maskGroup, BPHandler& physics)
+{
+	mVehicleRigidBody.ChangeUpdateFlag(RigidBody::UPDATE_FLAG::UPDATE, RigidBody::UPDATE_FLAG::CHANGE_MASK);
+	mVehicleRigidBody.SetMaskBits(maskGroup, OBJ_MASK::VEHICLE);
+}
+
+void Player::Update(float elapsed, BPHandler& physics)
 {
 	UpdateVehicleComponent(elapsed);
-	// Update invincible mode duration.
-
-	mVehicleRigidBody.Update(physicsWorld);
-	mMissileRigidBody.Update(physicsWorld);
+	mVehicleRigidBody.Update(physics);
+	mMissileRigidBody.Update(physics);
 }
 
-void Player::SetDeletionFlag()
+// NOTE: Not thread-safe.
+void Player::SetRemoveFlag()
 {
-	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
-	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
+	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::REMOVE);
+	DisableMissile();
 }
 
-void Player::Reset(btDiscreteDynamicsWorld* physicsWorld)
+void Player::DisableMissile()
+{
+	mMissileRigidBody.Deactivate();
+	mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::REMOVE);
+}
+
+void Player::SetInvincible(float duration)
+{
+	mInvincible = true;
+	mActive = false;
+	mInvincibleDuration = duration;
+}
+
+void Player::Reset(BPHandler& physics)
 {
 	LoadDone = false;
-	mMissileRigidBody.RemoveRigidBody(physicsWorld);
-	mVehicleRigidBody.RemoveRigidBody(physicsWorld);
+	mVehicleRigidBody.RemoveRigidBody(physics);
+	mMissileRigidBody.RemoveRigidBody(physics);
+	mVehicleRigidBody.Flush();
+	mMissileRigidBody.Flush();
 }
 
-void Player::HandleCollisionWith(const btCollisionObject& objA, const btCollisionObject& objB, GameObject& otherObj)
-{
-	auto myTag = GetTag(objA);
-	auto otherTag = otherObj.GetTag(objB);
-	switch (myTag)
-	{
-	case OBJ_TAG::VEHICLE:
-	{
-		if (otherTag == OBJ_TAG::CHECKPOINT)
-		{
-			int cpIdx = dynamic_cast<Map&>(otherObj).GetCheckpointIndex(objB);
-			HandleCheckpointCollision(cpIdx);
-		}
-		else if (otherTag == OBJ_TAG::MISSILE)
-		{
-			if (mInvincible == false)
-			{
-				mInvincible = true;
-				std::cout << "Hit by missile!\n";
-				// TODO: waits for like 1 second and send spawn packet.
-				// and waits another 1 second and release invincible mode.
-			}
-		}
-		break;
-	}
-	case OBJ_TAG::MISSILE:
-	{
-		if (otherTag == OBJ_TAG::VEHICLE || otherTag == OBJ_TAG::TRACK)
-		{
-			mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::DELETION);
-		}
-		else if (otherTag == OBJ_TAG::VEHICLE)
-		{
-			bool isInvincible = dynamic_cast<Player&>(otherObj).mInvincible;
-			if (isInvincible == false)
-			{
-				mPoint += mConstantPtr->MissileHitPoint;
-			}
-		}
-		break;
-	}
-	default:
-		std::cout << "Wrong tag" << std::endl;
-		break;
-	}
-}
-
-GameObject::OBJ_TAG Player::GetTag(const btCollisionObject& obj) const
+int Player::GetMask(const btCollisionObject& obj) const
 {
 	if (&obj == mVehicleRigidBody.GetRigidBody())
 	{
-		return OBJ_TAG::VEHICLE;
+		return OBJ_MASK::VEHICLE;
 	}
-	else if (&obj == mMissileRigidBody.GetRigidBody())
+	else if (&obj == mMissileRigidBody.GetRigidBody()
+		&& mMissileRigidBody.IsActive())
 	{
-		return OBJ_TAG::MISSILE;
+		return OBJ_MASK::MISSILE;
 	}
+	return OBJ_MASK::NONE;
 }
 
-void Player::HandleCheckpointCollision(int cpIndex)
+bool Player::IsNextCheckpoint(int cpIndex)
 {
 	int nextIdx = (mCurrentCPIndex + 1) % mCPPassed.size();
-	if (nextIdx == cpIndex && mCPPassed[nextIdx] == false)
+	return (nextIdx == cpIndex && mCPPassed[nextIdx] == false);
+}
+
+void Player::MarkNextCheckpoint(int cpIndex)
+{
+	if (mCurrentCPIndex >= 0)
 	{
-		std::cout << "Hit checkpoint: " << nextIdx << std::endl;
-		if (mCurrentCPIndex >= 0)
-		{
-			mCPPassed[mCurrentCPIndex] = false;
-			if (nextIdx == 0)
-			{
-				mLapCount += 1;
-				mPoint += mConstantPtr->LapFinishPoint;
-				std::cout << "Gets point!" << std::endl;
-			}
-		}
-		mCurrentCPIndex = nextIdx;
-		mCPPassed[nextIdx] = true;
+		mCPPassed[mCurrentCPIndex] = false;
 	}
+	mCurrentCPIndex = cpIndex;
+	mCPPassed[cpIndex] = true;
+	ResetReverseCount();
+}
+
+int Player::GetReverseDriveCount(int cpIndex)
+{
+	int prevFirstIndex = std::max(0, mCurrentCPIndex) - 1;
+	int prevSecondIndex = std::max(0, mCurrentCPIndex) - 2;
+
+	if (prevFirstIndex < 0) prevFirstIndex = (int)mCPPassed.size() + prevFirstIndex;
+	if (prevSecondIndex < 0) prevSecondIndex = (int)mCPPassed.size() + prevSecondIndex;
+
+	if (cpIndex <= prevSecondIndex && mReverseDriveCount == 1)
+	{
+		mReverseDriveCount += 1;
+		return mReverseDriveCount;
+	}
+	if (cpIndex == prevFirstIndex && mReverseDriveCount == 0)
+	{
+		mReverseDriveCount += 1;
+		return mReverseDriveCount;
+	}
+	return 0;
+}
+
+bool Player::NeedUpdate()
+{
+	if (mVehicleRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::REMOVE
+		|| mMissileRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::REMOVE)
+	{
+		return true;
+	}
+	return (Empty == false);
 }
 
 void Player::UpdateWorldTransform()
@@ -195,12 +199,38 @@ void Player::ClearVehicleComponent()
 	for (auto& [key, val] : mKeyMap) val = false;
 }
 
+void Player::ClearAllGameInfo()
+{
+	for (int i = 0; i < mCPPassed.size(); i++)
+	{
+		mCPPassed[i] = false;
+	}
+	mCurrentCPIndex		= -1;
+	mLapCount			= 0;
+	mHitCount			= 0;
+	mPoint				= 0;
+	mReverseDriveCount	= 0;
+	mItemCount			= 0;
+	mDriftGauge			= 0.0f;
+	mInvincibleDuration = 0.0f;
+	mInvincible			= false;
+	mItemIncreased		= false;
+	mManualRespawn		= false;
+	mActive				= true;
+	mBoosterToggle		= false;
+}
+
 void Player::UpdateVehicleComponent(float elapsed)
 {
 	UpdateDriftGauge(elapsed);
 	UpdateBooster(elapsed);
 	UpdateSteering(elapsed);
 	UpdateEngineForce();
+}
+
+void Player::UpdateInvincibleDuration(float elapsed)
+{
+	mInvincibleDuration -= elapsed;
 }
 
 void Player::UpdateDriftGauge(float elapsed)
@@ -228,8 +258,8 @@ void Player::UpdateDriftGauge(float elapsed)
 
 		float angle = acos(linearVelNorm.dot(forwardNorm));
 
-		float DriftLimit = 30.0f / 180.0f * Math::PI;
-		float AngleLimit = 50.0f / 180.0f * Math::PI;
+		float DriftLimit = 30.0f / 180.0f * (float)Math::PI;
+		float AngleLimit = 50.0f / 180.0f * (float)Math::PI;
 
 		if (angle > DriftLimit && mDriftGauge < 1.0f)
 		{
@@ -237,7 +267,12 @@ void Player::UpdateDriftGauge(float elapsed)
 			if (mDriftGauge > 1.0f)
 			{
 				mDriftGauge = 0.0f;
-				if (mItemCount < 2)	mItemCount += 1;	
+				if (mItemCount < 2)
+				{
+					mItemCount += 1;
+					mItemIncreased = true;
+					std::cout << "Item increased.\n";
+				}
 			}
 		}
 
@@ -292,7 +327,7 @@ void Player::UpdateSteering(float elapsed)
 			0.0f);
 	}
 	if (mKeyMap[VK_LEFT])
-	{		
+	{
 		comp.VehicleSteering = std::max(
 			comp.VehicleSteering - mConstantPtr->SteeringIncrement * scale * elapsed,
 			-mConstantPtr->SteeringClamp);
@@ -350,13 +385,20 @@ void Player::UpdateEngineForce()
 
 void Player::ToggleKeyValue(uint8_t key, bool pressed)
 {
+	if (mActive == false) return;
+
 	if ((key == 'Z' || key == 'X'))
 	{
 		if (pressed && IsItemAvailable())
 		{
-			//if (UseItem(key)) mItemCount -= 1;
-			UseItem(key);
+			if (UseItem(key)) mItemCount -= 1;
+			//UseItem(key);
 		}
+	}
+	else if (key == 'P' && pressed)
+	{
+		bool expected = false;
+		mManualRespawn.compare_exchange_strong(expected, true);
 	}
 	else
 	{
@@ -366,8 +408,8 @@ void Player::ToggleKeyValue(uint8_t key, bool pressed)
 
 bool Player::IsItemAvailable()
 {
-	//return (mItemCount > 0);
-	return true;
+	return (mItemCount > 0);
+	//return true;
 }
 
 bool Player::UseItem(uint8_t key)
@@ -381,14 +423,18 @@ bool Player::UseItem(uint8_t key)
 	}
 	case 'X':
 	{
-		return mMissileRigidBody.ChangeUpdateFlag(
+		if (mMissileRigidBody.ChangeUpdateFlag(
 			RigidBody::UPDATE_FLAG::NONE,
-			RigidBody::UPDATE_FLAG::CREATION);
+			RigidBody::UPDATE_FLAG::CREATE))
+		{
+			mMissileRigidBody.Activate();
+			return true;
+		}
 	}}
 	return false;
 }
 
 bool Player::CheckMissileExist() const
 {
-	return (mMissileRigidBody.GetUpdateFlag() == RigidBody::UPDATE_FLAG::UPDATE);
+	return (mMissileRigidBody.IsActive());
 }
