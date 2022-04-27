@@ -50,6 +50,7 @@ public:
 public:
 	void UpdateLight(float elapsed);
 	void AddParticleObject();
+	void DestroyParticleObject();
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
 	void UpdateVolumetricConstant();
@@ -160,6 +161,7 @@ private:
 
 	float mMissileInterval = 0.0f;
 	float mCubemapInterval = 0.0f;
+	float mParticleInterval = 0.0f;
 
 	UINT mCubemapDrawIndex = 0;
 

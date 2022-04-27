@@ -196,7 +196,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
 	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
-	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl");
+	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl", true);
 	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
 	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
 	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
@@ -727,35 +727,6 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			mVolumetricEnable = !mVolumetricEnable;
 		}
 
-		/*if (wParam == 'U')
-		{
-			mVolumetricInner += 1.0f;
-		}
-		if (wParam == 'J')
-		{
-			mVolumetricInner -= 1.0f;
-		}
-		if (wParam == 'I')
-		{
-			mVolumetricOuter += 1.0f;
-		}
-		if (wParam == 'K')
-		{
-			mVolumetricOuter -= 1.0f;
-		}
-		if (wParam == 'O')
-		{
-			mVolumetricRange += 1.0f;
-		}
-		if (wParam == 'L')
-		{
-			mVolumetricRange -= 1.0f;
-		}
-
-		OutputDebugStringW((L"Inner : " + std::to_wstring(mVolumetricInner) + L"\n").c_str());
-		OutputDebugStringW((L"outer : " + std::to_wstring(mVolumetricOuter) + L"\n").c_str());
-		OutputDebugStringW((L"range : " + std::to_wstring(mVolumetricRange) + L"\n\n").c_str());*/
-
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 		break;
@@ -796,6 +767,22 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 	{
 		mMissileInterval -= elapsed;
 	}
+
+	if (mParticleInterval < 0.0f)
+	{
+		if(GetAsyncKeyState(VK_LSHIFT) & 0x8000)
+		{
+			mParticleInterval = 0.1f;
+			
+			if(mPipelines[Layer::Particle]->GetRenderObjects().size() == 0)
+				AddParticleObject();
+		}
+	}
+	else
+	{
+		mParticleInterval -= elapsed;
+	}
+	
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 
 #ifndef STANDALONE
@@ -848,6 +835,16 @@ void InGameScene::UpdateLight(float elapsed)
 }
 
 void InGameScene::AddParticleObject()
+{
+	auto obj = std::make_shared<GameObject>();
+
+	auto particleEmittor = std::make_shared<ParticleMesh>();
+	obj->SetMesh(particleEmittor);
+	
+	mPipelines[Layer::Particle]->AppendObject(obj);
+}
+
+void InGameScene::DestroyParticleObject()
 {
 	
 }
