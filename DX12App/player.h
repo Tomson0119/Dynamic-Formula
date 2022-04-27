@@ -135,6 +135,8 @@ public:
 
 	LightBundle* GetLightBundle() { return mFrontLight; }
 
+	Camera* GetCubeMapCamera(int index) { return mCameras[index].get(); }
+
 private:
 	static const int RtvCounts = 12;
 	static const float TransparentInterval;
@@ -144,7 +146,7 @@ private:
 
 	ULONG mCubeMapSize = 500;
 
-	std::array<std::unique_ptr<Camera>, RtvCounts / 2> mCameras;
+	std::array<std::shared_ptr<Camera>, RtvCounts / 2> mCameras;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE mRtvCPUDescriptorHandles[RtvCounts]{};
 	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle{};

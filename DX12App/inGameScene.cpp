@@ -497,8 +497,13 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 	if (mShadowMapRenderer)
 		mShadowMapRenderer->PreRender(cmdList, this);
 
+	Camera* cam[1] = {mMainCamera.get()};
+	UpdateInstancingPipelines(cam, 1);
+
 	if (mCubemapInterval < 0.0f)
 	{
+		Camera* playerCam[1] = { static_cast<PhysicsPlayer*>(mPlayer)->GetCubeMapCamera(mCubemapDrawIndex) };
+		
 		mCubemapInterval = 0.001f;
 		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
@@ -796,9 +801,12 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	OnPreciseKeyInput(cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
-	mCurrentCamera->Update(elapsed);
+	//mCurrentCamera->Update(elapsed);
 
-	mShadowMapRenderer->UpdateSplitFrustum(mCurrentCamera);
+	mMainCamera->Update(elapsed);
+	mDirectorCamera->Update(elapsed);
+
+	mShadowMapRenderer->UpdateSplitFrustum(mMainCamera.get());
 	mShadowMapRenderer->UpdateDepthCamera(cmdList);
 
 	for (const auto& [_, pso] : mPipelines)
@@ -911,8 +919,13 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 
 	mGameInfoCB->CopyData(0, gameInfo);
 	
-	for (const auto& [_, pso] : mPipelines)
-		pso->UpdateConstants();
+	Camera* cam[1] = { mMainCamera.get()};
+	
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if(layer != Layer::Transparent && layer != Layer::Instancing)
+			pso->UpdateConstants(cam, 1);
+	}
 }
 
 void InGameScene::UpdateDynamicsWorld()
@@ -1034,7 +1047,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex, bool cubeMapping)
-{	
+{
 	SetGraphicsCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
 
@@ -1061,25 +1074,6 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 		{
 			continue;
 		}
-		else
-			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
-	}
-}
-
-void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex, bool cubeMapping)
-{
-	SetGraphicsCBV(cmdList, cameraCBIndex);
-	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
-
-	for (const auto& [layer, pso] : mPipelines)
-	{
-		if (layer == Layer::Color)
-			continue;
-
-		if (layer != Layer::Terrain && layer != Layer::SkyBox)
-			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), true, (bool)mLODSet, true, cubeMapping);
-		else if(layer != Layer::SkyBox)
-			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), false, (bool)mLODSet, true, cubeMapping);
 		else
 			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
 	}
@@ -1347,5 +1341,14 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 		bundle.volumetric = v;
 
 		mLights.push_back(bundle);
+	}
+}
+
+void InGameScene::UpdateInstancingPipelines(Camera** cam, int count)
+{
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if (layer == Layer::Transparent || layer == Layer::Instancing)
+			pso->UpdateConstants(cam, count);
 	}
 }

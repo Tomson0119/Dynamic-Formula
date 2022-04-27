@@ -25,11 +25,6 @@ public:
 
 	virtual void Update(float elapsedTime, float updateRate);
 
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList,
-		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
-		UINT64 matGPUAddress, UINT64 byteOffset,
-		const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO=false);
-
 	virtual void Draw(
 		ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
@@ -38,11 +33,6 @@ public:
 	void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
 		UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
 		UINT64 matGPUAddress, UINT64 byteOffset, int InstanceCount, bool isSO = false);
-
-	virtual void DrawInstanced(ID3D12GraphicsCommandList* cmdList,
-		UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
-		UINT64 matGPUAddress, UINT64 byteOffset,
-		const BoundingFrustum& viewFrustum, bool objectOOBB, int InstanceCount, bool isSO = false);
 
 	virtual void ChangeCurrentRenderTarget() {}
 

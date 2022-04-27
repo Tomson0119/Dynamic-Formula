@@ -211,12 +211,6 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 	Draw(cmdList);
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline, bool msaaOff)
-{
-	PreparePipeline(cmdList, drawWiredFrame, setPipeline, msaaOff);
-	Draw(cmdList, viewFrustum, objectOOBB);
-}
-
 void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 {
 	UINT matOffset = 0;
@@ -229,23 +223,6 @@ void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 			mRootParamSRVIndex,
 			mMaterialCB->GetGPUVirtualAddress(matOffset), 
 			mMaterialCB->GetByteSize(), isSO);
-
-		matOffset += mRenderObjects[i]->GetMeshCount();
-	}
-}
-
-void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
-{
-	UINT matOffset = 0;
-	for (int i = 0; i < mRenderObjects.size(); i++)
-	{
-		mRenderObjects[i]->Draw(
-			cmdList,
-			mRootParamMatIndex,
-			mRootParamCBVIndex,
-			mRootParamSRVIndex,
-			mMaterialCB->GetGPUVirtualAddress(matOffset),
-			mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
 
 		matOffset += mRenderObjects[i]->GetMeshCount();
 	}
@@ -307,7 +284,7 @@ void Pipeline::Update(float elapsed, float updateRate, Camera* camera)
 		obj->Update(elapsed, updateRate);
 }
 
-void Pipeline::UpdateConstants()
+void Pipeline::UpdateConstants(Camera** camera, int count)
 {
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++) {
@@ -544,12 +521,12 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 	if (mRenderObjects.size() <= 0) return;
 
 	UINT matOffset = 0;
-	UINT instancingOffset = 0;
+	float instancingOffset = 0;
 
 	cmdList->SetGraphicsRootShaderResourceView(9, mObjectSB->GetGPUVirtualAddress(0));
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
-		if (mRenderObjects[i]->GetMeshCount() > 0)
+		if (mRenderObjects[i]->GetMeshCount() > 0 && mInstancingCount[mRenderObjects[i]->GetName()] > 0)
 		{
 			cmdList->SetGraphicsRoot32BitConstants(8, 1, &instancingOffset, 3);
 
@@ -560,34 +537,6 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 				mRootParamSRVIndex,
 				mMaterialCB->GetGPUVirtualAddress(matOffset),
 				mMaterialCB->GetByteSize(), mInstancingCount[mRenderObjects[i]->GetName()], isSO);
-
-			matOffset += mRenderObjects[i]->GetMeshCount();
-			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];
-		}
-	}
-}
-
-void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
-{
-	if (mRenderObjects.size() <= 0) return;
-
-	UINT matOffset = 0;
-	UINT instancingOffset = 0;
-
-	cmdList->SetGraphicsRootShaderResourceView(mRootParamSBIndex, mObjectSB->GetGPUVirtualAddress(0));
-	for (int i = 0; i < mRenderObjects.size(); i++)
-	{
-		if (mRenderObjects[i]->GetMeshCount() > 0)
-		{
-			cmdList->SetGraphicsRoot32BitConstants(8, 1, &instancingOffset, 3);
-			
-			mRenderObjects[i]->DrawInstanced(
-				cmdList,
-				mRootParamMatIndex,
-				mRootParamSBIndex,
-				mRootParamSRVIndex,
-				mMaterialCB->GetGPUVirtualAddress(matOffset),
-				mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
 
 			matOffset += mRenderObjects[i]->GetMeshCount();
 			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];
@@ -607,16 +556,59 @@ void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
 	}
 }
 
-void InstancingPipeline::UpdateConstants()
+void InstancingPipeline::UpdateConstants(Camera** camera, int count)
 {
 	UINT matOffset = 0;
+	for (auto& [_, count] : mInstancingCount)
+	{
+		count = 0;
+	}
+
+	std::map<int, bool> collidedIndex;
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
-		mObjectSB->CopyData(i, mRenderObjects[i]->GetInstancingInfo());
-		if (mRenderObjects[i]->GetMeshCount() > 0)
+		XMMATRIX world = XMLoadFloat4x4(&mRenderObjects[i]->GetWorld());
+		XMMATRIX invWorld = XMMatrixInverse(&XMMatrixDeterminant(world), world);
+
+		bool collided = false;
+		for (int j = 0; j < count; ++j)
 		{
-			mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
-			matOffset += mRenderObjects[i]->GetMeshCount();
+			XMMATRIX invView = XMLoadFloat4x4(&camera[j]->GetInverseView());
+			XMMATRIX viewToLocal = XMMatrixMultiply(invView, invWorld);
+			auto viewFrustum = camera[j]->GetViewFrustum();
+
+			BoundingFrustum localFrustum;
+			viewFrustum.Transform(localFrustum, viewToLocal);
+			if (localFrustum.Contains(mRenderObjects[i]->GetBoundingBox()) != DirectX::DISJOINT)
+			{
+				collided = true;
+				break;
+			}
+		}
+
+		if (collided)
+		{
+			collidedIndex[i] = true;
+			mInstancingCount[mRenderObjects[i]->GetName()]++;
+		}
+		else
+		{
+			collidedIndex[i] = false;
+		}
+	}
+	
+	int currentIndex = 0;
+	for (int i = 0; i < mRenderObjects.size(); ++i)
+	{
+		if (collidedIndex[i])
+		{
+			mObjectSB->CopyData(currentIndex, mRenderObjects[i]->GetInstancingInfo());
+			if (mRenderObjects[i]->GetMeshCount() > 0)
+			{
+				mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
+				matOffset += mRenderObjects[i]->GetMeshCount();
+			}
+			currentIndex++;
 		}
 	}
 }

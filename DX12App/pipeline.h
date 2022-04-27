@@ -68,11 +68,9 @@ public:
 
 	void Pipeline::Update(float elapsed, float updateRate, Camera* camera);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);
-	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
 
-	virtual void UpdateConstants();
+	virtual void UpdateConstants(Camera** camera, int count);
 
 	std::vector<std::shared_ptr<GameObject>>& GetRenderObjects() { return mRenderObjects; }
 
@@ -164,9 +162,8 @@ public:
 	InstancingPipeline();
 	virtual ~InstancingPipeline();
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
-	virtual void Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO = false);
 	virtual void BuildConstantBuffer(ID3D12Device* device);
-	virtual void UpdateConstants();
+	virtual void UpdateConstants(Camera** camera, int count);
 
 	std::map<std::string, int> mInstancingCount;
 private:

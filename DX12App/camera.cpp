@@ -211,15 +211,8 @@ void Camera::UpdateViewMatrix()
 		XMMATRIX invViewMat = XMMatrixInverse(&XMMatrixDeterminant(viewMat), viewMat);
 		XMStoreFloat4x4(&mInvView, invViewMat);
 
-		mFrustumView.Transform(mFrustumWorld, XMLoadFloat4x4(&mInvView));
-
 		mViewDirty = false;
 	}
-}
-
-bool Camera::IsInFrustum(BoundingOrientedBox& boundBox)
-{
-	return mFrustumWorld.Intersects(boundBox);
 }
 
 

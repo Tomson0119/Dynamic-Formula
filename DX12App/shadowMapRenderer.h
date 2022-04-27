@@ -28,6 +28,8 @@ public:
 	XMFLOAT4X4 GetShadowTransform(int idx) const;
 	int GetMapCount() const { return mMapCount; }
 
+	Camera* GetDepthCamera(int index) { return mDepthCamera[index].get(); }
+
 private:
 	void BuildDescriptorViews(ID3D12Device* device);
 

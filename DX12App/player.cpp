@@ -173,9 +173,9 @@ PhysicsPlayer::PhysicsPlayer(UINT netID)
 	mMotionBlurOn = false;
 	mCubemapOn = true;
 
-	for (std::unique_ptr<Camera>& camera : mCameras)
+	for (std::shared_ptr<Camera>& camera : mCameras)
 	{
-		camera = std::make_unique<Camera>();
+		camera = std::make_shared<Camera>();
 		camera->SetLens(0.5f * Math::PI, 1.0f, 0.1f, 100.0f);
 	}
 

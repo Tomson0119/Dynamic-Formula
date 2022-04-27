@@ -107,6 +107,8 @@ private:
 	void LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 	void LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 
+	void UpdateInstancingPipelines(Camera** cam, int count);
+
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
 
 private:

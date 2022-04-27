@@ -51,8 +51,6 @@ public:
 	virtual void Update(const float elapsedTime);
 	virtual void UpdateViewMatrix();
 
-	bool IsInFrustum(BoundingOrientedBox& boundBox);
-
 public:
 	const XMFLOAT3& GetPosition() const { return mPosition; }
 	const XMFLOAT3& GetRight() const { return mRight; }
@@ -78,7 +76,6 @@ public:
 	CameraConstants GetConstants() const;
 
 	const CameraMode& GetMode() const { return mMode; }
-	const BoundingFrustum& GetWorldFrustum() const { return mFrustumWorld; }
 	const BoundingFrustum& GetViewFrustum() const { return mFrustumView; }
 
 protected:
@@ -106,7 +103,6 @@ protected:
 	XMFLOAT4X4 mOldView = Matrix4x4::Identity4x4();
 
 	BoundingFrustum mFrustumView;
-	BoundingFrustum mFrustumWorld;
 
 	class Player* mPlayer = nullptr;
 

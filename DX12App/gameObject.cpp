@@ -391,85 +391,9 @@ void GameObject::DrawInstanced(ID3D12GraphicsCommandList* cmdList,
 	}
 }
 
-
-void GameObject::DrawInstanced(ID3D12GraphicsCommandList* cmdList, 
-	UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
-	UINT64 matGPUAddress, UINT64 byteOffset, const BoundingFrustum& viewFrustum,
-	bool objectOOBB, int InstanceCount, bool isSO)
-{
-	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
-	for (int i = 0; i < mMeshes.size(); i++)
-	{
-		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
-
-		int srvIndex = mMeshes[i]->GetSrvIndex();
-
-		if (srvIndex >= 0)
-		{
-			srvGpuHandle = mSrvGPUAddress;
-			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
-			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
-		}
-		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
-
-		if (objectOOBB && viewFrustum.Intersects(mOOBB))
-			mMeshes[i]->DrawInstanced(cmdList, InstanceCount, isSO);
-		else if (!objectOOBB)
-			mMeshes[i]->DrawInstanced(cmdList, viewFrustum, InstanceCount, isSO);
-
-		matGPUAddress += byteOffset;
-	}
-}
-
-void GameObject::Draw(
-	ID3D12GraphicsCommandList* cmdList, 
-	UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
-	UINT64 matGPUAddress, UINT64 byteOffset, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
-{
-	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
-	
-	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
-	for (int i = 0; i < mMeshes.size(); i++)
-	{
-		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
-
-		int srvIndex = mMeshes[i]->GetSrvIndex();
-
-		if (srvIndex >= 0)
-		{
-			srvGpuHandle = mSrvGPUAddress;
-			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
-			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
-		}
-		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
-
-		if (objectOOBB && viewFrustum.Intersects(mOOBB))
-			mMeshes[i]->Draw(cmdList, isSO);
-		else if(!objectOOBB)
-			mMeshes[i]->Draw(cmdList, viewFrustum, isSO);
-
-		matGPUAddress += byteOffset;
-	}
-}
-
 void GameObject::UpdateTransform()
 {
 	mWorld = Matrix4x4::CalulateWorldTransform(mPosition, mQuaternion, mScaling);
-	/*mWorld(0, 0) = mScaling.x * mRight.x;
-	mWorld(0, 1) = mRight.y;
-	mWorld(0, 2) = mRight.z;
-
-	mWorld(1, 0) = mUp.x;
-	mWorld(1, 1) = mScaling.y * mUp.y;
-	mWorld(1, 2) = mUp.z;
-
-	mWorld(2, 0) = mLook.x;
-	mWorld(2, 1) = mLook.y;
-	mWorld(2, 2) = mScaling.z * mLook.z;
-
-	mWorld(3, 0) = mPosition.x;
-	mWorld(3, 1) = mPosition.y;
-	mWorld(3, 2) = mPosition.z;*/
 }
 
 void GameObject::RotateDirectionVectors()

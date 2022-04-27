@@ -89,24 +89,6 @@ void Mesh::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 	}
 }
 
-void Mesh::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool isSO)
-{
-	if (viewFrustum.Intersects(mOOBB))
-	{
-		cmdList->IASetVertexBuffers(mSlot, 1, &mVertexBufferView);
-		cmdList->IASetPrimitiveTopology(mPrimitiveTopology);
-
-		if (mIndexCount > 0)
-		{
-			cmdList->IASetIndexBuffer(&mIndexBufferView);
-			cmdList->DrawIndexedInstanced(mIndexCount, 1, mStartIndex, mBaseVertex, 0);
-		}
-		else
-		{
-			cmdList->DrawInstanced(mVerticesCount, 1, mBaseVertex, 0);
-		}
-	}
-}
 void Mesh::DrawInstanced(ID3D12GraphicsCommandList* cmdList, int InstanceCount, bool isSO)
 {
 	cmdList->IASetVertexBuffers(mSlot, 1, &mVertexBufferView);
@@ -120,25 +102,6 @@ void Mesh::DrawInstanced(ID3D12GraphicsCommandList* cmdList, int InstanceCount, 
 	else
 	{
 		cmdList->DrawInstanced(mVerticesCount, InstanceCount, mBaseVertex, 0);
-	}
-}
-
-void Mesh::DrawInstanced(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, int InstanceCount, bool isSO)
-{
-	if (viewFrustum.Intersects(mOOBB))
-	{
-		cmdList->IASetVertexBuffers(mSlot, 1, &mVertexBufferView);
-		cmdList->IASetPrimitiveTopology(mPrimitiveTopology);
-
-		if (mIndexCount > 0)
-		{
-			cmdList->IASetIndexBuffer(&mIndexBufferView);
-			cmdList->DrawIndexedInstanced(mIndexCount, InstanceCount, mStartIndex, mBaseVertex, 0);
-		}
-		else
-		{
-			cmdList->DrawInstanced(mVerticesCount, InstanceCount, mBaseVertex, 0);
-		}
 	}
 }
 
