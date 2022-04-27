@@ -395,7 +395,6 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		}
 
 		float DriftLimit = 30.0f / 180.0f;
-
 		float AngleLimit = 50.0f / 180.0f;
 
 		auto camLook = mCamera->GetLook();
