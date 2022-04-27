@@ -7,14 +7,7 @@ UI::UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommand
 
 UI::~UI() 
 {
-    mvfFontSizes.clear();
-    mvwsFonts.clear();
-    mvBitmapFileNames.clear();
-    mvTextBlocks.clear();
-    mvColors.clear();
 
-    //mvWrappedRenderTargets.clear();
-    //mvd2dRenderTargets.clear();
 }
 
 void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)

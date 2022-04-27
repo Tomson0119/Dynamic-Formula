@@ -221,8 +221,8 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	for(int i=0;i<static_cast<int>(GetTextCnt());++i)
 		mvTextBlocks[i].strText.clear();
 
-	for (auto& wc : L"Time: ")
-		mvTextBlocks[0].strText.push_back(wc);
+	for (auto& str : "Time: ")
+		mvTextBlocks[0].strText.push_back(str);
 	float LapTime = GTime - CountdownTime;
 	int Min = 0;
 	float Sec = 0.0;
@@ -231,22 +231,22 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 
 	if (Min < 10)
 		mvTextBlocks[0].strText.push_back('0');
-	for (auto &wc : std::to_wstring(Min))
-		mvTextBlocks[0].strText.push_back(wc);
+	for (auto &str : std::to_string(Min))
+		mvTextBlocks[0].strText.push_back(str);
 
 	mvTextBlocks[0].strText.push_back(':');
 	if (Sec < 10)
 		mvTextBlocks[0].strText.push_back('0');
 	for (int i = 0; i < 3 + !(Sec < 10); ++i)
-		mvTextBlocks[0].strText.push_back(std::to_wstring(Sec)[i]);
+		mvTextBlocks[0].strText.push_back(std::to_string(Sec)[i]);
 
 	//Lap Count Set
 	if (static_cast<int>(GTime / 3) > 0)
 	{
-		for (auto &wc : std::to_wstring(static_cast<int>(LapTime / 3)))
-			mvTextBlocks[1].strText.push_back(wc);
-		for (auto &wc : std::wstring{ L"Lap" })
-			mvTextBlocks[1].strText.push_back(wc);
+		for (auto &str : std::to_string(static_cast<int>(LapTime / 3)))
+			mvTextBlocks[1].strText.push_back(str);
+		for (auto &str : std::string{ "Lap" })
+			mvTextBlocks[1].strText.push_back(str);
 	}
 	//My Rank
 	UINT MyRank = 1;
@@ -277,25 +277,25 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	if (mPlayer->GetCurrentVelocity() >= 1000.0f)
 	{
 		for (int i = 0; i < 6; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_wstring(mPlayer->GetCurrentVelocity())[i]);
+			mvTextBlocks[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
 	}
 	else if (mPlayer->GetCurrentVelocity() >= 100.0f)
 	{
 		for (int i = 0; i < 5; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_wstring(mPlayer->GetCurrentVelocity())[i]);
+			mvTextBlocks[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
 	}
 	else if (mPlayer->GetCurrentVelocity() >= 10.0f)
 	{
 		for (int i = 0; i < 4; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_wstring(mPlayer->GetCurrentVelocity())[i]);
+			mvTextBlocks[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
 	}
 	else
 	{
 		for (int i = 0; i < 3; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_wstring(0.0f)[i]);
+			mvTextBlocks[3].strText.push_back(std::to_string(0.0f)[i]);
 	}
-	for (auto &wc : std::wstring(L"km/h"))
-		mvTextBlocks[4].strText.push_back(wc);
+	for (auto &str : std::string("km/h"))
+		mvTextBlocks[4].strText.push_back(str);
 
    /* for (int i = 0; i < TextCnt; ++i)
         mvTextBlocks[i].strText = TextUI[i];*/
@@ -471,6 +471,7 @@ void InGameUI::CreateFontFormat()
 {
 	
     std::vector<std::wstring> Fonts;
+	//Manrope-Regular
     Fonts.push_back(L"FivoSans-Regular"); // Time
     Fonts.push_back(L"abberancy"); //Lap
     Fonts.push_back(L"Xenogears"); // Rank

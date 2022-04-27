@@ -26,8 +26,7 @@ public:
     virtual void Draw(UINT nFrame);
 
     virtual HRESULT LoadBitmapResourceFromFile(std::wstring ImageName, int index);
-    virtual void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
-    virtual void DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpNum, const float aOpacities[]);
+    
     virtual void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height);
     virtual void BuildBrush(D2D1::ColorF* ColorList, UINT gradientCnt, D2D1::ColorF* gradientColors);
     virtual void BuildBrush(std::vector<D2D1::ColorF>& ColorList, UINT gradientCnt, D2D1::ColorF* gradientColors);
@@ -50,6 +49,8 @@ public:
     virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y) { return 0; }
 
     void BeginDraw(UINT nFrame);
+    void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
+    void DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpNum, const float aOpacities[]);
     void TextDraw(const std::vector<TextBlock> &mvTextBlocks);
     void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
     void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
