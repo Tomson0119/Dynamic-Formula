@@ -83,10 +83,10 @@ void InGameScene::BuildObjects(
 
 	mCurrentCamera = mDirectorCamera.get();
 
-	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
+	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
 	mDirectionalLight.SetInfo(
-		XMFLOAT3(0.3f, 0.3f, 0.3f),
+		XMFLOAT3(0.1f, 0.1f, 0.1f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		0.0f, 0.0f, 0.0f,
