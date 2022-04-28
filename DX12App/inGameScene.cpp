@@ -838,8 +838,8 @@ void InGameScene::AddParticleObject()
 {
 	auto obj = std::make_shared<GameObject>();
 
-	auto particleEmittor = std::make_shared<ParticleMesh>();
-	obj->SetMesh(particleEmittor);
+	//auto particleEmittor = std::make_shared<ParticleMesh>();
+	//obj->SetMesh(particleEmittor);
 	
 	mPipelines[Layer::Particle]->AppendObject(obj);
 }

@@ -151,7 +151,7 @@ private:
     std::vector<float> mvfFontSizes; //FontSize
     std::vector<std::wstring> mvwsFonts; //Fonts
     std::vector<std::wstring> mvBitmapFileNames; //BitmapFileNames
-    std::vector<ComPtr<ID2D1Bitmap1>> mvBitmaps; //Bitmaps
+    std::vector<ID2D1Bitmap*> mvBitmaps; //Bitmaps
     std::vector<TextBlock>          mvTextBlocks; //TextBlocks
     std::vector<D2D1::ColorF> mvColors; //Colors
     std::vector<DWRITE_TEXT_ALIGNMENT> mvdwTextAlignments;  //TextAllignments
