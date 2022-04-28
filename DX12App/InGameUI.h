@@ -5,7 +5,7 @@ class InGameUI : public UI
 {
 public:
     InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
-    virtual ~InGameUI();
+    virtual ~InGameUI() = default;
     virtual void Update(float GTime, Player* mPlayer);
     virtual void Update(float GTime, std::vector<std::string> Texts);
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y);
@@ -20,7 +20,9 @@ public:
     void SetVectorSize(UINT nFrame, UINT TextCnt);
     void SetTextRect();
     void StartPrint(const std::wstring& strUIText);
-    void SetDriftGauge(float gauge);
+
+    void SetDriftGauge(int gauge);
+    void SetRunningTime(float time) { mRunningTime = time; }
 
 private:
     virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
@@ -28,12 +30,11 @@ private:
     float mfWidth = 0.0f;
     float mfHeight = 0.0f;
 
-    UINT uItemCnt = 0;
-    float fDriftGauge = 0.0f;   // 드리프트 0~1
+    std::atomic_int mItemCnt = 0;
+    std::atomic_int mDriftGauge = 0;
 
     UINT TextCnt;
     UINT UICnt;
-
     
     float mItemOffTime = 3.5f;
     float mItemOffStart = 0.0f;
@@ -42,6 +43,8 @@ private:
     bool mItemOff = false;
     bool mIsShootingMissile = false;
     bool mIsBoost = false;
+
+    float mRunningTime;
 
     //ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
 

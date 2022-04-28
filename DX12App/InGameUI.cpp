@@ -1,18 +1,16 @@
 #include "stdafx.h"
 #include "InGameUI.h"
 
-InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(5), UICnt(3)
+InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
+	: UI(nFrame, device, pd3dCommandQueue),
+	  TextCnt(5),
+	  UICnt(3),
+	  mRunningTime(0)
     // Text: GameTime, LapCnt, Rank, StartCount, Velocity
     //UI: DraftGage, Item1, Item2
 {
     SetVectorSize(nFrame, TextCnt);
     Initialize(device, pd3dCommandQueue);
-}
-
-InGameUI::~InGameUI()
-{
-
 }
 
 void InGameUI::SetVectorSize(UINT nFrame, UINT TextCnt)
@@ -113,6 +111,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 		for (auto wc : std::wstring{ L"Lap" })
 			mvTextBlocks[1].strText.push_back(wc);
 	}
+
 	//My Rank
 	UINT MyRank = 1;
 	mvTextBlocks[2].strText.push_back(('0' + MyRank));
@@ -226,9 +225,9 @@ void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 	}
 }
 
-void InGameUI::SetDriftGauge(float gauge)
+void InGameUI::SetDriftGauge(int gauge)
 {
-	fDriftGauge = gauge;
+	mDriftGauge = gauge;
 }
 
 void InGameUI::Draw(UINT nFrame)
@@ -260,7 +259,7 @@ void InGameUI::Draw(UINT nFrame)
         {
             mfWidth * (3.0f / 16.0f), 
 			mfHeight * (5.0f / 6.0f), 
-			mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)) * fDriftGauge, 
+			mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)) * (mDriftGauge/FIXED_FLOAT_LIMIT),
 			mfHeight * (8.0f / 9.0f)
         }, //DriftGauge
         {
@@ -276,7 +275,8 @@ void InGameUI::Draw(UINT nFrame)
 			mfHeight * (8.0f / 9.0f)
         }//Item2 UI
     };
-	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 2-uItemCnt, 1);
+
+	UI::RectDraw(RectLTRB, FillLTRB, TextCnt, 2-mItemCnt, 1);
 	UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
     //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
 	UI::EndDraw(nFrame);
