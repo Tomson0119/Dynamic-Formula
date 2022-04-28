@@ -26,7 +26,7 @@ public:
     void UpdateItemCnt(bool IsPlus) { if (IsPlus&&muItemCnt<2) ++muItemCnt; else if(!IsPlus && muItemCnt>0) --muItemCnt; }
     void UpdateScore() {}
     void UpdateRank() {}
-    void UpdateDraftGauge();
+    void SetDriftGauge(float gauge);
     void UpdateIngameTime() {}
 
 private:
@@ -51,7 +51,7 @@ private:
     float mfVelocity;
     bool mbIsReverse = false;
     float mfIngameTime;
-
+    float mDriftGauge = 0.0f;
 
     //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

@@ -307,8 +307,8 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	
 		//DraftGage Set
 	//fDriftGauge = mPlayer->GetDriftGauge();
-	muItemCnt = mPlayer->GetItemNum();
-    UpdateDraftGauge();
+	//muItemCnt = mPlayer->GetItemNum();
+    SetDriftGauge(0.5f);
 }
 
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -363,7 +363,7 @@ void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
 void InGameUI::SetDriftGauge(float gauge)
 {
-	fDriftGauge = gauge;
+	mDriftGauge = gauge;
 }
 
 void InGameUI::Draw(UINT nFrame)
