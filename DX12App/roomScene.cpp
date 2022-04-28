@@ -41,6 +41,13 @@ void RoomScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 }
 
+void RoomScene::OnProcessMouseDown(WPARAM btnState, int x, int y)
+{
+	// 레디/시작 버튼
+	// 맵 변경 버튼
+	// 나가기 버튼
+}
+
 void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mpUI->Update(timer.TotalTime());
@@ -69,6 +76,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);
+		// 모든 플레이어 정보 초기화
 		break;
 	}
 	case SC::UPDATE_PLAYER_INFO:
@@ -76,6 +84,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received update player info packet.\n");
 		SC::packet_update_player_info* pck = reinterpret_cast<SC::packet_update_player_info*>(packet);
 		mNetPtr->UpdatePlayerInfo(pck);
+		// 
 		break;
 	}
 	case SC::UPDATE_MAP_INFO:

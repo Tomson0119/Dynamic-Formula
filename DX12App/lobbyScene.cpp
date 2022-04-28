@@ -87,7 +87,20 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		
 		SC::packet_access_room_deny* pck = reinterpret_cast<SC::packet_access_room_deny*>(packet);
 		// show room access deny message
+		switch (pck->reason)
+		{
+		case static_cast<char>(ROOM_STAT::GAME_STARTED):
+			break;
 
+		case static_cast<char>(ROOM_STAT::MAX_ROOM_REACHED):
+			break;
+
+		case static_cast<char>(ROOM_STAT::ROOM_IS_CLOSED):
+			break;
+
+		case static_cast<char>(ROOM_STAT::ROOM_IS_FULL):
+			break;
+		}
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestNewRoom();
 	#endif
@@ -114,10 +127,16 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 					  pck->map_id, 
 					  pck->game_started, 
 					  pck->room_closed };
+
+			// 规 积己
+			// 
+			mpUI->setRoomActive(pck->room_id);
 		}
 		else
 		{
 			mRoomList.erase(pck->room_id);
+
+			// 规 力芭
 		}
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);

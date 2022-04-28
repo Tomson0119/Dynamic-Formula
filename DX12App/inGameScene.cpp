@@ -621,6 +621,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_warning_message* pck = reinterpret_cast<SC::packet_warning_message*>(packet);
 		OutputDebugStringA("Reverse drive warning!\n");
+		// 5초간 유지
 		break;
 	}
 	case SC::INGAME_INFO:
@@ -635,6 +636,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			ss << "Rank: " << (int)pck->rank << "\n";
 			OutputDebugStringA(ss.str().c_str());
 		}
+		// 점수판 생성 위에서 아래로 순차적으로 갱신.
 		break;
 	}
 	case SC::GAME_END:

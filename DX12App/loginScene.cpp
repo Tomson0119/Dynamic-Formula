@@ -166,9 +166,10 @@ bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			mNetPtr->Client()->BindUDPSocket(pck->port);
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		}
-		else
-			// Show login has failed message
-			;
+		else if (pck->result == static_cast<char>(LOGIN_STAT::INVALID_IDPWD))
+		{
+			// INVALID ID OR PASSWOD;
+		}
 		break;
 	}
 	case SC::REGISTER_RESULT:
@@ -176,7 +177,18 @@ bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugStringW(L"Received register result packet.\n");
 		
 		SC::packet_register_result* pck = reinterpret_cast<SC::packet_register_result*>(packet);
-		// Show register result
+		if(pck->result == static_cast<char>(REGI_STAT::ACCEPTED))
+		{
+			//
+		}
+		else if (pck->result == static_cast<char>(REGI_STAT::ALREADY_EXIST))
+		{
+			//
+		}
+		else if (pck->result == static_cast<char>(REGI_STAT::INVALID_IDPWD))
+		{
+			//
+		}
 		break;
 	}
 	default:
