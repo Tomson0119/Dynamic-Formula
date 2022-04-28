@@ -1,10 +1,7 @@
 #include "stdafx.h"
-#include "Mesh.h"
-#include "shadowMapRenderer.h"
-#include "LoginUI.h"
-#include "InGameUI.h"
-#include "NetLib/NetModule.h"
 #include "inGameScene.h"
+#include "shadowMapRenderer.h"
+#include "NetLib/NetModule.h"
 
 using namespace std;
 
@@ -514,7 +511,8 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_start_signal* pck = reinterpret_cast<SC::packet_start_signal*>(packet);
 		mGameStarted = true;
-		// TODO: Start signal
+		int runningTime = 180; // 180ÃÊ
+		mpUI->SetRunningTime((float)runningTime);
 		break;
 	}
 	case SC::REMOVE_PLAYER:
@@ -580,12 +578,12 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player)
 		{
-			float drift_gauge = pck->gauge / FIXED_FLOAT_LIMIT;
-			if (drift_gauge > 0.0f)
+			if (pck->gauge >= 0.0f)
 			{
 				std::stringstream ss;
-				ss << "Drift gauge: " << drift_gauge << "\n";
+				ss << "Drift gauge: " << pck->gauge << "\n";
 				OutputDebugStringA(ss.str().c_str());
+				mpUI->SetDriftGauge(pck->gauge);
 			}
 		}
 		break;
@@ -608,6 +606,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if(player)
 		{
 			OutputDebugStringA("Item increased.\n");
+			
 		}
 		break;
 	}
@@ -836,12 +835,14 @@ void InGameScene::UpdateLight(float elapsed)
 
 void InGameScene::AddParticleObject()
 {
-	auto obj = std::make_shared<GameObject>();
-
-	auto particleEmittor = std::make_shared<ParticleMesh>();
-	obj->SetMesh(particleEmittor);
+	// compile error!!!
 	
-	mPipelines[Layer::Particle]->AppendObject(obj);
+	//auto obj = std::make_shared<GameObject>();
+
+	//auto particleEmittor = std::make_shared<ParticleMesh>();
+	//obj->SetMesh(particleEmittor);
+	
+	//mPipelines[Layer::Particle]->AppendObject(obj);
 }
 
 void InGameScene::DestroyParticleObject()

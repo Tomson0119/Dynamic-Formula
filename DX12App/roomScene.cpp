@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "roomScene.h"
 #include "NetLib/NetModule.h"
-#include "RoomUI.h"
 
 RoomScene::RoomScene(HWND hwnd, NetModule* netPtr)
 	: Scene{ hwnd, SCENE_STAT::ROOM, (XMFLOAT4)Colors::Chocolate, netPtr }

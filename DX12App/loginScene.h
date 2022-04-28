@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene.h"
+#include "LoginUI.h"
 
 class NetModule;
 
@@ -33,11 +34,15 @@ public:
 	virtual void OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y);
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
+	
+	virtual UI* GetUI() const override { return mpUI.get(); }
 	void KeyInputFunc();
-	//std::string GetId() { return id; }
+	
 private:
 	std::string mID;
 	std::string mPWD;
 	std::vector<std::string> Texts;
 	bool IsPwd = false;
+
+	std::unique_ptr<LoginUI> mpUI;
 };

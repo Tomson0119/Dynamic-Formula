@@ -1,16 +1,10 @@
 #pragma once
-#include "gameTimer.h"
-#include "camera.h"
-#include "constantBuffer.h"
 
-
-#include "mesh.h"
 #include "pipeline.h"
 #include "player.h"
-#include "shader.h"
-#include "texture.h"
 
 #include "scene.h"
+#include "InGameUI.h"
 
 class DynamicCubeRenderer;
 class ShadowMapRenderer;
@@ -47,6 +41,7 @@ public:
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 
+
 public:
 	void UpdateLight(float elapsed);
 	void AddParticleObject();
@@ -71,6 +66,8 @@ public:
 	virtual void OnProcessMouseUp(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+	virtual UI* GetUI() const override { return mpUI.get(); }
 
 	virtual ID3D12RootSignature* GetRootSignature() const override { return mRootSignature.Get(); }
 
@@ -203,4 +200,6 @@ private:
 	
 	std::vector<LightBundle> mLights;
 	LightInfo mDirectionalLight;
+
+	std::unique_ptr<InGameUI> mpUI;
 };

@@ -39,8 +39,8 @@ void GameFramework::OnResize()
 {
 	if (!mScenes.empty())
 	{
-		mScenes.top().get()->GetUI().get()->Flush();
-		mScenes.top().get()->GetUI().get()->Reset();
+		mScenes.top().get()->GetUI()->Flush();
+		mScenes.top().get()->GetUI()->Reset();
 	}
 	D3DFramework::OnResize();
 	if (!mScenes.empty()) 

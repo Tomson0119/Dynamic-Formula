@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "loginScene.h"
 #include "NetLib/NetModule.h"
-#include "LoginUI.h"
 
 
 LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)

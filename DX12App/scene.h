@@ -54,6 +54,7 @@ public:
 
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame) = 0;
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) = 0;
+	virtual UI* GetUI() const = 0;
 
 	virtual void OnResize(float aspect) { }
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) { }
@@ -64,7 +65,6 @@ public:
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
 
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
-	std::shared_ptr<UI> GetUI() { return mpUI; }
 
 public:
 	SCENE_CHANGE_FLAG GetSceneChangeFlag() const { return mSceneChangeFlag; }
@@ -77,7 +77,7 @@ protected:
 	XMFLOAT4 mFrameColor;
 
 	//UI 
-	std::shared_ptr<UI> mpUI;
+	//std::shared_ptr<UI> mpUI;
 
 	NetModule* mNetPtr;
 

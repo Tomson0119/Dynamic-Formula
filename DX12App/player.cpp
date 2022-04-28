@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "player.h"
 #include "camera.h"
+#include "inGameScene.h"
 
 Player::Player()
 	: GameObject()

@@ -215,6 +215,7 @@ private:
 class ParticleMesh : public Mesh
 {
 public:
+
 	ParticleMesh(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,

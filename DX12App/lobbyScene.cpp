@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "lobbyScene.h"
 #include "NetLib/NetModule.h"
-#include "LobbyUI.h"
 
 LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
 	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::Bisque, netPtr }
