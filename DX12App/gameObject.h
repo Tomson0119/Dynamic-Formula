@@ -331,3 +331,20 @@ public:
 
 	virtual void Update(float elapsedTime, float updateRate) override;
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class SOParticleObject : public GameObject
+{
+public:
+	SOParticleObject(GameObject& parent);
+	virtual ~SOParticleObject() = default;
+	virtual void Update(float elapsedTime, float updateRate) override;
+
+	void SetLocalOffset(XMFLOAT3 offset);
+
+private:
+	GameObject& mParent;
+	XMFLOAT3 mLocalOffset = {0.0f, 0.0f, 0.0f};
+};

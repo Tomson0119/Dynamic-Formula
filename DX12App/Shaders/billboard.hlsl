@@ -46,17 +46,22 @@ void GSStreamOutput(point VertexIn gin[1],
         if (particle.Type == PARTICLE_TYPE_EMMITER)
         {
             particle.Age.x = 0.0f;
-            particle.PosL = gPlayerPos;
+            particle.PosL = float3(0, 0, 0);
             pointStream.Append(particle);
             
             VertexIn vertex = (VertexIn)0;            
             vertex.PosL = particle.PosL;
             vertex.Size = particle.Size;
-            vertex.Direction = gRandFloat4.xyz;
+            
+            float3 dir = vertex.Direction;
+            dir.x *= gRandFloat4.x;
+            dir.y *= gRandFloat4.y;
+            vertex.Direction = dir;
+            
             vertex.Speed = particle.Speed * gRandFloat4.w;               
             vertex.Type = PARTICLE_TYPE_FLARE;
             vertex.Age.x = 0.0f;
-            vertex.Age.y = 10.0f;
+            vertex.Age.y = 0.2f;
             pointStream.Append(vertex);
         }
         else

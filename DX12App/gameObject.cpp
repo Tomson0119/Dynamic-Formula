@@ -1019,6 +1019,23 @@ void StaticObject::Update(float elapsedTime, float updateRate)
 	mOldWorld = mWorld;
 
 	UpdateTransform();
+}
 
-	//UpdateBoundingBox();
+SOParticleObject::SOParticleObject(GameObject& parent) : GameObject(), mParent{ parent }
+{
+}
+
+void SOParticleObject::Update(float elapsedTime, float updateRate)
+{
+	mPosition = mLocalOffset;
+
+	RotateDirectionVectors();
+	UpdateTransform();
+
+	mWorld = Matrix4x4::Multiply(mWorld, mParent.GetWorld());
+}
+
+void SOParticleObject::SetLocalOffset(XMFLOAT3 offset)
+{
+	mLocalOffset = offset;
 }

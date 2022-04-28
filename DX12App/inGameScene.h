@@ -44,7 +44,7 @@ public:
 
 public:
 	void UpdateLight(float elapsed);
-	void AddParticleObject();
+	void AddParticleObject(ID3D12GraphicsCommandList* cmdList);
 	void DestroyParticleObject();
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
@@ -158,7 +158,6 @@ private:
 
 	float mMissileInterval = 0.0f;
 	float mCubemapInterval = 0.0f;
-	float mParticleInterval = 0.0f;
 
 	UINT mCubemapDrawIndex = 0;
 
@@ -191,6 +190,9 @@ private:
 	bool mBloomEnable = true;
 
 	bool mVolumetricEnable = true;
+
+	bool mParticleAddFlag = false;
+	bool mParticleDestroyFlag = false;
 
 	btRigidBody* mTrackRigidBody = NULL;
 

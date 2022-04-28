@@ -122,7 +122,7 @@ void InGameScene::BuildRootSignature()
 	parameters[5] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);				 // Texture, SRV
 	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap
 	parameters[7] = Extension::DescriptorTable(1, &descRanges[3], D3D12_SHADER_VISIBILITY_ALL);				 // CubeMap
-	parameters[8] = Extension::Constants(4, 5, D3D12_SHADER_VISIBILITY_ALL);                                 // E.T.C - 기타 바로바로 올려야 할 필요가 있는 쉐이더 상수들
+	parameters[8] = Extension::Constants(7, 5, D3D12_SHADER_VISIBILITY_ALL);                                 // E.T.C - 기타 바로바로 올려야 할 필요가 있는 쉐이더 상수들
 	parameters[9] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_SRV, 0, D3D12_SHADER_VISIBILITY_ALL, 3); // Instancing Structured Buffer
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[5];
@@ -206,7 +206,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
-	//mPipelines[Layer::Particle] = make_unique<StreamOutputPipeline>();
+	mPipelines[Layer::Particle] = make_unique<StreamOutputPipeline>();
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.Direction);
 
@@ -220,6 +220,8 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	}
 
 	mPipelines[Layer::Default]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), defaultShader.get());
+
+	mPipelines[Layer::Particle]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), nullptr);
 
 	mPipelines[Layer::Terrain]->SetWiredFrame(true);
 	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
@@ -238,9 +240,6 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::CheckPoint]->SetWiredFrame(true);
 	mPipelines[Layer::CheckPoint]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), simpleShader.get());
 
-	//mPipelines[Layer::Particle]->SetAlphaBlending();
-	//mPipelines[Layer::Particle]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), particleShader.get());
-
 	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<MotionBlurPipeline>();
 	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get(), true);
 
@@ -254,7 +253,6 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
-	//mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Instancing, mPipelines[Layer::Instancing].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Transparent, mPipelines[Layer::Transparent].get());
 	mShadowMapRenderer->BuildPipeline(mDevice.Get(), mRootSignature.Get());
@@ -727,9 +725,20 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mVolumetricEnable = !mVolumetricEnable;
 		}
+		if (wParam == VK_LSHIFT)
+		{
+			mParticleDestroyFlag = true;
+		}
+		
 
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+
+	case WM_KEYDOWN:
+		if (wParam == VK_LSHIFT)
+		{
+			mParticleAddFlag = true;
+		}
 		break;
 	}
 	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
@@ -768,22 +777,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 	{
 		mMissileInterval -= elapsed;
 	}
-
-	if (mParticleInterval < 0.0f)
-	{
-		if(GetAsyncKeyState(VK_LSHIFT) & 0x8000)
-		{
-			mParticleInterval = 0.1f;
-			
-			if(mPipelines[Layer::Particle]->GetRenderObjects().size() == 0)
-				AddParticleObject();
-		}
-	}
-	else
-	{
-		mParticleInterval -= elapsed;
-	}
-	
+		
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 
 #ifndef STANDALONE
@@ -813,6 +807,12 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
 
+	if (mParticleAddFlag)
+		AddParticleObject(cmdList);
+
+	if (mParticleDestroyFlag)
+		DestroyParticleObject();
+
 	UpdatePlayerObjects();
 	UpdateMissileObject();
 	OnPreciseKeyInput(cmdList, physics, elapsed);
@@ -835,21 +835,24 @@ void InGameScene::UpdateLight(float elapsed)
 {
 }
 
-void InGameScene::AddParticleObject()
+void InGameScene::AddParticleObject(ID3D12GraphicsCommandList* cmdList)
 {
-	// compile error!!!
-	
-	//auto obj = std::make_shared<GameObject>();
+	for (int i = 2; i < 4; ++i)
+	{
+		auto obj = std::make_shared<SOParticleObject>(*static_cast<PhysicsPlayer*>(mPlayer)->GetWheel(i));
 
-	//auto particleEmittor = std::make_shared<ParticleMesh>();
-	//obj->SetMesh(particleEmittor);
-	
-	//mPipelines[Layer::Particle]->AppendObject(obj);
+		//이후 개선, 작동하게만 만드는 중
+		auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.2f, 0.2f), Vector3::Normalize(XMFLOAT3(0.0f, 0.3f, -1.0f)), 0.3f, 1, 50);
+		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
+		obj->SetMesh(particleEmittor);
+
+		mPipelines[Layer::Particle]->AppendObject(obj);
+	}
 }
 
 void InGameScene::DestroyParticleObject()
 {
-	
+	mPipelines[Layer::Particle]->GetRenderObjects().clear();
 }
 
 void InGameScene::UpdateLightConstants()
@@ -935,7 +938,7 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 
 	GameInfoConstants gameInfo{};
 	gameInfo.RandFloat4 = XMFLOAT4(
-		Math::RandFloat(-1.0f, 1.0f),
+		Math::RandFloat(0.0f, 1.0f),
 		Math::RandFloat(0.0f, 1.0f),
 		Math::RandFloat(-1.0f, 1.0f),
 		Math::RandFloat(1.0f, 5.0f));
