@@ -2,10 +2,19 @@
 #include "LobbyUI.h"
 
 LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(13), UICnt(14)
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue)
+    //Text: 7, RoundRect: 18
 {
-    SetVectorSize(nFrame, TextCnt);
+    SetTextCnt(7);
+    SetRoundRectCnt(18);
+    SetBitmapCnt(3);
+    //SetGradientCnt(12);
+    SetUICnt();
+
+    SetVectorSize(nFrame);
     Initialize(device, pd3dCommandQueue);
+    for (int i = 0;i<static_cast<int>(GetBitmapCnt()); ++i)
+        LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
 }
 
 LobbyUI::~LobbyUI()
@@ -26,49 +35,71 @@ bool LobbyUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
     return false;
 }
 
-void LobbyUI::SetVectorSize(UINT nFrame, UINT TextCnt)
+void LobbyUI::SetVectorSize(UINT nFrame)
 {
     UI::SetVectorSize(nFrame);
-    mvTextBlocks.resize(TextCnt);
+
+    std::vector<std::wstring> BitmapFileNames;
+    BitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
+    BitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
+    BitmapFileNames.push_back(L"Resources\\LeftRightArrow.jpeg");
+
+    SetBitmapFileNames(BitmapFileNames);
     //mvd2dLinearGradientBrush.resize(TextCnt);
+
+    std::vector<std::wstring> Fonts;
+    Fonts.push_back(L"Fonts\\Blazed.ttf");
+    Fonts.push_back(L"Fonts\\Xenogears.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+
+    FontLoad(Fonts);
+}
+
+int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
+{
+    return 0;
 }
 
 void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
-    if (MouseCollisionCheck(dx, dy, mvTextBlocks[0]))
-        mvColors[0].a = 0.1f;
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]))
+        GetColors()[0].a = 0.1f;
     else
-        mvColors[0].a = 0.9f;
-    for (int i = 1; i < static_cast<int>(TextCnt); ++i)
+        GetColors()[0].a = 0.9f;
+    for (int i = 1; i < static_cast<int>(GetTextCnt()); ++i)
     {// 12, 34, 56, 78, 910, 1112
-        if (MouseCollisionCheck(dx, dy, mvTextBlocks[i]))
+        if (MouseCollisionCheck(dx, dy, GetTextBlock()[i]))
         {
-            mvColors[(i+1)/2*2-1].a = 0.1f;
+            //GetColors()[(((i+1)/2)*2)-1].a = 0.1f;
         }
-        else mvColors[i].a = 0.9f;
+        else GetColors()[i].a = 0.9f;
     }
-    UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    UI::BuildSolidBrush(GetColors());
 
 }
 
-char LobbyUI::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+void LobbyUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
-    for (int i = 1; i < static_cast<int>(TextCnt); ++i)
+    for (int i = 1; i < static_cast<int>(GetTextCnt()); ++i)
     {
-        if (MouseCollisionCheck(dx, dy, mvTextBlocks[i]))
+        if (MouseCollisionCheck(dx, dy, GetTextBlock()[i]))
         {
            
-            mvColors[(i+1)/2].a = 0.1f;
-            if (buttonState)
-                return i;
+            //GetColors()[(i+1)/2].a = 0.1f;
+           /* if (buttonState)
+                return i;*/
         }
-        else mvColors[i].a = 0.9f;
+        else GetColors()[i].a = 0.9f;
     }
-    return 66;
+    //return 66;
 }
 
 void LobbyUI::Update(float GTime)
@@ -80,203 +111,269 @@ void LobbyUI::Draw(UINT nFrame)
 {
     XMFLOAT4 RectLTRB[] =
     {
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36,
-        mfWidth / 32 * 24,
-        mfHeight / 36 * 29
+        {//BigBackGroundBox
+            GetFrameWidth() * 0.04f,
+            GetFrameHeight() * 0.02f,
+            GetFrameWidth() * 0.96f,
+            GetFrameHeight() * 0.96f
         },
-        {
-            mfWidth / 32 * 9, 
-            mfHeight / 18, 
-            mfWidth / 32 * 15, 
-            mfHeight / 18 * 2
+        {//SmallBackGroundBox
+            GetFrameWidth() * 0.18f,
+            GetFrameHeight() * 0.04f,
+            GetFrameWidth() * 0.86f,
+            GetFrameHeight() * 0.86f
         },
-        {
-        mfWidth / 32 * 9,
-        mfHeight / 36 * 10, 
-        mfWidth / 32 * 15, 
-        mfHeight / 36 * 12
+        {//SmallWhiteBackGroundBox
+        GetFrameWidth() * 0.20f,
+        GetFrameHeight() * 0.18f,
+        GetFrameWidth() * 0.80f,
+        GetFrameHeight() * 0.84f
         },
-        {
-            mfWidth / 32 * 16, 
-            mfHeight / 36 * 10, 
-            mfWidth / 32 * 22, 
-            mfHeight / 36 * 12
+        {//MakeRoomBox
+            GetFrameWidth() * 0.27f,
+            GetFrameHeight() * 0.055f,
+            GetFrameWidth() * 0.48f,
+            GetFrameHeight() * 0.11f
         },
-        {
-            mfWidth / 32 * 9, 
-            mfHeight / 36 * 16,
-            mfWidth / 32 * 15, 
-            mfHeight / 36 * 18
+        {//RoomTitle1
+        GetFrameWidth() * 0.27f,
+        GetFrameHeight() * 0.245f,
+        GetFrameWidth() * 0.48f,
+        GetFrameHeight() * 0.3f
         },
-        {
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 16,
-        mfWidth / 32 * 22, 
-        mfHeight / 36 * 18
+        {//RoomTitle2
+            GetFrameWidth() * 0.54f,
+            GetFrameHeight() * 0.245f,
+            GetFrameWidth() * 0.75f,
+            GetFrameHeight() * 0.3f
         },
-        {
-        mfWidth / 32 * 9, 
-        mfHeight / 36 * 22, 
-        mfWidth / 32 * 15, 
-        mfHeight / 36 * 24
+        {//RoomTitle3
+            GetFrameWidth() * 0.27f,
+            GetFrameHeight() * 0.425f,
+            GetFrameWidth() * 0.48f,
+            GetFrameHeight() * 0.48f
         },
-        {
-        mfWidth / 32 * 16, 
-        mfHeight / 36 * 22,
-        mfWidth / 32 * 22, 
-        mfHeight / 36 * 24
+        {//RoomTitle4
+        GetFrameWidth() * 0.54f,
+        GetFrameHeight() * 0.425f,
+        GetFrameWidth() * 0.75f,
+        GetFrameHeight() * 0.48f
         },
-        //---
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36 * 9,
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 15
+        {//RoomTitle5
+        GetFrameWidth() * 0.27f,
+        GetFrameHeight() * 0.605f,
+        GetFrameWidth() * 0.48f,
+        GetFrameHeight() * 0.66f
         },
-        {
-            mfWidth / 32 * 17,
-            mfHeight / 36 * 9,
-            mfWidth / 32 * 25,
-            mfHeight / 36 * 15
+        {//RoomTitle6
+        GetFrameWidth() * 0.54f,
+        GetFrameHeight() * 0.605f,
+        GetFrameWidth() * 0.75f,
+        GetFrameHeight() * 0.66f
         },
-        {
-            mfWidth / 32 * 8,
-            mfHeight / 36 * 15,
-            mfWidth / 32 * 16,
-            mfHeight / 36 * 21
+        {//RoomBox1
+        GetFrameWidth() * 0.25f,
+        GetFrameHeight() * 0.23f,
+        GetFrameWidth() * 0.5f,
+        GetFrameHeight() * 0.40f
         },
-        {
-        mfWidth / 32 * 17,
-        mfHeight / 36 * 15,
-        mfWidth / 32 * 25,
-        mfHeight / 36 * 21
+        {//RoomBox2
+            GetFrameWidth() * 0.52f,
+            GetFrameHeight() * 0.23f,
+            GetFrameWidth() * 0.77f,
+            GetFrameHeight() * 0.40f
         },
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36 * 21,
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 27
+        {//RoomBox3
+            GetFrameWidth() * 0.25f,
+            GetFrameHeight() * 0.41f,
+            GetFrameWidth() * 0.5f,
+            GetFrameHeight() * 0.58f
         },
-        {
-        mfWidth / 32 * 17,
-        mfHeight / 36 * 21,
-        mfWidth / 32 * 25,
-        mfHeight / 36 * 27
+        {//RoomBox4
+        GetFrameWidth() * 0.52f,
+        GetFrameHeight() * 0.41f,
+        GetFrameWidth() * 0.77f,
+        GetFrameHeight() * 0.58f
+        },
+        {//RoomBox5
+        GetFrameWidth() * 0.25f,
+        GetFrameHeight() * 0.59f,
+        GetFrameWidth() * 0.5f,
+        GetFrameHeight() * 0.76f
+        },
+        {//RoomBox6
+        GetFrameWidth() * 0.52f,
+        GetFrameHeight() * 0.59f,
+        GetFrameWidth() * 0.77f,
+        GetFrameHeight() * 0.76f
         }
     };
     XMFLOAT4 FillLTRB[] =
     {
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36,
-        mfWidth / 32 * 24,
-        mfHeight / 36 * 29
+        {//BigBackGroundBox
+            GetFrameWidth() * 0.04f,
+            GetFrameHeight() * 0.02f,
+            GetFrameWidth() * 0.96f,
+            GetFrameHeight() * 0.96f
         },
-        {
-            mfWidth / 32 * 9,
-            mfHeight / 18,
-            mfWidth / 32 * 15,
-            mfHeight / 18 * 2
+        {//SmallBackGroundBox
+            GetFrameWidth() * 0.18f,
+            GetFrameHeight() * 0.04f,
+            GetFrameWidth() * 0.86f,
+            GetFrameHeight() * 0.86f
         },
-        {
-        mfWidth / 32 * 9,
-        mfHeight / 36 * 10,
-        mfWidth / 32 * 15,
-        mfHeight / 36 * 12
+        {//SmallWhiteBackGroundBox
+        GetFrameWidth() * 0.20f,
+        GetFrameHeight() * 0.18f,
+        GetFrameWidth() * 0.80f,
+        GetFrameHeight() * 0.84f
         },
-        {
-            mfWidth / 32 * 16,
-            mfHeight / 36 * 10,
-            mfWidth / 32 * 22,
-            mfHeight / 36 * 12
+        {//MakeRoomBox
+            GetFrameWidth() * 0.27f,
+            GetFrameHeight() * 0.055f,
+            GetFrameWidth() * 0.48f,
+            GetFrameHeight() * 0.11f
         },
-        {
-            mfWidth / 32 * 9,
-            mfHeight / 36 * 16,
-            mfWidth / 32 * 15,
-            mfHeight / 36 * 18
+        {//RoomTitle1
+        GetFrameWidth() * 0.27f,
+        GetFrameHeight() * 0.245f,
+        GetFrameWidth() * 0.48f,
+        GetFrameHeight() * 0.3f
         },
-        {
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 16,
-        mfWidth / 32 * 22,
-        mfHeight / 36 * 18
+        {//RoomTitle2
+            GetFrameWidth() * 0.54f,
+            GetFrameHeight() * 0.245f,
+            GetFrameWidth() * 0.75f,
+            GetFrameHeight() * 0.3f
         },
-        {
-        mfWidth / 32 * 9,
-        mfHeight / 36 * 22,
-        mfWidth / 32 * 15,
-        mfHeight / 36 * 24
+        {//RoomTitle3
+            GetFrameWidth() * 0.27f,
+            GetFrameHeight() * 0.425f,
+            GetFrameWidth() * 0.48f,
+            GetFrameHeight() * 0.48f
         },
-        {
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 22,
-        mfWidth / 32 * 22,
-        mfHeight / 36 * 24
+        {//RoomTitle4
+        GetFrameWidth() * 0.54f,
+        GetFrameHeight() * 0.425f,
+        GetFrameWidth() * 0.75f,
+        GetFrameHeight() *0.48f
         },
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36 * 9,
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 15
+        {//RoomTitle5
+        GetFrameWidth() * 0.27f,
+        GetFrameHeight() * 0.605f,
+        GetFrameWidth() * 0.48f,
+        GetFrameHeight() * 0.66f
         },
-        {
-            mfWidth / 32 * 17,
-            mfHeight / 36 * 9,
-            mfWidth / 32 * 25,
-            mfHeight / 36 * 15
+        {//RoomTitle6
+        GetFrameWidth() * 0.54f,
+        GetFrameHeight() * 0.605f,
+        GetFrameWidth() * 0.75f,
+        GetFrameHeight() * 0.66f
         },
-        {
-            mfWidth / 32 * 8,
-            mfHeight / 36 * 15,
-            mfWidth / 32 * 16,
-            mfHeight / 36 * 21
+        {//RoomBox1
+        GetFrameWidth() * 0.25f,
+        GetFrameHeight() * 0.23f,
+        GetFrameWidth() * 0.5f,
+        GetFrameHeight() * 0.40f
         },
-        {
-        mfWidth / 32 * 17,
-        mfHeight / 36 * 15,
-        mfWidth / 32 * 25,
-        mfHeight / 36 * 21
+        {//RoomBox2
+            GetFrameWidth() * 0.52f,
+            GetFrameHeight() * 0.23f,
+            GetFrameWidth() * 0.77f,
+            GetFrameHeight() * 0.40f
         },
-        {
-        mfWidth / 32 * 8,
-        mfHeight / 36 * 21,
-        mfWidth / 32 * 16,
-        mfHeight / 36 * 27
+        {//RoomBox3
+            GetFrameWidth() * 0.25f,
+            GetFrameHeight() * 0.41f,
+            GetFrameWidth() * 0.5f,
+            GetFrameHeight() * 0.58f
         },
-        {
-        mfWidth / 32 * 17,
-        mfHeight / 36 * 21,
-        mfWidth / 32 * 25,
-        mfHeight / 36 * 27
+        {//RoomBox4
+        GetFrameWidth() * 0.52f,
+        GetFrameHeight() * 0.41f,
+        GetFrameWidth() * 0.77f,
+        GetFrameHeight() * 0.58f
+        },
+        {//RoomBox5
+        GetFrameWidth() * 0.25f,
+        GetFrameHeight() * 0.59f,
+        GetFrameWidth() * 0.5f,
+        GetFrameHeight() * 0.76f
+        },
+        {//RoomBox6
+        GetFrameWidth() * 0.52f,
+        GetFrameHeight() * 0.59f,
+        GetFrameWidth() * 0.77f,
+        GetFrameHeight() * 0.76f
+        },
+        {//LeftArrowBox
+        GetFrameWidth() * 0.044f,
+        GetFrameHeight() * 0.076f,
+        GetFrameWidth() * 0.05f,
+        GetFrameHeight() * 0.082f
+        },
+        {//RightArrowBox
+        GetFrameWidth() * 0.052f,
+        GetFrameHeight() * 0.076f,
+        GetFrameWidth() * 0.058f,
+        GetFrameHeight() * 0.082f
         }
     };
+    XMFLOAT4 LTRB[] =
+    {
+        {
+            390.0f,
+            290.0f,
+            410.0f,
+            310.0f
+        },
+        {
+            0.0f,
+            0.0f,
+            GetFrameWidth(),
+            GetFrameHeight()
+        },
+        {
+             GetFrameWidth() * 0.44f,
+           GetFrameHeight() * 0.76f,
+            GetFrameWidth() * 0.58f,
+            GetFrameHeight() * 0.82f
+        }
+    };
+    bool IsOutlined[18] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false };
+    float aOpacities[3] = { 0.5f, 1.0f, 0.5f };
     UI::BeginDraw(nFrame);
-    UI::RoundedRectDraw(RectLTRB, FillLTRB, TextCnt + 1, 0, 0);
-    UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
+    UI::DrawBmp(LTRB, 0, 2, aOpacities);
+    UI::RectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
+    UI::DrawBmp(LTRB, 2, 1, aOpacities);
+    UI::TextDraw(GetTextBlock());
     UI::EndDraw(nFrame);
 }
 
 void LobbyUI::CreateFontFormat()
 {
-    fFontSize = mfHeight / 25.0f;
-    Fonts.push_back(L"Tahoma");
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼"); 
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼");
-    Fonts.push_back(L"±¼¸²Ã¼");
+    std::vector<float>fFontSize;
+    fFontSize.push_back(GetFrameHeight() * 0.03f);
+    fFontSize.push_back(GetFrameHeight() * 0.03f);
+    fFontSize.push_back(GetFrameHeight() * 0.03f);
+    fFontSize.push_back(GetFrameHeight() * 0.03f);
+    fFontSize.push_back(GetFrameHeight() * 0.03f);
+    fFontSize.push_back(GetFrameHeight() * 0.03f);
+    fFontSize.push_back(GetFrameHeight() * 0.03f);
+    SetFontSize(fFontSize);
 
-    //TextAlignments.resize(TextCnt);
+    std::vector<std::wstring> Fonts;
+    Fonts.push_back(L"Blazed");
+    Fonts.push_back(L"Xenogears");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    SetFonts(Fonts);
+
+    std::vector<DWRITE_TEXT_ALIGNMENT> TextAlignments;
+    TextAlignments.resize(GetTextCnt());
     TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
@@ -284,93 +381,103 @@ void LobbyUI::CreateFontFormat()
     TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[7] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[8] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[9] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[10] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[11] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[12] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    SetTextAllignments(TextAlignments);
 
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, TextAlignments);
+    UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextAlignment());
 }
 
 void LobbyUI::SetTextRect()
 {//MakeRoom, Room1, Room2, Room3, Room4, Room5, Room6
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 9, mfHeight / 18, mfWidth / 32 * 15, mfHeight / 18 * 2);
-
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 9, mfHeight / 36 * 10, mfWidth / 32 * 15, mfHeight / 36 * 12);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 13, mfHeight / 36 * 13, mfWidth / 32 * 15, mfHeight / 36 * 14);
-
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 16, mfHeight / 36 * 10, mfWidth / 32 * 22, mfHeight / 36 * 12);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 20, mfHeight / 36 * 13, mfWidth / 32 * 22, mfHeight / 36 * 14);
-
-    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 9, mfHeight / 36 * 16, mfWidth / 32 * 15, mfHeight / 36 * 18);
-    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 13, mfHeight / 36 * 19, mfWidth / 32 * 15, mfHeight / 36 * 20);
-
-    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 16, mfHeight / 36 * 16, mfWidth / 32 * 22, mfHeight / 36 * 18);
-    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(mfWidth / 32 *20, mfHeight / 36 * 19, mfWidth / 32 * 22, mfHeight / 36 * 20);
-
-    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 9, mfHeight / 36 * 22, mfWidth / 32 * 15, mfHeight / 36 * 24);
-    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 13, mfHeight / 36 * 25, mfWidth / 32 * 15, mfHeight / 36 * 26);
-
-    mvTextBlocks[11].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 16, mfHeight / 36 * 22, mfWidth / 32 * 22, mfHeight / 36 * 24);
-    mvTextBlocks[12].d2dLayoutRect = D2D1::RectF(mfWidth / 32 * 20, mfHeight / 36 * 25, mfWidth / 32 * 22, mfHeight / 36 * 26);
-
+    GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.28125f, GetFrameHeight() * 0.055f, GetFrameWidth() * 0.46875f, GetFrameHeight() * 0.11f);
+    GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.245f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.3f);
+    GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.245f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.3f);
+    GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.425f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.48f);
+    GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.425f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.48f);
+    GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.66f);
+    GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.66f);
 }
 
-void LobbyUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
+void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
-    mfWidth = static_cast<float>(nWidth);
-    mfHeight = static_cast<float>(nHeight);
-    UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
+    UI::BuildObjects(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
 
-    D2D1::ColorF colorList[27] = { D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::White, 0.9f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f), D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) , D2D1::ColorF(D2D1::ColorF::Blue, 0.3f) };
-    //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
-    for (auto color : colorList)
-        mvColors.push_back(color);
-    UI::BuildSolidBrush(UICnt + 1, TextCnt, mvColors);
+    std::vector<D2D1::ColorF> colorList;
+    /*Text*/
+    // MakeRoom, RoomNum[6]
+    colorList.push_back(D2D1::ColorF::DarkGray); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::DarkGray, 1.0f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));  
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
+    /*UI*/
+    //BigBackGroundBox, SmallBackGroundBox, SmallWhiteBackGroundBox, MakeRoomBox,
+    //RoomTitle[6], RoomBox[6], Leftarrow, Rightarrow
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Gray, 0.98f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::DarkGray, 0.9f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::LightGray, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::LightGray, 0.3f)); 
+    SetColors(colorList);
 
+    UI::BuildSolidBrush(GetColors());
+    for (int i = 0; i < 6; ++i)
+        mviRoomNums[i] = i+1;
     SetTextRect();
-    for (auto wc : std::wstring{ L"MakeRoom" })
-        mvTextBlocks[0].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Room No.1" })
-        mvTextBlocks[1].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"1" })
-        mvTextBlocks[2].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Room Title 2" })
-        mvTextBlocks[3].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"2" })
-        mvTextBlocks[4].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"0/03" })
-        mvTextBlocks[5].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"3" })
-        mvTextBlocks[6].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Room No. 4" })
-        mvTextBlocks[7].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"4" })
-        mvTextBlocks[8].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Room Title 5" })
-        mvTextBlocks[9].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"5" })
-        mvTextBlocks[10].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"0 / 0 6" })
-        mvTextBlocks[11].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"6" })
-        mvTextBlocks[12].strText.push_back(wc);
+    for (auto &wc : std::string{ "MakeRoom" })
+        GetTextBlock()[0].strText.push_back(wc);
+    for (auto &wc : std::string{std::to_string(mviRoomNums[0]) })
+        GetTextBlock()[1].strText.push_back(wc);
+    for (auto &wc : std::string{ std::to_string(mviRoomNums[1]) })
+        GetTextBlock()[2].strText.push_back(wc);
+    for (auto &wc : std::string{ std::to_string(mviRoomNums[2]) })
+        GetTextBlock()[3].strText.push_back(wc);
+    for (auto &wc : std::string{ std::to_string(mviRoomNums[3]) })
+        GetTextBlock()[4].strText.push_back(wc);
+    for (auto &wc : std::string{ std::to_string(mviRoomNums[4]) })
+        GetTextBlock()[5].strText.push_back(wc);
+    for (auto &wc : std::string{ std::to_string(mviRoomNums[5]) })
+        GetTextBlock()[6].strText.push_back(wc);
+}
+
+void LobbyUI::UpdateRoomNumsText()
+{
+    for (UINT i = 1; i < GetTextCnt(); ++i)
+    {
+        GetTextBlock()[i].strText.clear();
+        for (auto& str : std::string{ std::to_string(mviRoomNums[i - 1]) })
+        {
+            GetTextBlock()[i].strText.push_back(str);
+        }
+    }
 }
 
 void LobbyUI::Reset()
 {
     UI::Reset();
-    mvTextBlocks.clear();
 }
 
 void LobbyUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
-    //Reset();
-    SetVectorSize(nFrame, TextCnt);
     UI::Initialize(device, pd3dCommandQueue);
-    PreDraw(ppd3dRenderTargets, width, height);
+    SetVectorSize(nFrame);
+    for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
+        LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
+    BuildObjects(ppd3dRenderTargets, width, height);
 }

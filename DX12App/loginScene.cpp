@@ -4,7 +4,7 @@
 
 
 LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::LOGIN, (XMFLOAT4)Colors::Aqua, netPtr }
+	: Scene{ hwnd, SCENE_STAT::LOGIN, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"Login Scene Entered.\n");
 	Texts.resize(2);
@@ -12,11 +12,13 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	if (mNetPtr->Connect(SERVER_IP, SERVER_PORT))
 	{
 		// TEST
-		mNetPtr->Client()->RequestLogin("GM", "GM");
+		//mNetPtr->Client()->RequestLogin("", "");
+		/mNetPtr->Client()->RequestLogin("GM", "GM");
+		
 	}
 	else OutputDebugStringW(L"Failed to connect to server.\n");
 #else
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #endif
 }
 
@@ -28,25 +30,51 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
 	const std::shared_ptr<BulletWrapper>& physics)
 {
+	
 	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void LoginScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 {
 	float dx = static_cast<float>(x);
 	float dy = static_cast<float>(y);
-	mpUI.get()->OnProcessMouseMove(btnState, x, y);
+	mpUI->OnProcessMouseMove(btnState, x, y);
 }
 
-void LoginScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+void LoginScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
-	if (buttonState) 
+	if (buttonState&MK_LBUTTON) 
 	{
+		if (mpUI->OnProcessMouseClick(buttonState, x, y) == 1) //LoginFail
+		{
+#ifndef STADNALONE
+			mNetPtr->Client()->RequestLogin(mID, mPWD);
+#else
+#endif
+
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Sign-up
+		{
+#ifndef STADNALONE
+			mNetPtr->Client()->RequestRegister(mID, mPWD);
+#else
+#endif
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 0) //LoginSuccess
+		{
+
+		}
+
+		//mpUI.get()->OnProcessMouseDown(buttonState, x, y);
 		//LoginCheck
-		if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		//if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y) == 1)
+		//{
+			////SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+			//mNetPtr->Client()->RequestLogin(mID, mPWD);
+			//// 로그인 성공? 실패? 를 어떻게 판단하지??
+		//}
 	}
 }
 
@@ -68,6 +96,7 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			mID.assign(Texts[0].begin(), Texts[0].end());
 			mPWD.assign(Texts[1].begin(), Texts[1].end());
 			//Login Check -> mID와 mPWD로 Login Check
+			mNetPtr->Client()->RequestLogin(Texts[0], Texts[1]);
 			break;
 		case 0x08:  // backspace
 			if(!Texts[IsPwd].empty() && (Texts[0].compare("ID") != 0||Texts[1].compare("Password") != 0))
@@ -116,26 +145,26 @@ void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& tim
 	if (Texts[0].empty())
 	{
 		Texts[0].assign("ID");
-		mpUI->ChangeTextAlignment(0, 1);
+		mpUI->ChangeTextAlignment(0, 1/*Center*/); // 1== Center(CenterAllignment), 0 == Leading(LeftSideAllignment)
 	}
 	if (Texts[1].empty())
 	{
 		Texts[1].assign("Password");
-		mpUI->ChangeTextAlignment(1, 1);
+		mpUI->ChangeTextAlignment(1, 1/*Center*/); 
 	}
 
-	std::vector<std::wstring> WTexts;
+	std::vector<std::string> vTexts;
 
-	WTexts.resize(Texts.size());
+	vTexts.resize(Texts.size());
 	for(int i=0;i<Texts.size();++i)
-		WTexts[i].assign(Texts[i].begin(), Texts[i].end());
+		vTexts[i].assign(Texts[i].begin(), Texts[i].end());
 
-	mpUI.get()->Update(timer.TotalTime(), WTexts);
+	mpUI->Update(timer.TotalTime(), vTexts);
 }
 
 void LoginScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
 {
-	mpUI.get()->Draw(nFrame);
+	mpUI->Draw(nFrame);
 }
 
 bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)

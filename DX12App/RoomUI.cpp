@@ -1,12 +1,20 @@
 #include "stdafx.h"
 #include "RoomUI.h"
 RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue), TextCnt(11), UICnt(13)
+    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue)
+    // Text: 11, RoundRect: 12
     //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
     //UI: NicknameBox[8], StartBox, CarSelectBox[2], MapSelectBox[2]
 {
-    SetVectorSize(nFrame, TextCnt);
+    SetTextCnt(11);
+    SetRoundRectCnt(12);
+    SetBitmapCnt(9);
+    SetUICnt();
+
+    SetVectorSize(nFrame);
     Initialize(device, pd3dCommandQueue);
+    for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
+        LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
 }
 
 RoomUI::~RoomUI()
@@ -19,39 +27,75 @@ void RoomUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCom
 
 }
 
-void RoomUI::SetVectorSize(UINT nFrame, UINT TextCnt)
+void RoomUI::SetVectorSize(UINT nFrame)
 {
     UI::SetVectorSize(nFrame);
-    mvTextBlocks.resize(TextCnt);
+  
+    std::vector<std::wstring> BitmapFileNames;
+    BitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
+    BitmapFileNames.push_back(L"Resources\\CarSample1.png");
+    BitmapFileNames.push_back(L"Resources\\CarSample1.png");
+    BitmapFileNames.push_back(L"Resources\\CarSample1.png");
+    BitmapFileNames.push_back(L"Resources\\CarSample1.png");
+    BitmapFileNames.push_back(L"Resources\\CarSample1.png");
+    BitmapFileNames.push_back(L"Resources\\CarSample1.png");
+    BitmapFileNames.push_back(L"Resources\\CarSample1.png");
+    BitmapFileNames.push_back(L"Resources\\CarSample1.png");
+
+    SetBitmapFileNames(BitmapFileNames);
     //mvd2dLinearGradientBrush.resize(TextCnt);
+
+    std::vector<std::wstring> Fonts;
+    Fonts.push_back(L"Fonts\\Blazed.ttf");
+    Fonts.push_back(L"Fonts\\Xenogears.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    Fonts.push_back(L"Fonts\\abberancy.ttf");
+
+    FontLoad(Fonts);
+}
+
+void RoomUI::SetStartOrReady()
+{
+    GetTextBlock()[0].strText.clear();
+    if (mbIsRoomMaster)
+        GetTextBlock()[0].strText.assign("START");
+    else
+        GetTextBlock()[0].strText.assign("READY");
 }
 
 void RoomUI::Update(float GTime)
 {
-    for (int i = 0; i < 11; ++i)
-        mvTextBlocks[i].strText.clear();
-    for (auto wc : std::wstring{ L"StartOrReady" })
-        mvTextBlocks[0].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"CarSelect" })
-        mvTextBlocks[1].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"MapSelect" })
-        mvTextBlocks[2].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname1" })
-        mvTextBlocks[3].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname2" })
-        mvTextBlocks[4].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname3" })
-        mvTextBlocks[5].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname4" })
-        mvTextBlocks[6].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname5" })
-        mvTextBlocks[7].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname6" })
-        mvTextBlocks[8].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname7" })
-        mvTextBlocks[9].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname8" })
-        mvTextBlocks[10].strText.push_back(wc);
+    for (UINT i = 0; i < GetTextCnt(); ++i)
+        GetTextBlock()[i].strText.clear();
+    for (auto& wc : std::string{ "Start" })
+        GetTextBlock()[0].strText.push_back(wc);
+    for (auto& wc : std::string{ "Car" })
+        GetTextBlock()[1].strText.push_back(wc);
+    for (auto& wc : std::string{ "Map" })
+        GetTextBlock()[2].strText.push_back(wc);
+    for (auto& wc : std::string{ masNicknames[0] })
+        GetTextBlock()[3].strText.push_back(wc);
+    for (auto& wc : std::string{ masNicknames[1] })
+        GetTextBlock()[4].strText.push_back(wc);
+    for (auto& wc : std::string{ masNicknames[2] })
+        GetTextBlock()[5].strText.push_back(wc);
+    for (auto& wc : std::string{ masNicknames[3] })
+        GetTextBlock()[6].strText.push_back(wc);
+    for (auto& wc : std::string{ masNicknames[4] })
+        GetTextBlock()[7].strText.push_back(wc);
+    for (auto& wc : std::string{ masNicknames[5] })
+        GetTextBlock()[8].strText.push_back(wc);
+    for (auto& wc : std::string{ masNicknames[6] })
+        GetTextBlock()[9].strText.push_back(wc);
+    for (auto& wc : std::string{ masNicknames[7] })
+        GetTextBlock()[10].strText.push_back(wc);
     
 }
 
@@ -60,283 +104,383 @@ void RoomUI::Draw(UINT nFrame)
     XMFLOAT4 RectLTRB[] =
     {
         {
-        mvTextBlocks[0].d2dLayoutRect.left,
-        mvTextBlocks[0].d2dLayoutRect.top,
-        mvTextBlocks[0].d2dLayoutRect.right,
-        mvTextBlocks[0].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.32f
         },
         {
-        mvTextBlocks[1].d2dLayoutRect.left,
-        mvTextBlocks[1].d2dLayoutRect.top,
-        mvTextBlocks[1].d2dLayoutRect.right,
-        mvTextBlocks[1].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.265f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.495f,
+        GetFrameHeight() * 0.32f
         },
         {
-        mvTextBlocks[2].d2dLayoutRect.left,
-        mvTextBlocks[2].d2dLayoutRect.top,
-        mvTextBlocks[2].d2dLayoutRect.right,
-        mvTextBlocks[2].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.505f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.735f,
+        GetFrameHeight() * 0.32f
         },
         {
-        mvTextBlocks[1].d2dLayoutRect.left,
-        mvTextBlocks[1].d2dLayoutRect.top,
-        mvTextBlocks[1].d2dLayoutRect.right,
-        mvTextBlocks[1].d2dLayoutRect.bottom - 
-        (mvTextBlocks[1].d2dLayoutRect.top- mvTextBlocks[1].d2dLayoutRect.bottom)/4*3
+        GetFrameWidth() * 0.745f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.975f,
+        GetFrameHeight() * 0.32f
         },
         {
-        mvTextBlocks[2].d2dLayoutRect.left,
-        mvTextBlocks[2].d2dLayoutRect.top,
-        mvTextBlocks[2].d2dLayoutRect.right,
-        mvTextBlocks[2].d2dLayoutRect.bottom -
-        (mvTextBlocks[2].d2dLayoutRect.top - mvTextBlocks[2].d2dLayoutRect.bottom) / 4 * 3
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.625f
         },
         {
-        mvTextBlocks[3].d2dLayoutRect.left,
-        mvTextBlocks[3].d2dLayoutRect.top,
-        mvTextBlocks[3].d2dLayoutRect.right,
-        mvTextBlocks[3].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.265f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.495f,
+        GetFrameHeight() * 0.625f
         },
         {
-        mvTextBlocks[4].d2dLayoutRect.left,
-        mvTextBlocks[4].d2dLayoutRect.top,
-        mvTextBlocks[4].d2dLayoutRect.right,
-        mvTextBlocks[4].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.505f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.735f,
+        GetFrameHeight() * 0.625f
         },
         {
-        mvTextBlocks[5].d2dLayoutRect.left,
-        mvTextBlocks[5].d2dLayoutRect.top,
-        mvTextBlocks[5].d2dLayoutRect.right,
-        mvTextBlocks[5].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.745f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.975f,
+        GetFrameHeight() * 0.625f
         },
-        {
-        mvTextBlocks[6].d2dLayoutRect.left,
-        mvTextBlocks[6].d2dLayoutRect.top,
-        mvTextBlocks[6].d2dLayoutRect.right,
-        mvTextBlocks[6].d2dLayoutRect.bottom
+        {//StartOrReady
+        GetFrameWidth() * 0.745f,
+        GetFrameHeight() * 0.65f,
+        GetFrameWidth() * 0.975f,
+        GetFrameHeight() * 0.8f
         },
-        {
-        mvTextBlocks[7].d2dLayoutRect.left,
-        mvTextBlocks[7].d2dLayoutRect.top,
-        mvTextBlocks[7].d2dLayoutRect.right,
-        mvTextBlocks[7].d2dLayoutRect.bottom
+        {// CarSelect
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.65f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.8f
         },
-        {
-        mvTextBlocks[8].d2dLayoutRect.left,
-        mvTextBlocks[8].d2dLayoutRect.top,
-        mvTextBlocks[8].d2dLayoutRect.right,
-        mvTextBlocks[8].d2dLayoutRect.bottom
-        },
-        {
-        mvTextBlocks[9].d2dLayoutRect.left,
-        mvTextBlocks[9].d2dLayoutRect.top,
-        mvTextBlocks[9].d2dLayoutRect.right,
-        mvTextBlocks[9].d2dLayoutRect.bottom
-        },
-        {
-        mvTextBlocks[10].d2dLayoutRect.left,
-        mvTextBlocks[10].d2dLayoutRect.top,
-        mvTextBlocks[10].d2dLayoutRect.right,
-        mvTextBlocks[10].d2dLayoutRect.bottom
+        {// MapSelect
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.825f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.975f
         }
     };
     XMFLOAT4 FillLTRB[] =
     {
         {
-        mvTextBlocks[0].d2dLayoutRect.left,
-        mvTextBlocks[0].d2dLayoutRect.top,
-        mvTextBlocks[0].d2dLayoutRect.right,
-        mvTextBlocks[0].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.015f,
+        GetFrameHeight() * 0.015f,
+        GetFrameWidth() * 0.985f,
+        GetFrameHeight() * 0.985f
         },
         {
-        mvTextBlocks[1].d2dLayoutRect.left,
-        mvTextBlocks[1].d2dLayoutRect.top,
-        mvTextBlocks[1].d2dLayoutRect.right,
-        mvTextBlocks[1].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.32f
         },
         {
-        mvTextBlocks[2].d2dLayoutRect.left,
-        mvTextBlocks[2].d2dLayoutRect.top,
-        mvTextBlocks[2].d2dLayoutRect.right,
-        mvTextBlocks[2].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.265f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.495f,
+        GetFrameHeight() * 0.32f
         },
         {
-        mvTextBlocks[1].d2dLayoutRect.left,
-        mvTextBlocks[1].d2dLayoutRect.top,
-        mvTextBlocks[1].d2dLayoutRect.right,
-        mvTextBlocks[1].d2dLayoutRect.bottom -
-        (mvTextBlocks[1].d2dLayoutRect.top - mvTextBlocks[1].d2dLayoutRect.bottom) / 4 * 3
+        GetFrameWidth() * 0.505f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.735f,
+        GetFrameHeight() * 0.32f
         },
         {
-        mvTextBlocks[2].d2dLayoutRect.left,
-        mvTextBlocks[2].d2dLayoutRect.top,
-        mvTextBlocks[2].d2dLayoutRect.right,
-        mvTextBlocks[2].d2dLayoutRect.bottom -
-        (mvTextBlocks[2].d2dLayoutRect.top - mvTextBlocks[2].d2dLayoutRect.bottom) / 4 * 3
+        GetFrameWidth() * 0.745f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.975f,
+        GetFrameHeight() * 0.32f
         },
         {
-        mvTextBlocks[3].d2dLayoutRect.left,
-        mvTextBlocks[3].d2dLayoutRect.top,
-        mvTextBlocks[3].d2dLayoutRect.right,
-        mvTextBlocks[3].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.625f
         },
         {
-        mvTextBlocks[4].d2dLayoutRect.left,
-        mvTextBlocks[4].d2dLayoutRect.top,
-        mvTextBlocks[4].d2dLayoutRect.right,
-        mvTextBlocks[4].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.265f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.495f,
+        GetFrameHeight() * 0.625f
         },
         {
-        mvTextBlocks[5].d2dLayoutRect.left,
-        mvTextBlocks[5].d2dLayoutRect.top,
-        mvTextBlocks[5].d2dLayoutRect.right,
-        mvTextBlocks[5].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.505f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.735f,
+        GetFrameHeight() * 0.625f
         },
         {
-        mvTextBlocks[6].d2dLayoutRect.left,
-        mvTextBlocks[6].d2dLayoutRect.top,
-        mvTextBlocks[6].d2dLayoutRect.right,
-        mvTextBlocks[6].d2dLayoutRect.bottom
+        GetFrameWidth() * 0.745f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.975f,
+        GetFrameHeight() * 0.625f
         },
-        {
-        mvTextBlocks[7].d2dLayoutRect.left,
-        mvTextBlocks[7].d2dLayoutRect.top,
-        mvTextBlocks[7].d2dLayoutRect.right,
-        mvTextBlocks[7].d2dLayoutRect.bottom
+        {//StartOrReady
+        GetFrameWidth() * 0.745f,
+        GetFrameHeight() * 0.65f,
+        GetFrameWidth() * 0.975f,
+        GetFrameHeight() * 0.8f
         },
-        {
-        mvTextBlocks[8].d2dLayoutRect.left,
-        mvTextBlocks[8].d2dLayoutRect.top,
-        mvTextBlocks[8].d2dLayoutRect.right,
-        mvTextBlocks[8].d2dLayoutRect.bottom
+        {// CarSelect
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.65f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.8f
         },
-        {
-        mvTextBlocks[9].d2dLayoutRect.left,
-        mvTextBlocks[9].d2dLayoutRect.top,
-        mvTextBlocks[9].d2dLayoutRect.right,
-        mvTextBlocks[9].d2dLayoutRect.bottom
-        },
-        {
-        mvTextBlocks[10].d2dLayoutRect.left,
-        mvTextBlocks[10].d2dLayoutRect.top,
-        mvTextBlocks[10].d2dLayoutRect.right,
-        mvTextBlocks[10].d2dLayoutRect.bottom
+        {// MapSelect
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.825f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.975f
         }
     };
+    XMFLOAT4 LTRB[] =
+    {
+        {
+        0.0f,
+        0.0f,
+        GetFrameWidth(),
+        GetFrameHeight()
+        },
+        {
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.32f
+        },
+        {
+        GetFrameWidth() * 0.265f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.495f,
+        GetFrameHeight() * 0.32f
+        },
+        {
+        GetFrameWidth() * 0.505f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.735f,
+        GetFrameHeight() * 0.32f
+        },
+        {
+        GetFrameWidth() * 0.745f,
+        GetFrameHeight() * 0.025f,
+        GetFrameWidth() * 0.975f,
+        GetFrameHeight() * 0.32f
+        },
+        {
+        GetFrameWidth() * 0.025f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.255f,
+        GetFrameHeight() * 0.625f
+        },
+        {
+        GetFrameWidth() * 0.265f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.495f,
+        GetFrameHeight() * 0.625f
+        },
+        {
+        GetFrameWidth() * 0.505f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.735f,
+        GetFrameHeight() * 0.625f
+        },
+        {
+        GetFrameWidth() * 0.745f,
+        GetFrameHeight() * 0.33f,
+        GetFrameWidth() * 0.975f,
+        GetFrameHeight() * 0.625f
+        }
+    };
+    bool IsOutlined[12] = { false,false,false,false,false,false,false,false,false,false,false,false };
+    float aOpacities[9] = { 1.0f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f };
+
     UI::BeginDraw(nFrame); 
-    UI::RectDraw(RectLTRB, FillLTRB, TextCnt+1, 0, 0);
-    UI::TextDraw(nFrame, TextCnt, mvTextBlocks);
+    
+    UI::DrawBmp(LTRB, 0, 1, aOpacities);
+    UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
+    UI::DrawBmp(LTRB, 1, 8, aOpacities);
+
+    UI::TextDraw(GetTextBlock());
     UI::EndDraw(nFrame);
 }
 
 void RoomUI::CreateFontFormat()
 {
-    float fFontSize = mfHeight / 15.0f;
+    std::vector<float> fFontSize;
+    fFontSize.push_back(GetFrameHeight() * 0.07f);  //Start
+    fFontSize.push_back(GetFrameHeight() * 0.07f); //CarSelect
+    fFontSize.push_back(GetFrameHeight() * 0.07f); //MapSelect
+    fFontSize.push_back(GetFrameHeight() * 0.05f);
+    fFontSize.push_back(GetFrameHeight() * 0.05f);
+    fFontSize.push_back(GetFrameHeight() * 0.05f);
+    fFontSize.push_back(GetFrameHeight() * 0.05f);
+    fFontSize.push_back(GetFrameHeight() * 0.05f);
+    fFontSize.push_back(GetFrameHeight() * 0.05f);
+    fFontSize.push_back(GetFrameHeight() * 0.05f);
+    fFontSize.push_back(GetFrameHeight() * 0.05f);
+    SetFontSize(fFontSize);
+
     std::vector<std::wstring> Fonts;
-    Fonts.push_back(L"Tahoma");
-     Fonts.push_back(L"Vladimir Script ∫∏≈Î");
-     Fonts.push_back(L"πŸ≈¡√º");
-     Fonts.push_back(L"±º∏≤√º");
-     Fonts.push_back(L"±º∏≤√º");
-     Fonts.push_back(L"±º∏≤√º");
-     Fonts.push_back(L"±º∏≤√º");
-     Fonts.push_back(L"±º∏≤√º");
-     Fonts.push_back(L"±º∏≤√º");
-     Fonts.push_back(L"±º∏≤√º");
-     Fonts.push_back(L"±º∏≤√º");
+    Fonts.push_back(L"Blazed");
+    Fonts.push_back(L"Xenogears");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    Fonts.push_back(L"abberancy");
+    SetFonts(Fonts);
 
-     DWRITE_TEXT_ALIGNMENT TextAlignments[11];
-     //TextAlignments.resize(TextCnt);
-     TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[7] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[8] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[9] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     TextAlignments[10] = DWRITE_TEXT_ALIGNMENT_CENTER;
-     
+    std::vector<DWRITE_TEXT_ALIGNMENT> TextAlignments;
+    TextAlignments.resize(GetTextCnt());
+    TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[7] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[8] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[9] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    TextAlignments[10] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    SetTextAllignments(TextAlignments);
 
-
-    UI::CreateFontFormat(fFontSize, Fonts, TextCnt, TextAlignments);
+    UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextAlignment());
 }
 
 void RoomUI::SetTextRect()
 {//Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(mfWidth * 2 / 32,  mfHeight * 9 / 16,  mfWidth /4,  mfHeight *11/16 );
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(mfWidth * 2 / 32, mfHeight * 23 / 32, mfWidth / 4, mfHeight * 27 / 32);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(mfWidth * 26 / 32, mfHeight * 25 / 32, mfWidth*30/32, mfHeight * 29 / 32);
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 32, mfHeight * 1/ 32, mfWidth*7/32, mfHeight*8/32);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(mfWidth * 8 / 32, mfHeight * 1 / 32, mfWidth * 14 / 32, mfHeight * 8 / 32);
-    mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(mfWidth * 15 / 32, mfHeight * 1 / 32, mfWidth * 21 / 32, mfHeight * 8 / 32);
-    mvTextBlocks[6].d2dLayoutRect = D2D1::RectF(mfWidth * 22 / 32, mfHeight * 1 / 32, mfWidth * 28 / 32, mfHeight * 8 / 32);
-    mvTextBlocks[7].d2dLayoutRect = D2D1::RectF(mfWidth * 1 / 32, mfHeight * 9 / 32, mfWidth * 7 / 32, mfHeight * 16 / 32);
-    mvTextBlocks[8].d2dLayoutRect = D2D1::RectF(mfWidth * 8 / 32, mfHeight * 9 / 32, mfWidth * 14 / 32, mfHeight * 16 / 32);
-    mvTextBlocks[9].d2dLayoutRect = D2D1::RectF(mfWidth * 15 / 32, mfHeight * 9 / 32, mfWidth * 21 / 32, mfHeight * 16 / 32);
-    mvTextBlocks[10].d2dLayoutRect = D2D1::RectF(mfWidth * 22 / 32, mfHeight * 9 / 32, mfWidth * 28 / 32, mfHeight * 16 / 32);
+    GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.65f, GetFrameWidth() * 0.975f, GetFrameHeight() * 0.8f);
+    GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.65f, GetFrameWidth() * 0.255f, GetFrameHeight() * 0.8f);
+    GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.825f, GetFrameWidth() * 0.23f, GetFrameHeight() * 0.975f);
+    
+    GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.235f, GetFrameHeight() * 0.075f);
+    GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.075f);
+    GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.075f);
+    GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.075f);
+    GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.235f, GetFrameHeight() * 0.385f);
+    GetTextBlock()[8].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.385f);
+    GetTextBlock()[9].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.385f);
+    GetTextBlock()[10].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.385f);
 }
 
-void RoomUI::PreDraw(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
+void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
-    mfWidth = static_cast<float>(nWidth);
-    mfHeight = static_cast<float>(nHeight);
-    UI::PreDraw(ppd3dRenderTargets, nWidth, nHeight);
+    //SetFrame(static_cast<float>(nWidth), static_cast<float>(nHeight));
+
+    UI::BuildObjects(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
+    
+    std::vector<D2D1::ColorF> colorList;
+    /*Text*/
     //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
+    colorList.push_back(D2D1::ColorF::FloralWhite);
+    colorList.push_back(D2D1::ColorF::Beige);
+    colorList.push_back(D2D1::ColorF::Beige);
+    colorList.push_back(D2D1::ColorF::Black);
+    colorList.push_back(D2D1::ColorF::Black);
+    colorList.push_back(D2D1::ColorF::Black);
+    colorList.push_back(D2D1::ColorF::Black);
+    colorList.push_back(D2D1::ColorF::Black);
+    colorList.push_back(D2D1::ColorF::Black);
+    colorList.push_back(D2D1::ColorF::Black);
+    colorList.push_back(D2D1::ColorF::Black);
+    /*UI*/
     //UI:  StartBox, CarSelectBox[2], NicknameBox[8], MapSelectBox[2]
-    D2D1::ColorF colorList[24] = { D2D1::ColorF::Black, D2D1::ColorF::Black, D2D1::ColorF::Black, 
-        D2D1::ColorF::Red, D2D1::ColorF::Orange, D2D1::ColorF::Yellow, D2D1::ColorF::Green, 
-        D2D1::ColorF::Blue, D2D1::ColorF::Navy, D2D1::ColorF::Violet, D2D1::ColorF::Pink,//Text
-    D2D1::ColorF(D2D1::ColorF::Red, 0.5f), D2D1::ColorF(D2D1::ColorF::Blue, 0.5f), 
-        D2D1::ColorF(D2D1::ColorF::Green, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-        D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-        D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-       D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-        D2D1::ColorF(D2D1::ColorF::Gray, 0.5f), D2D1::ColorF(D2D1::ColorF::Gray, 0.5f),
-        D2D1::ColorF(D2D1::ColorF::Gray, 0.5f)/*UI*/
-    };
-    //D2D1::ColorF gradientColors[4] = { D2D1::ColorF::ForestGreen, D2D1::ColorF::Yellow, D2D1::ColorF::Orange, D2D1::ColorF::Red };
-    UI::BuildSolidBrush(UICnt, TextCnt+1, colorList);
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Gold , 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Orange, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Green, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Navy, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Violet, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Pink, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Green, 1.0f));
+    SetColors(colorList);
+
+    UI::BuildSolidBrush(GetColors());
 
     SetTextRect(); 
-    for (auto wc : std::wstring{ L"StartOrReady" })
-        mvTextBlocks[0].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"CarSelect" })
-        mvTextBlocks[1].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"MapSelect" })
-        mvTextBlocks[2].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname1" })
-        mvTextBlocks[3].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname2" })
-        mvTextBlocks[4].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname3" })
-        mvTextBlocks[5].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname4" })
-        mvTextBlocks[6].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname5" })
-        mvTextBlocks[7].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname6" })
-        mvTextBlocks[8].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname7" })
-        mvTextBlocks[9].strText.push_back(wc);
-    for (auto wc : std::wstring{ L"Nickname8" })
-        mvTextBlocks[10].strText.push_back(wc);
+    for (auto& wc : std::string{ "Start" })
+        GetTextBlock()[0].strText.push_back(wc);
+    for (auto& wc : std::string{ "Car" })
+        GetTextBlock()[1].strText.push_back(wc);
+    for (auto& wc : std::string{ "Map" })
+        GetTextBlock()[2].strText.push_back(wc);
+
+    for (auto& wc : std::string{ "Nickname1" })
+    {
+        GetTextBlock()[3].strText.push_back(wc);
+        masNicknames[0].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname2" })
+    {
+        GetTextBlock()[4].strText.push_back(wc);
+        masNicknames[1].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname3" })
+    {
+        GetTextBlock()[5].strText.push_back(wc);
+        masNicknames[2].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname4" })
+    {
+        GetTextBlock()[6].strText.push_back(wc);
+        masNicknames[3].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname5" })
+    {
+        GetTextBlock()[7].strText.push_back(wc);
+        masNicknames[4].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname6" })
+    {
+        GetTextBlock()[8].strText.push_back(wc);
+        masNicknames[5].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname7" })
+    {
+        GetTextBlock()[9].strText.push_back(wc);
+        masNicknames[6].push_back(wc);
+    }
+    for (auto& wc : std::string{ "Nickname8" })
+    {
+        GetTextBlock()[10].strText.push_back(wc);
+        masNicknames[7].push_back(wc);
+    }
 }
 
 void RoomUI::Reset()
 {
     UI::Reset();
-    mvTextBlocks.clear();
+    for (auto& NickName : masNicknames)
+        NickName.clear();
 }
 
 void RoomUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
     ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
-    //Reset();
-    SetVectorSize(nFrame, TextCnt);
     UI::Initialize(device, pd3dCommandQueue);
-    PreDraw(ppd3dRenderTargets, width, height);
+    SetVectorSize(nFrame);
+    for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
+        LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
+    BuildObjects(ppd3dRenderTargets, width, height);
 }
