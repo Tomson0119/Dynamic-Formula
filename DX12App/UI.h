@@ -6,11 +6,13 @@ struct TextBlock
     D2D1_RECT_F         d2dLayoutRect;
     IDWriteTextFormat* pdwFormat;
 };
+
 class UI 
 {
 public:
     explicit UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
-    ~UI();
+    virtual ~UI();
+
     virtual void Update(float GTime, Player* mPlayer) {};
     virtual void Update(float GTime, std::vector<std::wstring>& Texts) {}
     virtual void Update(std::vector<std::wstring>& Texts) {}

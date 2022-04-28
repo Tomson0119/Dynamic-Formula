@@ -164,8 +164,8 @@ void InGameUI::Update(float GTime, Player* mPlayer)
    /* for (int i = 0; i < TextCnt; ++i)
         mvTextBlocks[i].strText = TextUI[i];*/
    
-	fDriftGauge = mPlayer->GetDriftGauge();
-	uItemCnt = mPlayer->GetItemNum();
+	//fDriftGauge = mPlayer->GetDriftGauge();
+	//uItemCnt = mPlayer->GetItemNum();
     //DraftGage Set
     //SetDraftGage();
 }
@@ -226,9 +226,9 @@ void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 	}
 }
 
-void InGameUI::SetDraftGage()
+void InGameUI::SetDriftGauge(float gauge)
 {
-    fDriftGauge += 0.001f;
+	fDriftGauge = gauge;
 }
 
 void InGameUI::Draw(UINT nFrame)
@@ -239,20 +239,20 @@ void InGameUI::Draw(UINT nFrame)
         {
             mfWidth * (3.0f / 16.0f), 
 			mfHeight * (5.0f / 6.0f),
-        mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)),
-        mfHeight * (8.0f / 9.0f)
+			mfWidth * (3.0f / 16.0f) + (mfWidth * (1.0f / 2.0f) - mfWidth * (3.0f / 16.0f)),
+			mfHeight * (8.0f / 9.0f)
         }, //DriftGauge
         {
             mfWidth * (17.0f / 32.0f), 
 			mfHeight * (5.0f / 6.0f),
-        mfWidth * (18.0f / 32.0f), 
-		mfHeight * (8.0f / 9.0f)
+			mfWidth * (18.0f / 32.0f), 
+			mfHeight * (8.0f / 9.0f)
         }, //Item1 UI
         {
             mfWidth * (19.0f / 32.0f), 
 			mfHeight * (5.0f / 6.0f),
-        mfWidth * (20.0f / 32.0f),
-		mfHeight * (8.0f / 9.0f)
+			mfWidth * (20.0f / 32.0f),
+			mfHeight * (8.0f / 9.0f)
         }//Item2 UI
     };
     XMFLOAT4 FillLTRB[] = 
