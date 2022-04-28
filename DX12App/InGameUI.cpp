@@ -299,6 +299,11 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 
    /* for (int i = 0; i < TextCnt; ++i)
         mvTextBlocks[i].strText = TextUI[i];*/
+   
+	//fDriftGauge = mPlayer->GetDriftGauge();
+	//uItemCnt = mPlayer->GetItemNum();
+    //DraftGage Set
+    //SetDraftGage();
 	
 		//DraftGage Set
 	//fDriftGauge = mPlayer->GetDriftGauge();
@@ -356,11 +361,9 @@ void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 	}
 }
 
-void InGameUI::UpdateDraftGauge()
+void InGameUI::SetDriftGauge(float gauge)
 {
-    mfDriftGauge += 0.001f;
-	if (mfDriftGauge > 1.0f)
-		mfDriftGauge = 0.0f;
+	fDriftGauge = gauge;
 }
 
 void InGameUI::Draw(UINT nFrame)
