@@ -13,7 +13,6 @@ InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 	SetGradientCnt(1);
 	SetUICnt();
     SetVectorSize(nFrame);
-    Initialize(device, pd3dCommandQueue);
 	for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
 		LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
 }
@@ -21,7 +20,7 @@ InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 void InGameUI::SetVectorSize(UINT nFrame)
 {
     UI::SetVectorSize(nFrame);
-    mvTextBlocks.resize(GetTextCnt());
+    GetTextBlock().resize(GetTextCnt());
 	ResizeFontSize(GetTextCnt());
 	ResizeFonts(GetTextCnt());
     //mvd2dLinearGradientBrush.resize(TextCnt);
@@ -49,175 +48,143 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	FontLoad(Fonts);
 }
 
-void InGameUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
-{
-
-}
 
 void InGameUI::StartPrint(const std::string& strUIText)
 {
-    mvTextBlocks[GetTextCnt() - 1].strText = strUIText;
+    GetTextBlock()[GetTextCnt() - 1].strText = strUIText;
 }
 
 void InGameUI::StartAnimation(float GTime)
 {
-	if (mbIsStartUI[3])
+	if (mIsStartUI[3])
 	{
-		if (AnimEndTime - GTime > 0.1f)
+		if (mAnimEndTime - GTime > 0.1f)
 		{
-			if (fOpacities[3] < 1.0f)
-				fOpacities[3] += 0.05f;
+			if (mOpacities[3] < 1.0f)
+				mOpacities[3] += 0.05f;
 
-			if (fOpacities[4] < 1.0f)
-				fOpacities[4] += 0.05f;
+			if (mOpacities[4] < 1.0f)
+				mOpacities[4] += 0.05f;
 
-			if (fOpacities[5] < 1.0f)
-				fOpacities[5] += 0.05f;
+			if (mOpacities[5] < 1.0f)
+				mOpacities[5] += 0.05f;
 		}
 		else
 		{
-			fOpacities[3] = 0.0f;
-			fOpacities[4] = 0.0f;
-			fOpacities[5] = 0.0f;
+			mOpacities[3] = 0.0f;
+			mOpacities[4] = 0.0f;
+			mOpacities[5] = 0.0f;
 			
 		}
 	}
-	else if (mbIsStartUI[2])
+	else if (mIsStartUI[2])
 	{
-		if (AnimEndTime - GTime > 0.1f)
+		if (mAnimEndTime - GTime > 0.1f)
 		{
-			LTRB[2].y += 0.5f;
-			LTRB[2].w += 0.5f;
+			mLTRB[2].y += 0.5f;
+			mLTRB[2].w += 0.5f;
 
-			if (fOpacities[2] < 1.0f)
-				fOpacities[2] += 0.05f;
+			if (mOpacities[2] < 1.0f)
+				mOpacities[2] += 0.05f;
 		}
 		else
 		{
-			LTRB[2].x += 0.1f;
-			LTRB[2].z += 0.1f;
+			mLTRB[2].x += 0.1f;
+			mLTRB[2].z += 0.1f;
 
-			if (fOpacities[2] > 0.0f)
-				fOpacities[2] -= 1.5f;
+			if (mOpacities[2] > 0.0f)
+				mOpacities[2] -= 1.5f;
 		}
 	}
-	else if (mbIsStartUI[1])
+	else if (mIsStartUI[1])
 	{
-		if (AnimEndTime - GTime > 0.1f)
+		if (mAnimEndTime - GTime > 0.1f)
 		{
-			LTRB[1].y += 0.5f;
-			LTRB[1].w += 0.5f;
+			mLTRB[1].y += 0.5f;
+			mLTRB[1].w += 0.5f;
 
-			if (fOpacities[1] < 1.0f)
-				fOpacities[1] += 0.05f;
+			if (mOpacities[1] < 1.0f)
+				mOpacities[1] += 0.05f;
 		}
 		else
 		{
-			LTRB[1].y += 0.1f;
-			LTRB[1].w += 0.1f;
+			mLTRB[1].y += 0.1f;
+			mLTRB[1].w += 0.1f;
 
-			if (fOpacities[1] > 0.0f)
-				fOpacities[1] -= 1.5f;
+			if (mOpacities[1] > 0.0f)
+				mOpacities[1] -= 1.5f;
 		}
 	}
-	else if (mbIsStartUI[0])
+	else if (mIsStartUI[0])
 	{
-		if (AnimEndTime - GTime > 0.1f)
+		if (mAnimEndTime - GTime > 0.1f)
 		{
-			LTRB[0].y += 0.5f;
-			LTRB[0].w += 0.5f;
+			mLTRB[0].y += 0.5f;
+			mLTRB[0].w += 0.5f;
 
-			if (fOpacities[0] < 1.0f)
-				fOpacities[0] += 0.05f;
+			if (mOpacities[0] < 1.0f)
+				mOpacities[0] += 0.05f;
 		}
 		else
 		{
-			LTRB[0].x += 0.1f;
-			LTRB[0].z += 0.1f;
+			mLTRB[0].x += 0.1f;
+			mLTRB[0].z += 0.1f;
 
-			if (fOpacities[0] > 0.0f)
-				fOpacities[0] -= 1.5f;
+			if (mOpacities[0] > 0.0f)
+				mOpacities[0] -= 1.5f;
 		}
 	}
 }
 
 void InGameUI::Update(float GTime, Player* mPlayer)
 {
-	/*TextUI.clear();
-	TextUI.resize(5);*/
-	
-	mvTextBlocks[5].strText.clear();
+	GetTextBlock()[5].strText.clear();
 	//StartTime Set
 	UINT Countdown = 3;
 	float CountdownTime = START_DELAY_TIME;
 	if (GTime > START_DELAY_TIME - 1.5f)
 	{
-		if (!mbIsStartUI[3]) AnimEndTime = GTime + 1.5f;
-		mbIsStartUI[3] = true;
-		/*for (auto &wc : L"Go!")
-			mvTextBlocks[5].strText.push_back(wc);*/
+		if (!mIsStartUI[3]) mAnimEndTime = GTime + 1.5f;
+		mIsStartUI[3] = true;
+		
 	}
 	else if (GTime > START_DELAY_TIME - 2.5f)
 	{
-		if (!mbIsStartUI[2]) AnimEndTime = GTime + 1.0f;
-		mbIsStartUI[2] = true;
-		//mvTextBlocks[5].strText.push_back('0' + Countdown - (Countdown - 1));
+		if (!mIsStartUI[2]) mAnimEndTime = GTime + 1.0f;
+		mIsStartUI[2] = true;
 	}
 	else if (GTime > START_DELAY_TIME - 3.5f)
 	{
-		if (!mbIsStartUI[1]) AnimEndTime = GTime + 1.0f;
-		mbIsStartUI[1] = true;
-		//mvTextBlocks[5].strText.push_back('0' + Countdown - (Countdown - 2));
+		if (!mIsStartUI[1]) mAnimEndTime = GTime + 1.0f;
+		mIsStartUI[1] = true;
 	}
 	else if (GTime > START_DELAY_TIME - 4.5f)
 	{
-		//3
-		if (!mbIsStartUI[0]) AnimEndTime = GTime + 1.0f;
-		mbIsStartUI[0] = true;
-		//mvTextBlocks[5].strText.push_back('0' + Countdown - (Countdown-3));
+		if (!mIsStartUI[0]) mAnimEndTime = GTime + 1.0f;
+		mIsStartUI[0] = true;
 	}
 
 
 	//Time Set
 	if (GTime < CountdownTime)
 	{
-		StartPrint(mvTextBlocks[5].strText);
+		StartPrint(GetTextBlock()[5].strText);
 		StartAnimation(GTime);
 		return;
 	}
-	if (mbIsStartUI[3])
+	if (mIsStartUI[3])
 	{
-		for (auto& Op : mfOpacities)
+		for (auto& Op : mOpacities)
 			Op = 0.0f;
-		for (auto& IsStartUI : mbIsStartUI)
+		for (auto& IsStartUI : mIsStartUI)
 			IsStartUI = false;
 	}
 
-	/*if (mIsBoost || mIsShootingMissile)
-	{
-		mItemOffStart = GTime;
-		mItemOffEnd = GTime + mItemOffTime;
-		mIsBoost = false;
-		mIsShootingMissile = false;
-		mItemOff = true;
-	}
-	if (mItemOff)
-	{
-		if (GTime == mItemOffEnd)
-		{
-			mItemOffStart = 0.0f;
-			mItemOffEnd = 0.0f;
-			mItemOff = false;
-		}
-	}*/
-	
-
-
 	for(int i=0;i<static_cast<int>(GetTextCnt());++i)
-		mvTextBlocks[i].strText.clear();
+		GetTextBlock()[i].strText.clear();
 
 	for (auto& str : "Time: ")
-		mvTextBlocks[0].strText.push_back(str);
+		GetTextBlock()[0].strText.push_back(str);
 	float LapTime = GTime - CountdownTime;
 	int Min = 0;
 	float Sec = 0.0;
@@ -225,47 +192,47 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	Sec = LapTime - (Min * 60.0f);
 
 	if (Min < 10)
-		mvTextBlocks[0].strText.push_back('0');
+		GetTextBlock()[0].strText.push_back('0');
 	for (auto &str : std::to_string(Min))
-		mvTextBlocks[0].strText.push_back(str);
+		GetTextBlock()[0].strText.push_back(str);
 
-	mvTextBlocks[0].strText.push_back(':');
+	GetTextBlock()[0].strText.push_back(':');
 	if (Sec < 10)
-		mvTextBlocks[0].strText.push_back('0');
+		GetTextBlock()[0].strText.push_back('0');
 	for (int i = 0; i < 3 + !(Sec < 10); ++i)
-		mvTextBlocks[0].strText.push_back(std::to_string(Sec)[i]);
+		GetTextBlock()[0].strText.push_back(std::to_string(Sec)[i]);
 
 	//Lap Count Set
 	if (static_cast<int>(GTime / 3) > 0)
 	{
 		for (auto &str : std::to_string(static_cast<int>(LapTime / 3)))
-			mvTextBlocks[1].strText.push_back(str);
+			GetTextBlock()[1].strText.push_back(str);
 		for (auto &str : std::string{ "Lap" })
-			mvTextBlocks[1].strText.push_back(str);
+			GetTextBlock()[1].strText.push_back(str);
 	}
 
 	//My Rank
 	UINT MyRank = 1;
-	mvTextBlocks[2].strText.push_back(('0' + MyRank));
+	GetTextBlock()[2].strText.push_back(('0' + MyRank));
 
 
 	switch (MyRank)
 	{
 	case 1:
-		mvTextBlocks[2].strText.push_back('s');
-		mvTextBlocks[2].strText.push_back('t');
+		GetTextBlock()[2].strText.push_back('s');
+		GetTextBlock()[2].strText.push_back('t');
 		break;
 	case 2:
-		mvTextBlocks[2].strText.push_back('n');
-		mvTextBlocks[2].strText.push_back('d');
+		GetTextBlock()[2].strText.push_back('n');
+		GetTextBlock()[2].strText.push_back('d');
 		break;
 	case 3:
-		mvTextBlocks[2].strText.push_back('r');
-		mvTextBlocks[2].strText.push_back('d');
+		GetTextBlock()[2].strText.push_back('r');
+		GetTextBlock()[2].strText.push_back('d');
 		break;
 	default:
-		mvTextBlocks[2].strText.push_back('t');
-		mvTextBlocks[2].strText.push_back('h');
+		GetTextBlock()[2].strText.push_back('t');
+		GetTextBlock()[2].strText.push_back('h');
 		break;
 	}
 	//Speed
@@ -273,38 +240,28 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	if (mPlayer->GetCurrentVelocity() >= 1000.0f)
 	{
 		for (int i = 0; i < 6; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
+			GetTextBlock()[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
 	}
 	else if (mPlayer->GetCurrentVelocity() >= 100.0f)
 	{
 		for (int i = 0; i < 5; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
+			GetTextBlock()[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
 	}
 	else if (mPlayer->GetCurrentVelocity() >= 10.0f)
 	{
 		for (int i = 0; i < 4; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
+			GetTextBlock()[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
 	}
 	else
 	{
 		for (int i = 0; i < 3; ++i)
-			mvTextBlocks[3].strText.push_back(std::to_string(0.0f)[i]);
+			GetTextBlock()[3].strText.push_back(std::to_string(0.0f)[i]);
 	}
 	for (auto &str : std::string("km/h"))
-		mvTextBlocks[4].strText.push_back(str);
+		GetTextBlock()[4].strText.push_back(str);
 
-   /* for (int i = 0; i < TextCnt; ++i)
-        mvTextBlocks[i].strText = TextUI[i];*/
-   
-	//fDriftGauge = mPlayer->GetDriftGauge();
-	//uItemCnt = mPlayer->GetItemNum();
-    //DraftGage Set
-    //SetDraftGage();
-	
-		//DraftGage Set
-	//fDriftGauge = mPlayer->GetDriftGauge();
 	//muItemCnt = mPlayer->GetItemNum();
-    //SetDriftGauge(0.5f);
+    SetDriftGauge(5000);
 }
 
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -348,7 +305,7 @@ void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
 	if (buttonState)
 	{
-		for (auto TextBlock : mvTextBlocks)
+		for (auto TextBlock : GetTextBlock())
 			if (TextBlock.d2dLayoutRect.left<x &&
 				TextBlock.d2dLayoutRect.right>x &&
 				TextBlock.d2dLayoutRect.top > y &&
@@ -359,7 +316,6 @@ void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
 void InGameUI::Draw(UINT nFrame)
 {
-	UI::BeginDraw(nFrame);
     XMFLOAT4 RectLTRB[] =
     {
         {
@@ -449,16 +405,11 @@ void InGameUI::Draw(UINT nFrame)
 			GetFrameHeight() * 0.6f
 		}
 	};
-	/*mfOpacities.push_back(0.0f);
-	mfOpacities.push_back(0.0f);
-	mfOpacities.push_back(0.0f);
-	mfOpacities.push_back(0.0f);*/
-
-	UI::RectDraw(RectLTRB, FillLTRB, 1, IsOutlined);
-	UI::DrawBmp(GetLTRB(), 0, 6, fOpacities);
-	UI::TextDraw(mvTextBlocks);
-    //UI::Draw(nFrame, TextCnt, 1, mvTextBlocks, RectLTRB, FillLTRB);
-	UI::EndDraw(nFrame);
+	BeginDraw(nFrame);
+	RectDraw(RectLTRB, FillLTRB, 1, IsOutlined);
+	DrawBmp(GetLTRB(), 0, 6, mOpacities);
+	TextDraw(GetTextBlock());
+	EndDraw(nFrame);
 }
 
 void InGameUI::CreateFontFormat()
@@ -500,12 +451,12 @@ void InGameUI::CreateFontFormat()
 
 void InGameUI::SetTextRect()
 {//Time, Lap, Rank, Speed, km/h, 321 Go! GetFrameWidth() * 0.25f, GetFrameHeight() * 0.13f)
-    mvTextBlocks[0].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.22f, GetFrameHeight() * 0.19f);
-    mvTextBlocks[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.02f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.16f, GetFrameHeight() * 0.14f);
-    mvTextBlocks[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, 0.0f, GetFrameWidth(), GetFrameHeight() * 0.16f);
-    mvTextBlocks[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.90f);
-    mvTextBlocks[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.95f);
-	mvTextBlocks[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.35f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.65f, GetFrameHeight() * 0.6f);
+    GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.22f, GetFrameHeight() * 0.19f);
+    GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.02f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.16f, GetFrameHeight() * 0.14f);
+    GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, 0.0f, GetFrameWidth(), GetFrameHeight() * 0.16f);
+    GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.90f);
+    GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.95f);
+	GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.35f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.65f, GetFrameHeight() * 0.6f);
 
 }
 
@@ -543,7 +494,8 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
     //D2D1::ColorF colorList[8] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f),D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f), D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f), D2D1::ColorF(D2D1::ColorF::Red, 1.0f), D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f) };
     D2D1::ColorF gradientColors[4] = { D2D1::ColorF(D2D1::ColorF::ForestGreen, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Yellow, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Orange, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Red, gradient_Alpha) };
 	SetColors(colorList);
-	UI::BuildBrush(GetColors(), 4, gradientColors);
+
+	BuildBrush(GetColors(), 4, gradientColors);
     
     SetTextRect();
 }

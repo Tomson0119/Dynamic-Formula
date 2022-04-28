@@ -13,19 +13,8 @@ LoginUI::LoginUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     SetUICnt();
 
     SetVectorSize(nFrame);
-    Initialize(device, pd3dCommandQueue);
     for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
         LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
-}
-
-LoginUI::~LoginUI()
-{
-
-}
-
-void LoginUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
-{
-
 }
 
 void LoginUI::SetVectorSize(UINT nFrame)
@@ -67,7 +56,7 @@ int LoginUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
     
-    /*if (IsLoginFail && MouseCollisionCheck(dx, dy, mvTextBlocks[6]))
+    /*if (IsLoginFail && MouseCollisionCheck(dx, dy, mTextBlocks[6]))
     {
         IsLoginFail = false;
         UI::BuildSolidBrush(UICnt + 1, TextCnt, GetColors());
@@ -78,7 +67,7 @@ int LoginUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
         GetColors()[12].a = 0.0f;
         GetColors()[6].a = 0.0f;
         SetLoginFail(false);
-        UI::BuildSolidBrush(GetColors());
+        BuildSolidBrush(GetColors());
     }
 
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[1])) //Log-in
@@ -102,24 +91,24 @@ int LoginUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
         //        return 2;
         //    }
         //}
-        UI::BuildSolidBrush(GetColors());
+        BuildSolidBrush(GetColors());
     }
 
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[5])) // Sign-up
     {
         //MouseUp일 때 실행되도록 변경해야 함.
-        if (!IsSignup)
+        if (!mIsSignup)
         {
-            SetLoginOrSignup("Signup");
-            SetLoginOrSignupReverse("Login");
+            //SetLoginOrSignup("Signup");
+            //SetLoginOrSignupReverse("Login");
         }
         else
         {
-            SetLoginOrSignup("Login");
-            SetLoginOrSignupReverse("Signup");
+            //SetLoginOrSignup("Login");
+            //SetLoginOrSignupReverse("Signup");
         }
-        SetSignupBool(!IsSignup);
-        UI::BuildSolidBrush(GetColors());
+        SetSignupBool(!mIsSignup);
+        BuildSolidBrush(GetColors());
         return 2;
     }
     /*else 
@@ -136,7 +125,7 @@ void LoginUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
     
-    //if (/*IsLoginFail &&*/ MouseCollisionCheck(dx, dy, mvTextBlocks[6]))
+    //if (/*IsLoginFail &&*/ MouseCollisionCheck(dx, dy, mTextBlocks[6]))
     //{
     //    GetColors()[6].a = 0.5f;
     //    GetColors()[12].a = 0.5f;
@@ -157,7 +146,7 @@ void LoginUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
     }
     else GetColors()[1].a = 1.0f;
 
-    /*if (MouseCollisionCheck(dx, dy, mvTextBlocks[5]) && buttonState)
+    /*if (MouseCollisionCheck(dx, dy, mTextBlocks[5]) && buttonState)
         exit(0);*/
 
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[5]))  // Sign-up
@@ -168,7 +157,7 @@ void LoginUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
         //새로운 UI처리
         ;
     }
-    UI::BuildSolidBrush(GetColors());
+    BuildSolidBrush(GetColors());
     //return 0;
 }
 
@@ -187,7 +176,7 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     }
     else GetColors()[1].a = 1.0f;
 
-    if (IsLoginFail)
+    if (mIsLoginFail)
     {
         if (MouseCollisionCheck(dx, dy, GetTextBlock()[6])) // LoginFail
         {
@@ -203,13 +192,13 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         GetColors()[5].a = 0.3f;
     else GetColors()[5].a = 1.0f;
 
-    UI::BuildSolidBrush(GetColors());
+    BuildSolidBrush(GetColors());
 }
 
 void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
 {
-    //mvTextBlocks[3].strText.clear();
-    //mvTextBlocks[5].strText.clear();
+    //mTextBlocks[3].strText.clear();
+    //mTextBlocks[5].strText.clear();
 
     if (!Texts[0].empty())
     {
@@ -237,30 +226,30 @@ void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
     }*/
     /*if (IsSignup)
     {
-        mvTextBlocks[1].strText.clear();
-        mvTextBlocks[4].strText.clear();
-        mvTextBlocks[6].strText.clear();
+        mTextBlocks[1].strText.clear();
+        mTextBlocks[4].strText.clear();
+        mTextBlocks[6].strText.clear();
 
         for (auto wc : std::string{ "Log-in" })
-            mvTextBlocks[4].strText.push_back(wc);
+            mTextBlocks[4].strText.push_back(wc);
         for (auto wc : std::string{ "Sign-Up" })
-            mvTextBlocks[1].strText.push_back(wc);
+            mTextBlocks[1].strText.push_back(wc);
         for (auto wc : std::string{ "Sign-Up Fail" })
-            mvTextBlocks[6].strText.push_back(wc);
+            mTextBlocks[6].strText.push_back(wc);
         UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
     }
     else
     {
-        mvTextBlocks[1].strText.clear();
-        mvTextBlocks[4].strText.clear();
-        mvTextBlocks[6].strText.clear();
+        mTextBlocks[1].strText.clear();
+        mTextBlocks[4].strText.clear();
+        mTextBlocks[6].strText.clear();
 
         for (auto wc : std::string{ "Log-in" })
-            mvTextBlocks[1].strText.push_back(wc);
+            mTextBlocks[1].strText.push_back(wc);
         for (auto wc : std::string{ "Sign-Up" })
-            mvTextBlocks[4].strText.push_back(wc);
+            mTextBlocks[4].strText.push_back(wc);
         for (auto wc : std::string{ "Login Fail" })
-            mvTextBlocks[6].strText.push_back(wc);
+            mTextBlocks[6].strText.push_back(wc);
         UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
     }*/
 }
@@ -292,7 +281,7 @@ void LoginUI::ChangeTextAlignment(UINT uNum, UINT uState)
             GetColors()[3].a = 1.0f;
         }
     }
-    UI::BuildSolidBrush(GetColors());
+    BuildSolidBrush(GetColors());
     UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextAlignment());
 }
 
@@ -427,11 +416,11 @@ void LoginUI::Draw(UINT nFrame)
     float aOpacities[1] = { 1.0f };
     bool IsOutlined[9] = { true,true, true, true, true,false,false, false,false };
 
-    UI::BeginDraw(nFrame);
-    UI::DrawBmp(LTRB,0 , 1, aOpacities);
-    UI::RectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
-    UI::TextDraw(GetTextBlock());
-    UI::EndDraw(nFrame);
+    BeginDraw(nFrame);
+    DrawBmp(LTRB,0 , 1, aOpacities);
+    RectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
+    TextDraw(GetTextBlock());
+    EndDraw(nFrame);
 }
 
 void LoginUI::CreateFontFormat()
@@ -512,16 +501,16 @@ void LoginUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     SetColors(colorList);
     
-    UI::BuildSolidBrush(GetColors());
+    BuildSolidBrush(GetColors());
 
     SetTextRect();
     for (auto wc : std::string{ "Dynamic Fomula" })
         GetTextBlock()[0].strText.push_back(wc);
-    for (auto wc : std::string{ LoginOrSignup })
+    for (auto wc : std::string{ "Login" })
         GetTextBlock()[1].strText.push_back(wc);
     for (auto wc : std::string{ "EXT" })
         GetTextBlock()[4].strText.push_back(wc);
-    for (auto wc : std::string{LoginOrSignupReverse })
+    for (auto wc : std::string{"Signup"})
         GetTextBlock()[5].strText.push_back(wc);
     
     for (auto wc : std::string{ "Login-FAIL" })

@@ -12,19 +12,8 @@ RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     SetUICnt();
 
     SetVectorSize(nFrame);
-    Initialize(device, pd3dCommandQueue);
     for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
         LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
-}
-
-RoomUI::~RoomUI()
-{
-
-}
-
-void RoomUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
-{
-
 }
 
 void RoomUI::SetVectorSize(UINT nFrame)
@@ -64,7 +53,7 @@ void RoomUI::SetVectorSize(UINT nFrame)
 void RoomUI::SetStartOrReady()
 {
     GetTextBlock()[0].strText.clear();
-    if (mbIsRoomMaster)
+    if (mIsRoomMaster)
         GetTextBlock()[0].strText.assign("START");
     else
         GetTextBlock()[0].strText.assign("READY");
@@ -80,21 +69,21 @@ void RoomUI::Update(float GTime)
         GetTextBlock()[1].strText.push_back(wc);
     for (auto& wc : std::string{ "Map" })
         GetTextBlock()[2].strText.push_back(wc);
-    for (auto& wc : std::string{ masNicknames[0] })
+    for (auto& wc : std::string{ mNicknames[0] })
         GetTextBlock()[3].strText.push_back(wc);
-    for (auto& wc : std::string{ masNicknames[1] })
+    for (auto& wc : std::string{ mNicknames[1] })
         GetTextBlock()[4].strText.push_back(wc);
-    for (auto& wc : std::string{ masNicknames[2] })
+    for (auto& wc : std::string{ mNicknames[2] })
         GetTextBlock()[5].strText.push_back(wc);
-    for (auto& wc : std::string{ masNicknames[3] })
+    for (auto& wc : std::string{ mNicknames[3] })
         GetTextBlock()[6].strText.push_back(wc);
-    for (auto& wc : std::string{ masNicknames[4] })
+    for (auto& wc : std::string{ mNicknames[4] })
         GetTextBlock()[7].strText.push_back(wc);
-    for (auto& wc : std::string{ masNicknames[5] })
+    for (auto& wc : std::string{ mNicknames[5] })
         GetTextBlock()[8].strText.push_back(wc);
-    for (auto& wc : std::string{ masNicknames[6] })
+    for (auto& wc : std::string{ mNicknames[6] })
         GetTextBlock()[9].strText.push_back(wc);
-    for (auto& wc : std::string{ masNicknames[7] })
+    for (auto& wc : std::string{ mNicknames[7] })
         GetTextBlock()[10].strText.push_back(wc);
     
 }
@@ -305,14 +294,12 @@ void RoomUI::Draw(UINT nFrame)
     bool IsOutlined[12] = { false,false,false,false,false,false,false,false,false,false,false,false };
     float aOpacities[9] = { 1.0f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f };
 
-    UI::BeginDraw(nFrame); 
-    
-    UI::DrawBmp(LTRB, 0, 1, aOpacities);
-    UI::RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
-    UI::DrawBmp(LTRB, 1, 8, aOpacities);
-
-    UI::TextDraw(GetTextBlock());
-    UI::EndDraw(nFrame);
+    BeginDraw(nFrame); 
+    DrawBmp(LTRB, 0, 1, aOpacities);
+    RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
+    DrawBmp(LTRB, 1, 8, aOpacities);
+    TextDraw(GetTextBlock());
+    EndDraw(nFrame);
 }
 
 void RoomUI::CreateFontFormat()
@@ -416,7 +403,7 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Green, 1.0f));
     SetColors(colorList);
 
-    UI::BuildSolidBrush(GetColors());
+    BuildSolidBrush(GetColors());
 
     SetTextRect(); 
     for (auto& wc : std::string{ "Start" })
@@ -429,49 +416,49 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     for (auto& wc : std::string{ "Nickname1" })
     {
         GetTextBlock()[3].strText.push_back(wc);
-        masNicknames[0].push_back(wc);
+        mNicknames[0].push_back(wc);
     }
     for (auto& wc : std::string{ "Nickname2" })
     {
         GetTextBlock()[4].strText.push_back(wc);
-        masNicknames[1].push_back(wc);
+        mNicknames[1].push_back(wc);
     }
     for (auto& wc : std::string{ "Nickname3" })
     {
         GetTextBlock()[5].strText.push_back(wc);
-        masNicknames[2].push_back(wc);
+        mNicknames[2].push_back(wc);
     }
     for (auto& wc : std::string{ "Nickname4" })
     {
         GetTextBlock()[6].strText.push_back(wc);
-        masNicknames[3].push_back(wc);
+        mNicknames[3].push_back(wc);
     }
     for (auto& wc : std::string{ "Nickname5" })
     {
         GetTextBlock()[7].strText.push_back(wc);
-        masNicknames[4].push_back(wc);
+        mNicknames[4].push_back(wc);
     }
     for (auto& wc : std::string{ "Nickname6" })
     {
         GetTextBlock()[8].strText.push_back(wc);
-        masNicknames[5].push_back(wc);
+        mNicknames[5].push_back(wc);
     }
     for (auto& wc : std::string{ "Nickname7" })
     {
         GetTextBlock()[9].strText.push_back(wc);
-        masNicknames[6].push_back(wc);
+        mNicknames[6].push_back(wc);
     }
     for (auto& wc : std::string{ "Nickname8" })
     {
         GetTextBlock()[10].strText.push_back(wc);
-        masNicknames[7].push_back(wc);
+        mNicknames[7].push_back(wc);
     }
 }
 
 void RoomUI::Reset()
 {
     UI::Reset();
-    for (auto& NickName : masNicknames)
+    for (auto& NickName : mNicknames)
         NickName.clear();
 }
 
