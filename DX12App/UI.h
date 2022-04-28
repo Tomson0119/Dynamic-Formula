@@ -18,7 +18,7 @@ class UI
 {
 public:
     explicit UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
-    ~UI();
+    virtual ~UI();
     virtual void Update(float GTime, Player* mPlayer) {}
     virtual void Update(float GTime, std::vector<std::string>& Texts) {} 
     virtual void Update(std::vector<std::string>& Texts) {}
@@ -151,7 +151,7 @@ private:
     std::vector<float> mvfFontSizes; //FontSize
     std::vector<std::wstring> mvwsFonts; //Fonts
     std::vector<std::wstring> mvBitmapFileNames; //BitmapFileNames
-    std::vector<ID2D1Bitmap*> mvBitmaps; //Bitmaps
+    std::vector<ComPtr<ID2D1Bitmap>> mvBitmaps; //Bitmaps
     std::vector<TextBlock>          mvTextBlocks; //TextBlocks
     std::vector<D2D1::ColorF> mvColors; //Colors
     std::vector<DWRITE_TEXT_ALIGNMENT> mvdwTextAlignments;  //TextAllignments
@@ -185,5 +185,5 @@ private:
 
     TCHAR mtcFontName[50];
 
-    IWICImagingFactory* mWICFactoryPtr;
+    ComPtr<IWICImagingFactory> mWICFactoryPtr;
 };

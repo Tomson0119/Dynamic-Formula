@@ -6,7 +6,7 @@ class RoomUI : public UI
 public:
 	RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 		pd3dCommandQueue);
-	~RoomUI();
+	virtual ~RoomUI();
 	void Update(float GTime);
 	void Update(float GTime, std::vector<std::string> Texts) {}
 	void Update(float GTime, Player* mPlayer) {}

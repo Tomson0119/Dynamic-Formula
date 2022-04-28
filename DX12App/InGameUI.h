@@ -23,13 +23,12 @@ public:
     void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) LTRB.push_back(R); }
 
     //For Packet
-    void UpdateItemCnt(bool IsPlus) { if (IsPlus&&muItemCnt<2) ++muItemCnt; else if(!IsPlus && muItemCnt>0) --muItemCnt; }
+    //void UpdateItemCnt(bool IsPlus) { if (IsPlus&&muItemCnt<2) ++muItemCnt; else if(!IsPlus && muItemCnt>0) --muItemCnt; }
     void UpdateScore() {}
     void UpdateRank() {}
-    void SetDriftGauge(float gauge);
     void UpdateIngameTime() {}
 
-    void SetDriftGauge(int gauge);
+    void SetDriftGauge(int gauge) { mDriftGauge = gauge; }
     void SetRunningTime(float time) { mRunningTime = time; }
 
 private:
@@ -37,6 +36,8 @@ private:
 
     float mfWidth = 0.0f;
     float mfHeight = 0.0f;
+
+    float mRunningTime;
 
     std::atomic_int mItemCnt = 0;
     std::atomic_int mDriftGauge = 0;

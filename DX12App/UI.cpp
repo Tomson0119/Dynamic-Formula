@@ -2,17 +2,15 @@
 #include "UI.h"
 UI::UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 {
+    CoInitializeEx(0, COINIT_MULTITHREADED);
     UI::Initialize(device, pd3dCommandQueue);
 }
 
 UI::~UI() 
 {
-    for (auto& bitmap : mvBitmaps)
-    {
-        if(bitmap!=NULL)
-            bitmap->Release();
-        bitmap = NULL;
-    }
+    Flush();
+    Reset();
+    CoUninitialize();
 }
 
 void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
@@ -117,7 +115,7 @@ HRESULT UI::LoadBitmapResourceFromFile(std::wstring ImageName, int index)
     if (SUCCEEDED(hresult)) hresult = pDecoder->GetFrame(0, &pFrame);
     if (SUCCEEDED(hresult)) hresult = mWICFactoryPtr->CreateFormatConverter(&pConverter);
     if (SUCCEEDED(hresult)) hresult = pConverter->Initialize(pFrame.Get(), GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.0f, WICBitmapPaletteTypeMedianCut);
-    if (SUCCEEDED(hresult)) hresult = mpd2dDeviceContext->CreateBitmapFromWicBitmap(pConverter.Get(), NULL, &mvBitmaps[index]);
+    if (SUCCEEDED(hresult)) hresult = mpd2dDeviceContext->CreateBitmapFromWicBitmap(pConverter.Get(), NULL, mvBitmaps[index].GetAddressOf());
     
     return hresult;
 }
@@ -152,13 +150,13 @@ void UI::FontLoad(const std::vector<std::wstring>& FontFilePaths)
 void UI::DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[])
 {
     for (int i = static_cast<int>(StartNum); i < static_cast<int>(StartNum + BmpNum); ++i)
-        mpd2dDeviceContext->DrawBitmap(mvBitmaps[i], D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), aOpacities[i], D2D1_INTERPOLATION_MODE_LINEAR);
+        mpd2dDeviceContext->DrawBitmap(mvBitmaps[i].Get(), D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), aOpacities[i], D2D1_INTERPOLATION_MODE_LINEAR);
 }
 
 void UI::DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpNum, const float aOpacities[])
 {
     for (int i = static_cast<int>(StartNum); i < static_cast<int>(StartNum + BmpNum); ++i)
-        mpd2dDeviceContext->DrawBitmap(mvBitmaps[i], D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), aOpacities[i], D2D1_INTERPOLATION_MODE_LINEAR);
+        mpd2dDeviceContext->DrawBitmap(mvBitmaps[i].Get(), D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), aOpacities[i], D2D1_INTERPOLATION_MODE_LINEAR);
 }
 
 void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[])
@@ -327,8 +325,7 @@ void UI::Reset()
     mpd2dDeviceContext.Reset();
 
     mpd2dWriteFactory.Reset();
-    if(mWICFactoryPtr)
-     mWICFactoryPtr->Release();
+    
 
     mdwFontFile.Reset();
     mdwFontSetBuilder.Reset();
@@ -350,10 +347,14 @@ void UI::Reset()
         renderTarget.Reset();
     for (auto &bitmap : mvd2dRenderTargets)
         bitmap.Reset();
-    for (auto &bitmap : mvBitmaps)
-        bitmap->Release();
     for (auto& FontCollection : mdwFontCollection)
         FontCollection.Reset();
+
+    if(mWICFactoryPtr) mWICFactoryPtr.Reset();
+    mWICFactoryPtr = nullptr;
+
+    for (auto& bitmap : mvBitmaps)
+        bitmap.Reset();
     mdwFontCollection.clear();
     
     mvTextBlocks.clear();

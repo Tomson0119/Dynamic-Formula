@@ -3,8 +3,6 @@
 
 InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 	: UI(nFrame, device, pd3dCommandQueue),
-	  TextCnt(5),
-	  UICnt(3),
 	  mRunningTime(0)
     // Text: GameTime, LapCnt, Rank, StartCount, Velocity
     //UI: DraftGage, Item1, Item2
@@ -306,7 +304,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 		//DraftGage Set
 	//fDriftGauge = mPlayer->GetDriftGauge();
 	//muItemCnt = mPlayer->GetItemNum();
-    SetDriftGauge(0.5f);
+    //SetDriftGauge(0.5f);
 }
 
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -359,11 +357,6 @@ void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 	}
 }
 
-void InGameUI::SetDriftGauge(int gauge)
-{
-	mDriftGauge = gauge;
-}
-
 void InGameUI::Draw(UINT nFrame)
 {
 	UI::BeginDraw(nFrame);
@@ -393,7 +386,7 @@ void InGameUI::Draw(UINT nFrame)
         {
 			GetFrameWidth()* (3.0f / 16.0f),
 			GetFrameHeight() * (5.0f / 6.0f), 
-			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * mfDriftGauge,
+			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * (mDriftGauge/FIXED_FLOAT_LIMIT),
 			GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
         {

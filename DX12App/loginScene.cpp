@@ -13,7 +13,7 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	{
 		// TEST
 		//mNetPtr->Client()->RequestLogin("", "");
-		/mNetPtr->Client()->RequestLogin("GM", "GM");
+		//mNetPtr->Client()->RequestLogin("GM", "GM");
 		
 	}
 	else OutputDebugStringW(L"Failed to connect to server.\n");
@@ -47,34 +47,19 @@ void LoginScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
 	if (buttonState&MK_LBUTTON) 
 	{
-		if (mpUI->OnProcessMouseClick(buttonState, x, y) == 1) //LoginFail
+		if (mpUI->OnProcessMouseClick(buttonState, x, y) == 1) // Login Button
 		{
-#ifndef STADNALONE
+			OutputDebugStringA("Login button");
+		#ifndef STADNALONE
 			mNetPtr->Client()->RequestLogin(mID, mPWD);
-#else
-#endif
-
+		#endif
 		}
-		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Sign-up
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Sign-up Button
 		{
-#ifndef STADNALONE
+		#ifndef STADNALONE
 			mNetPtr->Client()->RequestRegister(mID, mPWD);
-#else
-#endif
+		#endif
 		}
-		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 0) //LoginSuccess
-		{
-
-		}
-
-		//mpUI.get()->OnProcessMouseDown(buttonState, x, y);
-		//LoginCheck
-		//if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y) == 1)
-		//{
-			////SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
-			//mNetPtr->Client()->RequestLogin(mID, mPWD);
-			//// 로그인 성공? 실패? 를 어떻게 판단하지??
-		//}
 	}
 }
 

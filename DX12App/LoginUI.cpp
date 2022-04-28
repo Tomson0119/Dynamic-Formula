@@ -128,8 +128,7 @@ int LoginUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
         UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
         return 0;
     }*/
-    return 0;
-    
+    return 0;    
 }
 
 void LoginUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)

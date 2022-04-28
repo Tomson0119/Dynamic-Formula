@@ -5,7 +5,7 @@ class LobbyUI : public UI
 public:
 	LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 		pd3dCommandQueue);
-	~LobbyUI();
+	virtual ~LobbyUI();
 	void Update(float GTime, Player* mPlayer) {}
 	void Update(float GTime, std::vector<std::string> Texts) {}
 	void Update(float GTime);
