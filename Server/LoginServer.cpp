@@ -267,7 +267,10 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		if (std::string(pck->name).find("GM") != std::string::npos)
 		{
 			gClients[id]->SendRegisterResult(REGI_STAT::INVALID_IDPWD);
-			break;
+		}
+		else
+		{
+			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
 		}
 
 	#ifdef USE_DATABASE
