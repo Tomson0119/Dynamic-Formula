@@ -58,17 +58,16 @@ private:
     std::vector<XMFLOAT4> mLTRB;
 
     //For Packet
-    std::array<int, 8> mScores;
-    std::array<int, 8> mRanks;
-    std::array<int, 8> mLaps;
-    std::array<int, 8> mMissileHits;
-    std::array<std::string, 8> mUserNicknames;
+    std::array<std::atomic_int, MAX_ROOM_CAPACITY> mScores;
+    std::array<std::atomic_int, MAX_ROOM_CAPACITY> mRanks;
+    std::array<std::atomic_int, MAX_ROOM_CAPACITY> mLaps;
+    std::array<std::atomic_int, MAX_ROOM_CAPACITY> mMissileHits;
+    std::array<std::string, MAX_ROOM_CAPACITY> mUserNicknames;
 
-    int mMyScore;
-    int mMyRank;
-    int mMyLap;
+    std::atomic_int mMyScore;
+    std::atomic_int mMyRank;
+    std::atomic_int mMyLap;
     float mCurrentSpeed;
-    float mVelocity;
     bool mIsReverse = false;
     float mIngameTime;
 

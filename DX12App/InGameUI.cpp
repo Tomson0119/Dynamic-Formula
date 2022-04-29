@@ -3,8 +3,12 @@
 
 InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 	: UI(nFrame, device, pd3dCommandQueue),
-	  mRunningTime(0)
-    // Text: GameTime, LapCnt, Rank, Velocity
+	  mRunningTime(0),
+	  mMyScore(0),
+	  mMyRank(0),
+	  mMyLap(0),
+	  mCurrentSpeed(0.0f)
+	// Text: GameTime, LapCnt, Rank, Velocity
 	// Ranking credits 8 * 5(Rank, Nickname, Score, Lap, Missile)
     //UI: DraftGage, Item1, Item2
 {
@@ -338,12 +342,6 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	//Time Set
 	if (mIngameTime <= CountdownTime)
 	{
-		SetScore(500);
-		SetSpeed(mPlayer->GetCurrentVelocity());
-		SetMyRank(3);
-		SetLap(3);
-		SetDriftGauge(5000);
-
 		StartAnimation();
 		return;
 	}
@@ -381,7 +379,7 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		case 'S':
 			mMyScore += 100;
 			break;
-		case 'D':
+		case 'N':
 			SetRunningTime(0.0f);
 			break;
 		case 'L':
