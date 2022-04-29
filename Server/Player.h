@@ -75,7 +75,8 @@ public:
 	int GetLapCount() const { return mLapCount; }
 	int GetPoint() const { return mPoint; }
 	int GetCurrentCPIndex() const { return mCurrentCPIndex; }
-
+	
+	float GetCurrentSpeed() const { return mVehicleRigidBody.GetCurrentSpeed(); }
 	float GetDriftGauge() const { return mDriftGauge; }
 
 	void ResetManualRespawnFlag() { mManualRespawn = false; }
