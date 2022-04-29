@@ -389,8 +389,8 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 
 /////////////////////////////////////////////////////////////////////////
 //
-StreamOutputPipeline::StreamOutputPipeline()
-	: Pipeline(), mStreamOutputDesc({})
+StreamOutputPipeline::StreamOutputPipeline(UINT objectMaxCount)
+	: Pipeline(), mStreamOutputDesc({}), mObjectMaxCount(objectMaxCount)
 {
 }
 
@@ -426,6 +426,11 @@ void StreamOutputPipeline::SetAndDraw(
 
 	cmdList->SetPipelineState(mPSO[0].Get()); // Draw
 	Pipeline::Draw(cmdList, false);
+}
+
+void StreamOutputPipeline::BuildConstantBuffer(ID3D12Device* device)
+{
+	mObjectCB = std::make_unique<ConstantBuffer<ObjectConstants>>(device, mObjectMaxCount);
 }
 
 void StreamOutputPipeline::BuildSOPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader)
@@ -464,6 +469,13 @@ void StreamOutputPipeline::BuildSOPipeline(ID3D12Device* device, ID3D12RootSigna
 		&psoDesc, IID_PPV_ARGS(&mPSO[1])));
 }
 
+void StreamOutputPipeline::AppendObject(const std::shared_ptr<GameObject>& obj)
+{
+	mRenderObjects.push_back(obj);
+
+	obj->SetCBVAddress(mGPUHandles[mRenderObjects.size() - 1]);
+}
+
 void StreamOutputPipeline::CreateStreamOutputDesc()
 {
 	mSODeclarations.push_back({ 0, "POSITION",  0, 0, 3, 0 });
@@ -482,6 +494,31 @@ void StreamOutputPipeline::CreateStreamOutputDesc()
 	mStreamOutputDesc.pBufferStrides = mStrides.data();
 	mStreamOutputDesc.pSODeclaration = mSODeclarations.data();
 	mStreamOutputDesc.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+}
+
+void StreamOutputPipeline::BuildCBV(ID3D12Device* device)
+{
+	if (mObjectCB == nullptr) return;
+
+	UINT stride = mObjectCB->GetByteSize();
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+	cbvDesc.BufferLocation = mObjectCB->GetGPUVirtualAddress(0);
+	cbvDesc.SizeInBytes = stride;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+	for (int i = 0; i < mObjectMaxCount; ++i)
+	{
+		device->CreateConstantBufferView(&cbvDesc, cpuHandle);
+		
+		mGPUHandles.push_back(gpuHandle);
+
+		cbvDesc.BufferLocation += stride;
+		cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+		gpuHandle.ptr += gCbvSrvUavDescriptorSize;
+	}
 }
 
 

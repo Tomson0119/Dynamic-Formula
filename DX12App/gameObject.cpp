@@ -1035,6 +1035,27 @@ void SOParticleObject::Update(float elapsedTime, float updateRate)
 	mWorld = Matrix4x4::Multiply(mWorld, mParent.GetWorld());
 }
 
+void SOParticleObject::Draw(ID3D12GraphicsCommandList* cmdList, UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex, UINT64 matGPUAddress, UINT64 byteOffset, bool isSO)
+{
+	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
+
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	for (int i = 0; i < mMeshes.size(); i++)
+	{
+		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
+
+		int srvIndex = mMeshes[i]->GetSrvIndex();
+
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
+		mMeshes[i]->Draw(cmdList, isSO);
+	}
+}
+
 void SOParticleObject::SetLocalOffset(XMFLOAT3 offset)
 {
 	mLocalOffset = offset;

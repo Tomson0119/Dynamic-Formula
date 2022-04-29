@@ -342,6 +342,11 @@ public:
 	virtual ~SOParticleObject() = default;
 	virtual void Update(float elapsedTime, float updateRate) override;
 
+	virtual void Draw(
+		ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset, bool isSO = false);
+
 	void SetLocalOffset(XMFLOAT3 offset);
 
 private:

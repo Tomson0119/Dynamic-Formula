@@ -129,7 +129,7 @@ public:
 class StreamOutputPipeline : public Pipeline
 {
 public:
-	StreamOutputPipeline();
+	StreamOutputPipeline(UINT objectMaxCount);
 	virtual ~StreamOutputPipeline();
 
 	virtual void BuildPipeline(
@@ -142,18 +142,27 @@ public:
 		bool drawWiredFrame = false,
 		bool setPipeline = true, bool msaaOff = false) override;
 
+	virtual void BuildConstantBuffer(ID3D12Device* device);
+
 private:
 	void BuildSOPipeline(
 		ID3D12Device* device,
 		ID3D12RootSignature* rootSig,
 		Shader* shader = nullptr);
 
+	virtual void AppendObject(const std::shared_ptr<GameObject>& obj);
+
 	void CreateStreamOutputDesc();
+
+	virtual void BuildCBV(ID3D12Device* device);
 
 private:
 	D3D12_STREAM_OUTPUT_DESC mStreamOutputDesc;
 	std::vector<D3D12_SO_DECLARATION_ENTRY> mSODeclarations;
 	std::vector<UINT> mStrides;
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> mGPUHandles;
+
+	UINT mObjectMaxCount = 0;
 };
 
 //////////////////////////////////////////////////////////////////////////////////

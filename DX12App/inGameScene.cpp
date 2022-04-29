@@ -725,17 +725,17 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mVolumetricEnable = !mVolumetricEnable;
 		}
-		if (wParam == VK_LSHIFT)
+		if (wParam == VK_SHIFT)
 		{
 			mParticleDestroyFlag = true;
 		}
 		
-
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+		break;
 
 	case WM_KEYDOWN:
-		if (wParam == VK_LSHIFT)
+		if (wParam == VK_SHIFT)
 		{
 			mParticleAddFlag = true;
 		}
@@ -808,10 +808,15 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 		physics->StepSimulation(elapsed);
 
 	if (mParticleAddFlag)
+	{
+		mParticleAddFlag = false;
 		AddParticleObject(cmdList);
-
+	}
 	if (mParticleDestroyFlag)
+	{
+		mParticleDestroyFlag = false;
 		DestroyParticleObject();
+	}
 
 	UpdatePlayerObjects();
 	UpdateMissileObject();
@@ -1083,23 +1088,26 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
 
-		if (layer == Layer::CheckPoint && !cubeMapping)
+		if (pso->GetRenderObjects().size() > 0)
 		{
-			if (mCheckPointEnable)
+			if (layer == Layer::CheckPoint && !cubeMapping)
 			{
-				pso->SetAndDraw(cmdList, true, true, cubeMapping);
+				if (mCheckPointEnable)
+				{
+					pso->SetAndDraw(cmdList, true, true, cubeMapping);
+				}
+				else
+				{
+					continue;
+				}
 			}
-			else
+			else if (cubeMapping && layer == Layer::Color)
 			{
 				continue;
 			}
-		}
-		else if (cubeMapping && layer == Layer::Color)
-		{
-			continue;
-		}
-		else
-			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
+			else
+				pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
+		}			
 	}
 }
 
