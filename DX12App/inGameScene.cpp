@@ -580,9 +580,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 			if (pck->gauge >= 0.0f)
 			{
-				std::stringstream ss;
-				ss << "Drift gauge: " << pck->gauge << "\n";
-				OutputDebugStringA(ss.str().c_str());
 				mpUI->SetDriftGauge(pck->gauge);
 			}
 		}
@@ -630,11 +627,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player.get() == mPlayer)
 		{
-			std::stringstream ss;
-			ss << "Lap count: " << (int)pck->lap_count << "\n";
-			ss << "Point: " << pck->point << "\n";
-			ss << "Rank: " << (int)pck->rank << "\n";
-			OutputDebugStringA(ss.str().c_str());
+			mpUI->SetLap(pck->lap_count);
 		}
 		// 점수판 생성 위에서 아래로 순차적으로 갱신.
 		break;
@@ -775,8 +768,8 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		{
 			mParticleInterval = 0.1f;
 			
-			if(mPipelines[Layer::Particle]->GetRenderObjects().size() == 0)
-				AddParticleObject();
+			/*if(mPipelines[Layer::Particle]->GetRenderObjects().size() == 0)
+				AddParticleObject();*/
 		}
 	}
 	else
