@@ -12,9 +12,7 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	if (mNetPtr->Connect(SERVER_IP, SERVER_PORT))
 	{
 		// TEST
-		//mNetPtr->Client()->RequestLogin("", "");
-		//mNetPtr->Client()->RequestLogin("GM", "GM");
-		
+		mNetPtr->Client()->RequestLogin("GM", "GM");
 	}
 	else OutputDebugStringW(L"Failed to connect to server.\n");
 #else
