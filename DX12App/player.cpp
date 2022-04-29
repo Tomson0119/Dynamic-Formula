@@ -166,7 +166,8 @@ const float PhysicsPlayer::TransparentInterval = 0.3f;
 
 PhysicsPlayer::PhysicsPlayer(UINT netID) 
 	: Player(), 
-	  mNetID(netID)
+	  mNetID(netID),
+	  mItemNum(0)
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
