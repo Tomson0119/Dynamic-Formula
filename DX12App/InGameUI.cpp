@@ -5,7 +5,7 @@ InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 	: UI(nFrame, device, pd3dCommandQueue),
 	  mRunningTime(0),
 	  mMyScore(0),
-	  mMyRank(0),
+	  mMyRank(1),
 	  mMyLap(0),
 	  mCurrentSpeed(0),
 	mTextCountWithoutRankCredit(8)
@@ -67,6 +67,7 @@ void InGameUI::StartAnimation()
 {
 	if (mIsStartUI[3])
 	{
+		mOpacities[2] = 0.0f;
 		if (mAnimEndTime - mIngameTime > 0.1f)
 		{
 			if (mOpacities[3] < 1.0f)
@@ -88,6 +89,7 @@ void InGameUI::StartAnimation()
 	}
 	else if (mIsStartUI[2])
 	{
+		mOpacities[1] = 0.0f;
 		if (mAnimEndTime - mIngameTime > 0.1f)
 		{
 			mLTRB[2].y += 0.5f;
@@ -107,6 +109,7 @@ void InGameUI::StartAnimation()
 	}
 	else if (mIsStartUI[1])
 	{
+		mOpacities[0] = 0.0f;
 		if (mAnimEndTime - mIngameTime > 0.1f)
 		{
 			mLTRB[1].y += 0.5f;
