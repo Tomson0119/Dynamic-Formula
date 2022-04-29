@@ -136,7 +136,7 @@ namespace SC
 	const char TRANSFER_TIME	  = 13;
 	const char PLAYER_TRANSFORM	  = 14;
 	const char MISSILE_TRANSFORM  = 15;
-	const char DRIFT_GAUGE		  = 16;
+	const char UI_INFO			  = 16;
 	const char REMOVE_MISSILE	  = 17;
 	const char INVINCIBLE_ON	  = 18;
 	const char SPAWN_TRANSFORM	  = 19;
@@ -250,10 +250,11 @@ namespace SC
 		int linear_vel[3];
 	};
 
-	struct packet_drift_gauge : packet_header
+	struct packet_ui_info : packet_header
 	{
 		uint8_t player_idx;
 		int gauge;
+		int speed;
 	};
 
 	struct packet_remove_missile : packet_header

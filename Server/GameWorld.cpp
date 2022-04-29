@@ -234,7 +234,7 @@ void GameWorld::BroadcastAllTransform()
 				PushMissileTransformPacket(target, receiver);
 			}
 		}
-		PushDriftGaugePacket(receiver);
+		PushUiInfoPacket(receiver);
 
 		int id = mPlayerList[receiver]->ID;
 		if (id < 0) continue;
@@ -309,12 +309,13 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
 
-void GameWorld::PushDriftGaugePacket(int target)
+void GameWorld::PushUiInfoPacket(int target)
 {
-	SC::packet_drift_gauge pck{};
-	pck.size = sizeof(SC::packet_drift_gauge);;
-	pck.type = SC::DRIFT_GAUGE;
+	SC::packet_ui_info pck{};
+	pck.size = sizeof(SC::packet_ui_info);;
+	pck.type = SC::UI_INFO;
 	pck.gauge = (int)(mPlayerList[target]->GetDriftGauge() * FIXED_FLOAT_LIMIT);
+	pck.speed = (int)(mPlayerList[target]->GetCurrentSpeed() * FIXED_FLOAT_LIMIT);
 
 	int hostID = mPlayerList[target]->ID;
 	if (hostID < 0) return;
@@ -421,7 +422,7 @@ void GameWorld::SendGameEndPacket()
 	{
 		pck.rank[i] = mCurrRanks[i];
 		pck.lap_count[i] = mPlayerList[i]->GetLapCount();
-		pck.hit_count[i] = mPlayerList[i]->GetLapCount();
+		pck.hit_count[i] = mPlayerList[i]->GetHitCount();
 		pck.point[i] = mPlayerList[i]->GetPoint();
 	}
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
