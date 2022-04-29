@@ -16,7 +16,7 @@ D3DFramework::D3DFramework()
 
 D3DFramework::~D3DFramework()
 {
-	//if(mD3dDevice) WaitUntilGPUComplete();
+	if(mD3dDevice) WaitUntilGPUComplete();
 	if (mFenceEvent) CloseHandle(mFenceEvent);
 }
 
