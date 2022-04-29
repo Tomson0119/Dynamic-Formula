@@ -283,7 +283,7 @@ void InGameUI::SetTimeMinSec(int& m, int& s)
 
 void InGameUI::UpdateRankCredits()
 {
-	int ExtraTextCnt = 7;
+	size_t ExtraTextCnt = 7;
 	for (int i = 0;i < ExtraTextCnt; ++i)
 		GetTextBlock()[i].strText.clear();
 	// Rank, Nickname, Score, Lap, MissileHit
@@ -298,11 +298,11 @@ void InGameUI::UpdateRankCredits()
 	}
 	for (int i = 0; i< 8; ++i)
 	{
-		GetTextBlock()[ExtraTextCnt + (0 * 5) + i].strText.assign(std::to_string(mRanks[i]));
-		GetTextBlock()[ExtraTextCnt + (1 * 5) + i].strText.assign(mUserNicknames[i]);
-		GetTextBlock()[ExtraTextCnt + (2 * 5) + i].strText.assign(std::to_string(mScores[i]));
-		GetTextBlock()[ExtraTextCnt + (3 * 5) + i].strText.assign(std::to_string(mLaps[i]));
-		GetTextBlock()[ExtraTextCnt + (4 * 5) + i].strText.assign(std::to_string(mMissileHits[i]));
+		GetTextBlock()[ExtraTextCnt + static_cast<size_t>(i)].strText.assign(std::to_string(mRanks[i]));
+		GetTextBlock()[ExtraTextCnt + (1 * 8) + static_cast<size_t>(i)].strText.assign(mUserNicknames[i]);
+		GetTextBlock()[ExtraTextCnt + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScores[i]));
+		GetTextBlock()[ExtraTextCnt + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mLaps[i]));
+		GetTextBlock()[ExtraTextCnt + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mMissileHits[i]));
 	}
 	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Black, 0.8f));
 	BuildSolidBrush(GetColors());
@@ -553,7 +553,7 @@ void InGameUI::CreateFontFormat()
 	TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_TRAILING;
 	
-	for(int i=0;i<40;++i)
+	for(size_t i=0;i<40;++i)
 		TextAlignments[7+i] = DWRITE_TEXT_ALIGNMENT_LEADING; //RankCredits
 
     UI::CreateFontFormat(GetFontSize(), GetFonts(), TextAlignments);
