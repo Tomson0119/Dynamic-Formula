@@ -44,51 +44,8 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Speed
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // km/h
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Score
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Rank Credits
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); 
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
-
+	for(int i =0;i<40;++i)
+		Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Rank Credits
 	
 	//LTRB.resize(GetBitmapCnt());
 
@@ -509,7 +466,7 @@ void InGameUI::Draw(UINT nFrame)
 	bool IsOutlined[4] = { true, true, true, true };
 
 	BeginDraw(nFrame);
-	RectDraw(RectLTRB, FillLTRB, 1, IsOutlined);
+	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt, 1, IsOutlined);
 	DrawBmp(GetLTRB(), 0, 6, mOpacities);
 	TextDraw(GetTextBlock());
 	EndDraw(nFrame);

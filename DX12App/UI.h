@@ -53,7 +53,7 @@ public:
     void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
     void DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpNum, const float aOpacities[]);
     void TextDraw(const std::vector<TextBlock> &mTextBlocks);
-    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
+    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT InvisibleRectCnt, UINT GradientCnt, bool IsOutlined[]);
     void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
     void EndDraw(UINT nFrame);
     void Flush();
@@ -132,6 +132,9 @@ public:
    std::vector<DWRITE_TEXT_ALIGNMENT>& GetTextAlignment() { return mDWriteTextAlignments; }
    void SetTextAllignments(const std::vector< DWRITE_TEXT_ALIGNMENT>& Allignments) { for (int i = 0; i < static_cast<int>(GetTextCnt());++i) mDWriteTextAlignments[i] = Allignments[i]; }
    
+   //ItemCnt
+   UINT GetgItemCnt() const { return mgItemCnt; };
+   void SetgItem(int item) { mgItemCnt = item; }
    //UI
    void SetUICnt() { mUICnt = mRectCnt + mRoundRectCnt + mEllipseCnt; }
 private:
@@ -146,6 +149,8 @@ private:
     UINT mGradientCnt = 0;
     UINT mBitmapCnt = 0;
     UINT mUICnt = 0;
+
+    UINT mgItemCnt = 0;
     
     std::vector<float> mFontSizes; //FontSize
     std::vector<std::wstring> mFonts; //Fonts

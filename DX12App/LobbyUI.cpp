@@ -333,7 +333,7 @@ void LobbyUI::Draw(UINT nFrame)
     float aOpacities[3] = { 0.5f, 1.0f, 0.5f };
     BeginDraw(nFrame);
     DrawBmp(LTRB, 0, 2, aOpacities);
-    RectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
+    RectDraw(RectLTRB, FillLTRB, 0, 0, IsOutlined);
     DrawBmp(LTRB, 2, 1, aOpacities);
     TextDraw(GetTextBlock());
     EndDraw(nFrame);

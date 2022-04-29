@@ -157,7 +157,7 @@ void UI::DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpN
         mD2dDeviceContext->DrawBitmap(mBitmaps[i].Get(), D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), aOpacities[i], D2D1_INTERPOLATION_MODE_LINEAR);
 }
 
-void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[])
+void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT InvisibleRectCnt, UINT GradientCnt, bool IsOutlined[])
 {
     if (mD2dLinearGradientBrush.Get())
     {
@@ -168,7 +168,7 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bo
             mD2dDeviceContext->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mD2dLinearGradientBrush.Get());
         }
     }
-    for (size_t i = GradientCnt; i < mD2dSolidBrush.size() - static_cast<size_t>(mTextCnt); ++i)
+    for (size_t i = GradientCnt; i < mD2dSolidBrush.size() - static_cast<size_t>(mTextCnt) - static_cast<size_t>(InvisibleRectCnt); ++i)
     {
         if (IsOutlined[i])
             mD2dDeviceContext->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mD2dSolidBrush[static_cast<size_t>(i) + static_cast<size_t>(mTextCnt)].Get());
