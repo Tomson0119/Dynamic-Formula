@@ -772,8 +772,8 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 			mParticleInterval = 0.1f;
 			
 			/*if(mPipelines[Layer::Particle]->GetRenderObjects().size() == 0)
-				AddParticleObject();*/
-		}
+				AddParticleObject();
+		}*/
 	}
 	else
 	{

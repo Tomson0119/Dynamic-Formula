@@ -245,11 +245,11 @@ void InGameUI::UpdateRankCredits()
 	
 	for (int i = 0; i< mScoreboard.size(); ++i)
 	{
-		GetTextBlock()[ExtraTextCnt + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
-		GetTextBlock()[ExtraTextCnt + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname);
-		GetTextBlock()[ExtraTextCnt + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));
-		GetTextBlock()[ExtraTextCnt + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
-		GetTextBlock()[ExtraTextCnt + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
+		GetTextBlock()[mTextCountWithoutRankCredit + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
+		GetTextBlock()[mTextCountWithoutRankCredit + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname);
+		GetTextBlock()[mTextCountWithoutRankCredit + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));
+		GetTextBlock()[mTextCountWithoutRankCredit + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
+		GetTextBlock()[mTextCountWithoutRankCredit + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
 	}
 	SetIndexColor(51, D2D1::ColorF(D2D1::ColorF::Black, 0.8f));
 	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
