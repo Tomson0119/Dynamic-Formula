@@ -1,64 +1,76 @@
 #pragma once
 #include "UI.h"
-constexpr float START_DELAY_TIME = 47.5f;
+constexpr int START_DELAY_TIME = 27;
 class InGameUI : public UI
 {
 public:
     InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     virtual ~InGameUI() = default;
-    void Update(float GTime, Player* mPlayer) override ;
-    void SetVectorSize(UINT nFrame) override;
-    void Draw(UINT nFrame) override;
+    virtual void Update(float Elapsed, Player* mPlayer) override ;
+    virtual void SetVectorSize(UINT nFrame) override;
+    virtual void Draw(UINT nFrame) override;
     virtual void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
     virtual void Reset() override;
-    void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
+    virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
         ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height) override;
-    void SetTextRect() override;
+    virtual void SetTextRect() override;
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
     void CreateFontFormat();
-    void StartAnimation(float GTime);
+    void StartAnimation();
     void StartPrint(const std::string& strUIText);
-    std::vector<XMFLOAT4>& GetLTRB() { return LTRB; }
-    void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) LTRB.push_back(R); }
+    std::vector<XMFLOAT4>& GetLTRB() { return mLTRB; }
+    void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) mLTRB.push_back(R); }
 
     //For Packet
     //void UpdateItemCnt(bool IsPlus) { if (IsPlus&&muItemCnt<2) ++muItemCnt; else if(!IsPlus && muItemCnt>0) --muItemCnt; }
-    void UpdateScore() {}
-    void UpdateRank() {}
-    void UpdateIngameTime() {}
+    void UpdateMyScore();
+    void UpdateMyLap();
+    void UpdateMyRank();
+    void UpdateSpeed();
+    void UpdateIngameTime(float Elapsed);
+    void UpdateRankCredits();
 
     void SetDriftGauge(int gauge) { mDriftGauge = gauge; }
     void SetRunningTime(float time) { mRunningTime = time; }
+    void SetMyScore(int score) { mMyScore = score; }
+    void SetMyRank(int rank) { mMyRank = rank; }
+    void SetLap(int lap) { mMyLap = lap; }
+    void SetSpeed(float Speed) { mCurrentSpeed = Speed; }
+    float GetCurrentSpeed() const { return mCurrentSpeed; }
+    void SetScore(int score) { mMyScore = score; }
 
+    void SetTimeMinSec(int& m, int& s);
+
+    void AnimateStartSignAnim();
 private:
-    virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
-
-    float mfWidth = 0.0f;
-    float mfHeight = 0.0f;
-
     float mRunningTime;
 
     int mItemCnt = 0;
     std::atomic_int mDriftGauge = 0;
 
-    float AnimEndTime = 0.0f;
-    float fOpacities[7] = { 0.0f, 0.0f , 0.0f , 0.0f , 0.0f , 0.0f , 0.0f };
+    float mAnimEndTime = 0.0f;
+    float mOpacities[6] = { 0.0f, 0.0f , 0.0f , 0.0f , 0.0f , 0.0f};
 
-    bool mbIsStartUI[4] = { false, false, false, false };
+    bool mIsStartUI[4] = { false, false, false, false };
 
-    XMFLOAT2 mf2StartUIPos = { GetFrameWidth() * 0.5f, GetFrameHeight() * 0.5f };
-    
     std::vector<float> mfOpacities;
-    std::vector<XMFLOAT4> LTRB;
-    std::vector<TextBlock>          mvTextBlocks;
+    std::vector<XMFLOAT4> mLTRB;
 
     //For Packet
-    std::array<UINT, 8> mauScores;
-    std::array<UINT, 8> mauRanks;
-    float mfVelocity;
-    bool mbIsReverse = false;
-    float mfIngameTime;
+    std::array<int, 8> mScores;
+    std::array<int, 8> mRanks;
+    std::array<int, 8> mLaps;
+    std::array<int, 8> mMissileHits;
+    std::array<std::string, 8> mUserNicknames;
+
+    int mMyScore;
+    int mMyRank;
+    int mMyLap;
+    float mCurrentSpeed;
+    float mVelocity;
+    bool mIsReverse = false;
+    float mIngameTime;
 
     //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

@@ -130,7 +130,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 
 			// ¹æ »ý¼º
 			// 
-			mpUI->setRoomActive(pck->room_id);
+			//mpUI->setRoomActive(pck->room_id);
 		}
 		else
 		{
