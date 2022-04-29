@@ -3,12 +3,13 @@
 
 InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 	: UI(nFrame, device, pd3dCommandQueue),
-	  mRunningTime(0)
+	mRunningTime(0),
+	mTextCountWithoutRankCredit(8)
     // Text: GameTime, LapCnt, Rank, Velocity
 	// Ranking credits 8 * 5(Rank, Nickname, Score, Lap, Missile)
     //UI: DraftGage, Item1, Item2
 {
-	SetTextCnt(47);
+	SetTextCnt(40 + mTextCountWithoutRankCredit);
 	SetRectCnt(4);
 	SetBitmapCnt(6);
 	SetGradientCnt(1);
@@ -44,18 +45,13 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Speed
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // km/h
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Score
+	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Warning
 	for(int i =0;i<40;++i)
 		Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Rank Credits
 	
 	//LTRB.resize(GetBitmapCnt());
 
 	FontLoad(Fonts);
-}
-
-
-void InGameUI::StartPrint(const std::string& strUIText)
-{
-    GetTextBlock()[GetTextCnt() - 1].strText = strUIText;
 }
 
 void InGameUI::AnimateStartSignAnim()
@@ -229,7 +225,7 @@ void InGameUI::UpdateSpeed()
 void InGameUI::UpdateMyScore()
 {
 	// 텍스트 설정
-	GetTextBlock()[6].strText.assign(std::to_string(mMyScore) + "pts");
+	GetTextBlock()[6].strText.assign(std::to_string(mMyScore) + "p");
 }
 
 void InGameUI::SetTimeMinSec(int& m, int& s)
@@ -240,8 +236,7 @@ void InGameUI::SetTimeMinSec(int& m, int& s)
 
 void InGameUI::UpdateRankCredits()
 {
-	size_t ExtraTextCnt = 7;
-	for (int i = 0;i < ExtraTextCnt; ++i)
+	for (int i = 0;i < mTextCountWithoutRankCredit; ++i)
 		GetTextBlock()[i].strText.clear();
 	// Rank, Nickname, Score, Lap, MissileHit
 	//Set
@@ -255,13 +250,17 @@ void InGameUI::UpdateRankCredits()
 	}
 	for (int i = 0; i< 8; ++i)
 	{
-		GetTextBlock()[ExtraTextCnt + static_cast<size_t>(i)].strText.assign(std::to_string(mRanks[i]));
-		GetTextBlock()[ExtraTextCnt + (1 * 8) + static_cast<size_t>(i)].strText.assign(mUserNicknames[i]);
-		GetTextBlock()[ExtraTextCnt + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScores[i]));
-		GetTextBlock()[ExtraTextCnt + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mLaps[i]));
-		GetTextBlock()[ExtraTextCnt + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mMissileHits[i]));
+		GetTextBlock()[mTextCountWithoutRankCredit + static_cast<size_t>(i)].strText.assign(std::to_string(mRanks[i]));
+		GetTextBlock()[mTextCountWithoutRankCredit + (1 * mTextCountWithoutRankCredit) + static_cast<size_t>(i)].strText.assign(mUserNicknames[i]);
+		GetTextBlock()[mTextCountWithoutRankCredit + (2 * mTextCountWithoutRankCredit) + static_cast<size_t>(i)].strText.assign(std::to_string(mScores[i]));
+		GetTextBlock()[mTextCountWithoutRankCredit + (3 * mTextCountWithoutRankCredit) + static_cast<size_t>(i)].strText.assign(std::to_string(mLaps[i]));
+		GetTextBlock()[mTextCountWithoutRankCredit + (4 * mTextCountWithoutRankCredit) + static_cast<size_t>(i)].strText.assign(std::to_string(mMissileHits[i]));
 	}
-	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Black, 0.8f));
+	SetItemCnt(2);
+
+	SetIndexColor(51, D2D1::ColorF(D2D1::ColorF::Black, 0.8f));
+	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
+	SetIndexColor(49, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	BuildSolidBrush(GetColors());
 }
 
@@ -300,7 +299,6 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 		SetMyRank(3);
 		SetLap(3);
 		SetDriftGauge(5000);
-
 		StartAnimation();
 		return;
 	}
@@ -315,6 +313,11 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 		for (auto& Opac : mOpacities)
 			Opac = 0.0f;
 	}
+	if (mIsReverse)
+		TextUpdateReverseState(Elapsed);
+	else
+		GetTextBlock()[7].strText.clear();
+
 	//UpdateTime
 	UpdateIngameTime(Elapsed);
 	//UpdateLap
@@ -328,6 +331,25 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	//muItemCnt = mPlayer->GetItemNum();
 }
 
+void InGameUI::TextUpdateReverseState(float Elapsed)
+{
+	mWarningTime += Elapsed;
+	std::string Warning{ "WARNING" };
+	GetTextBlock()[7].strText.assign(Warning);
+	
+	if (mWarningTime < 0.1f && GetColors()[7].a < 1.0f)
+		GetColors()[7].a += 0.05f;
+	else if (mWarningTime < 0.7f)
+		GetColors()[7].a = 1.0f;
+	else if (mWarningTime < 0.9f && GetColors()[7].a > 0.0f)
+		GetColors()[7].a -= 0.05f;
+	else if (mWarningTime > 1.0f)
+	{
+		GetColors()[7].a = 0.0f;
+		mIsReverse = false;
+	}
+	BuildSolidBrush(GetColors());
+}
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -338,11 +360,27 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		case 'S':
 			mMyScore += 100;
 			break;
-		case 'D':
-			SetRunningTime(0.0f);
+		case 'N':
+			
+			if (mRunningTime > 0.0f)
+			{
+				SetRunningTime(0.0f);
+				mIsRankCredit = true;
+			}
+			else
+			{
+				SetRunningTime(180.0f);
+				mIsRankCredit = false;
+			}
 			break;
 		case 'L':
 			mMyLap += 1;
+			break;
+		case 'O': // warning
+			if (!mIsReverse)
+				mIsReverse = true;
+			else
+				mIsReverse = false;
 			break;
 		}
 	}
@@ -463,10 +501,10 @@ void InGameUI::Draw(UINT nFrame)
 			GetFrameHeight() * 0.6f
 		}
 	};
-	bool IsOutlined[4] = { true, true, true, true };
+	bool IsOutlined[4] = { true, true, true, false };
 
 	BeginDraw(nFrame);
-	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt, 1, IsOutlined);
+	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt - mIsRankCredit, 1, IsOutlined);
 	DrawBmp(GetLTRB(), 0, 6, mOpacities);
 	TextDraw(GetTextBlock());
 	EndDraw(nFrame);
@@ -483,6 +521,8 @@ void InGameUI::CreateFontFormat()
     Fonts.push_back(L"abberancy"); // Speed
 	Fonts.push_back(L"abberancy"); // km/h
 	Fonts.push_back(L"abberancy"); // Score
+	Fonts.push_back(L"abberancy"); // Warning
+
 	for(int i=0;i<40;++i)
 		Fonts.push_back(L"FivoSans-Regular"); //RankCredits
 
@@ -496,6 +536,8 @@ void InGameUI::CreateFontFormat()
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
+	fFontSize.push_back(GetFrameHeight() * 0.15f);
+
 	for(int i=0;i<40;++i)
 		fFontSize.push_back(GetFrameHeight() * 0.05f); //RankCredits
 	SetFontSize(fFontSize);
@@ -505,13 +547,14 @@ void InGameUI::CreateFontFormat()
 	TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_LEADING;
 	TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_TRAILING;
 	TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_LEADING;
-	TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_CENTER;
-	TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
-	TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
+	TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_TRAILING;
+	TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_TRAILING;
+	TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_TRAILING;
 	TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_TRAILING;
+	TextAlignments[7] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	
 	for(size_t i=0;i<40;++i)
-		TextAlignments[7+i] = DWRITE_TEXT_ALIGNMENT_LEADING; //RankCredits
+		TextAlignments[8+i] = DWRITE_TEXT_ALIGNMENT_LEADING; //RankCredits
 
     UI::CreateFontFormat(GetFontSize(), GetFonts(), TextAlignments);
 }
@@ -519,21 +562,22 @@ void InGameUI::CreateFontFormat()
 void InGameUI::SetTextRect()
 {//Time, LapNum, Lap, Rank, Speed, km/h, Score
     GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.03f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.20f, GetFrameHeight() * 0.21f);
-	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.14f);
+	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.05f, GetFrameHeight() * 0.14f);
     GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.048f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.16f, GetFrameHeight() * 0.141f);
-    GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, GetFrameHeight() * 0.10f, GetFrameWidth(), GetFrameHeight() * 0.16f);
-    GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.90f);
-    GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.95f);
-	GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.75f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.97f, GetFrameHeight() * 0.23f);
+    GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, GetFrameHeight() * 0.10f, GetFrameWidth() * 0.9f, GetFrameHeight() * 0.16f);
+    GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.90f);
+    GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.95f);
+	GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.75f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.93f, GetFrameHeight() * 0.23f);
+	GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.30f, GetFrameHeight() * 0.30f, GetFrameWidth() * 0.70f, GetFrameHeight() * 0.70f);
 
 	//RankCredits Rank, Ninkname, Score, Lap, MissileHit
 	for (int i = 0; i < 8; ++i)
 	{
-		GetTextBlock()[7+static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.1f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.5f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
-		GetTextBlock()[15 + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.1f + (i* (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.75f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
-		GetTextBlock()[23 + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.4f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.9f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
-		GetTextBlock()[31 + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.55f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
-		GetTextBlock()[39 + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.7f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[static_cast<size_t>(mTextCountWithoutRankCredit)+static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.1f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.5f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[2* static_cast<size_t>(mTextCountWithoutRankCredit) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.1f + (i* (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.75f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[3 * static_cast<size_t>(mTextCountWithoutRankCredit) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.4f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.9f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[4 * static_cast<size_t>(mTextCountWithoutRankCredit) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.55f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[5 * static_cast<size_t>(mTextCountWithoutRankCredit) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.7f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
 	}
 
 }
@@ -565,6 +609,7 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	//RankCredits
 	for(int i=0;i<40;++i)
 		colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));

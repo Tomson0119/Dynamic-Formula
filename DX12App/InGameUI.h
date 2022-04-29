@@ -19,7 +19,6 @@ public:
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
     void CreateFontFormat();
     void StartAnimation();
-    void StartPrint(const std::string& strUIText);
     std::vector<XMFLOAT4>& GetLTRB() { return mLTRB; }
     void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) mLTRB.push_back(R); }
 
@@ -31,6 +30,7 @@ public:
     void UpdateSpeed();
     void UpdateIngameTime(float Elapsed);
     void UpdateRankCredits();
+    void TextUpdateReverseState(float Elapsed);
 
     void SetDriftGauge(int gauge) { mDriftGauge = gauge; }
     void SetRunningTime(float time) { mRunningTime = time; }
@@ -59,6 +59,9 @@ private:
     std::vector<float> mfOpacities;
     std::vector<XMFLOAT4> mLTRB;
 
+    int mTextCountWithoutRankCredit = 0;
+    float mWarningTime = 0.0f;
+
     //For Packet
     std::array<int, 8> mScores;
     std::array<int, 8> mRanks;
@@ -72,6 +75,7 @@ private:
     float mCurrentSpeed;
     float mIngameTime;
 
+    bool mIsRankCredit = false;
     bool mIsReverse = false;
 
     //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
