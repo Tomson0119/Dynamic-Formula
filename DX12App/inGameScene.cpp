@@ -771,13 +771,13 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 	if (mParticleInterval < 0.0f)
 	{
-		if(GetAsyncKeyState(VK_LSHIFT) & 0x8000)
+		/*if(GetAsyncKeyState(VK_LSHIFT) & 0x8000)
 		{
 			mParticleInterval = 0.1f;
 			
 			if(mPipelines[Layer::Particle]->GetRenderObjects().size() == 0)
 				AddParticleObject();
-		}
+		}*/
 	}
 	else
 	{
