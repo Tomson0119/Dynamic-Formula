@@ -7,7 +7,7 @@ InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 	  mMyScore(0),
 	  mMyRank(0),
 	  mMyLap(0),
-	  mCurrentSpeed(0.0f)
+	  mCurrentSpeed(0)
 	// Text: GameTime, LapCnt, Rank, Velocity
 	// Ranking credits 8 * 5(Rank, Nickname, Score, Lap, Missile)
     //UI: DraftGage, Item1, Item2
@@ -205,8 +205,7 @@ void InGameUI::UpdateMyRank()
 
 void InGameUI::UpdateSpeed()
 {
-	float CurrentSpeed = GetCurrentSpeed();
-	if (CurrentSpeed >= 1000.0f)
+	/*if (CurrentSpeed >= 1000.0f)
 	{
 		for (int i = 0; i < 6; ++i)
 			GetTextBlock()[4].strText.push_back(std::to_string(CurrentSpeed)[i]);
@@ -225,7 +224,8 @@ void InGameUI::UpdateSpeed()
 	{
 		for (int i = 0; i < 3; ++i)
 			GetTextBlock()[4].strText.push_back(std::to_string(0.0f)[i]);
-	}
+	}*/
+	GetTextBlock()[4].strText.assign(std::to_string((int)(mCurrentSpeed / FIXED_FLOAT_LIMIT)));
 	for (auto& str : std::string("km/h"))
 		GetTextBlock()[5].strText.push_back(str);
 }
@@ -233,7 +233,7 @@ void InGameUI::UpdateSpeed()
 void InGameUI::UpdateMyScore()
 {
 	// 텍스트 설정
-	GetTextBlock()[6].strText.assign(std::to_string(mMyScore) + "pts");
+	GetTextBlock()[6].strText.assign(std::to_string(mMyScore) + "p");
 }
 
 void InGameUI::SetTimeMinSec(int& m, int& s)
@@ -247,26 +247,38 @@ void InGameUI::UpdateRankCredits()
 	size_t ExtraTextCnt = 7;
 	for (int i = 0;i < ExtraTextCnt; ++i)
 		GetTextBlock()[i].strText.clear();
-	// Rank, Nickname, Score, Lap, MissileHit
-	//Set
-	for (int i = 0; i< 8; ++i)
+	
+	for (int i = 0; i< mScoreboard.size(); ++i)
 	{
-		mRanks[i] = i + 1;
-		mUserNicknames[i] = "Nick" + std::to_string(i + 1);
-		mScores[i] = i * 800;
-		mLaps[i] = i * 2;
-		mMissileHits[i] = i * 3;
-	}
-	for (int i = 0; i< 8; ++i)
-	{
-		GetTextBlock()[ExtraTextCnt + static_cast<size_t>(i)].strText.assign(std::to_string(mRanks[i]));
-		GetTextBlock()[ExtraTextCnt + (1 * 8) + static_cast<size_t>(i)].strText.assign(mUserNicknames[i]);
-		GetTextBlock()[ExtraTextCnt + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScores[i]));
-		GetTextBlock()[ExtraTextCnt + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mLaps[i]));
-		GetTextBlock()[ExtraTextCnt + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mMissileHits[i]));
+		GetTextBlock()[ExtraTextCnt + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
+		GetTextBlock()[ExtraTextCnt + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname);
+		GetTextBlock()[ExtraTextCnt + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));
+		GetTextBlock()[ExtraTextCnt + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
+		GetTextBlock()[ExtraTextCnt + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
 	}
 	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Black, 0.8f));
 	BuildSolidBrush(GetColors());
+}
+
+void InGameUI::SetScoreboardInfo(
+	int idx, int rank, int score, 
+	int lapCount, int hitCount, 
+	const std::string& name)
+{
+	mScoreboard[idx].rank = rank;
+	mScoreboard[idx].score = score;
+	mScoreboard[idx].lapCount = lapCount;
+	mScoreboard[idx].hitCount = hitCount;
+	mScoreboard[idx].nickname = name;
+}
+
+void InGameUI::SortScoreboard()
+{
+	std::sort(mScoreboard.begin(), mScoreboard.end(),
+		[](const Scoreboard& a, const Scoreboard& b)
+		{
+			return (a.rank < b.rank);
+		});
 }
 
 void InGameUI::Update(float Elapsed, Player* mPlayer)
@@ -313,6 +325,9 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 		for (auto& Opac : mOpacities)
 			Opac = 0.0f;
 	}
+
+	mItemCnt = mPlayer->GetItemNum();
+
 	//UpdateTime
 	UpdateIngameTime(Elapsed);
 	//UpdateLap
@@ -323,7 +338,6 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	UpdateSpeed();
 	//UpdateScore
 	UpdateMyScore(); // @@여기 해야함
-	//muItemCnt = mPlayer->GetItemNum();
 }
 
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -517,7 +531,7 @@ void InGameUI::CreateFontFormat()
 void InGameUI::SetTextRect()
 {//Time, LapNum, Lap, Rank, Speed, km/h, Score
     GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.03f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.20f, GetFrameHeight() * 0.21f);
-	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.14f);
+	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.05f, GetFrameHeight() * 0.14f);
     GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.048f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.16f, GetFrameHeight() * 0.141f);
     GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, GetFrameHeight() * 0.10f, GetFrameWidth(), GetFrameHeight() * 0.16f);
     GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.90f);
