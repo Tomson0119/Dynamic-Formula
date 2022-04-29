@@ -59,7 +59,7 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     float3 screenPos = GetPositionVS(texCoord, depth);
     float3 rayEnd = float3(0.0f, 0.0f, 0.0f);
 	
-    const uint sampleCount = 16;
+    const uint sampleCount = 12;
     const float stepSize = length(screenPos - rayEnd) / sampleCount;
     
 	// Perform ray marching to integrate light volume along view ray:
