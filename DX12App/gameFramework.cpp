@@ -78,6 +78,7 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			//if (mScenes.size() > 0);
 				//mScenes.pop();
 
+			OutputDebugStringA("Escape key inserted\n");
 			if (mScenes.empty()) {
 				PostQuitMessage(0);
 				return;
