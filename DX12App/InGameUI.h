@@ -1,6 +1,7 @@
 #pragma once
 #include "UI.h"
 constexpr int START_DELAY_TIME = 27;
+constexpr int MAXRECT = 3;
 class InGameUI : public UI
 {
 public:
@@ -39,6 +40,7 @@ public:
     void SetSpeed(float Speed) { mCurrentSpeed = Speed; }
     float GetCurrentSpeed() const { return mCurrentSpeed; }
     void SetScore(int score) { mMyScore = score; }
+    void SetItemCnt(int ItemCnt) { mItemCnt = ItemCnt; }
 
     void SetTimeMinSec(int& m, int& s);
 
@@ -68,8 +70,9 @@ private:
     std::atomic_int mMyRank;
     std::atomic_int mMyLap;
     float mCurrentSpeed;
-    bool mIsReverse = false;
     float mIngameTime;
+
+    bool mIsReverse = false;
 
     //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
