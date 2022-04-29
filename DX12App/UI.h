@@ -47,141 +47,145 @@ public:
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) {}
     virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) {  }
     virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y) { return 0; }
+    virtual void ChangeTextAlignment(UINT uNum, UINT uState) {}
 
     void BeginDraw(UINT nFrame);
     void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
     void DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpNum, const float aOpacities[]);
-    void TextDraw(const std::vector<TextBlock> &mvTextBlocks);
-    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
+    void TextDraw(const std::vector<TextBlock> &mTextBlocks);
+    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT InvisibleRectCnt, UINT GradientCnt, bool IsOutlined[]);
     void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
     void EndDraw(UINT nFrame);
     void Flush();
 
-    virtual void ChangeTextAlignment(UINT uNum, UINT uState) {}
+    UINT GetRenderTargetsCount() const { return static_cast<UINT>(mWrappedRenderTargets.size()); }
 
-   ID3D11Resource* GetRenderTarget() const { return mvWrappedRenderTargets[0].Get(); }
-   UINT GetRenderTargetsCount() const { return static_cast<UINT>(mvWrappedRenderTargets.size()); }
-   
    virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair("", ""); }
-   virtual int GetLobbyPacket() { return -1; }
-   virtual int GetRoomPacket() { return -1; }
+   virtual int GetLobbyPacket() const { return -1; }
+   virtual int GetRoomPacket() const { return -1; }
    
    //Frame
-   void SetFrame(float W, float H) { mfHeight = H; mfWidth = W; }
-   std::pair<float, float> GetFrame() const { return std::make_pair(mfWidth, mfHeight); }
-   float GetFrameWidth() { return mfWidth; }
-   float GetFrameHeight() { return mfHeight; }
+   void SetFrame(float W, float H) { mHeight = H; mWidth = W; }
+   std::pair<float, float> GetFrame() const { return std::make_pair(mWidth, mHeight); }
+   float GetFrameWidth() const { return mWidth; }
+   float GetFrameHeight() const { return mHeight; }
 
    //Font 
    TCHAR* GetFontName() { return mtcFontName; }
    void FontLoad(const std::vector<std::wstring>& FontFilePath);
 
    //TextCnt
-   UINT GetTextCnt() { return miTextCnt; }
-   void SetTextCnt(UINT n) { miTextCnt = n; }
+   UINT GetTextCnt() const { return mTextCnt; }
+   void SetTextCnt(UINT n) { mTextCnt = n; }
 
    //RoundRectCnt
-   UINT GetRoundRectCnt() { return miRoundRectCnt; }
-   void SetRoundRectCnt(UINT n) { miRoundRectCnt = n; }
+   UINT GetRoundRectCnt() const { return mRoundRectCnt; }
+   void SetRoundRectCnt(UINT n) { mRoundRectCnt = n; }
 
    // RectCnt
-   UINT GetRectCnt() { return miRectCnt; }
-   void SetRectCnt(UINT n) { miRectCnt = n; }
+   UINT GetRectCnt() const { return mRectCnt; }
+   void SetRectCnt(UINT n) { mRectCnt = n; }
 
    //Ellipse
-   UINT GetEllipseCnt() { return miEllipseCnt; }
-   void SetEllipseCnt(UINT n) { miEllipseCnt  = n; }
+   UINT GetEllipseCnt() const { return mEllipseCnt; }
+   void SetEllipseCnt(UINT n) { mEllipseCnt  = n; }
 
    //Gradient
-   UINT GetGradientCnt() { return miGradientCnt; }
-   void SetGradientCnt(UINT n) { miGradientCnt = n; }
+   UINT GetGradientCnt() const { return mGradientCnt; }
+   void SetGradientCnt(UINT n) { mGradientCnt = n; }
 
    // Bitmap
-   UINT GetBitmapCnt() { return miBitmapCnt; }
-   void SetBitmapCnt(UINT n) { miBitmapCnt = n; }
-   void SetBitmapsSize(UINT size) { mvBitmaps.resize(size); }
+   UINT GetBitmapCnt() const { return mBitmapCnt; }
+   void SetBitmapCnt(UINT n) { mBitmapCnt = n; }
+   void SetBitmapsSize(UINT size) { mBitmaps.resize(size); }
 
   //Font Size
-   void ResizeFontSize(UINT n) { mvfFontSizes.resize(n); }
-   void SetFontSize(const std::vector<float>& vfFontsizes) { for (int i = 0; i < static_cast<int>(GetTextCnt());++i) mvfFontSizes[i] = vfFontsizes[i]; }
-   void SetFontSize(float FontSize, int index) { mvfFontSizes[index] = FontSize; }
-   float GetFontSize(int index) { return mvfFontSizes[index]; }
-   std::vector<float>& GetFontSize() { return mvfFontSizes; }
+   void ResizeFontSize(UINT n) { mFontSizes.resize(n); }
+   void SetFontSize(const std::vector<float>& vfFontsizes) { for (int i = 0; i < static_cast<int>(GetTextCnt());++i) mFontSizes[i] = vfFontsizes[i]; }
+   void SetFontSize(float FontSize, int index) { mFontSizes[index] = FontSize; }
+   float GetFontSize(int index) const { return mFontSizes[index]; }
+   std::vector<float>& GetFontSize() { return mFontSizes; }
 
    //Fonts
-   void ResizeFonts(UINT n) { mvwsFonts.resize(n); }
-   std::vector<std::wstring>& GetFonts() { return mvwsFonts; }
-   void SetFonts(const std::vector<std::wstring>& Fonts) { for (int i = 0; i < static_cast<int>(GetTextCnt()); ++i) mvwsFonts[i] = Fonts[i]; }
+   void ResizeFonts(UINT n) { mFonts.resize(n); }
+   std::vector<std::wstring>& GetFonts() { return mFonts; }
+   void SetFonts(const std::vector<std::wstring>& Fonts) { for (int i = 0; i < static_cast<int>(GetTextCnt()); ++i) mFonts[i] = Fonts[i]; }
 
    //BitmapFileName
-   void ResizeBitmapNames(UINT n) { mvBitmapFileNames.resize(n); }
-   std::vector<std::wstring>& GetBitmapFileNames() { return mvBitmapFileNames; }
-   void SetBitmapFileNames(const std::vector<std::wstring>& names) { for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i) mvBitmapFileNames[i] = names[i]; }
+   void ResizeBitmapNames(UINT n) { mBitmapFileNames.resize(n); }
+   std::vector<std::wstring>& GetBitmapFileNames() { return mBitmapFileNames; }
+   void SetBitmapFileNames(const std::vector<std::wstring>& names) { for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i) mBitmapFileNames[i] = names[i]; }
 
    //TextBlock
-   void ResizeTextBlock(UINT n) { mvTextBlocks.resize(n); }
-   std::vector<TextBlock>& GetTextBlock() { return mvTextBlocks; }
+   void ResizeTextBlock(UINT n) { mTextBlocks.resize(n); }
+    std::vector<TextBlock>& GetTextBlock() { return mTextBlocks; }
    void SetTextBlock(const std::vector<TextBlock>& TextBlocks);
 
    //Colors - no resize
-   std::vector<D2D1::ColorF>& GetColors() { return mvColors; }
-   void SetColors(const std::vector<D2D1::ColorF>& Colors) { for (auto& color : Colors) mvColors.push_back(color); }
-   void SetColors(D2D1::ColorF* Colors) { for (int i = 0; i < static_cast<int>(mvColors.size()); ++i) mvColors.push_back(Colors[i]); }
+   std::vector<D2D1::ColorF>& GetColors() { return mColors; }
+   void SetColors(const std::vector<D2D1::ColorF>& Colors) { for (auto& color : Colors) mColors.push_back(color); }
+   void SetColors(D2D1::ColorF* Colors) { for (int i = 0; i < static_cast<int>(mColors.size()); ++i) mColors.push_back(Colors[i]); }
+   void SetIndexColor(int index, D2D1::ColorF Color) { mColors[index] = Color; }
 
    //TextAllignments
-   void ResizeTextAlignment(UINT n) { mvdwTextAlignments.resize(n); }
-   std::vector<DWRITE_TEXT_ALIGNMENT>& GetTextAlignment() { return mvdwTextAlignments; }
-   void SetTextAllignments(const std::vector< DWRITE_TEXT_ALIGNMENT>& Allignments) { for (int i = 0; i < static_cast<int>(GetTextCnt());++i) mvdwTextAlignments[i] = Allignments[i]; }
+   void ResizeTextAlignment(UINT n) { mDWriteTextAlignments.resize(n); }
+   std::vector<DWRITE_TEXT_ALIGNMENT>& GetTextAlignment() { return mDWriteTextAlignments; }
+   void SetTextAllignments(const std::vector< DWRITE_TEXT_ALIGNMENT>& Allignments) { for (int i = 0; i < static_cast<int>(GetTextCnt());++i) mDWriteTextAlignments[i] = Allignments[i]; }
    
+   //ItemCnt
+   UINT GetgItemCnt() const { return mgItemCnt; };
+   void SetgItem(int item) { mgItemCnt = item; }
    //UI
-   void SetUICnt() { miUICnt = miRectCnt + miRoundRectCnt + miEllipseCnt; }
+   void SetUICnt() { mUICnt = mRectCnt + mRoundRectCnt + mEllipseCnt; }
 private:
-    float mfHeight = 0.0f;
-    float mfWidth = 0.0f;
+    float mHeight = 0.0f;
+    float mWidth = 0.0f;
 
     //Text and UI Count
-    UINT miTextCnt = 0;
-    UINT miRectCnt = 0;
-    UINT miRoundRectCnt = 0;
-    UINT miEllipseCnt = 0;
-    UINT miGradientCnt = 0;
-    UINT miBitmapCnt = 0;
-    UINT miUICnt = 0;
+    UINT mTextCnt = 0;
+    UINT mRectCnt = 0;
+    UINT mRoundRectCnt = 0;
+    UINT mEllipseCnt = 0;
+    UINT mGradientCnt = 0;
+    UINT mBitmapCnt = 0;
+    UINT mUICnt = 0;
+
+    UINT mgItemCnt = 0;
     
-    std::vector<float> mvfFontSizes; //FontSize
-    std::vector<std::wstring> mvwsFonts; //Fonts
-    std::vector<std::wstring> mvBitmapFileNames; //BitmapFileNames
-    std::vector<ComPtr<ID2D1Bitmap>> mvBitmaps; //Bitmaps
-    std::vector<TextBlock>          mvTextBlocks; //TextBlocks
-    std::vector<D2D1::ColorF> mvColors; //Colors
-    std::vector<DWRITE_TEXT_ALIGNMENT> mvdwTextAlignments;  //TextAllignments
+    std::vector<float> mFontSizes; //FontSize
+    std::vector<std::wstring> mFonts; //Fonts
+    std::vector<std::wstring> mBitmapFileNames; //BitmapFileNames
+    std::vector<ComPtr<ID2D1Bitmap>> mBitmaps; //Bitmaps
+    std::vector<TextBlock>          mTextBlocks; //TextBlocks
+    std::vector<D2D1::ColorF> mColors; //Colors
+    std::vector<DWRITE_TEXT_ALIGNMENT> mDWriteTextAlignments;  //TextAllignments
 
-    GradientColors* pGradientColors;
+    GradientColors* mGradientColors;
 
-    ComPtr<ID3D11DeviceContext> mpd3d11DeviceContext;
-    ComPtr<ID2D1DeviceContext2> mpd2dDeviceContext;
-    ComPtr<ID3D11On12Device> mpd3d11On12Device;
+    ComPtr<ID3D11DeviceContext> mD3d11DeviceContext;
+    ComPtr<ID2D1DeviceContext2> mD2dDeviceContext;
+    ComPtr<ID3D11On12Device> mD3d11On12Device;
     
-    ComPtr<ID2D1Factory3> mpd2dFactory;
-    ComPtr<ID2D1Device2> mpd2dDevice;
-    ComPtr<ID3D11Device> pd3d11Device;
-    ComPtr<IDXGIDevice> pdxgiDevice;
+    ComPtr<ID2D1Factory3> mD2dFactory;
+    ComPtr<ID2D1Device2> mD2dDevice;
+    ComPtr<ID3D11Device> mD3d11Device;
+    ComPtr<IDXGIDevice> mDxgiDevice;
 
-    ComPtr<IDWriteFactory5> mpd2dWriteFactory;
-    ComPtr<IDWriteFontFile> mdwFontFile;
-    ComPtr<IDWriteFontSetBuilder1> mdwFontSetBuilder;
-    ComPtr<IDWriteInMemoryFontFileLoader> mdwInMemoryFontFileLoader;
-    ComPtr<IDWriteFontSet> mdwFontSet;
-    ComPtr<IDWriteFontFamily> mdwFontFamily;
-    ComPtr<IDWriteLocalizedStrings> mdwLocalizedStrings;
+    ComPtr<IDWriteFactory5> mD2dWriteFactory;
+    ComPtr<IDWriteFontFile> mDWriteFontFile;
+    ComPtr<IDWriteFontSetBuilder1> mDWriteFontSetBuilder;
+    ComPtr<IDWriteInMemoryFontFileLoader> mDWriteInMemoryFontFileLoader;
+    ComPtr<IDWriteFontSet> mDWriteFontSet;
+    ComPtr<IDWriteFontFamily> mDWriteFontFamily;
+    ComPtr<IDWriteLocalizedStrings> mDWriteLocalizedStrings;
     
-    ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
+    ComPtr<ID2D1LinearGradientBrush> mD2dLinearGradientBrush;
 
-    std::vector<ComPtr<IDWriteFontCollection1>> mdwFontCollection;
-    std::vector<ComPtr<IDWriteTextFormat>> mvdwTextFormat;
-    std::vector<ComPtr<ID2D1SolidColorBrush>> mvd2dSolidBrush;
-    std::vector<ComPtr<ID3D11Resource>>    mvWrappedRenderTargets;
-    std::vector<ComPtr<ID2D1Bitmap1>>      mvd2dRenderTargets;
+    std::vector<ComPtr<IDWriteFontCollection1>> mDWriteFontCollection;
+    std::vector<ComPtr<IDWriteTextFormat>> mDWriteTextFormat;
+    std::vector<ComPtr<ID2D1SolidColorBrush>> mD2dSolidBrush;
+    std::vector<ComPtr<ID3D11Resource>>    mWrappedRenderTargets;
+    std::vector<ComPtr<ID2D1Bitmap1>>      mD2dRenderTargets;
 
     TCHAR mtcFontName[50];
 

@@ -9,6 +9,7 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	: Scene{ hwnd, SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"In Game Scene Entered.\n");
+
 	mMsaa4xQualityLevels = msaaQuality;
 	mMsaa4xEnable = msaaEnable;
 	mKeyMap[VK_LEFT] = false;
@@ -67,6 +68,9 @@ void InGameScene::BuildObjects(
 {
 	mDevice = device;
 
+	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+
 	mMainCamera = make_unique<Camera>();
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
@@ -95,9 +99,6 @@ void InGameScene::BuildObjects(
 	BuildGameObjects(cmdList, physics);
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
-
-	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
@@ -378,6 +379,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #ifdef STANDALONE
 	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
 #else
+	int playerCount = 0;
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
 	{
@@ -386,9 +388,12 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
 			BuildCarObject(info.StartPosition, info.StartRotation, info.Color, isPlayer, cmdList, physics, i);
 			BuildMissileObject(cmdList, info.StartPosition, i);
+			playerCount += 1;
 		}
 		i++;
 	}
+	mpUI->SetPlayerCount(playerCount);
+
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
@@ -570,19 +575,14 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::DRIFT_GAUGE:
+	case SC::UI_INFO:
 	{
-		SC::packet_drift_gauge* pck = reinterpret_cast<SC::packet_drift_gauge*>(packet);
+		SC::packet_ui_info* pck = reinterpret_cast<SC::packet_ui_info*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player)
 		{
-			if (pck->gauge >= 0.0f)
-			{
-				std::stringstream ss;
-				ss << "Drift gauge: " << pck->gauge << "\n";
-				OutputDebugStringA(ss.str().c_str());
-				mpUI->SetDriftGauge(pck->gauge);
-			}
+			if (pck->gauge > 0) mpUI->SetDriftGauge(pck->gauge);
+			if (pck->speed > 0) mpUI->SetSpeed(pck->speed);
 		}
 		break;
 	}
@@ -597,14 +597,14 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::ITEM_INCREASED:
+	case SC::ITEM_COUNT:
 	{
-		SC::packet_item_increased* pck = reinterpret_cast<SC::packet_item_increased*>(packet);
+		SC::packet_item_count* pck = reinterpret_cast<SC::packet_item_count*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if(player)
 		{
 			OutputDebugStringA("Item increased.\n");
-			
+			player->SetItemNum(pck->item_count);
 		}
 		break;
 	}
@@ -628,32 +628,28 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player.get() == mPlayer)
 		{
-			std::stringstream ss;
-			ss << "Lap count: " << (int)pck->lap_count << "\n";
-			ss << "Point: " << pck->point << "\n";
-			ss << "Rank: " << (int)pck->rank << "\n";
-			OutputDebugStringA(ss.str().c_str());
+			mpUI->SetLap(pck->lap_count);
+			mpUI->SetMyRank(pck->rank);
+			mpUI->SetMyScore(pck->point);
 		}
-		// 점수판 생성 위에서 아래로 순차적으로 갱신.
 		break;
 	}
 	case SC::GAME_END:
 	{
 		SC::packet_game_end* pck = reinterpret_cast<SC::packet_game_end*>(packet);
-		for (int i = 0; i < mPlayerObjects.size(); i++)
+		std::scoped_lock<std::mutex> lock(mpUI->GetMutex());
+		for (int i = 0, idx=0; i < mPlayerObjects.size(); i++)
 		{
 			if (mPlayerObjects[i])
 			{
-				std::stringstream ss;
-				ss << "idx: " << i << "\n";
-				ss << "Rank: " << (int)pck->rank[i] << "\n";
-				ss << "Name: " << mNetPtr->GetPlayersInfo()[i].Name << "\n";
-				ss << "Point: " << pck->point[i] << "\n";
-				ss << "Lap count: " << (int)pck->lap_count[i] << "\n";
-				ss << "Hit count: " << (int)pck->hit_count[i] << "\n";
-				OutputDebugStringA(ss.str().c_str());
+				mpUI->SetScoreboardInfo(
+					idx, (int)pck->rank[i], pck->point[i],
+					(int)pck->lap_count[i], (int)pck->hit_count[i],
+					mNetPtr->GetPlayersInfo()[i].Name);
+				idx += 1;
 			}
 		}
+		mpUI->SortScoreboard();
 		break;
 	}
 	default:
@@ -833,7 +829,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	
 	UpdateConstants(timer);
 
-	mpUI.get()->Update(timer.TotalTime(), mPlayer);
+	if(mGameStarted)
+		mpUI.get()->Update(elapsed, mPlayer);
 }
 
 void InGameScene::UpdateLight(float elapsed)

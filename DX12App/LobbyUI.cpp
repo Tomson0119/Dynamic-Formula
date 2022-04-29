@@ -12,19 +12,8 @@ LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     SetUICnt();
 
     SetVectorSize(nFrame);
-    Initialize(device, pd3dCommandQueue);
     for (int i = 0;i<static_cast<int>(GetBitmapCnt()); ++i)
         LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
-}
-
-LobbyUI::~LobbyUI()
-{
-
-}
-
-void LobbyUI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
-{
-
 }
 
 bool LobbyUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
@@ -80,7 +69,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         }
         else GetColors()[i].a = 0.9f;
     }
-    UI::BuildSolidBrush(GetColors());
+    BuildSolidBrush(GetColors());
 
 }
 
@@ -342,12 +331,12 @@ void LobbyUI::Draw(UINT nFrame)
     };
     bool IsOutlined[18] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false };
     float aOpacities[3] = { 0.5f, 1.0f, 0.5f };
-    UI::BeginDraw(nFrame);
-    UI::DrawBmp(LTRB, 0, 2, aOpacities);
-    UI::RectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
-    UI::DrawBmp(LTRB, 2, 1, aOpacities);
-    UI::TextDraw(GetTextBlock());
-    UI::EndDraw(nFrame);
+    BeginDraw(nFrame);
+    DrawBmp(LTRB, 0, 2, aOpacities);
+    RectDraw(RectLTRB, FillLTRB, 0, 0, IsOutlined);
+    DrawBmp(LTRB, 2, 1, aOpacities);
+    TextDraw(GetTextBlock());
+    EndDraw(nFrame);
 }
 
 void LobbyUI::CreateFontFormat()
@@ -435,23 +424,26 @@ void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::LightGray, 0.3f)); 
     SetColors(colorList);
 
-    UI::BuildSolidBrush(GetColors());
+    BuildSolidBrush(GetColors());
+
     for (int i = 0; i < 6; ++i)
-        mviRoomNums[i] = i+1;
+        mRoomNums[i] = i+1;
+
     SetTextRect();
+
     for (auto &wc : std::string{ "MakeRoom" })
         GetTextBlock()[0].strText.push_back(wc);
-    for (auto &wc : std::string{std::to_string(mviRoomNums[0]) })
+    for (auto &wc : std::string{std::to_string(mRoomNums[0]) })
         GetTextBlock()[1].strText.push_back(wc);
-    for (auto &wc : std::string{ std::to_string(mviRoomNums[1]) })
+    for (auto &wc : std::string{ std::to_string(mRoomNums[1]) })
         GetTextBlock()[2].strText.push_back(wc);
-    for (auto &wc : std::string{ std::to_string(mviRoomNums[2]) })
+    for (auto &wc : std::string{ std::to_string(mRoomNums[2]) })
         GetTextBlock()[3].strText.push_back(wc);
-    for (auto &wc : std::string{ std::to_string(mviRoomNums[3]) })
+    for (auto &wc : std::string{ std::to_string(mRoomNums[3]) })
         GetTextBlock()[4].strText.push_back(wc);
-    for (auto &wc : std::string{ std::to_string(mviRoomNums[4]) })
+    for (auto &wc : std::string{ std::to_string(mRoomNums[4]) })
         GetTextBlock()[5].strText.push_back(wc);
-    for (auto &wc : std::string{ std::to_string(mviRoomNums[5]) })
+    for (auto &wc : std::string{ std::to_string(mRoomNums[5]) })
         GetTextBlock()[6].strText.push_back(wc);
 }
 
@@ -460,7 +452,7 @@ void LobbyUI::UpdateRoomNumsText()
     for (UINT i = 1; i < GetTextCnt(); ++i)
     {
         GetTextBlock()[i].strText.clear();
-        for (auto& str : std::string{ std::to_string(mviRoomNums[i - 1]) })
+        for (auto& str : std::string{ std::to_string(mRoomNums[i - 1]) })
         {
             GetTextBlock()[i].strText.push_back(str);
         }

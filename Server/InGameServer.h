@@ -42,7 +42,7 @@ struct GameConstant
 	const btVector3 StartPosition = { -190.7f, 1.0f, 250.0f };
 	const btQuaternion StartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
 
-	const std::chrono::seconds GameRunningTime = 10s; // 30√  TEST
+	const std::chrono::seconds GameRunningTime = 180s; // 30√  TEST
 };
 
 class InGameServer
