@@ -236,13 +236,13 @@ void Player::UpdateInvincibleDuration(float elapsed)
 void Player::UpdateDriftGauge(float elapsed)
 {
 	float currentSpeed = mVehicleRigidBody.GetCurrentSpeed();
-	if (currentSpeed < mConstantPtr->MinSpeedForDrift) return;
+	//if (currentSpeed < mConstantPtr->MinSpeedForDrift) return;
 
 	auto& comp = mVehicleRigidBody.GetComponent();
 
 	if (mKeyMap[VK_LSHIFT])
 	{
-		comp.FrontFrictionSlip = mConstantPtr->FrontWheelDriftFriction;
+		/*comp.FrontFrictionSlip = mConstantPtr->FrontWheelDriftFriction;
 		comp.BackFrictionSlip = mConstantPtr->RearWheelDriftFriction;
 
 		auto linearVelocity = mVehicleRigidBody.GetLinearVelocity();
@@ -274,11 +274,25 @@ void Player::UpdateDriftGauge(float elapsed)
 					std::cout << "Item increased.\n";
 				}
 			}
+			std::cout << mDriftGauge << "\n";
 		}
 
 		if (angle > AngleLimit)
 		{
 			mVehicleRigidBody.SetAngularVelocity(btVector3(0.f, 0.f, 0.f));
+		}*/
+
+		// TEST
+		mDriftGauge += elapsed * 0.5f;
+		if (mDriftGauge > 1.0f)
+		{
+			mDriftGauge = 0.0f;
+			if (mItemCount < 2)
+			{
+				mItemCount += 1;
+				mItemIncreased = true;
+				std::cout << "Item increased.\n";
+			}
 		}
 	}
 	else

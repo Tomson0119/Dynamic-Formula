@@ -1,7 +1,27 @@
 #pragma once
+
 #include "UI.h"
+
 constexpr int START_DELAY_TIME = 27;
 constexpr int MAXRECT = 3;
+
+struct Scoreboard
+{
+    int rank;
+    int score;
+    int lapCount;
+    int hitCount;
+    std::string nickname;
+
+    Scoreboard()
+        : rank(0),
+          score(0),
+          lapCount(0),
+          hitCount(0)
+    {
+    }
+};
+
 class InGameUI : public UI
 {
 public:
@@ -32,23 +52,31 @@ public:
     void UpdateRankCredits();
     void TextUpdateReverseState(float Elapsed);
 
+    void SetScoreboardInfo(
+        int idx, int rank, int score, 
+        int lapCount, int hitCount, 
+        const std::string& name);
+
+    void SortScoreboard();
+    void SetPlayerCount(int cnt) { mScoreboard.resize(cnt, {}); }
+
     void SetDriftGauge(int gauge) { mDriftGauge = gauge; }
     void SetRunningTime(float time) { mRunningTime = time; }
     void SetMyScore(int score) { mMyScore = score; }
     void SetMyRank(int rank) { mMyRank = rank; }
     void SetLap(int lap) { mMyLap = lap; }
-    void SetSpeed(float Speed) { mCurrentSpeed = Speed; }
-    float GetCurrentSpeed() const { return mCurrentSpeed; }
-    void SetScore(int score) { mMyScore = score; }
-    void SetItemCnt(int ItemCnt) { mItemCnt = ItemCnt; }
+    void SetSpeed(int Speed) { mCurrentSpeed = Speed; }
+
+    std::mutex& GetMutex() { return mScoreboardMutex; }
 
     void SetTimeMinSec(int& m, int& s);
 
     void AnimateStartSignAnim();
+
 private:
     float mRunningTime;
 
-    std::atomic_int mItemCnt = 0;
+    int mItemCnt = 0;
     std::atomic_int mDriftGauge = 0;
 
     float mAnimEndTime = 0.0f;
@@ -58,21 +86,15 @@ private:
 
     std::vector<float> mfOpacities;
     std::vector<XMFLOAT4> mLTRB;
-
     int mTextCountWithoutRankCredit = 0;
     float mWarningTime = 0.0f;
+    std::vector<Scoreboard> mScoreboard;
+    std::mutex mScoreboardMutex;
 
-    //For Packet
-    std::array<int, 8> mScores;
-    std::array<int, 8> mRanks;
-    std::array<int, 8> mLaps;
-    std::array<int, 8> mMissileHits;
-    std::array<std::string, 8> mUserNicknames;
-
-    int mMyScore;
-    int mMyRank;
-    int mMyLap;
-    float mCurrentSpeed;
+    std::atomic_int mMyScore;
+    std::atomic_int mMyRank;
+    std::atomic_int mMyLap;
+    std::atomic_int mCurrentSpeed;
     float mIngameTime;
 
     bool mIsRankCredit = false;

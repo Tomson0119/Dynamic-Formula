@@ -3,9 +3,13 @@
 
 InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 	: UI(nFrame, device, pd3dCommandQueue),
-	mRunningTime(0),
+	  mRunningTime(0),
+	  mMyScore(0),
+	  mMyRank(0),
+	  mMyLap(0),
+	  mCurrentSpeed(0),
 	mTextCountWithoutRankCredit(8)
-    // Text: GameTime, LapCnt, Rank, Velocity
+	// Text: GameTime, LapCnt, Rank, Velocity
 	// Ranking credits 8 * 5(Rank, Nickname, Score, Lap, Missile)
     //UI: DraftGage, Item1, Item2
 {
@@ -197,8 +201,7 @@ void InGameUI::UpdateMyRank()
 
 void InGameUI::UpdateSpeed()
 {
-	float CurrentSpeed = GetCurrentSpeed();
-	if (CurrentSpeed >= 1000.0f)
+	/*if (CurrentSpeed >= 1000.0f)
 	{
 		for (int i = 0; i < 6; ++i)
 			GetTextBlock()[4].strText.push_back(std::to_string(CurrentSpeed)[i]);
@@ -217,7 +220,8 @@ void InGameUI::UpdateSpeed()
 	{
 		for (int i = 0; i < 3; ++i)
 			GetTextBlock()[4].strText.push_back(std::to_string(0.0f)[i]);
-	}
+	}*/
+	GetTextBlock()[4].strText.assign(std::to_string((int)(mCurrentSpeed / FIXED_FLOAT_LIMIT)));
 	for (auto& str : std::string("km/h"))
 		GetTextBlock()[5].strText.push_back(str);
 }
@@ -238,30 +242,40 @@ void InGameUI::UpdateRankCredits()
 {
 	for (int i = 0;i < mTextCountWithoutRankCredit; ++i)
 		GetTextBlock()[i].strText.clear();
-	// Rank, Nickname, Score, Lap, MissileHit
-	//Set
-	for (int i = 0; i< 8; ++i)
+	
+	for (int i = 0; i< mScoreboard.size(); ++i)
 	{
-		mRanks[i] = i + 1;
-		mUserNicknames[i] = "Nick" + std::to_string(i + 1);
-		mScores[i] = i * 800;
-		mLaps[i] = i * 2;
-		mMissileHits[i] = i * 3;
+		GetTextBlock()[ExtraTextCnt + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
+		GetTextBlock()[ExtraTextCnt + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname);
+		GetTextBlock()[ExtraTextCnt + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));
+		GetTextBlock()[ExtraTextCnt + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
+		GetTextBlock()[ExtraTextCnt + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
 	}
-	for (int i = 0; i< 8; ++i)
-	{
-		GetTextBlock()[mTextCountWithoutRankCredit + static_cast<size_t>(i)].strText.assign(std::to_string(mRanks[i]));
-		GetTextBlock()[mTextCountWithoutRankCredit + (1 * mTextCountWithoutRankCredit) + static_cast<size_t>(i)].strText.assign(mUserNicknames[i]);
-		GetTextBlock()[mTextCountWithoutRankCredit + (2 * mTextCountWithoutRankCredit) + static_cast<size_t>(i)].strText.assign(std::to_string(mScores[i]));
-		GetTextBlock()[mTextCountWithoutRankCredit + (3 * mTextCountWithoutRankCredit) + static_cast<size_t>(i)].strText.assign(std::to_string(mLaps[i]));
-		GetTextBlock()[mTextCountWithoutRankCredit + (4 * mTextCountWithoutRankCredit) + static_cast<size_t>(i)].strText.assign(std::to_string(mMissileHits[i]));
-	}
-	SetItemCnt(2);
-
 	SetIndexColor(51, D2D1::ColorF(D2D1::ColorF::Black, 0.8f));
 	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	SetIndexColor(49, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	BuildSolidBrush(GetColors());
+}
+
+void InGameUI::SetScoreboardInfo(
+	int idx, int rank, int score, 
+	int lapCount, int hitCount, 
+	const std::string& name)
+{
+	mScoreboard[idx].rank = rank;
+	mScoreboard[idx].score = score;
+	mScoreboard[idx].lapCount = lapCount;
+	mScoreboard[idx].hitCount = hitCount;
+	mScoreboard[idx].nickname = name;
+}
+
+void InGameUI::SortScoreboard()
+{
+	std::sort(mScoreboard.begin(), mScoreboard.end(),
+		[](const Scoreboard& a, const Scoreboard& b)
+		{
+			return (a.rank < b.rank);
+		});
 }
 
 void InGameUI::Update(float Elapsed, Player* mPlayer)
@@ -294,11 +308,6 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	//Time Set
 	if (mIngameTime <= CountdownTime)
 	{
-		SetScore(500);
-		SetSpeed(mPlayer->GetCurrentVelocity());
-		SetMyRank(3);
-		SetLap(3);
-		SetDriftGauge(5000);
 		StartAnimation();
 		return;
 	}
@@ -313,6 +322,9 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 		for (auto& Opac : mOpacities)
 			Opac = 0.0f;
 	}
+
+	mItemCnt = mPlayer->GetItemNum();
+
 	if (mIsReverse)
 		TextUpdateReverseState(Elapsed);
 	else
@@ -328,7 +340,6 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	UpdateSpeed();
 	//UpdateScore
 	UpdateMyScore(); // @@여기 해야함
-	//muItemCnt = mPlayer->GetItemNum();
 }
 
 void InGameUI::TextUpdateReverseState(float Elapsed)

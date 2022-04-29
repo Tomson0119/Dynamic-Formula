@@ -16,7 +16,11 @@ D3DFramework::D3DFramework()
 
 D3DFramework::~D3DFramework()
 {
-	//if(mD3dDevice) WaitUntilGPUComplete();
+	if (mFullScreen)
+	{
+		mSwapChain->SetFullscreenState(FALSE, nullptr);
+	}
+	if(mD3dDevice) WaitUntilGPUComplete();
 	if (mFenceEvent) CloseHandle(mFenceEvent);
 }
 
@@ -76,6 +80,7 @@ bool D3DFramework::InitDirect3D()
 	CreateRtvDsvDescriptorHeaps();
 	CreateSwapChain();
 
+	ChangeFullScreenState();
 	OnResize();
 
 	return true;
@@ -473,6 +478,7 @@ void D3DFramework::ChangeFullScreenState()
 
 	mSwapChain->GetFullscreenState(&mFullScreen, NULL);
 	mSwapChain->SetFullscreenState(!mFullScreen, NULL);
+	mFullScreen = !mFullScreen;
 
 	OnResize();
 }

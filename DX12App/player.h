@@ -45,6 +45,7 @@ public:
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
 
+	virtual void SetItemNum() { }
 	virtual int GetItemNum() { return 0; }
 	virtual float GetDriftGauge() { return 0.0f; }
 
@@ -129,6 +130,7 @@ public:
 	WheelObject* GetWheel(int index) { return mWheel[index].get(); }
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 
+	virtual void SetItemNum(int num) { mItemNum = num; }
 	virtual int GetItemNum() { return mItemNum; }
 	virtual float GetDriftGauge() { return mDriftGauge; }
 
@@ -190,7 +192,7 @@ private:
 
 	float mFovCoefficient = 1.0f;
 
-	int mItemNum = 0;
+	std::atomic_int mItemNum = 0;
 	float mDriftGauge = 0.0f;
 
 	std::atomic_bool mSpawnFlag = false;

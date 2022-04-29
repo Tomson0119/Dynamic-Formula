@@ -130,8 +130,8 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 void InGameServer::StartMatch(int roomID)
 {
 	msWorlds[roomID]->SetActive(true);
-	msWorlds[roomID]->SendStartSignal();
 	msWorlds[roomID]->SetFinishTime(mGameConstants->GameRunningTime);
+	msWorlds[roomID]->SendStartSignal();
 	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
 }
 

@@ -70,11 +70,13 @@ public:
 	bool IsInvincible() const { return mInvincible; }
 	float GetInvincibleDuration() const { return mInvincibleDuration; }	
 
+	int GetItemCount() const { return mItemCount; }
 	int GetHitCount() const { return mHitCount; }
 	int GetLapCount() const { return mLapCount; }
 	int GetPoint() const { return mPoint; }
 	int GetCurrentCPIndex() const { return mCurrentCPIndex; }
-
+	
+	float GetCurrentSpeed() const { return mVehicleRigidBody.GetCurrentSpeed(); }
 	float GetDriftGauge() const { return mDriftGauge; }
 
 	void ResetManualRespawnFlag() { mManualRespawn = false; }
