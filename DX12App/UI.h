@@ -125,6 +125,7 @@ public:
    std::vector<D2D1::ColorF>& GetColors() { return mColors; }
    void SetColors(const std::vector<D2D1::ColorF>& Colors) { for (auto& color : Colors) mColors.push_back(color); }
    void SetColors(D2D1::ColorF* Colors) { for (int i = 0; i < static_cast<int>(mColors.size()); ++i) mColors.push_back(Colors[i]); }
+   void SetIndexColor(int index, D2D1::ColorF Color) { mColors[index] = Color; }
 
    //TextAllignments
    void ResizeTextAlignment(UINT n) { mDWriteTextAlignments.resize(n); }

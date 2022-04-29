@@ -828,7 +828,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	
 	UpdateConstants(timer);
 
-	mpUI.get()->Update(timer.TotalTime(), mPlayer);
+	if(mGameStarted)
+		mpUI.get()->Update(elapsed, mPlayer);
 }
 
 void InGameScene::UpdateLight(float elapsed)

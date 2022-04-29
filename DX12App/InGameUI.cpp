@@ -4,11 +4,12 @@
 InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
 	: UI(nFrame, device, pd3dCommandQueue),
 	  mRunningTime(0)
-    // Text: GameTime, LapCnt, Rank, StartCount, Velocity
+    // Text: GameTime, LapCnt, Rank, Velocity
+	// Ranking credits 8 * 5(Rank, Nickname, Score, Lap, Missile)
     //UI: DraftGage, Item1, Item2
 {
-	SetTextCnt(6);
-	SetRectCnt(3);
+	SetTextCnt(47);
+	SetRectCnt(4);
 	SetBitmapCnt(6);
 	SetGradientCnt(1);
 	SetUICnt();
@@ -37,11 +38,57 @@ void InGameUI::SetVectorSize(UINT nFrame)
 
 	std::vector<std::wstring> Fonts;
 	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Time
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //LapNum
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Lap
 	Fonts.push_back(L"Fonts\\Xenogears.ttf"); // Rank
-	Fonts.push_back(L"Fonts\\abberancy.ttf"); //Speed
-	Fonts.push_back(L"Fonts\\abberancy.ttf"); //Speed
-	Fonts.push_back(L"Fonts\\Blazed.ttf"); // 321 Go!
+	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Speed
+	Fonts.push_back(L"Fonts\\abberancy.ttf"); // km/h
+	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Score
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Rank Credits
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); 
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf");
+
 	
 	//LTRB.resize(GetBitmapCnt());
 
@@ -54,11 +101,16 @@ void InGameUI::StartPrint(const std::string& strUIText)
     GetTextBlock()[GetTextCnt() - 1].strText = strUIText;
 }
 
-void InGameUI::StartAnimation(float GTime)
+void InGameUI::AnimateStartSignAnim()
+{
+
+}
+
+void InGameUI::StartAnimation()
 {
 	if (mIsStartUI[3])
 	{
-		if (mAnimEndTime - GTime > 0.1f)
+		if (mAnimEndTime - mIngameTime > 0.1f)
 		{
 			if (mOpacities[3] < 1.0f)
 				mOpacities[3] += 0.05f;
@@ -79,7 +131,7 @@ void InGameUI::StartAnimation(float GTime)
 	}
 	else if (mIsStartUI[2])
 	{
-		if (mAnimEndTime - GTime > 0.1f)
+		if (mAnimEndTime - mIngameTime > 0.1f)
 		{
 			mLTRB[2].y += 0.5f;
 			mLTRB[2].w += 0.5f;
@@ -98,7 +150,7 @@ void InGameUI::StartAnimation(float GTime)
 	}
 	else if (mIsStartUI[1])
 	{
-		if (mAnimEndTime - GTime > 0.1f)
+		if (mAnimEndTime - mIngameTime > 0.1f)
 		{
 			mLTRB[1].y += 0.5f;
 			mLTRB[1].w += 0.5f;
@@ -117,13 +169,13 @@ void InGameUI::StartAnimation(float GTime)
 	}
 	else if (mIsStartUI[0])
 	{
-		if (mAnimEndTime - GTime > 0.1f)
+		if (mAnimEndTime - mIngameTime > 0.1f)
 		{
 			mLTRB[0].y += 0.5f;
 			mLTRB[0].w += 0.5f;
 
 			if (mOpacities[0] < 1.0f)
-				mOpacities[0] += 0.05f;
+				mOpacities[0] += 0.5f;
 		}
 		else
 		{
@@ -136,169 +188,207 @@ void InGameUI::StartAnimation(float GTime)
 	}
 }
 
-void InGameUI::Update(float GTime, Player* mPlayer)
+void InGameUI::UpdateIngameTime(float Elapsed)
 {
-	GetTextBlock()[5].strText.clear();
-	//StartTime Set
-	UINT Countdown = 3;
-	float CountdownTime = START_DELAY_TIME;
-	if (GTime > START_DELAY_TIME - 1.5f)
-	{
-		if (!mIsStartUI[3]) mAnimEndTime = GTime + 1.5f;
-		mIsStartUI[3] = true;
-		
-	}
-	else if (GTime > START_DELAY_TIME - 2.5f)
-	{
-		if (!mIsStartUI[2]) mAnimEndTime = GTime + 1.0f;
-		mIsStartUI[2] = true;
-	}
-	else if (GTime > START_DELAY_TIME - 3.5f)
-	{
-		if (!mIsStartUI[1]) mAnimEndTime = GTime + 1.0f;
-		mIsStartUI[1] = true;
-	}
-	else if (GTime > START_DELAY_TIME - 4.5f)
-	{
-		if (!mIsStartUI[0]) mAnimEndTime = GTime + 1.0f;
-		mIsStartUI[0] = true;
-	}
-
-
-	//Time Set
-	if (GTime < CountdownTime)
-	{
-		StartPrint(GetTextBlock()[5].strText);
-		StartAnimation(GTime);
-		return;
-	}
-	if (mIsStartUI[3])
-	{
-		for (auto& Op : mOpacities)
-			Op = 0.0f;
-		for (auto& IsStartUI : mIsStartUI)
-			IsStartUI = false;
-	}
-
-	for(int i=0;i<static_cast<int>(GetTextCnt());++i)
+	if(mRunningTime>0.0f)
+		mRunningTime -= Elapsed;
+	int m{}, s{};
+	SetTimeMinSec(m, s);
+	for (int i = 0; i < static_cast<int>(GetTextCnt()); ++i)
 		GetTextBlock()[i].strText.clear();
 
-	for (auto& str : "Time: ")
-		GetTextBlock()[0].strText.push_back(str);
-	float LapTime = GTime - CountdownTime;
-	int Min = 0;
-	float Sec = 0.0;
-	Min = (int)(LapTime / 60.0f);
-	Sec = LapTime - (Min * 60.0f);
-
-	if (Min < 10)
+	if (m < 10)
 		GetTextBlock()[0].strText.push_back('0');
-	for (auto &str : std::to_string(Min))
+	for (auto& str : std::to_string(m))
 		GetTextBlock()[0].strText.push_back(str);
 
 	GetTextBlock()[0].strText.push_back(':');
-	if (Sec < 10)
+	if (s < 10)
 		GetTextBlock()[0].strText.push_back('0');
-	for (int i = 0; i < 3 + !(Sec < 10); ++i)
-		GetTextBlock()[0].strText.push_back(std::to_string(Sec)[i]);
+	for (int i = 0; i < 1 + !(s < 10); ++i)
+		GetTextBlock()[0].strText.push_back(std::to_string(s)[i]);
+}
 
-	//Lap Count Set
-	if (static_cast<int>(GTime / 3) > 0)
-	{
-		for (auto &str : std::to_string(static_cast<int>(LapTime / 3)))
-			GetTextBlock()[1].strText.push_back(str);
-		for (auto &str : std::string{ "Lap" })
-			GetTextBlock()[1].strText.push_back(str);
-	}
+void InGameUI::UpdateMyLap()
+{
+	for (auto& str : std::to_string(mMyLap))
+		GetTextBlock()[1].strText.push_back(str);
+	//Lap Font Change
+	for (auto& str : std::string{ "Lap" })
+		GetTextBlock()[2].strText.push_back(str);
+}
 
-	//My Rank
-	UINT MyRank = 1;
-	GetTextBlock()[2].strText.push_back(('0' + MyRank));
-
-
-	switch (MyRank)
+void InGameUI::UpdateMyRank()
+{
+	GetTextBlock()[3].strText.push_back(('0' + mMyRank));
+	switch (mMyRank)
 	{
 	case 1:
-		GetTextBlock()[2].strText.push_back('s');
-		GetTextBlock()[2].strText.push_back('t');
+		GetTextBlock()[3].strText.push_back('s');
+		GetTextBlock()[3].strText.push_back('t');
 		break;
 	case 2:
-		GetTextBlock()[2].strText.push_back('n');
-		GetTextBlock()[2].strText.push_back('d');
+		GetTextBlock()[3].strText.push_back('n');
+		GetTextBlock()[3].strText.push_back('d');
 		break;
 	case 3:
-		GetTextBlock()[2].strText.push_back('r');
-		GetTextBlock()[2].strText.push_back('d');
+		GetTextBlock()[3].strText.push_back('r');
+		GetTextBlock()[3].strText.push_back('d');
 		break;
 	default:
-		GetTextBlock()[2].strText.push_back('t');
-		GetTextBlock()[2].strText.push_back('h');
+		GetTextBlock()[3].strText.push_back('t');
+		GetTextBlock()[3].strText.push_back('h');
 		break;
 	}
-	//Speed
-	float CurrentSpeed = mPlayer->GetCurrentVelocity();
-	if (mPlayer->GetCurrentVelocity() >= 1000.0f)
+}
+
+void InGameUI::UpdateSpeed()
+{
+	float CurrentSpeed = GetCurrentSpeed();
+	if (CurrentSpeed >= 1000.0f)
 	{
 		for (int i = 0; i < 6; ++i)
-			GetTextBlock()[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
+			GetTextBlock()[4].strText.push_back(std::to_string(CurrentSpeed)[i]);
 	}
-	else if (mPlayer->GetCurrentVelocity() >= 100.0f)
+	else if (CurrentSpeed >= 100.0f)
 	{
 		for (int i = 0; i < 5; ++i)
-			GetTextBlock()[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
+			GetTextBlock()[4].strText.push_back(std::to_string(CurrentSpeed)[i]);
 	}
-	else if (mPlayer->GetCurrentVelocity() >= 10.0f)
+	else if (CurrentSpeed >= 10.0f)
 	{
 		for (int i = 0; i < 4; ++i)
-			GetTextBlock()[3].strText.push_back(std::to_string(mPlayer->GetCurrentVelocity())[i]);
+			GetTextBlock()[4].strText.push_back(std::to_string(CurrentSpeed)[i]);
 	}
 	else
 	{
 		for (int i = 0; i < 3; ++i)
-			GetTextBlock()[3].strText.push_back(std::to_string(0.0f)[i]);
+			GetTextBlock()[4].strText.push_back(std::to_string(0.0f)[i]);
 	}
-	for (auto &str : std::string("km/h"))
-		GetTextBlock()[4].strText.push_back(str);
+	for (auto& str : std::string("km/h"))
+		GetTextBlock()[5].strText.push_back(str);
+}
 
+void InGameUI::UpdateMyScore()
+{
+	// 텍스트 설정
+	GetTextBlock()[6].strText.assign(std::to_string(mMyScore) + "pts");
+}
+
+void InGameUI::SetTimeMinSec(int& m, int& s)
+{
+	m = static_cast<int>(mRunningTime) / 60;
+	s = static_cast<int>(mRunningTime) % 60;
+}
+
+void InGameUI::UpdateRankCredits()
+{
+	int ExtraTextCnt = 7;
+	for (int i = 0;i < ExtraTextCnt; ++i)
+		GetTextBlock()[i].strText.clear();
+	// Rank, Nickname, Score, Lap, MissileHit
+	//Set
+	for (int i = 0; i< 8; ++i)
+	{
+		mRanks[i] = i + 1;
+		mUserNicknames[i] = "Nick" + std::to_string(i + 1);
+		mScores[i] = i * 800;
+		mLaps[i] = i * 2;
+		mMissileHits[i] = i * 3;
+	}
+	for (int i = 0; i< 8; ++i)
+	{
+		GetTextBlock()[ExtraTextCnt + (0 * 5) + i].strText.assign(std::to_string(mRanks[i]));
+		GetTextBlock()[ExtraTextCnt + (1 * 5) + i].strText.assign(mUserNicknames[i]);
+		GetTextBlock()[ExtraTextCnt + (2 * 5) + i].strText.assign(std::to_string(mScores[i]));
+		GetTextBlock()[ExtraTextCnt + (3 * 5) + i].strText.assign(std::to_string(mLaps[i]));
+		GetTextBlock()[ExtraTextCnt + (4 * 5) + i].strText.assign(std::to_string(mMissileHits[i]));
+	}
+	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Black, 0.8f));
+	BuildSolidBrush(GetColors());
+}
+
+void InGameUI::Update(float Elapsed, Player* mPlayer)
+{
+	//4초를 세는게 문제. @@ 여기 해야 함
+	//StartTime Set
+	mIngameTime += Elapsed;
+	UINT CountdownTime = START_DELAY_TIME;
+	if (mIngameTime >= START_DELAY_TIME - 1.0f)
+	{
+		if (!mIsStartUI[3]) mAnimEndTime = mIngameTime + 1.0f;
+		mIsStartUI[3] = true;
+	}
+	else if (mIngameTime >= START_DELAY_TIME - 2.0f)
+	{
+		if (!mIsStartUI[2]) mAnimEndTime = mIngameTime + 1.0f;
+		mIsStartUI[2] = true;
+	}
+	else if (mIngameTime >= START_DELAY_TIME - 3.0f)
+	{
+		if (!mIsStartUI[1]) mAnimEndTime = mIngameTime + 1.0f;
+		mIsStartUI[1] = true;
+	}
+	else if (mIngameTime >= START_DELAY_TIME - 4.0f)
+	{
+		if (!mIsStartUI[0]) mAnimEndTime = mIngameTime + 1.0f;
+		mIsStartUI[0] = true;
+	}
+
+	//Time Set
+	if (mIngameTime <= CountdownTime)
+	{
+		SetScore(500);
+		SetSpeed(mPlayer->GetCurrentVelocity());
+		SetMyRank(3);
+		SetLap(3);
+		SetDriftGauge(5000);
+
+		StartAnimation();
+		return;
+	}
+	else if (mIngameTime >= mRunningTime)
+	{
+		//GameEnd
+		UpdateRankCredits();
+		return;
+	}
+	else
+	{
+		for (auto& Opac : mOpacities)
+			Opac = 0.0f;
+	}
+	//UpdateTime
+	UpdateIngameTime(Elapsed);
+	//UpdateLap
+	UpdateMyLap();
+	//UpdateMyRank
+	UpdateMyRank();
+	//UpdateSpeed
+	UpdateSpeed();
+	//UpdateScore
+	UpdateMyScore(); // @@여기 해야함
 	//muItemCnt = mPlayer->GetItemNum();
-    SetDriftGauge(5000);
 }
 
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	/*switch (msg)
+	switch (msg)
 	{
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
-		case 'Z':
-			if (uItemCnt > 0 && !mItemOff)
-			{
-				uItemCnt -= 1;
-				mIsBoost = true;
-			}
+		case 'S':
+			mMyScore += 100;
 			break;
-		case 'X':
-			if (uItemCnt > 0 && !mItemOff)
-			{
-				uItemCnt -= 1;
-				mIsShootingMissile = true;
-			}
+		case 'D':
+			SetRunningTime(0.0f);
+			break;
+		case 'L':
+			mMyLap += 1;
+			break;
 		}
-	}*/
-	/*if (!mItemOff)
-	{
-		if ((GetAsyncKeyState('Z') & 0x8000) == 1 && uItemCnt > 0)
-		{
-			uItemCnt -= 1;
-			mIsBoost = true;
-		}
-		if ((GetAsyncKeyState('X') & 0x8000) == 1 && uItemCnt > 0)
-		{
-			uItemCnt -= 1;
-			mIsShootingMissile = true;
-		}
-	}*/
+	}
 }
 
 void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
@@ -335,7 +425,13 @@ void InGameUI::Draw(UINT nFrame)
 			GetFrameHeight() * (5.0f / 6.0f),
 		GetFrameWidth()* (20.0f / 32.0f),
 		GetFrameHeight() * (8.0f / 9.0f)
-        }//Item2 UI
+        }, //Item2 UI
+		{
+			GetFrameWidth() * 0.1f,
+			GetFrameHeight() * 0.1f,
+			GetFrameWidth() * 0.9f,
+			GetFrameHeight() * 0.9f
+		} //RankCredits
     };
     XMFLOAT4 FillLTRB[] = 
     { 
@@ -356,10 +452,15 @@ void InGameUI::Draw(UINT nFrame)
 			GetFrameHeight() * (5.0f / 6.0f), 
 			GetFrameWidth()* (20.0f / 32.0f),
 			GetFrameHeight() * (8.0f / 9.0f)
-        }//Item2 UI
+        }, //Item2 UI
+		{
+			GetFrameWidth() * 0.1f,
+			GetFrameHeight() * 0.1f,
+			GetFrameWidth() * 0.9f,
+			GetFrameHeight() * 0.9f
+		} //RankCredits
     };
 	
-	bool IsOutlined[3] = { true, true, true };
 	XMFLOAT4 LTRB[7] =
 	{
 		{
@@ -405,6 +506,8 @@ void InGameUI::Draw(UINT nFrame)
 			GetFrameHeight() * 0.6f
 		}
 	};
+	bool IsOutlined[4] = { true, true, true, true };
+
 	BeginDraw(nFrame);
 	RectDraw(RectLTRB, FillLTRB, 1, IsOutlined);
 	DrawBmp(GetLTRB(), 0, 6, mOpacities);
@@ -414,49 +517,67 @@ void InGameUI::Draw(UINT nFrame)
 
 void InGameUI::CreateFontFormat()
 {
-	
     std::vector<std::wstring> Fonts;
 	//Manrope-Regular
     Fonts.push_back(L"FivoSans-Regular"); // Time
-    Fonts.push_back(L"abberancy"); //Lap
+    Fonts.push_back(L"FivoSans-Regular"); //LapNum
+	Fonts.push_back(L"abberancy"); // Lap
     Fonts.push_back(L"Xenogears"); // Rank
     Fonts.push_back(L"abberancy"); // Speed
 	Fonts.push_back(L"abberancy"); // km/h
-    Fonts.push_back(L"Blazed"); // 321 Go!
+	Fonts.push_back(L"abberancy"); // Score
+	for(int i=0;i<40;++i)
+		Fonts.push_back(L"FivoSans-Regular"); //RankCredits
 
 	SetFonts(Fonts);
 
 	std::vector<float> fFontSize;
 	fFontSize.push_back(GetFrameHeight() * 0.04f); 
 	fFontSize.push_back(GetFrameHeight() * 0.06f);
+	fFontSize.push_back(GetFrameHeight() * 0.06f);
 	fFontSize.push_back(GetFrameHeight() * 0.07f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
-	fFontSize.push_back(GetFrameHeight() * 0.13f);
-
+	fFontSize.push_back(GetFrameHeight() * 0.05f);
+	for(int i=0;i<40;++i)
+		fFontSize.push_back(GetFrameHeight() * 0.05f); //RankCredits
 	SetFontSize(fFontSize);
 
 	std::vector<DWRITE_TEXT_ALIGNMENT> TextAlignments;
 	TextAlignments.resize(GetTextCnt());
 	TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_LEADING;
-	TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_LEADING;
-	TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
+	TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_TRAILING;
+	TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_LEADING;
 	TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
-	//TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
+	TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_TRAILING;
+	
+	for(int i=0;i<40;++i)
+		TextAlignments[7+i] = DWRITE_TEXT_ALIGNMENT_LEADING; //RankCredits
 
     UI::CreateFontFormat(GetFontSize(), GetFonts(), TextAlignments);
 }
 
 void InGameUI::SetTextRect()
-{//Time, Lap, Rank, Speed, km/h, 321 Go! GetFrameWidth() * 0.25f, GetFrameHeight() * 0.13f)
-    GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.22f, GetFrameHeight() * 0.19f);
-    GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.02f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.16f, GetFrameHeight() * 0.14f);
-    GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, 0.0f, GetFrameWidth(), GetFrameHeight() * 0.16f);
-    GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.90f);
-    GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.95f);
-	GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.35f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.65f, GetFrameHeight() * 0.6f);
+{//Time, LapNum, Lap, Rank, Speed, km/h, Score
+    GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.03f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.20f, GetFrameHeight() * 0.21f);
+	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.14f);
+    GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.048f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.16f, GetFrameHeight() * 0.141f);
+    GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, GetFrameHeight() * 0.10f, GetFrameWidth(), GetFrameHeight() * 0.16f);
+    GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.90f);
+    GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.98f, GetFrameHeight() * 0.95f);
+	GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.75f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.97f, GetFrameHeight() * 0.23f);
+
+	//RankCredits Rank, Ninkname, Score, Lap, MissileHit
+	for (int i = 0; i < 8; ++i)
+	{
+		GetTextBlock()[7+static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.1f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.5f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[15 + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.1f + (i* (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.75f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[23 + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.4f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.9f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[31 + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.55f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[39 + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.7f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+	}
 
 }
 
@@ -466,15 +587,15 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 
     UI::BuildObjects(ppd3dRenderTargets, nWidth, nHeight);
 
-	std::vector<XMFLOAT4> LTRB2;
-	LTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.55f });
-	LTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.55f });
-	LTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.55f });
-	LTRB2.push_back({ GetFrameWidth() * 0.31f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.51f, GetFrameHeight() * 0.6f });
-	LTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.6f });
-	LTRB2.push_back({ GetFrameWidth() * 0.49f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.69f, GetFrameHeight() * 0.6f });
+	std::vector<XMFLOAT4> bitmapLTRB2;
+	bitmapLTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.55f });
+	bitmapLTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.55f });
+	bitmapLTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.35f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.55f });
+	bitmapLTRB2.push_back({ GetFrameWidth() * 0.31f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.51f, GetFrameHeight() * 0.6f });
+	bitmapLTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.6f });
+	bitmapLTRB2.push_back({ GetFrameWidth() * 0.49f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.69f, GetFrameHeight() * 0.6f });
 
-	SetLTRB(LTRB2);
+	SetLTRB(bitmapLTRB2);
 
     CreateFontFormat();
 
@@ -485,10 +606,16 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-	colorList.push_back(D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+	//RankCredits
+	for(int i=0;i<40;++i)
+		colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
 
 
     //D2D1::ColorF colorList[8] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f),D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f), D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f), D2D1::ColorF(D2D1::ColorF::Red, 1.0f), D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f) };
@@ -498,6 +625,9 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	BuildBrush(GetColors(), 4, gradientColors);
     
     SetTextRect();
+
+	//임시 시간
+	SetRunningTime(180.0f);
 }
 
 void InGameUI::Reset()
