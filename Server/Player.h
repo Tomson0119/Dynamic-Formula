@@ -70,6 +70,7 @@ public:
 	bool IsInvincible() const { return mInvincible; }
 	float GetInvincibleDuration() const { return mInvincibleDuration; }	
 
+	int GetItemCount() const { return mItemCount; }
 	int GetHitCount() const { return mHitCount; }
 	int GetLapCount() const { return mLapCount; }
 	int GetPoint() const { return mPoint; }

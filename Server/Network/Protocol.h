@@ -143,7 +143,7 @@ namespace SC
 	const char WARNING_MESSAGE	  = 20;
 	const char INGAME_INFO		  = 21;
 	const char GAME_END			  = 22;
-	const char ITEM_INCREASED	  = 23;
+	const char ITEM_COUNT		  = 23;
 
 	struct packet_force_logout : packet_header { };
 
@@ -292,9 +292,10 @@ namespace SC
 		int point[MAX_ROOM_CAPACITY];
 	};
 
-	struct packet_item_increased : packet_header 
+	struct packet_item_count : packet_header 
 	{
-		int player_idx;
+		uint8_t player_idx;
+		uint8_t item_count;
 	};
 }
 #pragma pack(pop)

@@ -39,7 +39,7 @@ private:
 
     float mRunningTime;
 
-    std::atomic_int mItemCnt = 0;
+    int mItemCnt = 0;
     std::atomic_int mDriftGauge = 0;
 
     float AnimEndTime = 0.0f;

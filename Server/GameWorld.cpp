@@ -80,7 +80,6 @@ void GameWorld::UpdatePhysicsWorld()
 
 		UpdatePlayers(elapsed);
 		mMap.Update(elapsed, mPhysics);
-
 	}
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
@@ -106,7 +105,7 @@ void GameWorld::UpdatePlayers(float elapsed)
 			if (player->ItemIncreased())
 			{
 				player->ResetItemFlag();
-				SendItemIncreasePacket(i);
+				SendItemCountPacket(i);
 			}
 		}
 		i += 1;
@@ -428,15 +427,16 @@ void GameWorld::SendGameEndPacket()
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
-void GameWorld::SendItemIncreasePacket(int target, bool instSend)
+void GameWorld::SendItemCountPacket(int target, bool instSend)
 {
 #ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "(room id: " << mID << ") Send game end packet.\n";
+	std::cout << "(room id: " << mID << ") Send item count packet.\n";
 #endif
-	SC::packet_item_increased pck{};
-	pck.size = sizeof(SC::packet_item_increased);
-	pck.type = SC::ITEM_INCREASED;
+	SC::packet_item_count pck{};
+	pck.size = sizeof(SC::packet_item_count);
+	pck.type = SC::ITEM_COUNT;
 	pck.player_idx = target;
+	pck.item_count = mPlayerList[target]->GetItemCount();
 
 	int idx = mPlayerList[target]->ID;
 	if (idx < 0) return;

@@ -81,7 +81,7 @@ private:
 	void SendWarningMsgPacket(int target, bool instSend=true);
 	void SendInGameInfoPacket(int target, bool instSend=true);
 	void SendGameEndPacket();
-	void SendItemIncreasePacket(int target, bool instSend=true);
+	void SendItemCountPacket(int target, bool instSend=true);
 
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
 

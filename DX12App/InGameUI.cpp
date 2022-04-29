@@ -303,7 +303,7 @@ void InGameUI::Update(float GTime, Player* mPlayer)
 	
 		//DraftGage Set
 	//fDriftGauge = mPlayer->GetDriftGauge();
-	//muItemCnt = mPlayer->GetItemNum();
+	mItemCnt = mPlayer->GetItemNum();
     //SetDriftGauge(0.5f);
 }
 

@@ -599,14 +599,14 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::ITEM_INCREASED:
+	case SC::ITEM_COUNT:
 	{
-		SC::packet_item_increased* pck = reinterpret_cast<SC::packet_item_increased*>(packet);
+		SC::packet_item_count* pck = reinterpret_cast<SC::packet_item_count*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if(player)
 		{
 			OutputDebugStringA("Item increased.\n");
-			
+			player->SetItemNum(pck->item_count);
 		}
 		break;
 	}
