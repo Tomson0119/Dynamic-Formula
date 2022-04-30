@@ -39,8 +39,9 @@ public:
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
     void CreateFontFormat();
     void StartAnimation(float Elapsed);
+    void CheckScoreBoardTime(float Elapsed);
     std::vector<XMFLOAT4>& GetLTRB() { return mLTRB; }
-    void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) mLTRB.push_back(R); }
+    void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) mLTRB[i++] = R; }
 
     //For Packet
     //void UpdateItemCnt(bool IsPlus) { if (IsPlus&&muItemCnt<2) ++muItemCnt; else if(!IsPlus && muItemCnt>0) --muItemCnt; }
@@ -49,7 +50,7 @@ public:
     void TextUpdateMyRank();
     void TextUpdateSpeed();
     void TextUpdateIngameTime(float Elapsed);
-    void SetRankCreditTexts();
+    void SetScoreBoardTexts();
     void TextUpdateReverseState(float Elapsed);
 
     void SetScoreboardInfo(
@@ -68,6 +69,10 @@ public:
     void SetSpeed(int Speed) { mCurrentSpeed = Speed; }
     void GameStart() { mIsStartAnim = true; }
 
+    void SetInvisibleStateTextUI();
+    void SetVisibleStateTextUI();
+    void SetBitmapPos();
+
     std::mutex& GetMutex() { return mScoreboardMutex; }
 
     void SetTimeMinSec(int& m, int& s);
@@ -82,10 +87,11 @@ private:
     float mStartAnimOpacities[6] = { 0.0f, 0.0f , 0.0f , 0.0f , 0.0f , 0.0f};
 
     bool mIsStartUI[4] = { false, false, false, false };
+    bool mIsOutlined[4] = { false, true, true, true };
 
     std::vector<float> mfOpacities;
     std::vector<XMFLOAT4> mLTRB;
-    int mTextCountWithoutRankCredit = 0;
+    int mTextCountWithoutScoreBoard = 0;
     float mWarningTime = 0.0f;
     std::vector<Scoreboard> mScoreboard;
     std::mutex mScoreboardMutex;
@@ -94,10 +100,12 @@ private:
     std::atomic_int mMyRank;
     std::atomic_int mMyLap;
     std::atomic_int mCurrentSpeed;
+
     float mStartAnimTime;
+    float mScoreBoardTime;
 
     bool mIsStartAnim = false;
-    bool mIsRankCredit = false;
+    bool mIsScoreBoard = false;
     bool mIsReverse = false;
 
     //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
