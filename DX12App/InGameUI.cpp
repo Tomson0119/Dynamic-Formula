@@ -58,99 +58,196 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	FontLoad(Fonts);
 }
 
-void InGameUI::AnimateStartSignAnim()
+void InGameUI::SetTimeMinSec(int& m, int& s)
 {
-
+	m = static_cast<int>(mRunningTime) / 60;
+	s = static_cast<int>(mRunningTime) % 60;
 }
 
-void InGameUI::StartAnimation()
+void InGameUI::SetScoreboardInfo(
+	int idx, int rank, int score, 
+	int lapCount, int hitCount, 
+	const std::string& name)
+{                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+	mScoreboard[idx].rank = rank;
+	mScoreboard[idx].score = score;
+	mScoreboard[idx].lapCount = lapCount;
+	mScoreboard[idx].hitCount = hitCount;
+	mScoreboard[idx].nickname = name;
+}
+
+void InGameUI::SortScoreboard()
 {
+	std::sort(mScoreboard.begin(), mScoreboard.end(),
+		[](const Scoreboard& a, const Scoreboard& b)
+		{
+			return (a.rank < b.rank);
+		});
+}
+
+void InGameUI::Update(float Elapsed, Player* mPlayer)
+{
+	//4초를 세는게 문제. @@ 여기 해야 함
+	//StartTime Set
+	
+	//Time Set
+	if (mIsStartAnim)
+	{
+		// UI띄우기 없애기 
+		// 시간 설정??
+		StartAnimation(Elapsed);
+		return;
+	}
+	else if (mIsRankCredit)
+	{
+		//GameEnd
+		SetRankCreditTexts();
+		return;
+	}
+	else if(mRunningTime<=0)
+	{
+		mRunningTime = 0;
+		return;
+	}
+	mRunningTime -= Elapsed;
+	for (auto& Opac : mStartAnimOpacities)
+		Opac = 0.0f;
+	mItemCnt = mPlayer->GetItemNum();
+	if (mIsReverse)
+		TextUpdateReverseState(Elapsed);
+	else
+		GetTextBlock()[7].strText.clear();
+
+	//UpdateTime
+	TextUpdateIngameTime(Elapsed);
+	//UpdateLap
+	TextUpdateMyLap();
+	//UpdateMyRank
+	TextUpdateMyRank();
+	//UpdateSpeed
+	TextUpdateSpeed();
+	//UpdateScore
+	TextUpdateMyScore(); // @@여기 해야함
+}
+
+void InGameUI::StartAnimation(float Elapsed)
+{
+	mStartAnimTime += Elapsed;
+	if (mStartAnimTime >=START_DELAY_TIME)
+	{
+		mIsStartAnim = false;
+		mStartAnimTime = 0.0f;
+		for (auto& IsStartUI : mIsStartUI)
+			IsStartUI = false;
+		//UI띄우기
+
+	}
+	else if (mStartAnimTime >= START_DELAY_TIME - 1.0f)
+	{
+		if (!mIsStartUI[3]) mAnimEndTime = mStartAnimTime + 1.0f;
+		mIsStartUI[3] = true;
+	}
+	else if (mStartAnimTime >= START_DELAY_TIME - 2.0f)
+	{
+		if (!mIsStartUI[2]) mAnimEndTime = mStartAnimTime + 1.0f;
+		mIsStartUI[2] = true;
+	}
+	else if (mStartAnimTime >= START_DELAY_TIME - 3.0f)
+	{
+		if (!mIsStartUI[1]) mAnimEndTime = mStartAnimTime + 1.0f;
+		mIsStartUI[1] = true;
+	}
+	else if (mStartAnimTime >= START_DELAY_TIME - 4.0f)
+	{
+		if (!mIsStartUI[0]) mAnimEndTime = mStartAnimTime + 1.0f;
+		mIsStartUI[0] = true;
+	}
 	if (mIsStartUI[3])
 	{
-		mOpacities[2] = 0.0f;
-		if (mAnimEndTime - mIngameTime > 0.1f)
+		mStartAnimOpacities[2] = 0.0f;
+		if (mAnimEndTime - mStartAnimTime > 0.1f)
 		{
-			if (mOpacities[3] < 1.0f)
-				mOpacities[3] += 0.05f;
+			if (mStartAnimOpacities[3] < 1.0f)
+				mStartAnimOpacities[3] += 0.05f;
 
-			if (mOpacities[4] < 1.0f)
-				mOpacities[4] += 0.05f;
+			if (mStartAnimOpacities[4] < 1.0f)
+				mStartAnimOpacities[4] += 0.05f;
 
-			if (mOpacities[5] < 1.0f)
-				mOpacities[5] += 0.05f;
+			if (mStartAnimOpacities[5] < 1.0f)
+				mStartAnimOpacities[5] += 0.05f;
 		}
 		else
 		{
-			mOpacities[3] = 0.0f;
-			mOpacities[4] = 0.0f;
-			mOpacities[5] = 0.0f;
-			
+			mStartAnimOpacities[3] = 0.0f;
+			mStartAnimOpacities[4] = 0.0f;
+			mStartAnimOpacities[5] = 0.0f;
+
 		}
 	}
 	else if (mIsStartUI[2])
 	{
-		mOpacities[1] = 0.0f;
-		if (mAnimEndTime - mIngameTime > 0.1f)
+		mStartAnimOpacities[1] = 0.0f;
+		if (mAnimEndTime - mStartAnimTime > 0.1f)
 		{
 			mLTRB[2].y += 0.5f;
 			mLTRB[2].w += 0.5f;
 
-			if (mOpacities[2] < 1.0f)
-				mOpacities[2] += 0.05f;
+			if (mStartAnimOpacities[2] < 1.0f)
+				mStartAnimOpacities[2] += 0.05f;
 		}
 		else
 		{
 			mLTRB[2].x += 0.1f;
 			mLTRB[2].z += 0.1f;
 
-			if (mOpacities[2] > 0.0f)
-				mOpacities[2] -= 1.5f;
+			if (mStartAnimOpacities[2] > 0.0f)
+				mStartAnimOpacities[2] -= 1.5f;
 		}
 	}
 	else if (mIsStartUI[1])
 	{
-		mOpacities[0] = 0.0f;
-		if (mAnimEndTime - mIngameTime > 0.1f)
+		mStartAnimOpacities[0] = 0.0f;
+		if (mAnimEndTime - mStartAnimTime > 0.1f)
 		{
 			mLTRB[1].y += 0.5f;
 			mLTRB[1].w += 0.5f;
 
-			if (mOpacities[1] < 1.0f)
-				mOpacities[1] += 0.05f;
+			if (mStartAnimOpacities[1] < 1.0f)
+				mStartAnimOpacities[1] += 0.05f;
 		}
 		else
 		{
 			mLTRB[1].y += 0.1f;
 			mLTRB[1].w += 0.1f;
 
-			if (mOpacities[1] > 0.0f)
-				mOpacities[1] -= 1.5f;
+			if (mStartAnimOpacities[1] > 0.0f)
+				mStartAnimOpacities[1] -= 1.5f;
 		}
 	}
 	else if (mIsStartUI[0])
 	{
-		if (mAnimEndTime - mIngameTime > 0.1f)
+		if (mAnimEndTime - mStartAnimTime > 0.1f)
 		{
 			mLTRB[0].y += 0.5f;
 			mLTRB[0].w += 0.5f;
 
-			if (mOpacities[0] < 1.0f)
-				mOpacities[0] += 0.5f;
+			if (mStartAnimOpacities[0] < 1.0f)
+				mStartAnimOpacities[0] += 0.5f;
 		}
 		else
 		{
 			mLTRB[0].x += 0.1f;
 			mLTRB[0].z += 0.1f;
 
-			if (mOpacities[0] > 0.0f)
-				mOpacities[0] -= 1.5f;
+			if (mStartAnimOpacities[0] > 0.0f)
+				mStartAnimOpacities[0] -= 1.5f;
 		}
 	}
 }
 
-void InGameUI::UpdateIngameTime(float Elapsed)
+void InGameUI::TextUpdateIngameTime(float Elapsed)
 {
-	if(mRunningTime>0.0f)
+	if (mRunningTime > 0.0f)
 		mRunningTime -= Elapsed;
 	int m{}, s{};
 	SetTimeMinSec(m, s);
@@ -169,7 +266,7 @@ void InGameUI::UpdateIngameTime(float Elapsed)
 		GetTextBlock()[0].strText.push_back(std::to_string(s)[i]);
 }
 
-void InGameUI::UpdateMyLap()
+void InGameUI::TextUpdateMyLap()
 {
 	for (auto& str : std::to_string(mMyLap))
 		GetTextBlock()[1].strText.push_back(str);
@@ -178,7 +275,7 @@ void InGameUI::UpdateMyLap()
 		GetTextBlock()[2].strText.push_back(str);
 }
 
-void InGameUI::UpdateMyRank()
+void InGameUI::TextUpdateMyRank()
 {
 	GetTextBlock()[3].strText.push_back(('0' + mMyRank));
 	switch (mMyRank)
@@ -202,147 +299,36 @@ void InGameUI::UpdateMyRank()
 	}
 }
 
-void InGameUI::UpdateSpeed()
+void InGameUI::TextUpdateSpeed()
 {
-	/*if (CurrentSpeed >= 1000.0f)
-	{
-		for (int i = 0; i < 6; ++i)
-			GetTextBlock()[4].strText.push_back(std::to_string(CurrentSpeed)[i]);
-	}
-	else if (CurrentSpeed >= 100.0f)
-	{
-		for (int i = 0; i < 5; ++i)
-			GetTextBlock()[4].strText.push_back(std::to_string(CurrentSpeed)[i]);
-	}
-	else if (CurrentSpeed >= 10.0f)
-	{
-		for (int i = 0; i < 4; ++i)
-			GetTextBlock()[4].strText.push_back(std::to_string(CurrentSpeed)[i]);
-	}
-	else
-	{
-		for (int i = 0; i < 3; ++i)
-			GetTextBlock()[4].strText.push_back(std::to_string(0.0f)[i]);
-	}*/
 	GetTextBlock()[4].strText.assign(std::to_string((int)(mCurrentSpeed / FIXED_FLOAT_LIMIT)));
 	for (auto& str : std::string("km/h"))
 		GetTextBlock()[5].strText.push_back(str);
 }
 
-void InGameUI::UpdateMyScore()
+void InGameUI::TextUpdateMyScore()
 {
 	// 텍스트 설정
 	GetTextBlock()[6].strText.assign(std::to_string(mMyScore) + "p");
 }
 
-void InGameUI::SetTimeMinSec(int& m, int& s)
+void InGameUI::SetRankCreditTexts()
 {
-	m = static_cast<int>(mRunningTime) / 60;
-	s = static_cast<int>(mRunningTime) % 60;
-}
+	/*for (int i = 0; i < mTextCountWithoutRankCredit; ++i)
+		GetTextBlock()[i].strText.clear();*/
 
-void InGameUI::UpdateRankCredits()
-{
-	for (int i = 0;i < mTextCountWithoutRankCredit; ++i)
-		GetTextBlock()[i].strText.clear();
-	
-	for (int i = 0; i< mScoreboard.size(); ++i)
+	for (int i = 0; i < mScoreboard.size(); ++i)
 	{
 		GetTextBlock()[mTextCountWithoutRankCredit + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
-		GetTextBlock()[mTextCountWithoutRankCredit + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname);
-		GetTextBlock()[mTextCountWithoutRankCredit + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));
-		GetTextBlock()[mTextCountWithoutRankCredit + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
-		GetTextBlock()[mTextCountWithoutRankCredit + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
+		GetTextBlock()[static_cast<size_t>(mTextCountWithoutRankCredit) + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname);
+		GetTextBlock()[static_cast<size_t>(mTextCountWithoutRankCredit) + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));
+		GetTextBlock()[static_cast<size_t>(mTextCountWithoutRankCredit) + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
+		GetTextBlock()[static_cast<size_t>(mTextCountWithoutRankCredit) + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
 	}
 	SetIndexColor(51, D2D1::ColorF(D2D1::ColorF::Black, 0.8f));
 	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	SetIndexColor(49, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	BuildSolidBrush(GetColors());
-}
-
-void InGameUI::SetScoreboardInfo(
-	int idx, int rank, int score, 
-	int lapCount, int hitCount, 
-	const std::string& name)
-{
-	mScoreboard[idx].rank = rank;
-	mScoreboard[idx].score = score;
-	mScoreboard[idx].lapCount = lapCount;
-	mScoreboard[idx].hitCount = hitCount;
-	mScoreboard[idx].nickname = name;
-}
-
-void InGameUI::SortScoreboard()
-{
-	std::sort(mScoreboard.begin(), mScoreboard.end(),
-		[](const Scoreboard& a, const Scoreboard& b)
-		{
-			return (a.rank < b.rank);
-		});
-}
-
-void InGameUI::Update(float Elapsed, Player* mPlayer)
-{
-	//4초를 세는게 문제. @@ 여기 해야 함
-	//StartTime Set
-	mIngameTime += Elapsed;
-	UINT CountdownTime = START_DELAY_TIME;
-	if (mIngameTime >= START_DELAY_TIME - 1.0f)
-	{
-		if (!mIsStartUI[3]) mAnimEndTime = mIngameTime + 1.0f;
-		mIsStartUI[3] = true;
-	}
-	else if (mIngameTime >= START_DELAY_TIME - 2.0f)
-	{
-		if (!mIsStartUI[2]) mAnimEndTime = mIngameTime + 1.0f;
-		mIsStartUI[2] = true;
-	}
-	else if (mIngameTime >= START_DELAY_TIME - 3.0f)
-	{
-		if (!mIsStartUI[1]) mAnimEndTime = mIngameTime + 1.0f;
-		mIsStartUI[1] = true;
-	}
-	else if (mIngameTime >= START_DELAY_TIME - 4.0f)
-	{
-		if (!mIsStartUI[0]) mAnimEndTime = mIngameTime + 1.0f;
-		mIsStartUI[0] = true;
-	}
-
-	//Time Set
-	if (mIngameTime <= CountdownTime)
-	{
-		StartAnimation();
-		return;
-	}
-	else if (mIngameTime >= mRunningTime)
-	{
-		//GameEnd
-		UpdateRankCredits();
-		return;
-	}
-	else
-	{
-		for (auto& Opac : mOpacities)
-			Opac = 0.0f;
-	}
-
-	mItemCnt = mPlayer->GetItemNum();
-
-	if (mIsReverse)
-		TextUpdateReverseState(Elapsed);
-	else
-		GetTextBlock()[7].strText.clear();
-
-	//UpdateTime
-	UpdateIngameTime(Elapsed);
-	//UpdateLap
-	UpdateMyLap();
-	//UpdateMyRank
-	UpdateMyRank();
-	//UpdateSpeed
-	UpdateSpeed();
-	//UpdateScore
-	UpdateMyScore(); // @@여기 해야함
 }
 
 void InGameUI::TextUpdateReverseState(float Elapsed)
@@ -374,16 +360,28 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		case 'S':
 			mMyScore += 100;
 			break;
-		case 'N':
-			
-			if (mRunningTime > 0.0f)
+		case 'I':
+			if (!mIsStartAnim)
 			{
-				SetRunningTime(0.0f);
-				mIsRankCredit = true;
+				mIsStartAnim = true;
 			}
 			else
 			{
-				SetRunningTime(180.0f);
+				mIsStartAnim = false;
+				mStartAnimTime = 0.0f;
+				for (auto IsStartUI : mIsStartUI)
+					IsStartUI = false;
+			}
+			break;
+		case 'B':
+			if (!mIsRankCredit)
+			{
+				mIsRankCredit = true;
+				for (int i = 0; i < mTextCountWithoutRankCredit; ++i)
+					GetTextBlock()[i].strText.clear();
+			}
+			else
+			{
 				mIsRankCredit = false;
 			}
 			break;
@@ -519,7 +517,7 @@ void InGameUI::Draw(UINT nFrame)
 
 	BeginDraw(nFrame);
 	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt - mIsRankCredit, 1, IsOutlined);
-	DrawBmp(GetLTRB(), 0, 6, mOpacities);
+	DrawBmp(GetLTRB(), 0, 6, mStartAnimOpacities);
 	TextDraw(GetTextBlock());
 	EndDraw(nFrame);
 }
@@ -593,7 +591,6 @@ void InGameUI::SetTextRect()
 		GetTextBlock()[4 * static_cast<size_t>(mTextCountWithoutRankCredit) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.55f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
 		GetTextBlock()[5 * static_cast<size_t>(mTextCountWithoutRankCredit) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.7f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
 	}
-
 }
 
 void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
@@ -623,7 +620,7 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
 	//RankCredits
 	for(int i=0;i<40;++i)
 		colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
@@ -633,15 +630,11 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
 
-
     //D2D1::ColorF colorList[8] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f),D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f), D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f), D2D1::ColorF(D2D1::ColorF::Red, 1.0f), D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f) };
     D2D1::ColorF gradientColors[4] = { D2D1::ColorF(D2D1::ColorF::ForestGreen, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Yellow, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Orange, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Red, gradient_Alpha) };
 	SetColors(colorList);
-
 	BuildBrush(GetColors(), 4, gradientColors);
-    
     SetTextRect();
-
 	//임시 시간
 	SetRunningTime(180.0f);
 }
