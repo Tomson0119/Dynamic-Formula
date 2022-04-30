@@ -51,7 +51,7 @@ public:
     void TextUpdateSpeed();
     void TextUpdateIngameTime(float Elapsed);
     void SetScoreBoardTexts();
-    void TextUpdateReverseState(float Elapsed);
+    void TextUpdateWarning(float Elapsed);
 
     void SetScoreboardInfo(
         int idx, int rank, int score, 
@@ -74,11 +74,12 @@ public:
 
     void ShowScoreBoard(); 
     void ShowStartAnim() { mIsStartAnim = true; }
+    void ShowWarning() { mIsWarning = true; }
 
     std::mutex& GetMutex() { return mScoreboardMutex; }
 
     void SetTimeMinSec(int& m, int& s);
-    void SetWarningText() { GetTextBlock()[7].strText.assign("WARNING"); }
+    //void SetWarningText() { GetTextBlock()[7].strText.assign("WARNING"); }
 
 private:
     float mRunningTime;
@@ -112,7 +113,7 @@ private:
 
     bool mIsStartAnim = false;
     bool mIsScoreBoard = false;
-    bool mIsReverse = false;
+    bool mIsWarning = false;
 
     //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

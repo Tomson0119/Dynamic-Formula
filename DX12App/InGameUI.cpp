@@ -53,8 +53,6 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	for(int i =0;i<40;++i)
 		Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Rank Credits
 	
-	SetWarningText(); //WarningText Set
-
 	//LTRB.resize(GetBitmapCnt());
 	mLTRB.resize(6);
 	FontLoad(Fonts);
@@ -141,8 +139,8 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	for (int i = 0; i < static_cast<int>(GetTextCnt()); ++i)
 		GetTextBlock()[i].strText.clear();
 
-	if (mIsReverse)
-		TextUpdateReverseState(Elapsed);
+	if (mIsWarning)
+		TextUpdateWarning(Elapsed);
 
 	//UpdateTime
 	TextUpdateIngameTime(Elapsed);
@@ -375,23 +373,33 @@ void InGameUI::SetScoreBoardTexts()
 	BuildSolidBrush(GetColors());
 }
 
-void InGameUI::TextUpdateReverseState(float Elapsed)
+void InGameUI::TextUpdateWarning(float Elapsed)
 {
+	float WARNING_DURATION = 5.0f;
 	mWarningTime += Elapsed;
-	SetWarningText();
-	if (mWarningTime <= 0.3f && mWarningAlpha < 1.0f)
+	
+	GetTextBlock()[7].strText.assign("WARNING");
+	if (mWarningTime <= WARNING_DURATION * 0.15f && mWarningAlpha < 1.0f)
 		mWarningAlpha += 0.05f;
-	else if (mWarningTime < 1.7f)
+	else if (mWarningTime < WARNING_DURATION * 0.35f)
 		mWarningAlpha = 1.0f;
-	else if (mWarningTime < 1.9f && mWarningAlpha > 0.0f)
-		mWarningAlpha -= 1.0f;
-	else if (mWarningTime >= 2.0f)
+	else if (mWarningTime < WARNING_DURATION * 0.45f && mWarningAlpha > 0.0f)
+		mWarningAlpha -= 0.1f;
+	else if (mWarningTime <= WARNING_DURATION * 0.51f)
+		mWarningAlpha = 0.0f;
+	else if (mWarningTime <= WARNING_DURATION * 0.65f && mWarningAlpha < 1.0f)
+		mWarningAlpha += 0.05f;
+	else if (mWarningTime < WARNING_DURATION * 0.85f)
+		mWarningAlpha = 1.0f;
+	else if (mWarningTime < WARNING_DURATION * 0.95f && mWarningAlpha > 0.0f)
+		mWarningAlpha -= 0.1f;
+	else if (mWarningTime >= WARNING_DURATION)
 	{
 		mWarningAlpha = 0.0f;
 		mWarningTime = 0.0f;
-		mIsReverse = false;
+		mIsWarning = false;
 	}
-	SetIndexColor(8, D2D1::ColorF(D2D1::ColorF::Red, mWarningAlpha));
+	SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::Red, mWarningAlpha));
 	BuildSolidBrush(GetColors());
 }
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -438,10 +446,10 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			mMyLap += 1;
 			break;*/
 		case 'O': // warning
-			if (!mIsReverse)
-				mIsReverse = true;
+			if (!mIsWarning)
+				mIsWarning = true;
 			else
-				mIsReverse = false;
+				mIsWarning = false;
 			break;
 		}
 	}
@@ -596,7 +604,7 @@ void InGameUI::CreateFontFormat()
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
-	fFontSize.push_back(GetFrameHeight() * 0.15f);
+	fFontSize.push_back(GetFrameHeight() * 0.11f);
 
 	for(int i=0;i<40;++i)
 		fFontSize.push_back(GetFrameHeight() * 0.05f); //ScoreBoards
@@ -628,7 +636,7 @@ void InGameUI::SetTextRect()
     GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.90f);
     GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.95f);
 	GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.75f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.93f, GetFrameHeight() * 0.23f);
-	GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.30f, GetFrameHeight() * 0.30f, GetFrameWidth() * 0.70f, GetFrameHeight() * 0.70f);
+	GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.30f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.70f);
 
 	//ScoreBoards Rank, Ninkname, Score, Lap, MissileHit
 	for (int i = 0; i < 8; ++i)
