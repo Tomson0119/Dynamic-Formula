@@ -848,7 +848,9 @@ void InGameScene::AddParticleObject(ID3D12GraphicsCommandList* cmdList)
 		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 		obj->SetMesh(particleEmittor);
 
-		mPipelines[Layer::Particle]->AppendObject(obj);
+		Pipeline* p = mPipelines[Layer::Particle].get();
+		auto particlePipeline = dynamic_cast<StreamOutputPipeline*>(p);
+		particlePipeline->AppendObject(mDevice.Get(), obj);
 	}
 }
 

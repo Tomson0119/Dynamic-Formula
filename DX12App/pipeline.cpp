@@ -428,6 +428,25 @@ void StreamOutputPipeline::SetAndDraw(
 	Pipeline::Draw(cmdList, false);
 }
 
+void StreamOutputPipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex)
+{
+	mRootParamMatIndex = matIndex;
+	mRootParamCBVIndex = cbvIndex;
+	mRootParamSRVIndex = srvIndex;
+
+	UINT numDescriptors = mObjectMaxCount * 2;
+
+	ThrowIfFailed(device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			numDescriptors,
+			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
+		IID_PPV_ARGS(&mCbvSrvDescriptorHeap)));
+
+	BuildCBV(device);
+	BuildSRV(device);
+}
+
 void StreamOutputPipeline::BuildConstantBuffer(ID3D12Device* device)
 {
 	mObjectCB = std::make_unique<ConstantBuffer<ObjectConstants>>(device, mObjectMaxCount);
@@ -469,11 +488,17 @@ void StreamOutputPipeline::BuildSOPipeline(ID3D12Device* device, ID3D12RootSigna
 		&psoDesc, IID_PPV_ARGS(&mPSO[1])));
 }
 
-void StreamOutputPipeline::AppendObject(const std::shared_ptr<GameObject>& obj)
+void StreamOutputPipeline::AppendObject(ID3D12Device* device, const std::shared_ptr<GameObject>& obj)
 {
+	obj->SetCBVAddress(mConstantBufferGPUHandles[mRenderObjects.size() - 1]);
+	obj->SetSRVAddress(mShaderResourceGPUHandles[mRenderObjects.size() - 1]);
+	
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	cpuHandle.ptr = cpuHandle.ptr * mObjectMaxCount;
+	cpuHandle.ptr += mRenderObjects.size() * gCbvSrvUavDescriptorSize;
+	obj->BuildSRV(device, cpuHandle);
+	
 	mRenderObjects.push_back(obj);
-
-	obj->SetCBVAddress(mGPUHandles[mRenderObjects.size() - 1]);
 }
 
 void StreamOutputPipeline::CreateStreamOutputDesc()
@@ -513,13 +538,28 @@ void StreamOutputPipeline::BuildCBV(ID3D12Device* device)
 	{
 		device->CreateConstantBufferView(&cbvDesc, cpuHandle);
 		
-		mGPUHandles.push_back(gpuHandle);
+		mConstantBufferGPUHandles.push_back(gpuHandle);
 
 		cbvDesc.BufferLocation += stride;
 		cpuHandle.ptr += gCbvSrvUavDescriptorSize;
 		gpuHandle.ptr += gCbvSrvUavDescriptorSize;
 	}
 }
+
+void StreamOutputPipeline::BuildSRV(ID3D12Device* device)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+	gpuHandle.ptr += mObjectMaxCount * gCbvSrvUavDescriptorSize;
+
+	for (int i = 0; i < mObjectMaxCount; ++i)
+	{
+		mShaderResourceGPUHandles.push_back(gpuHandle);
+
+		gpuHandle.ptr += gCbvSrvUavDescriptorSize;
+	}
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////
