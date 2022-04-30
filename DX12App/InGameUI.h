@@ -67,20 +67,26 @@ public:
     void SetMyRank(int rank) { mMyRank = rank; }
     void SetLap(int lap) { mMyLap = lap; }
     void SetSpeed(int Speed) { mCurrentSpeed = Speed; }
-    void GameStart() { mIsStartAnim = true; }
-
+    void SetItemCount(int item) { mItemCnt = item; }
     void SetInvisibleStateTextUI();
     void SetVisibleStateTextUI();
     void SetBitmapPos();
 
+    void ShowScoreBoard(); 
+    void ShowStartAnim() { mIsStartAnim = true; }
+
     std::mutex& GetMutex() { return mScoreboardMutex; }
 
     void SetTimeMinSec(int& m, int& s);
+    void SetWarningText() { GetTextBlock()[7].strText.assign("WARNING"); }
 
 private:
     float mRunningTime;
 
     int mItemCnt = 0;
+
+    float mWarningAlpha = 0.0f;
+
     std::atomic_int mDriftGauge = 0;
 
     float mAnimEndTime = 0.0f;

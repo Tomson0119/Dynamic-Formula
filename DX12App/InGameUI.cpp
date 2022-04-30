@@ -53,6 +53,8 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	for(int i =0;i<40;++i)
 		Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Rank Credits
 	
+	SetWarningText(); //WarningText Set
+
 	//LTRB.resize(GetBitmapCnt());
 	mLTRB.resize(6);
 	FontLoad(Fonts);
@@ -91,6 +93,7 @@ void InGameUI::SetInvisibleStateTextUI()
 		SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
 	for(int i=0;i<3;++i)
 		mIsOutlined[i] = false;
+
 	BuildSolidBrush(GetColors());
 }
 
@@ -98,10 +101,11 @@ void InGameUI::SetVisibleStateTextUI()
 {
 	for (int i = 0; i < mTextCountWithoutScoreBoard; ++i)
 		SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
+	SetIndexColor(49, D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
 	for (int i = 0; i < 3; ++i)
 		mIsOutlined[i] = true;
 	BuildSolidBrush(GetColors());
-
 }
 
 void InGameUI::Update(float Elapsed, Player* mPlayer)
@@ -112,32 +116,33 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	//Time Set
 	if (mIsStartAnim)
 	{
-		// UI띄우기 없애기 
-		SetInvisibleStateTextUI();
-		StartAnimation(Elapsed);
+		SetInvisibleStateTextUI();// UI Invisible
+		StartAnimation(Elapsed); //321Go!
 		return;
 	}
 	else if (mIsScoreBoard)
 	{
-		//GameEnd
-		SetInvisibleStateTextUI();
-		SetScoreBoardTexts();
-		CheckScoreBoardTime(Elapsed);
+		SetInvisibleStateTextUI();//UI Invisible
+		SetScoreBoardTexts();// ScoreBoard Text Input
+		CheckScoreBoardTime(Elapsed); //Show during 5s
 		return;
 	}
-	else if(mRunningTime<=0)
+	else if(mRunningTime<=0.0f)
 	{
-		mRunningTime = 0;
+		mRunningTime = 0.0f;
 		return;
 	}
-	mRunningTime -= Elapsed;
+
 	for (auto& Opac : mStartAnimOpacities)
 		Opac = 0.0f;
+
 	mItemCnt = mPlayer->GetItemNum();
+
+	for (int i = 0; i < static_cast<int>(GetTextCnt()); ++i)
+		GetTextBlock()[i].strText.clear();
+
 	if (mIsReverse)
 		TextUpdateReverseState(Elapsed);
-	else
-		GetTextBlock()[7].strText.clear();
 
 	//UpdateTime
 	TextUpdateIngameTime(Elapsed);
@@ -149,6 +154,8 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	TextUpdateSpeed();
 	//UpdateScore
 	TextUpdateMyScore(); 
+	//UpdateItemCount
+	SetItemCount(mPlayer->GetItemNum());
 }
 
 void InGameUI::StartAnimation(float Elapsed)
@@ -280,14 +287,19 @@ void InGameUI::CheckScoreBoardTime(float Elapsed)
 		mItemCnt = 0;
 	}
 }
+
+void InGameUI::ShowScoreBoard()
+{
+	mIsScoreBoard = true; 
+}
+
 void InGameUI::TextUpdateIngameTime(float Elapsed)
 {
 	if (mRunningTime > 0.0f)
 		mRunningTime -= Elapsed;
 	int m{}, s{};
 	SetTimeMinSec(m, s);
-	for (int i = 0; i < static_cast<int>(GetTextCnt()); ++i)
-		GetTextBlock()[i].strText.clear();
+	
 
 	if (m < 10)
 		GetTextBlock()[0].strText.push_back('0');
@@ -349,9 +361,6 @@ void InGameUI::TextUpdateMyScore()
 
 void InGameUI::SetScoreBoardTexts()
 {
-	/*for (int i = 0; i < mTextCountWithoutScoreBoard; ++i)
-		GetTextBlock()[i].strText.clear();*/
-
 	for (int i = 0; i < mScoreboard.size(); ++i)
 	{
 		GetTextBlock()[mTextCountWithoutScoreBoard + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
@@ -369,20 +378,20 @@ void InGameUI::SetScoreBoardTexts()
 void InGameUI::TextUpdateReverseState(float Elapsed)
 {
 	mWarningTime += Elapsed;
-	std::string Warning{ "WARNING" };
-	GetTextBlock()[7].strText.assign(Warning);
-	
-	if (mWarningTime < 0.1f && GetColors()[7].a < 1.0f)
-		GetColors()[7].a += 0.05f;
-	else if (mWarningTime < 0.7f)
-		GetColors()[7].a = 1.0f;
-	else if (mWarningTime < 0.9f && GetColors()[7].a > 0.0f)
-		GetColors()[7].a -= 0.05f;
-	else if (mWarningTime > 1.0f)
+	SetWarningText();
+	if (mWarningTime <= 0.3f && mWarningAlpha < 1.0f)
+		mWarningAlpha += 0.05f;
+	else if (mWarningTime < 1.7f)
+		mWarningAlpha = 1.0f;
+	else if (mWarningTime < 1.9f && mWarningAlpha > 0.0f)
+		mWarningAlpha -= 1.0f;
+	else if (mWarningTime >= 2.0f)
 	{
-		GetColors()[7].a = 0.0f;
+		mWarningAlpha = 0.0f;
+		mWarningTime = 0.0f;
 		mIsReverse = false;
 	}
+	SetIndexColor(8, D2D1::ColorF(D2D1::ColorF::Red, mWarningAlpha));
 	BuildSolidBrush(GetColors());
 }
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
