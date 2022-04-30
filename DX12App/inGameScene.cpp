@@ -207,7 +207,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
-	mPipelines[Layer::Particle] = make_unique<StreamOutputPipeline>();
+	mPipelines[Layer::DriftParticle] = make_unique<StreamOutputPipeline>();
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.Direction);
 
@@ -222,7 +222,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 
 	mPipelines[Layer::Default]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), defaultShader.get());
 
-	mPipelines[Layer::Particle]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), nullptr);
+	mPipelines[Layer::DriftParticle]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), nullptr);
 
 	mPipelines[Layer::Terrain]->SetWiredFrame(true);
 	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
@@ -806,12 +806,12 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	if (mParticleAddFlag)
 	{
 		mParticleAddFlag = false;
-		AddParticleObject(cmdList);
+		AddDriftParticleObject(cmdList);
 	}
 	if (mParticleDestroyFlag)
 	{
 		mParticleDestroyFlag = false;
-		DestroyParticleObject();
+		DestroyDriftParticleObject();
 	}
 
 	UpdatePlayerObjects();
@@ -837,7 +837,7 @@ void InGameScene::UpdateLight(float elapsed)
 {
 }
 
-void InGameScene::AddParticleObject(ID3D12GraphicsCommandList* cmdList)
+void InGameScene::AddDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 {
 	for (int i = 2; i < 4; ++i)
 	{
@@ -848,15 +848,15 @@ void InGameScene::AddParticleObject(ID3D12GraphicsCommandList* cmdList)
 		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 		obj->SetMesh(particleEmittor);
 
-		Pipeline* p = mPipelines[Layer::Particle].get();
+		Pipeline* p = mPipelines[Layer::DriftParticle].get();
 		auto particlePipeline = dynamic_cast<StreamOutputPipeline*>(p);
 		particlePipeline->AppendObject(mDevice.Get(), obj);
 	}
 }
 
-void InGameScene::DestroyParticleObject()
+void InGameScene::DestroyDriftParticleObject()
 {
-	mPipelines[Layer::Particle]->GetRenderObjects().clear();
+	mPipelines[Layer::DriftParticle]->GetRenderObjects().clear();
 }
 
 void InGameScene::UpdateLightConstants()

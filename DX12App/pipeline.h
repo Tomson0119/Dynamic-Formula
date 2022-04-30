@@ -12,7 +12,7 @@ enum class Layer : int
 	Mirror,
 	Reflected,
 	Billboard,
-	Particle,
+	DriftParticle,
 	ShadowDebug,
 	DynamicCubeMap,
 	MotionBlur,

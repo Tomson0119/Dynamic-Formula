@@ -44,8 +44,8 @@ public:
 
 public:
 	void UpdateLight(float elapsed);
-	void AddParticleObject(ID3D12GraphicsCommandList* cmdList);
-	void DestroyParticleObject();
+	void AddDriftParticleObject(ID3D12GraphicsCommandList* cmdList);
+	void DestroyDriftParticleObject();
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
 	void UpdateVolumetricConstant();
