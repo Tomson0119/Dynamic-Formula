@@ -38,7 +38,8 @@ public:
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
     void CreateFontFormat();
-    void StartAnimation(float Elapsed);
+    void Start321Animation(float Elapsed);
+    void GoAnimation(float Elapsed);
     void CheckScoreBoardTime(float Elapsed);
     std::vector<XMFLOAT4>& GetLTRB() { return mLTRB; }
     void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) mLTRB[i++] = R; }

@@ -115,7 +115,7 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	if (mIsStartAnim)
 	{
 		SetInvisibleStateTextUI();// UI Invisible
-		StartAnimation(Elapsed); //321Go!
+		Start321Animation(Elapsed); //321Go!
 		return;
 	}
 	else if (mIsScoreBoard)
@@ -156,17 +156,27 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	SetItemCount(mPlayer->GetItemNum());
 }
 
-void InGameUI::StartAnimation(float Elapsed)
+void InGameUI::GoAnimation(float Elapsed)
+{
+	mStartAnimTime += Elapsed;
+	if (mStartAnimTime >= START_DELAY_TIME)
+	{
+		mIsStartAnim = false;
+		mStartAnimTime = 0.0f;
+		for (int i=0;i<3;++i)
+			mIsStartUI[i] = false;
+	}
+}
+
+void InGameUI::Start321Animation(float Elapsed)
 {
 	mStartAnimTime += Elapsed;
 	if (mStartAnimTime >=START_DELAY_TIME)
 	{
 		mIsStartAnim = false;
 		mStartAnimTime = 0.0f;
-		for (auto& IsStartUI : mIsStartUI)
-			IsStartUI = false;
-		
-		
+		for (int i = 0; i < 3; ++i)
+			mIsStartUI[i] = false;
 	}
 	else if (mStartAnimTime >= START_DELAY_TIME - 1.0f)
 	{
@@ -188,6 +198,7 @@ void InGameUI::StartAnimation(float Elapsed)
 		if (!mIsStartUI[0]) mAnimEndTime = mStartAnimTime + 1.0f;
 		mIsStartUI[0] = true;
 	}
+
 	if (mIsStartUI[3])
 	{
 		mStartAnimOpacities[2] = 0.0f;
