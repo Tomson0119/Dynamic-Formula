@@ -490,8 +490,8 @@ void StreamOutputPipeline::BuildSOPipeline(ID3D12Device* device, ID3D12RootSigna
 
 void StreamOutputPipeline::AppendObject(ID3D12Device* device, const std::shared_ptr<GameObject>& obj)
 {
-	obj->SetCBVAddress(mConstantBufferGPUHandles[mRenderObjects.size() - 1]);
-	obj->SetSRVAddress(mShaderResourceGPUHandles[mRenderObjects.size() - 1]);
+	obj->SetCBVAddress(mConstantBufferGPUHandles[mRenderObjects.size()]);
+	obj->SetSRVAddress(mShaderResourceGPUHandles[mRenderObjects.size()]);
 	
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	cpuHandle.ptr = cpuHandle.ptr * mObjectMaxCount;

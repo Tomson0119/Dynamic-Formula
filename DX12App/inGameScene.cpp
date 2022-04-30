@@ -207,7 +207,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
-	mPipelines[Layer::DriftParticle] = make_unique<StreamOutputPipeline>();
+	mPipelines[Layer::DriftParticle] = make_unique<StreamOutputPipeline>(2);
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.Direction);
 
