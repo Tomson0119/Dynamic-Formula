@@ -222,15 +222,29 @@ void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
-		mRenderObjects[i]->Draw(
-			cmdList,
-			mRootParamMatIndex,
-			mRootParamCBVIndex,
-			mRootParamSRVIndex,
-			mMaterialCB->GetGPUVirtualAddress(matOffset), 
-			mMaterialCB->GetByteSize(), isSO);
+		if (mMaterialCB)
+		{
+			mRenderObjects[i]->Draw(
+				cmdList,
+				mRootParamMatIndex,
+				mRootParamCBVIndex,
+				mRootParamSRVIndex,
+				mMaterialCB->GetGPUVirtualAddress(matOffset),
+				mMaterialCB->GetByteSize(), isSO);
 
-		matOffset += mRenderObjects[i]->GetMeshCount();
+			matOffset += mRenderObjects[i]->GetMeshCount();
+		}
+		else
+		{
+			mRenderObjects[i]->Draw(
+				cmdList,
+				mRootParamMatIndex,
+				mRootParamCBVIndex,
+				mRootParamSRVIndex,
+				NULL,
+				NULL, isSO);
+
+		}
 	}
 }
 
@@ -312,8 +326,12 @@ void Pipeline::UpdateConstants()
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++) {
 		mObjectCB->CopyData(i, mRenderObjects[i]->GetObjectConstants());
-		mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);		
-		matOffset += mRenderObjects[i]->GetMeshCount();
+
+		if (mMaterialCB)
+		{
+			mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
+			matOffset += mRenderObjects[i]->GetMeshCount();
+		}
 	}
 }
 

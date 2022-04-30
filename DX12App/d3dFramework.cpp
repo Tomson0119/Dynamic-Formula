@@ -286,6 +286,8 @@ void D3DFramework::CreateRenderTargetViews()
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffers[i])));
 		mD3dDevice->CreateRenderTargetView(mSwapChainBuffers[i].Get(), nullptr, rtvHandle);
 		rtvHandle.ptr += gRtvDescriptorSize;
+
+		mSwapChainBuffers[i]->SetName(L"Back Buffer");
 	}
 }
 

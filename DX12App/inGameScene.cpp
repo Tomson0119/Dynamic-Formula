@@ -296,6 +296,8 @@ void InGameScene::CreateVelocityMapViews()
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, 4, mMsaa4xQualityLevels - 1);
 
+	mMsaaVelocityMap->SetName(L"MSAA Velocity Map");
+
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mMsaaVelocityMapRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
@@ -355,6 +357,8 @@ void InGameScene::CreateMsaaViews()
 		DXGI_FORMAT_R8G8B8A8_UNORM,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, 4, mMsaa4xQualityLevels - 1);
+
+	mMsaaTarget->SetName(L"MSAA Target");
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mMsaaRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -842,18 +846,21 @@ void InGameScene::UpdateLight(float elapsed)
 
 void InGameScene::AddDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 {
-	for (int i = 2; i < 4; ++i)
+	if (mPipelines[Layer::DriftParticle]->GetRenderObjects().size() == 0)
 	{
-		auto obj = std::make_shared<SOParticleObject>(*static_cast<PhysicsPlayer*>(mPlayer)->GetWheel(i));
+		for (int i = 2; i < 4; ++i)
+		{
+			auto obj = std::make_shared<SOParticleObject>(*static_cast<PhysicsPlayer*>(mPlayer)->GetWheel(i));
 
-		//이후 개선, 작동하게만 만드는 중
-		auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.2f, 0.2f), Vector3::Normalize(XMFLOAT3(0.0f, 0.3f, -1.0f)), 0.3f, 1, 50);
-		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
-		obj->SetMesh(particleEmittor);
+			//이후 개선, 작동하게만 만드는 중
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.2f, 0.2f), Vector3::Normalize(XMFLOAT3(0.0f, 0.3f, -1.0f)), 0.3f, 1, 50);
+			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
+			obj->SetMesh(particleEmittor);
 
-		Pipeline* p = mPipelines[Layer::DriftParticle].get();
-		auto particlePipeline = dynamic_cast<StreamOutputPipeline*>(p);
-		particlePipeline->AppendObject(mDevice.Get(), obj);
+			Pipeline* p = mPipelines[Layer::DriftParticle].get();
+			auto particlePipeline = dynamic_cast<StreamOutputPipeline*>(p);
+			particlePipeline->AppendObject(mDevice.Get(), obj);
+		}
 	}
 }
 
@@ -1103,7 +1110,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 					continue;
 				}
 			}
-			else if (cubeMapping && layer == Layer::Color)
+			else if (cubeMapping && (layer == Layer::Color || layer== Layer::DriftParticle))
 			{
 				continue;
 			}
