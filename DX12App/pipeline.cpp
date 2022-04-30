@@ -512,7 +512,7 @@ void StreamOutputPipeline::AppendObject(ID3D12Device* device, const std::shared_
 	obj->SetSRVAddress(mShaderResourceGPUHandles[mRenderObjects.size()]);
 	
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	cpuHandle.ptr = cpuHandle.ptr * mObjectMaxCount;
+
 	cpuHandle.ptr += mRenderObjects.size() * gCbvSrvUavDescriptorSize;
 	obj->BuildSRV(device, cpuHandle);
 	
