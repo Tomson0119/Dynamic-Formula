@@ -516,6 +516,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mGameStarted = true;
 		int runningTime = 180; // 180초
 		mpUI->SetRunningTime((float)runningTime);
+		//mpUI->ShowStartAnim(); // 제대로 적용x
 		break;
 	}
 	case SC::REMOVE_PLAYER:
@@ -619,6 +620,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_warning_message* pck = reinterpret_cast<SC::packet_warning_message*>(packet);
 		OutputDebugStringA("Reverse drive warning!\n");
+		mpUI->ShowWarning();
 		// 5초간 유지
 		break;
 	}
@@ -650,6 +652,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			}
 		}
 		mpUI->SortScoreboard();
+		mpUI->ShowScoreBoard();
 		break;
 	}
 	default:

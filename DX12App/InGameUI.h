@@ -2,7 +2,7 @@
 
 #include "UI.h"
 
-constexpr int START_DELAY_TIME = 27;
+constexpr int START_DELAY_TIME = 4;
 constexpr int MAXRECT = 3;
 
 struct Scoreboard
@@ -38,19 +38,21 @@ public:
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
     void CreateFontFormat();
-    void StartAnimation();
+    void Start321Animation(float Elapsed);
+    void GoAnimation(float Elapsed);
+    void CheckScoreBoardTime(float Elapsed);
     std::vector<XMFLOAT4>& GetLTRB() { return mLTRB; }
-    void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) mLTRB.push_back(R); }
+    void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) mLTRB[i++] = R; }
 
     //For Packet
     //void UpdateItemCnt(bool IsPlus) { if (IsPlus&&muItemCnt<2) ++muItemCnt; else if(!IsPlus && muItemCnt>0) --muItemCnt; }
-    void UpdateMyScore();
-    void UpdateMyLap();
-    void UpdateMyRank();
-    void UpdateSpeed();
-    void UpdateIngameTime(float Elapsed);
-    void UpdateRankCredits();
-    void TextUpdateReverseState(float Elapsed);
+    void TextUpdateMyScore();
+    void TextUpdateMyLap();
+    void TextUpdateMyRank();
+    void TextUpdateSpeed();
+    void TextUpdateIngameTime(float Elapsed);
+    void SetScoreBoardTexts();
+    void TextUpdateWarning(float Elapsed);
 
     void SetScoreboardInfo(
         int idx, int rank, int score, 
@@ -66,27 +68,38 @@ public:
     void SetMyRank(int rank) { mMyRank = rank; }
     void SetLap(int lap) { mMyLap = lap; }
     void SetSpeed(int Speed) { mCurrentSpeed = Speed; }
+    void SetItemCount(int item) { mItemCnt = item; }
+    void SetInvisibleStateTextUI();
+    void SetVisibleStateTextUI();
+    void SetBitmapPos();
+
+    void ShowScoreBoard(); 
+    void ShowStartAnim() { mIsStartAnim = true; }
+    void ShowWarning() { mIsWarning = true; }
 
     std::mutex& GetMutex() { return mScoreboardMutex; }
 
     void SetTimeMinSec(int& m, int& s);
-
-    void AnimateStartSignAnim();
+    //void SetWarningText() { GetTextBlock()[7].strText.assign("WARNING"); }
 
 private:
     float mRunningTime;
 
     int mItemCnt = 0;
+
+    float mWarningAlpha = 0.0f;
+
     std::atomic_int mDriftGauge = 0;
 
     float mAnimEndTime = 0.0f;
-    float mOpacities[6] = { 0.0f, 0.0f , 0.0f , 0.0f , 0.0f , 0.0f};
+    float mStartAnimOpacities[6] = { 0.0f, 0.0f , 0.0f , 0.0f , 0.0f , 0.0f};
 
     bool mIsStartUI[4] = { false, false, false, false };
+    bool mIsOutlined[4] = { false, true, true, true };
 
     std::vector<float> mfOpacities;
     std::vector<XMFLOAT4> mLTRB;
-    int mTextCountWithoutRankCredit = 0;
+    int mTextCountWithoutScoreBoard = 0;
     float mWarningTime = 0.0f;
     std::vector<Scoreboard> mScoreboard;
     std::mutex mScoreboardMutex;
@@ -95,10 +108,13 @@ private:
     std::atomic_int mMyRank;
     std::atomic_int mMyLap;
     std::atomic_int mCurrentSpeed;
-    float mIngameTime;
 
-    bool mIsRankCredit = false;
-    bool mIsReverse = false;
+    float mStartAnimTime;
+    float mScoreBoardTime;
+
+    bool mIsStartAnim = false;
+    bool mIsScoreBoard = false;
+    bool mIsWarning = false;
 
     //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
