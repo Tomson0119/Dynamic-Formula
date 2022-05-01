@@ -606,7 +606,6 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 	mProgressMut.lock();
 	mProgress += elapsed;
 	float progress = std::min(1.0f, mProgress / updateRate);
-	OutputDebugStringA((std::to_string(progress) + "\n").c_str());
 	mProgressMut.unlock();
 
 	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
