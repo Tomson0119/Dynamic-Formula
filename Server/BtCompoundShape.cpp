@@ -4,6 +4,52 @@
 
 
 //
+//	BtCompoundShape
+//
+void BtCompoundShape::BuildCompoundShape(std::string_view filename)
+{
+	std::ifstream in_file = Helper::OpenFile(filename);
+
+	mCompoundShape = std::make_unique<btCompoundShape>();
+
+	std::vector<btVector3> positions;
+	std::string info;
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+		std::string type;
+
+		ss >> type;
+
+		if (type == "v")
+		{
+			float x, y, z;
+			ss >> x >> y >> z;
+			z *= -1.0f;
+
+			positions.push_back(btVector3{ x,y,z });
+		}
+		else if (type == "s")
+		{
+			auto convexHull = std::make_unique<btConvexHullShape>();
+
+			for (int i = 0; i < positions.size(); ++i)
+				convexHull->addPoint(positions[i]);
+
+			positions.clear();
+
+			btTransform localTransform;
+			localTransform.setIdentity();
+			localTransform.setOrigin(btVector3(0, 0, 0));
+
+			mCompoundShape->addChildShape(localTransform, convexHull.get());
+			mConvexHullShapes.push_back(std::move(convexHull));
+		}
+	}
+}
+
+
+//
 //	BtCarShape
 //
 BtCarShape::BtCarShape(std::string_view dataPath, std::string_view shapePath)
@@ -122,6 +168,15 @@ void BtCarShape::BuildCompoundShape(std::string_view filename)
 			mConvexHullShapes.push_back(std::move(convexHull));
 		}
 	}
+}
+
+
+//
+// BtMissileShape
+//
+BtMissileShape::BtMissileShape(std::string_view shapePath)
+{
+	BuildCompoundShape(shapePath);
 }
 
 

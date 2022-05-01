@@ -6,8 +6,8 @@ class BtCompoundShape : public BtShapeInterface
 {
 public:
 	virtual ~BtCompoundShape() = default;
-	virtual void LoadShapeData(std::string_view filename) override = 0;
-	virtual void BuildCompoundShape(std::string_view filename) = 0;
+	virtual void LoadShapeData(std::string_view filename) { }
+	virtual void BuildCompoundShape(std::string_view filename);
 
 public:
 	btCollisionShape& GetCompoundShape() const { return *mCompoundShape.get(); }
@@ -48,6 +48,14 @@ public:
 
 private:
 	WheelInfo mWheelInfo;
+};
+
+
+class BtMissileShape : public BtCompoundShape
+{
+public:
+	BtMissileShape(std::string_view shapePath);
+	virtual ~BtMissileShape() = default;
 };
 
 
