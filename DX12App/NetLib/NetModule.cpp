@@ -201,9 +201,9 @@ void NetModule::SetLatency(uint64_t sendTime)
 
 void NetModule::SetUpdateRate()
 {
-	auto duration = Clock::now().time_since_epoch();
-	mUpdateRate = std::chrono::duration_cast<std::chrono::milliseconds>(duration - mTimeStamp).count();
-	mTimeStamp = duration;
+	auto now = Clock::now();
+	mUpdateRate = std::chrono::duration_cast<std::chrono::milliseconds>(now - mTimeStamp).count();
+	mTimeStamp = now;
 }
 
 void NetModule::Init()
