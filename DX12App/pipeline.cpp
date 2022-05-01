@@ -461,6 +461,8 @@ void StreamOutputPipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matInd
 			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
 		IID_PPV_ARGS(&mCbvSrvDescriptorHeap)));
 
+	mCbvSrvDescriptorHeap->SetName(L"SO Descriptor Heap");
+
 	BuildCBV(device);
 	BuildSRV(device);
 }
@@ -513,7 +515,9 @@ void StreamOutputPipeline::AppendObject(ID3D12Device* device, const std::shared_
 	
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
+	cpuHandle.ptr += mObjectMaxCount * gCbvSrvUavDescriptorSize;
 	cpuHandle.ptr += mRenderObjects.size() * gCbvSrvUavDescriptorSize;
+	
 	obj->BuildSRV(device, cpuHandle);
 	
 	mRenderObjects.push_back(obj);

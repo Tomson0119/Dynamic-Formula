@@ -1052,6 +1052,7 @@ void SOParticleObject::Draw(ID3D12GraphicsCommandList* cmdList, UINT rootMatInde
 			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
 			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
 		}
+
 		mMeshes[i]->Draw(cmdList, isSO);
 	}
 }

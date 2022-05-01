@@ -61,7 +61,7 @@ void GSStreamOutput(point VertexIn gin[1],
             vertex.Speed = particle.Speed * gRandFloat4.w;               
             vertex.Type = PARTICLE_TYPE_FLARE;
             vertex.Age.x = 0.0f;
-            vertex.Age.y = 0.2f;
+            vertex.Age.y = 1.0f;
             pointStream.Append(vertex);
         }
         else
