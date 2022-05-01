@@ -4,6 +4,8 @@
 
 constexpr int START_DELAY_TIME = 3;
 constexpr int MAXRECT = 3;
+constexpr int SCOREBOARD_TEXTCOUNT = 46;
+constexpr int TEXTCOUNT = 8;
 
 struct Scoreboard
 {
@@ -40,7 +42,7 @@ public:
     void CreateFontFormat();
     void Start321Animation(float Elapsed);
     void GoAnimation(float Elapsed);
-    void CheckScoreBoardTime();
+    void SetScoreBoard();
     std::vector<XMFLOAT4>& GetLTRB() { return mLTRB; }
     void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) mLTRB[i++] = R; }
 
@@ -93,14 +95,13 @@ private:
     std::atomic_int mDriftGauge = 0;
 
     float mAnimEndTime = 0.0f;
-    float mStartAnimOpacities[6] = { 0.0f, 0.0f , 0.0f, 0.0f, 0.0f, 0.0f };
+    float mBitmapAnimOpacities[7] = { 0.0f, 0.0f , 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 
     bool mIsStartUI[4] = { false, false, false, false };
     bool mIsOutlined[4] = { false, true, true, true };
 
     std::vector<float> mfOpacities;
     std::vector<XMFLOAT4> mLTRB;
-    int mTextCountWithoutScoreBoard = 0;
     float mWarningTime = 0.0f;
     std::vector<Scoreboard> mScoreboard;
     std::mutex mScoreboardMutex;

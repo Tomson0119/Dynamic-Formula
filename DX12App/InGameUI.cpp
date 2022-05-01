@@ -7,15 +7,14 @@ InGameUI::InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 	  mMyScore(0),
 	  mMyRank(1),
 	  mMyLap(0),
-	  mCurrentSpeed(0),
-	mTextCountWithoutScoreBoard(8)
+	  mCurrentSpeed(0)
 	// Text: GameTime, LapCnt, Rank, Velocity
 	// Ranking credits 8 * 5(Rank, Nickname, Score, Lap, Missile)
     //UI: DraftGage, Item1, Item2
 {
-	SetTextCnt(40 + mTextCountWithoutScoreBoard);
+	SetTextCnt(SCOREBOARD_TEXTCOUNT + TEXTCOUNT);
 	SetRectCnt(4);
-	SetBitmapCnt(6);
+	SetBitmapCnt(7);
 	SetGradientCnt(1);
 	SetUICnt();
     SetVectorSize(nFrame);
@@ -38,6 +37,7 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	BitmapFileNames.push_back(L"Resources\\G.png");
 	BitmapFileNames.push_back(L"Resources\\O.png");
 	BitmapFileNames.push_back(L"Resources\\!.png");
+	BitmapFileNames.push_back(L"Resources\\!.png");
 
 	SetBitmapFileNames(BitmapFileNames);
 
@@ -50,11 +50,11 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // km/h
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Score
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Warning
-	for(int i =0;i<40;++i)
+	for(int i =0;i<SCOREBOARD_TEXTCOUNT;++i)
 		Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Rank Credits
 	
 	//LTRB.resize(GetBitmapCnt());
-	mLTRB.resize(6);
+	mLTRB.resize(GetBitmapCnt());
 	FontLoad(Fonts);
 }
 
@@ -87,7 +87,7 @@ void InGameUI::SortScoreboard()
 
 void InGameUI::SetInvisibleStateTextUI()
 {
-	for (int i = 0; i < mTextCountWithoutScoreBoard; ++i)
+	for (int i = 0; i < TEXTCOUNT; ++i)
 		SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
 	for(int i=0;i<3;++i)
 		mIsOutlined[i] = false;
@@ -97,12 +97,13 @@ void InGameUI::SetInvisibleStateTextUI()
 
 void InGameUI::SetVisibleStateTextUI()
 {
-	for (int i = 0; i < mTextCountWithoutScoreBoard; ++i)
+	for (int i = 0; i < TEXTCOUNT; ++i)
 		SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
-	SetIndexColor(49, D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
+	for(int i=0;i<2;++i)
+	SetIndexColor(GetTextCnt() + 1 + i, D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
 	for (int i = 0; i < 3; ++i)
 		mIsOutlined[i] = true;
+	mBitmapAnimOpacities[6] = 0.0f;
 	BuildSolidBrush(GetColors());
 }
 
@@ -119,7 +120,7 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	}
 	else if (mIsScoreBoard)
 	{
-		CheckScoreBoardTime(); //Show during 5s
+		SetScoreBoard(); //Show during 5s
 		return;
 	}
 	else if(mRunningTime<=0.0f)
@@ -134,7 +135,7 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 		return;
 	}
 
-	for (auto& Opac : mStartAnimOpacities)
+	for (auto& Opac : mBitmapAnimOpacities)
 		Opac = 0.0f;
 
 	mItemCnt = mPlayer->GetItemNum();
@@ -166,7 +167,7 @@ void InGameUI::GoAnimation(float Elapsed)
 	for (int i = 0; i < 2; ++i)
 		mIsStartUI[i] = false; // 321 Invisible
 	for(int i=0;i<2;++i)
-		mStartAnimOpacities[i] = 0.0f; //321 Invisible
+		mBitmapAnimOpacities[i] = 0.0f; //321 Invisible
 	// Bitmap위치 원래 위치로 조정
 	SetBitmapPos();
 	//UI띄우기
@@ -183,17 +184,17 @@ void InGameUI::GoAnimation(float Elapsed)
 	}
 	if (mIsStartUI[3])
 	{
-		mStartAnimOpacities[2] = 0.0f;
+		mBitmapAnimOpacities[2] = 0.0f;
 		if (mAnimEndTime - mGoAnimTime > 0.1f)
 		{
-			if (mStartAnimOpacities[3] < 1.0f)
-				mStartAnimOpacities[3] += 0.05f;
+			if (mBitmapAnimOpacities[3] < 1.0f)
+				mBitmapAnimOpacities[3] += 0.05f;
 
-			if (mStartAnimOpacities[4] < 1.0f)
-				mStartAnimOpacities[4] += 0.05f;
+			if (mBitmapAnimOpacities[4] < 1.0f)
+				mBitmapAnimOpacities[4] += 0.05f;
 
-			if (mStartAnimOpacities[5] < 1.0f)
-				mStartAnimOpacities[5] += 0.05f;
+			if (mBitmapAnimOpacities[5] < 1.0f)
+				mBitmapAnimOpacities[5] += 0.05f;
 		}
 	}
 }
@@ -209,7 +210,7 @@ void InGameUI::Start321Animation(float Elapsed)
 		mStartAnimTime = 0.0f;
 		for (int i = 0; i < 3; ++i)
 			mIsStartUI[i] = false;
-		mStartAnimOpacities[2] = 0.0f;
+		mBitmapAnimOpacities[2] = 0.0f;
 		// Bitmap위치 원래 위치로 조정
 		SetBitmapPos();
 		//UI띄우기
@@ -233,42 +234,42 @@ void InGameUI::Start321Animation(float Elapsed)
 
 	if (mIsStartUI[2])
 	{
-		mStartAnimOpacities[1] = 0.0f;
+		mBitmapAnimOpacities[1] = 0.0f;
 		if (mAnimEndTime - mStartAnimTime > 0.1f)
 		{
 			mLTRB[2].y += 0.5f;
 			mLTRB[2].w += 0.5f;
 
-			if (mStartAnimOpacities[2] < 1.0f)
-				mStartAnimOpacities[2] += 0.05f;
+			if (mBitmapAnimOpacities[2] < 1.0f)
+				mBitmapAnimOpacities[2] += 0.05f;
 		}
 		else
 		{
 			mLTRB[2].x += 0.1f;
 			mLTRB[2].z += 0.1f;
 
-			if (mStartAnimOpacities[2] > 0.0f)
-				mStartAnimOpacities[2] -= 1.5f;
+			if (mBitmapAnimOpacities[2] > 0.0f)
+				mBitmapAnimOpacities[2] -= 1.5f;
 		}
 	}
 	else if (mIsStartUI[1])
 	{
-		mStartAnimOpacities[0] = 0.0f;
+		mBitmapAnimOpacities[0] = 0.0f;
 		if (mAnimEndTime - mStartAnimTime > 0.1f)
 		{
 			mLTRB[1].y += 0.5f;
 			mLTRB[1].w += 0.5f;
 
-			if (mStartAnimOpacities[1] < 1.0f)
-				mStartAnimOpacities[1] += 0.05f;
+			if (mBitmapAnimOpacities[1] < 1.0f)
+				mBitmapAnimOpacities[1] += 0.05f;
 		}
 		else
 		{
 			mLTRB[1].y += 0.1f;
 			mLTRB[1].w += 0.1f;
 
-			if (mStartAnimOpacities[1] > 0.0f)
-				mStartAnimOpacities[1] -= 1.5f;
+			if (mBitmapAnimOpacities[1] > 0.0f)
+				mBitmapAnimOpacities[1] -= 1.5f;
 		}
 	}
 	else if (mIsStartUI[0])
@@ -278,34 +279,25 @@ void InGameUI::Start321Animation(float Elapsed)
 			mLTRB[0].y += 0.5f;
 			mLTRB[0].w += 0.5f;
 
-			if (mStartAnimOpacities[0] < 1.0f)
-				mStartAnimOpacities[0] += 0.5f;
+			if (mBitmapAnimOpacities[0] < 1.0f)
+				mBitmapAnimOpacities[0] += 0.5f;
 		}
 		else
 		{
 			mLTRB[0].x += 0.1f;
 			mLTRB[0].z += 0.1f;
 
-			if (mStartAnimOpacities[0] > 0.0f)
-				mStartAnimOpacities[0] -= 1.5f;
+			if (mBitmapAnimOpacities[0] > 0.0f)
+				mBitmapAnimOpacities[0] -= 1.5f;
 		}
 	}
 }
 
-void InGameUI::CheckScoreBoardTime()
+void InGameUI::SetScoreBoard()
 {
 	SetInvisibleStateTextUI();//UI Invisible
 	SetScoreBoardTexts();// ScoreBoard Text Input
-
-	//mScoreBoardTime += Elapsed;
-	//if (mScoreBoardTime > 5.0f)
-	//{
-		//Scene -> Pop();
-		//mScoreBoardTime = 0.0f;;
-		//SetVisibleStateTextUI();
-		//mIsScoreBoard = false;
-		//mItemCnt = 0;
-	//}
+	mBitmapAnimOpacities[6] = 1.0f;
 }
 
 void InGameUI::ShowScoreBoard()
@@ -341,7 +333,6 @@ void InGameUI::TextUpdateIngameTime(float Elapsed)
 
 void InGameUI::TextUpdateMyLap()
 {
-	SetLap(1);
 	for (auto& str : std::to_string(mMyLap))
 		GetTextBlock()[1].strText.push_back(str);
 	//Lap Font Change
@@ -387,17 +378,35 @@ void InGameUI::TextUpdateMyScore()
 
 void InGameUI::SetScoreBoardTexts()
 {
+	GetTextBlock()[TEXTCOUNT].strText.assign("RANK");
+	GetTextBlock()[TEXTCOUNT+1].strText.assign("NICK");
+	GetTextBlock()[TEXTCOUNT+2].strText.assign("SCORE");
+	GetTextBlock()[TEXTCOUNT+3].strText.assign("LAP");
+	GetTextBlock()[TEXTCOUNT+4].strText.assign("MISSILE");
+	int CategoryCount = 5;
+	SetPlayerCount(8);
+	//임시 set
 	for (int i = 0; i < mScoreboard.size(); ++i)
 	{
-		GetTextBlock()[mTextCountWithoutScoreBoard + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
-		GetTextBlock()[static_cast<size_t>(mTextCountWithoutScoreBoard) + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname);
-		GetTextBlock()[static_cast<size_t>(mTextCountWithoutScoreBoard) + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));
-		GetTextBlock()[static_cast<size_t>(mTextCountWithoutScoreBoard) + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
-		GetTextBlock()[static_cast<size_t>(mTextCountWithoutScoreBoard) + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + static_cast<size_t>(i)].strText.assign(std::to_string(i+1));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (1 * 8) + static_cast<size_t>(i)].strText.assign("id" + std::to_string(i + 1)); //21 22 23...
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(500 * (i + 1)));// 29 30 31...
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(3*i));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(2*i));
 	}
-	SetIndexColor(51, D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
-	SetIndexColor(50, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
-	SetIndexColor(49, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
+	GetTextBlock()[GetTextCnt()-1].strText.assign("SCORE BOARD");
+
+	/*for (int i = 0; i < mScoreboard.size(); ++i)
+	{
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) +  static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname);
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
+	}*/
+	SetIndexColor(GetTextCnt() + 3, D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
+	SetIndexColor(GetTextCnt() + 2, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
+	SetIndexColor(GetTextCnt()+1, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	BuildSolidBrush(GetColors());
 }
 
@@ -448,23 +457,23 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		case 'S':
 			mMyScore += 100;
 			break;
-		case 'L':
-			if (!mIsStartAnim)
-			{
-				mIsStartAnim = true;
-			}
-			else
-			{
-				mIsStartAnim = false;
-				mStartAnimTime = 0.0f;
-				for (auto &IsStartUI : mIsStartUI)
-					IsStartUI = false;
-				// Bitmap위치 원래 위치로 조정
-				SetBitmapPos();
-				//UI띄우기
-				SetVisibleStateTextUI();
-			}
-			break;
+		//case 'L':
+		//	if (!mIsStartAnim)
+		//	{
+		//		mIsStartAnim = true;
+		//	}
+		//	else
+		//	{
+		//		mIsStartAnim = false;
+		//		mStartAnimTime = 0.0f;
+		//		for (auto &IsStartUI : mIsStartUI)
+		//			IsStartUI = false;
+		//		// Bitmap위치 원래 위치로 조정
+		//		SetBitmapPos();
+		//		//UI띄우기
+		//		SetVisibleStateTextUI();
+		//	}
+		//	break;
 		case 'Y':
 			if (!mIsScoreBoard)
 			{
@@ -490,9 +499,9 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 				mIsGoAnim = false;
 			}
 			break;
-		/*case 'L':
+		case 'L':
 			mMyLap += 1;
-			break;*/
+			break;
 		case 'O': // warning
 			if (!mIsWarning)
 				mIsWarning = true;
@@ -573,55 +582,10 @@ void InGameUI::Draw(UINT nFrame)
 		} //ScoreBoards
     };
 	
-	XMFLOAT4 LTRB[7] =
-	{
-		{
-			GetFrameWidth() * 0.4f,
-			GetFrameHeight() * 0.4f,
-			GetFrameWidth() * 0.6f,
-			GetFrameHeight() * 0.6f
-		},
-		{
-			GetFrameWidth() * 0.4f,
-			GetFrameHeight() * 0.4f,
-			GetFrameWidth() * 0.6f,
-			GetFrameHeight() * 0.6f
-		},
-		{
-			GetFrameWidth() * 0.4f,
-			GetFrameHeight() * 0.4f,
-			GetFrameWidth() * 0.6f,
-			GetFrameHeight() * 0.6f
-		},
-		{
-			GetFrameWidth() * 0.4f,
-			GetFrameHeight() * 0.4f,
-			GetFrameWidth() * 0.6f,
-			GetFrameHeight() * 0.6f
-		},
-		{
-			GetFrameWidth() * 0.4f,
-			GetFrameHeight() * 0.4f,
-			GetFrameWidth() * 0.6f,
-			GetFrameHeight() * 0.6f
-		},
-		{
-			GetFrameWidth() * 0.4f,
-			GetFrameHeight() * 0.4f,
-			GetFrameWidth() * 0.6f,
-			GetFrameHeight() * 0.6f
-		},
-		{
-			GetFrameWidth() * 0.4f,
-			GetFrameHeight() * 0.4f,
-			GetFrameWidth() * 0.6f,
-			GetFrameHeight() * 0.6f
-		}
-	};
-
 	BeginDraw(nFrame);
+	DrawBmp(GetLTRB(), 6, 1, mBitmapAnimOpacities);
 	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt - mIsScoreBoard /*InvisibleRectCount*/, 1, mIsOutlined);
-	DrawBmp(GetLTRB(), 0, 6, mStartAnimOpacities);
+	DrawBmp(GetLTRB(), 0, 6, mBitmapAnimOpacities);
 	TextDraw(GetTextBlock());
 	EndDraw(nFrame);
 }
@@ -639,23 +603,29 @@ void InGameUI::CreateFontFormat()
 	Fonts.push_back(L"abberancy"); // Score
 	Fonts.push_back(L"abberancy"); // Warning
 
-	for(int i=0;i<40;++i)
+	for(int i=0;i< SCOREBOARD_TEXTCOUNT;++i)
 		Fonts.push_back(L"FivoSans-Regular"); //ScoreBoards
 
 	SetFonts(Fonts);
 
 	std::vector<float> fFontSize;
 	fFontSize.push_back(GetFrameHeight() * 0.04f); 
-	fFontSize.push_back(GetFrameHeight() * 0.06f);
-	fFontSize.push_back(GetFrameHeight() * 0.06f);
+	fFontSize.push_back(GetFrameHeight() * 0.07f);
+	fFontSize.push_back(GetFrameHeight() * 0.04f);
 	fFontSize.push_back(GetFrameHeight() * 0.07f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	fFontSize.push_back(GetFrameHeight() * 0.11f);
 
-	for(int i=0;i<40;++i)
-		fFontSize.push_back(GetFrameHeight() * 0.05f); //ScoreBoards
+	int CategoryCount = 5;
+
+	for (int i = 0; i < CategoryCount; ++i)
+		fFontSize.push_back(GetFrameHeight() * 0.045f);
+
+	for(int i=CategoryCount;i<SCOREBOARD_TEXTCOUNT-1;++i)
+		fFontSize.push_back(GetFrameHeight() * 0.04f); //ScoreBoards
+	fFontSize.push_back(GetFrameHeight() * 0.05f);
 	SetFontSize(fFontSize);
 
 	std::vector<DWRITE_TEXT_ALIGNMENT> TextAlignments;
@@ -669,8 +639,8 @@ void InGameUI::CreateFontFormat()
 	TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_TRAILING;
 	TextAlignments[7] = DWRITE_TEXT_ALIGNMENT_CENTER;
 	
-	for(size_t i=0;i<40;++i)
-		TextAlignments[8+i] = DWRITE_TEXT_ALIGNMENT_LEADING; //ScoreBoards
+	for(size_t i=TEXTCOUNT;i<GetTextCnt();++i)
+		TextAlignments[i] = DWRITE_TEXT_ALIGNMENT_CENTER; //ScoreBoards
 
     UI::CreateFontFormat(GetFontSize(), GetFonts(), TextAlignments);
 }
@@ -678,8 +648,8 @@ void InGameUI::CreateFontFormat()
 void InGameUI::SetTextRect()
 {//Time, LapNum, Lap, Rank, Speed, km/h, Score
     GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.03f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.20f, GetFrameHeight() * 0.21f);
-	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.05f, GetFrameHeight() * 0.141f);
-    GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.048f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.16f, GetFrameHeight() * 0.141f);
+	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(-(GetFrameWidth() *0.1f) , GetFrameHeight() * 0.09f, GetFrameWidth() * 0.07f, GetFrameHeight() * 0.13f);
+    GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.068f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.18f, GetFrameHeight() * 0.141f);
     GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, GetFrameHeight() * 0.10f, GetFrameWidth() * 0.9f, GetFrameHeight() * 0.16f);
     GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.90f);
     GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.95f);
@@ -687,14 +657,25 @@ void InGameUI::SetTextRect()
 	GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.15f, GetFrameHeight() * 0.30f, GetFrameWidth() * 0.85f, GetFrameHeight() * 0.70f);
 
 	//ScoreBoards Rank, Ninkname, Score, Lap, MissileHit
+	float HeightSize = 0.06f;
+	int CategoryCount = 5;
+	
+	GetTextBlock()[TEXTCOUNT].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.1f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.20f, GetFrameHeight() * 0.25f);
+	GetTextBlock()[TEXTCOUNT+1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.2f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.50f, GetFrameHeight() * 0.25f);
+	GetTextBlock()[TEXTCOUNT+2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.50f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.65f, GetFrameHeight() * 0.25f);
+	GetTextBlock()[TEXTCOUNT+3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.65f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.25f);
+	GetTextBlock()[TEXTCOUNT+4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.75f, GetFrameHeight() * 0.15f, GetFrameWidth() * 0.90f, GetFrameHeight() * 0.25f);
+
+
 	for (int i = 0; i < 8; ++i)
 	{
-		GetTextBlock()[static_cast<size_t>(mTextCountWithoutScoreBoard)+static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.1f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.5f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
-		GetTextBlock()[2* static_cast<size_t>(mTextCountWithoutScoreBoard) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.1f + (i* (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.75f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
-		GetTextBlock()[3 * static_cast<size_t>(mTextCountWithoutScoreBoard) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.4f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 0.9f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
-		GetTextBlock()[4 * static_cast<size_t>(mTextCountWithoutScoreBoard) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.55f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
-		GetTextBlock()[5 * static_cast<size_t>(mTextCountWithoutScoreBoard) + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.7f, GetFrameHeight() * 0.1f + (i * (GetFrameHeight() * 0.05f)), GetFrameWidth() * 1.0f, GetFrameHeight() * 0.2f + (i * (GetFrameHeight() * 0.05f)));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT) + CategoryCount + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.1f, GetFrameHeight() * 0.25f + (i * (GetFrameHeight() * HeightSize)), GetFrameWidth() * 0.20f, GetFrameHeight() * 0.35f + (i * (GetFrameHeight() * HeightSize)));
+		GetTextBlock()[2* static_cast<size_t>(TEXTCOUNT) + CategoryCount + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.20f, GetFrameHeight() * 0.25f + (i* (GetFrameHeight() * HeightSize)), GetFrameWidth() * 0.50f, GetFrameHeight() * 0.35f + (i * (GetFrameHeight() * HeightSize)));
+		GetTextBlock()[3 * static_cast<size_t>(TEXTCOUNT) + CategoryCount + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.50f, GetFrameHeight() * 0.25f + (i * (GetFrameHeight() * HeightSize)), GetFrameWidth() * 0.65f, GetFrameHeight() * 0.35f + (i * (GetFrameHeight() * HeightSize)));
+		GetTextBlock()[4 * static_cast<size_t>(TEXTCOUNT) + CategoryCount + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.65f, GetFrameHeight() * 0.25f + (i * (GetFrameHeight() * HeightSize)), GetFrameWidth() * 0.75f, GetFrameHeight() * 0.35f + (i * (GetFrameHeight() * HeightSize)));
+		GetTextBlock()[5 * static_cast<size_t>(TEXTCOUNT) + CategoryCount + static_cast<size_t>(i)].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.75f, GetFrameHeight() * 0.25f + (i * (GetFrameHeight() * HeightSize)), GetFrameWidth() * 0.90f, GetFrameHeight() * 0.35f + (i * (GetFrameHeight() * HeightSize)));
 	}
+	GetTextBlock()[SCOREBOARD_TEXTCOUNT + TEXTCOUNT - 1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.30f, GetFrameHeight() * 0.05f, GetFrameWidth() * 0.70f, GetFrameHeight() * 0.2f);
 }
 
 void InGameUI::SetBitmapPos()
@@ -706,6 +687,7 @@ void InGameUI::SetBitmapPos()
 	bitmapLTRB2.push_back({ GetFrameWidth() * 0.31f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.51f, GetFrameHeight() * 0.6f });
 	bitmapLTRB2.push_back({ GetFrameWidth() * 0.4f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.6f });
 	bitmapLTRB2.push_back({ GetFrameWidth() * 0.49f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.69f, GetFrameHeight() * 0.6f });
+	bitmapLTRB2.push_back({0.0f , 0.0f, GetFrameWidth(), GetFrameHeight()});
 
 	SetLTRB(bitmapLTRB2);
 }
@@ -729,7 +711,7 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
 	//ScoreBoards
-	for(int i=0;i<40;++i)
+	for(int i=0;i<SCOREBOARD_TEXTCOUNT;++i)
 		colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f));
