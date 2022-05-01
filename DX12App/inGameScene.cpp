@@ -519,6 +519,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_ready_signal* pck = reinterpret_cast<SC::packet_ready_signal*>(packet);
 		// TODO: Show countdown image..
+		mpUI->ShowStartAnim();
 		break;
 	}
 	case SC::START_SIGNAL:
@@ -529,6 +530,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugStringA(("Delay: " + std::to_string(pck->running_time_sec) + "\n").c_str());
 
 		//mpUI->SetDelayTime((float)pck->delay_time_msec / 1000.0f);
+		mpUI->ShowGoAnim();
 		mpUI->SetRunningTime((float)pck->running_time_sec);
 		//mpUI->ShowStartAnim(); // 
 
@@ -840,8 +842,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	
 	UpdateConstants(timer);
 
-	if(mGameStarted)
-		mpUI.get()->Update(elapsed, mPlayer);
+	
+	mpUI.get()->Update(elapsed, mPlayer);
 }
 
 void InGameScene::UpdateLight(float elapsed)

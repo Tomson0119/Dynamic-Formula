@@ -114,10 +114,10 @@ private:
     float mGoAnimTime = 0.0f;
     float mScoreBoardTime = 0.0f;
 
-    bool mIsGoAnim = false;
-    bool mIsStartAnim = false;
-    bool mIsScoreBoard = false;
-    bool mIsWarning = false;
+    std::atomic_bool mIsGoAnim = false;
+    std::atomic_bool mIsStartAnim = false;
+    std::atomic_bool mIsScoreBoard = false;
+    std::atomic_bool mIsWarning = false;
 
     //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

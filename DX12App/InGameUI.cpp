@@ -43,8 +43,8 @@ void InGameUI::SetVectorSize(UINT nFrame)
 
 	std::vector<std::wstring> Fonts;
 	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //Time
-	Fonts.push_back(L"Fonts\\FivoSans-Regular.otf"); //LapNum
-	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Lap
+	Fonts.push_back(L"Fonts\\Xenogears.ttf"); //LapNum
+	Fonts.push_back(L"Fonts\\Xenogears.ttf"); // Lap
 	Fonts.push_back(L"Fonts\\Xenogears.ttf"); // Rank
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // Speed
 	Fonts.push_back(L"Fonts\\abberancy.ttf"); // km/h
@@ -218,7 +218,8 @@ void InGameUI::GoAnimation(float Elapsed)
 void InGameUI::Start321Animation(float Elapsed)
 {
 	SetInvisibleStateTextUI();// UI Invisible
-	mStartAnimTime += Elapsed;
+	if(mIsStartAnim)
+		mStartAnimTime += Elapsed;
 	if (mStartAnimTime >=START_DELAY_TIME)
 	{
 		mIsStartAnim = false;
@@ -359,11 +360,11 @@ void InGameUI::TextUpdateIngameTime(float Elapsed)
 
 void InGameUI::TextUpdateMyLap()
 {
+	SetLap(1);
 	for (auto& str : std::to_string(mMyLap))
 		GetTextBlock()[1].strText.push_back(str);
 	//Lap Font Change
-	for (auto& str : std::string{ "Lap" })
-		GetTextBlock()[2].strText.push_back(str);
+	GetTextBlock()[2].strText.assign("Lap");
 }
 
 void InGameUI::TextUpdateMyRank()
@@ -421,23 +422,31 @@ void InGameUI::SetScoreBoardTexts()
 
 void InGameUI::TextUpdateWarning(float Elapsed)
 {
-	float WARNING_DURATION = 5.0f;
+	float WARNING_DURATION = 7.5f;
 	mWarningTime += Elapsed;
 	
-	GetTextBlock()[7].strText.assign("WARNING");
-	if (mWarningTime <= WARNING_DURATION * 0.15f && mWarningAlpha < 1.0f)
+	GetTextBlock()[7].strText.assign("WRONG WAY");
+	if (mWarningTime <= WARNING_DURATION * 0.10f && mWarningAlpha < 1.0f)
 		mWarningAlpha += 0.05f;
-	else if (mWarningTime < WARNING_DURATION * 0.35f)
+	else if (mWarningTime < WARNING_DURATION * 0.28f)
 		mWarningAlpha = 1.0f;
-	else if (mWarningTime < WARNING_DURATION * 0.45f && mWarningAlpha > 0.0f)
+	else if (mWarningTime < WARNING_DURATION * 0.32f && mWarningAlpha > 0.0f)
 		mWarningAlpha -= 0.1f;
-	else if (mWarningTime <= WARNING_DURATION * 0.51f)
+	else if (mWarningTime <= WARNING_DURATION * 0.33f)
 		mWarningAlpha = 0.0f;
-	else if (mWarningTime <= WARNING_DURATION * 0.65f && mWarningAlpha < 1.0f)
+	else if (mWarningTime <= WARNING_DURATION * 0.43f && mWarningAlpha < 1.0f)
 		mWarningAlpha += 0.05f;
-	else if (mWarningTime < WARNING_DURATION * 0.85f)
+	else if (mWarningTime < WARNING_DURATION * 0.61f)
 		mWarningAlpha = 1.0f;
-	else if (mWarningTime < WARNING_DURATION * 0.95f && mWarningAlpha > 0.0f)
+	else if (mWarningTime < WARNING_DURATION * 0.65f && mWarningAlpha > 0.0f)
+		mWarningAlpha -= 0.1f;
+	else if (mWarningTime < WARNING_DURATION * 0.66f && mWarningAlpha > 0.0f)
+		mWarningAlpha = 0.0f;
+	else if (mWarningTime <= WARNING_DURATION * 0.76f && mWarningAlpha < 1.0f)
+		mWarningAlpha += 0.05f;
+	else if (mWarningTime < WARNING_DURATION * 0.95f)
+		mWarningAlpha = 1.0f;
+	else if (mWarningTime < WARNING_DURATION * 0.99f && mWarningAlpha > 0.0f)
 		mWarningAlpha -= 0.1f;
 	else if (mWarningTime >= WARNING_DURATION)
 	{
@@ -641,8 +650,8 @@ void InGameUI::CreateFontFormat()
     std::vector<std::wstring> Fonts;
 	//Manrope-Regular
     Fonts.push_back(L"FivoSans-Regular"); // Time
-    Fonts.push_back(L"FivoSans-Regular"); //LapNum
-	Fonts.push_back(L"abberancy"); // Lap
+    Fonts.push_back(L"Xenogears"); //LapNum
+	Fonts.push_back(L"Xenogears"); // Lap
     Fonts.push_back(L"Xenogears"); // Rank
     Fonts.push_back(L"abberancy"); // Speed
 	Fonts.push_back(L"abberancy"); // km/h
@@ -688,13 +697,13 @@ void InGameUI::CreateFontFormat()
 void InGameUI::SetTextRect()
 {//Time, LapNum, Lap, Rank, Speed, km/h, Score
     GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.03f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.20f, GetFrameHeight() * 0.21f);
-	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.1f, GetFrameWidth() * 0.05f, GetFrameHeight() * 0.14f);
+	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(0.0f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.05f, GetFrameHeight() * 0.141f);
     GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.048f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.16f, GetFrameHeight() * 0.141f);
     GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, GetFrameHeight() * 0.10f, GetFrameWidth() * 0.9f, GetFrameHeight() * 0.16f);
     GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.90f);
     GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.95f);
 	GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.75f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.93f, GetFrameHeight() * 0.23f);
-	GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.30f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.70f);
+	GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.15f, GetFrameHeight() * 0.30f, GetFrameWidth() * 0.85f, GetFrameHeight() * 0.70f);
 
 	//ScoreBoards Rank, Ninkname, Score, Lap, MissileHit
 	for (int i = 0; i < 8; ++i)
