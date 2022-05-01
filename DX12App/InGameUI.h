@@ -2,7 +2,7 @@
 
 #include "UI.h"
 
-constexpr int START_DELAY_TIME = 4;
+constexpr int START_DELAY_TIME = 3;
 constexpr int MAXRECT = 3;
 
 struct Scoreboard
@@ -76,6 +76,7 @@ public:
     void ShowScoreBoard(); 
     void ShowStartAnim() { mIsStartAnim = true; }
     void ShowWarning() { mIsWarning = true; }
+    void ShowGoAnim() { mIsGoAnim = true; mIsStartUI[3] = true; }
 
     std::mutex& GetMutex() { return mScoreboardMutex; }
 
@@ -92,7 +93,7 @@ private:
     std::atomic_int mDriftGauge = 0;
 
     float mAnimEndTime = 0.0f;
-    float mStartAnimOpacities[6] = { 0.0f, 0.0f , 0.0f , 0.0f , 0.0f , 0.0f};
+    float mStartAnimOpacities[6] = { 0.0f, 0.0f , 0.0f, 0.0f, 0.0f, 0.0f };
 
     bool mIsStartUI[4] = { false, false, false, false };
     bool mIsOutlined[4] = { false, true, true, true };
@@ -109,9 +110,11 @@ private:
     std::atomic_int mMyLap;
     std::atomic_int mCurrentSpeed;
 
-    float mStartAnimTime;
-    float mScoreBoardTime;
+    float mStartAnimTime = 0.0f;
+    float mGoAnimTime = 0.0f;
+    float mScoreBoardTime = 0.0f;
 
+    bool mIsGoAnim = false;
     bool mIsStartAnim = false;
     bool mIsScoreBoard = false;
     bool mIsWarning = false;

@@ -131,6 +131,21 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 		return;
 	}
 
+	if (mIsGoAnim)
+	{
+		mIsStartAnim = false;
+		mStartAnimTime = 0.0f;
+		for (int i = 0; i < 2; ++i)
+			mIsStartUI[i] = false;
+		//mStartAnimOpacities[2] = 0.0f;
+		// Bitmap위치 원래 위치로 조정
+		SetBitmapPos();
+		//UI띄우기
+		SetVisibleStateTextUI();
+		GoAnimation(Elapsed);
+		return;
+	}
+
 	for (auto& Opac : mStartAnimOpacities)
 		Opac = 0.0f;
 
@@ -158,13 +173,46 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 
 void InGameUI::GoAnimation(float Elapsed)
 {
-	mStartAnimTime += Elapsed;
-	if (mStartAnimTime >= START_DELAY_TIME)
+	mGoAnimTime += Elapsed;
+	mAnimEndTime = 1.0f;
+	if (mGoAnimTime >= 1.0f)
 	{
-		mIsStartAnim = false;
-		mStartAnimTime = 0.0f;
-		for (int i=0;i<3;++i)
-			mIsStartUI[i] = false;
+		mIsGoAnim = false;
+		mGoAnimTime = 0.0f;
+		mIsStartUI[3] = false;
+		SetBitmapPos();
+	}
+	if (mIsStartUI[3])
+	{
+		mStartAnimOpacities[2] = 0.0f;
+		if (mAnimEndTime - mGoAnimTime > 0.1f)
+		{
+			if (mStartAnimOpacities[3] < 1.0f)
+				mStartAnimOpacities[3] += 0.05f;
+
+			if (mStartAnimOpacities[4] < 1.0f)
+				mStartAnimOpacities[4] += 0.05f;
+
+			if (mStartAnimOpacities[5] < 1.0f)
+				mStartAnimOpacities[5] += 0.05f;
+		}
+		/*else if (mAnimEndTime - mGoAnimTime > 0.01f)
+		{
+			if (mStartAnimOpacities[3] > 0.0f)
+				mStartAnimOpacities[3] -= 0.08f;
+
+			if (mStartAnimOpacities[4] > 0.0f)
+				mStartAnimOpacities[4] -= 0.08f;
+
+			if (mStartAnimOpacities[5] > 0.0f)
+				mStartAnimOpacities[5] -= 0.08f;
+		}
+		else 
+		{
+			mStartAnimOpacities[3] = 0.0f;
+			mStartAnimOpacities[4] = 0.0f;
+			mStartAnimOpacities[5] = 0.0f;
+		}*/
 	}
 }
 
@@ -177,51 +225,29 @@ void InGameUI::Start321Animation(float Elapsed)
 		mStartAnimTime = 0.0f;
 		for (int i = 0; i < 3; ++i)
 			mIsStartUI[i] = false;
+		mStartAnimOpacities[2] = 0.0f;
+		// Bitmap위치 원래 위치로 조정
+		SetBitmapPos();
+		//UI띄우기
+		SetVisibleStateTextUI();
 	}
 	else if (mStartAnimTime >= START_DELAY_TIME - 1.0f)
-	{
-		if (!mIsStartUI[3]) mAnimEndTime = mStartAnimTime + 1.0f;
-		mIsStartUI[3] = true;
-	}
-	else if (mStartAnimTime >= START_DELAY_TIME - 2.0f)
 	{
 		if (!mIsStartUI[2]) mAnimEndTime = mStartAnimTime + 1.0f;
 		mIsStartUI[2] = true;
 	}
-	else if (mStartAnimTime >= START_DELAY_TIME - 3.0f)
+	else if (mStartAnimTime >= START_DELAY_TIME - 2.0f)
 	{
 		if (!mIsStartUI[1]) mAnimEndTime = mStartAnimTime + 1.0f;
 		mIsStartUI[1] = true;
 	}
-	else if (mStartAnimTime >= START_DELAY_TIME - 4.0f)
+	else if (mStartAnimTime >= START_DELAY_TIME - 3.0f)
 	{
 		if (!mIsStartUI[0]) mAnimEndTime = mStartAnimTime + 1.0f;
 		mIsStartUI[0] = true;
 	}
 
-	if (mIsStartUI[3])
-	{
-		mStartAnimOpacities[2] = 0.0f;
-		if (mAnimEndTime - mStartAnimTime > 0.1f)
-		{
-			if (mStartAnimOpacities[3] < 1.0f)
-				mStartAnimOpacities[3] += 0.05f;
-
-			if (mStartAnimOpacities[4] < 1.0f)
-				mStartAnimOpacities[4] += 0.05f;
-
-			if (mStartAnimOpacities[5] < 1.0f)
-				mStartAnimOpacities[5] += 0.05f;
-		}
-		else
-		{
-			mStartAnimOpacities[3] = 0.0f;
-			mStartAnimOpacities[4] = 0.0f;
-			mStartAnimOpacities[5] = 0.0f;
-
-		}
-	}
-	else if (mIsStartUI[2])
+	if (mIsStartUI[2])
 	{
 		mStartAnimOpacities[1] = 0.0f;
 		if (mAnimEndTime - mStartAnimTime > 0.1f)
@@ -440,7 +466,7 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 				SetVisibleStateTextUI();
 			}
 			break;
-		case 'B':
+		case 'Y':
 			if (!mIsScoreBoard)
 			{
 				mIsScoreBoard = true;
@@ -451,6 +477,18 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 				SetVisibleStateTextUI();
 				mIsScoreBoard = false;
 				mItemCnt = 0;
+			}
+			break;
+		case 'U':
+			if (!mIsGoAnim)
+			{
+				mIsGoAnim = true;
+				mIsStartUI[3] = true;
+			}
+			else
+			{
+				mGoAnimTime = 0.0f;
+				mIsGoAnim = false;
 			}
 			break;
 		/*case 'L':
