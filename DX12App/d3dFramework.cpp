@@ -80,7 +80,7 @@ bool D3DFramework::InitDirect3D()
 	CreateRtvDsvDescriptorHeaps();
 	CreateSwapChain();
 
-	ChangeFullScreenState();
+	//ChangeFullScreenState();
 	OnResize();
 
 	return true;
