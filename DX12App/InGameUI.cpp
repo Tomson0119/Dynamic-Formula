@@ -119,7 +119,7 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	}
 	else if (mIsScoreBoard)
 	{
-		CheckScoreBoardTime(Elapsed); //Show during 5s
+		CheckScoreBoardTime(); //Show during 5s
 		return;
 	}
 	else if(mRunningTime<=0.0f)
@@ -195,23 +195,6 @@ void InGameUI::GoAnimation(float Elapsed)
 			if (mStartAnimOpacities[5] < 1.0f)
 				mStartAnimOpacities[5] += 0.05f;
 		}
-		/*else if (mAnimEndTime - mGoAnimTime > 0.01f)
-		{
-			if (mStartAnimOpacities[3] > 0.0f)
-				mStartAnimOpacities[3] -= 0.08f;
-
-			if (mStartAnimOpacities[4] > 0.0f)
-				mStartAnimOpacities[4] -= 0.08f;
-
-			if (mStartAnimOpacities[5] > 0.0f)
-				mStartAnimOpacities[5] -= 0.08f;
-		}
-		else 
-		{
-			mStartAnimOpacities[3] = 0.0f;
-			mStartAnimOpacities[4] = 0.0f;
-			mStartAnimOpacities[5] = 0.0f;
-		}*/
 	}
 }
 
@@ -309,22 +292,20 @@ void InGameUI::Start321Animation(float Elapsed)
 	}
 }
 
-void InGameUI::CheckScoreBoardTime(float Elapsed)
+void InGameUI::CheckScoreBoardTime()
 {
 	SetInvisibleStateTextUI();//UI Invisible
 	SetScoreBoardTexts();// ScoreBoard Text Input
 
-	mScoreBoardTime += Elapsed;
-	if (mScoreBoardTime > 5.0f)
-	{
-
+	//mScoreBoardTime += Elapsed;
+	//if (mScoreBoardTime > 5.0f)
+	//{
 		//Scene -> Pop();
-
-		mScoreBoardTime = 0.0f;;
-		SetVisibleStateTextUI();
-		mIsScoreBoard = false;
-		mItemCnt = 0;
-	}
+		//mScoreBoardTime = 0.0f;;
+		//SetVisibleStateTextUI();
+		//mIsScoreBoard = false;
+		//mItemCnt = 0;
+	//}
 }
 
 void InGameUI::ShowScoreBoard()

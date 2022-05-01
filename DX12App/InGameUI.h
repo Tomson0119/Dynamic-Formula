@@ -40,7 +40,7 @@ public:
     void CreateFontFormat();
     void Start321Animation(float Elapsed);
     void GoAnimation(float Elapsed);
-    void CheckScoreBoardTime(float Elapsed);
+    void CheckScoreBoardTime();
     std::vector<XMFLOAT4>& GetLTRB() { return mLTRB; }
     void SetLTRB(const std::vector<XMFLOAT4>& Rects) { int i = 0;  for (auto& R : Rects) mLTRB[i++] = R; }
 
