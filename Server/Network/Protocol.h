@@ -132,18 +132,19 @@ namespace SC
 	const char REMOVE_PLAYER	  = 9;
 	const char GAME_START_FAIL	  = 10;
 	const char GAME_START_SUCCESS = 11;
-	const char START_SIGNAL		  = 12;
-	const char TRANSFER_TIME	  = 13;
-	const char PLAYER_TRANSFORM	  = 14;
-	const char MISSILE_TRANSFORM  = 15;
-	const char UI_INFO			  = 16;
-	const char REMOVE_MISSILE	  = 17;
-	const char INVINCIBLE_ON	  = 18;
-	const char SPAWN_TRANSFORM	  = 19;
-	const char WARNING_MESSAGE	  = 20;
-	const char INGAME_INFO		  = 21;
-	const char GAME_END			  = 22;
-	const char ITEM_COUNT		  = 23;
+	const char READY_SIGNAL		  = 12;
+	const char START_SIGNAL		  = 13;
+	const char TRANSFER_TIME	  = 14;
+	const char PLAYER_TRANSFORM	  = 15;
+	const char MISSILE_TRANSFORM  = 16;
+	const char UI_INFO			  = 17;
+	const char REMOVE_MISSILE	  = 18;
+	const char INVINCIBLE_ON	  = 19;
+	const char SPAWN_TRANSFORM	  = 20;
+	const char WARNING_MESSAGE	  = 21;
+	const char INGAME_INFO		  = 22;
+	const char GAME_END			  = 23;
+	const char ITEM_COUNT		  = 24;
 
 	struct packet_force_logout : packet_header { };
 
@@ -225,7 +226,15 @@ namespace SC
 		int rw[MAX_ROOM_CAPACITY];
 	};
 
-	struct packet_start_signal : packet_header { };
+	struct packet_ready_signal : packet_header
+	{
+	};
+
+	struct packet_start_signal : packet_header 
+	{
+		int running_time_sec;
+		int delay_time_msec;
+	};
 
 	struct packet_transfer_time : packet_header
 	{
