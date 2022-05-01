@@ -46,7 +46,7 @@ void GSStreamOutput(point VertexIn gin[1],
         if (particle.Type == PARTICLE_TYPE_EMMITER)
         {
             particle.Age.x = 0.0f;
-            particle.PosL = float3(0, 0, 0);
+            particle.PosL = mul(float4(0, 0, 0, 1), gWorld).xyz;
             pointStream.Append(particle);
             
             VertexIn vertex = (VertexIn)0;            
@@ -83,7 +83,7 @@ void GSRender(point VertexIn gin[1],
         uint primID : SV_PrimitiveID,
         inout TriangleStream<GeoOut> triStream)
 {
-    float3 posW = mul(float4(gin[0].PosL, 1.0f), gWorld).xyz;
+    float3 posW = gin[0].PosL;
     
     float3 up = float3(0.0f, 1.0f, 0.0f);
     float3 look = gCameraPos - posW;
