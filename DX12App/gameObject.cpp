@@ -594,12 +594,6 @@ void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
 
 void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 {
-	if (mPrevOrigin.IsZero())
-	{
-		mPrevOrigin = mPosition;
-		mPrevQuat = mQuaternion;
-	}
-
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
 	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
 
@@ -609,9 +603,11 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 
 	if (updateRate <= 0.0f) return;
 
-	float progress = mProgress / FIXED_FLOAT_LIMIT;
-	progress = std::min(1.0f, progress + elapsed / updateRate);
-	mProgress = (int)(progress * FIXED_FLOAT_LIMIT);
+	mProgressMut.lock();
+	mProgress += elapsed;
+	float progress = std::min(1.0f, mProgress / updateRate);
+	OutputDebugStringA((std::to_string(progress) + "\n").c_str());
+	mProgressMut.unlock();
 
 	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
 	mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
