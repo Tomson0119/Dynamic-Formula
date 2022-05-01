@@ -72,7 +72,7 @@ private:
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;
 
-	Clock::duration mTimeStamp;
+	Clock::time_point mTimeStamp;
 	std::atomic_uint64_t mLatency;
 	std::atomic_uint64_t mUpdateRate;
 

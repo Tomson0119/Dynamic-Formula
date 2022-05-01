@@ -29,7 +29,7 @@ struct GameConstant
 	const float DefaultBreakingForce = 10.0f;
 
 	const float MissileSpeed = 50.0f;
-	const btVector3 MissileOffset = { 0.0f, 1.0f, 0.0f };
+	const btVector3 MissileOffset = { 0.0f, 2.0f, 0.0f };
 	const float MissileForwardMag = 5.0f;
 	const btVector3 MissileGravity = { 0.0f, 0.0f, 0.0f };
 
@@ -42,6 +42,7 @@ struct GameConstant
 	const btVector3 StartPosition = { -190.7f, 1.0f, 250.0f };
 	const btQuaternion StartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
 
+	const std::chrono::seconds CountdownTime = 4s; // 4초 후 시작
 	const std::chrono::seconds GameRunningTime = 180s; // 30초 TEST
 };
 
@@ -73,7 +74,7 @@ private:
 	TimerQueue mTimerQueue;
 	
 	std::unique_ptr<BtCarShape> mBtCarShape;
-	std::unique_ptr<BtBoxShape> mMissileShape;
+	std::unique_ptr<BtMissileShape> mMissileShape;
 	std::unique_ptr<BtMapShape> mMapShape;
 	std::unique_ptr<CheckpointShape> mCheckpointShape;
 

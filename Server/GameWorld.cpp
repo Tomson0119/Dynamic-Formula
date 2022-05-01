@@ -11,6 +11,7 @@
 GameWorld::GameWorld(std::shared_ptr<GameConstant> constantPtr)
 	: mID{ -1 }, 
 	  mUpdateTick{ 0 },
+	  mGameStarted{ false },
 	  mActive{ false },
 	  mPlayerCount{ 0 }, 
 	  mPhysicsOverlapped{ OP::PHYSICS }
@@ -48,9 +49,11 @@ void GameWorld::InitPlayerList(WaitRoom* room, int cpCount)
 	}
 }
 
-void GameWorld::SetFinishTime(std::chrono::seconds sec)
+void GameWorld::SetGameTime(std::chrono::seconds countdownSec, std::chrono::seconds finishSec)
 {
-	mFinishTime = Clock::now() + sec;
+	auto now = Clock::now();
+	mStartTime = now + countdownSec;
+	mFinishTime = now + finishSec + countdownSec;
 }
 
 void GameWorld::SetPlayerTransform(int idx, const btVector3& pos, const btQuaternion& quat)
@@ -60,7 +63,7 @@ void GameWorld::SetPlayerTransform(int idx, const btVector3& pos, const btQuater
 
 void GameWorld::CreateRigidbodies(int idx,
 	btScalar carMass, BtCarShape& carShape,
-	btScalar missileMass, BtBoxShape& missileShape)
+	btScalar missileMass, BtCompoundShape& missileShape)
 {
 	mPlayerList[idx]->CreateVehicleRigidBody(carMass, mPhysics, carShape);
 	mPlayerList[idx]->CreateMissileRigidBody(missileMass, missileShape);
@@ -71,11 +74,15 @@ void GameWorld::UpdatePhysicsWorld()
 {
 	mTimer.Tick();
 	float elapsed = mTimer.GetElapsed();
-
+	
+	if (mGameStarted == false)
+	{
+		CheckCountdownTime();
+	}
 	if (elapsed > 0.0f)
 	{
+		CheckRunningTime();
 		mPhysics.StepSimulation(elapsed);
-		CheckRunningTime(elapsed);
 		CheckCollision();
 
 		UpdatePlayers(elapsed);
@@ -158,6 +165,8 @@ void GameWorld::RemovePlayerRigidBody(int idx)
 
 void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 {
+	if (mGameStarted == false) return;
+
 	switch (static_cast<int>(key))
 	{
 	case VK_UP:
@@ -167,15 +176,10 @@ void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 	case VK_LSHIFT:
 	case 'Z': // boost
 	case 'X': // missile.
+	case 'P':
 		mPlayerList[idx]->ToggleKeyValue(key, pressed);
 		break;
 
-	case 'Q': // TEST
-	{
-		bool b = false;
-		mTestFlag.compare_exchange_strong(b, true);
-		break;
-	}
 	default:
 		std::cout << "Invalid key input.\n";
 		return;
@@ -209,7 +213,18 @@ void GameWorld::SendGameStartSuccess()
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&info_pck), info_pck.size);
 }
 
-void GameWorld::SendStartSignal()
+void GameWorld::SendReadySignal()
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[room id: " << mID << "] Sending ready signal packet.\n";
+#endif
+	SC::packet_ready_signal pck{};
+	pck.size = sizeof(SC::packet_ready_signal);
+	pck.type = SC::READY_SIGNAL;
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void GameWorld::SendStartSignal(uint64_t latency)
 {
 #ifdef DEBUG_PACKET_TRANSFER
 	std::cout << "[room id: " << mID << "] Sending start signal packet.\n";
@@ -217,6 +232,8 @@ void GameWorld::SendStartSignal()
 	SC::packet_start_signal pck{};
 	pck.size = sizeof(SC::packet_start_signal);
 	pck.type = SC::START_SIGNAL;
+	pck.running_time_sec = (int)mConstantPtr->GameRunningTime.count();
+	pck.delay_time_msec = (int)latency;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -487,9 +504,34 @@ void GameWorld::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instS
 	}
 }
 
-void GameWorld::CheckRunningTime(float elapsed)
+void GameWorld::CheckCountdownTime()
+{
+	auto longestLatencyMs = [this]() -> uint64_t
+	{
+		uint64_t latency = 0;
+		for (int i = 0; i < mPlayerList.size(); i++)
+		{
+			int hostID = mPlayerList[i]->ID;
+			if (hostID >= 0)
+			{
+				latency = std::max(latency, gClients[hostID]->GetLatency());
+			}
+		}
+		return latency;
+	}();
+
+	auto now = Clock::now();
+	if (now >= (mStartTime - std::chrono::milliseconds(longestLatencyMs)))
+	{
+		mGameStarted = true;
+		SendStartSignal(longestLatencyMs);
+	}
+}
+
+void GameWorld::CheckRunningTime()
 {
 	auto now = Clock::now();
+
 	if (now >= mFinishTime)
 	{
 		SetActive(false);

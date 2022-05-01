@@ -11,7 +11,7 @@ InGameServer::InGameServer()
 	mGameConstants = std::make_shared<GameConstant>();
 
 	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin", "Resource\\Models\\Car_Body_Convex_Hull.obj");
-	mMissileShape = std::make_unique<BtBoxShape>("Resource\\Missile_Data.bin");
+	mMissileShape = std::make_unique<BtMissileShape>("Resource\\Models\\Missile_Convex_Hull.obj");
 	mMapShape = std::make_unique<BtMapShape>("Resource\\MapData.tmap");
 	mCheckpointShape = std::make_unique<CheckpointShape>("Resource\\CheckPoint.tmap");
 }
@@ -130,8 +130,10 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 void InGameServer::StartMatch(int roomID)
 {
 	msWorlds[roomID]->SetActive(true);
-	msWorlds[roomID]->SetFinishTime(mGameConstants->GameRunningTime);
-	msWorlds[roomID]->SendStartSignal();
+	msWorlds[roomID]->SetGameTime(
+		mGameConstants->CountdownTime,
+		mGameConstants->GameRunningTime);
+	msWorlds[roomID]->SendReadySignal();
 	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
 }
 

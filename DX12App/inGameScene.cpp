@@ -372,9 +372,9 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 {
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
-	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
+	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
-	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
+	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 	LoadLights(cmdList, L"Map\\Lights.tmap");
 
@@ -479,8 +479,11 @@ void InGameScene::BuildMissileObject(
 	const XMFLOAT3& position, int idx)
 {
 	mMissileObjects[idx] = std::make_shared<MissileObject>(position);
-	mMissileObjects[idx]->SetMeshes(mMeshList["Missile"]);
-	mMissileObjects[idx]->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
+
+	if (mMeshList.find("Missile") == mMeshList.end())
+		mMeshList["Missile"] = mMissileObjects[idx]->LoadModel(mDevice.Get(), cmdList, L"Models\\Missile.obj");
+	else
+		mMissileObjects[idx]->CopyMeshes(mMeshList["Missile"]);
 }
 
 void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
@@ -512,13 +515,23 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 {
 	switch (type)
 	{
+	case SC::READY_SIGNAL:
+	{
+		SC::packet_ready_signal* pck = reinterpret_cast<SC::packet_ready_signal*>(packet);
+		// TODO: Show countdown image..
+		break;
+	}
 	case SC::START_SIGNAL:
 	{
 		SC::packet_start_signal* pck = reinterpret_cast<SC::packet_start_signal*>(packet);
 		mGameStarted = true;
-		int runningTime = 180; // 180ÃÊ
-		mpUI->SetRunningTime((float)runningTime);
+		OutputDebugStringA(("Delay: " + std::to_string(pck->delay_time_msec) + "\n").c_str());
+		OutputDebugStringA(("Delay: " + std::to_string(pck->running_time_sec) + "\n").c_str());
+
+		//mpUI->SetDelayTime((float)pck->delay_time_msec / 1000.0f);
+		mpUI->SetRunningTime((float)pck->running_time_sec);
 		//mpUI->ShowStartAnim(); // 
+
 		break;
 	}
 	case SC::REMOVE_PLAYER:
@@ -770,13 +783,13 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 	if (mParticleInterval < 0.0f)
 	{
-		/*if(GetAsyncKeyState(VK_LSHIFT) & 0x8000)
+		if(GetAsyncKeyState(VK_LSHIFT) & 0x8000)
 		{
 			mParticleInterval = 0.1f;
 			
 			/*if(mPipelines[Layer::Particle]->GetRenderObjects().size() == 0)
-				AddParticleObject();
-		}*/
+				AddParticleObject();*/
+		}
 	}
 	else
 	{
@@ -817,13 +830,13 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	OnPreciseKeyInput(cmdList, physics, elapsed);
 
 	UpdateLight(elapsed);
-	mCurrentCamera->Update(elapsed);
 
 	mShadowMapRenderer->UpdateSplitFrustum(mCurrentCamera);
 	mShadowMapRenderer->UpdateDepthCamera(cmdList);
 
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
+	mCurrentCamera->Update(elapsed);
 	
 	UpdateConstants(timer);
 
@@ -1182,16 +1195,17 @@ void InGameScene::UpdatePlayerObjects()
 	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
 }
 
-void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path)
+void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::string& path)
 {
-	std::ifstream in_file{ path };
-	std::string info;
+	FILE* file = nullptr;
+	fopen_s(&file, path.c_str(), "r");
 
 	btCompoundShape* compound = new btCompoundShape();
 
-	while (std::getline(in_file, info))
+	char buf[250];
+	while (fgets(buf, 250, file))
 	{
-		std::stringstream ss(info);
+		std::stringstream ss(buf);
 
 		std::string objName;
 		ss >> objName;
@@ -1286,6 +1300,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
 
 	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+
+	fclose(file);
 }
 
 void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path)

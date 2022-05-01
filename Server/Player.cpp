@@ -62,10 +62,10 @@ void Player::CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShap
 	mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::CREATE);
 }
 
-void Player::CreateMissileRigidBody(btScalar mass, BtBoxShape& shape)
+void Player::CreateMissileRigidBody(btScalar mass, BtCompoundShape& shape)
 {
 	mMissileRigidBody.SetMaskBits(OBJ_MASK_GROUP::MISSILE, OBJ_MASK::MISSILE);
-	mMissileRigidBody.CreateRigidBody(mass, shape.GetCollisionShape(), this);
+	mMissileRigidBody.CreateRigidBody(mass, shape.GetCompoundShape(), this);
 	mMissileRigidBody.SetNoResponseCollision();	
 }
 
@@ -236,13 +236,13 @@ void Player::UpdateInvincibleDuration(float elapsed)
 void Player::UpdateDriftGauge(float elapsed)
 {
 	float currentSpeed = mVehicleRigidBody.GetCurrentSpeed();
-	//if (currentSpeed < mConstantPtr->MinSpeedForDrift) return;
+	if (currentSpeed < mConstantPtr->MinSpeedForDrift) return;
 
 	auto& comp = mVehicleRigidBody.GetComponent();
 
 	if (mKeyMap[VK_LSHIFT])
 	{
-		/*comp.FrontFrictionSlip = mConstantPtr->FrontWheelDriftFriction;
+		comp.FrontFrictionSlip = mConstantPtr->FrontWheelDriftFriction;
 		comp.BackFrictionSlip = mConstantPtr->RearWheelDriftFriction;
 
 		auto linearVelocity = mVehicleRigidBody.GetLinearVelocity();
@@ -274,25 +274,11 @@ void Player::UpdateDriftGauge(float elapsed)
 					std::cout << "Item increased.\n";
 				}
 			}
-			std::cout << mDriftGauge << "\n";
 		}
 
 		if (angle > AngleLimit)
 		{
 			mVehicleRigidBody.SetAngularVelocity(btVector3(0.f, 0.f, 0.f));
-		}*/
-
-		// TEST
-		mDriftGauge += elapsed * 0.5f;
-		if (mDriftGauge > 1.0f)
-		{
-			mDriftGauge = 0.0f;
-			if (mItemCount < 2)
-			{
-				mItemCount += 1;
-				mItemIncreased = true;
-				std::cout << "Item increased.\n";
-			}
 		}
 	}
 	else
@@ -405,8 +391,8 @@ void Player::ToggleKeyValue(uint8_t key, bool pressed)
 	{
 		if (pressed && IsItemAvailable())
 		{
-			if (UseItem(key)) mItemCount -= 1;
-			//UseItem(key);
+			//if (UseItem(key)) mItemCount -= 1;
+			UseItem(key);
 		}
 	}
 	else if (key == 'P' && pressed)
@@ -422,8 +408,8 @@ void Player::ToggleKeyValue(uint8_t key, bool pressed)
 
 bool Player::IsItemAvailable()
 {
-	return (mItemCount > 0);
-	//return true;
+	//return (mItemCount > 0);
+	return true;
 }
 
 bool Player::UseItem(uint8_t key)
