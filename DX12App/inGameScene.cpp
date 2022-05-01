@@ -518,7 +518,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mGameStarted = true;
 		int runningTime = 180; // 180초
 		mpUI->SetRunningTime((float)runningTime);
-		//mpUI->ShowStartAnim(); // 제대로 적용x
+		//mpUI->ShowStartAnim(); // 
 		break;
 	}
 	case SC::REMOVE_PLAYER:

@@ -76,7 +76,7 @@ public:
     void ShowScoreBoard(); 
     void ShowStartAnim() { mIsStartAnim = true; }
     void ShowWarning() { mIsWarning = true; }
-    void ShowGoAnim() { mIsGoAnim = true; mIsStartUI[3] = true; }
+    void ShowGoAnim(); 
 
     std::mutex& GetMutex() { return mScoreboardMutex; }
 

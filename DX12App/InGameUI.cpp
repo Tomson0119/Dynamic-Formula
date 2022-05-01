@@ -114,14 +114,11 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 	//Time Set
 	if (mIsStartAnim)
 	{
-		SetInvisibleStateTextUI();// UI Invisible
 		Start321Animation(Elapsed); //321Go!
 		return;
 	}
 	else if (mIsScoreBoard)
 	{
-		SetInvisibleStateTextUI();//UI Invisible
-		SetScoreBoardTexts();// ScoreBoard Text Input
 		CheckScoreBoardTime(Elapsed); //Show during 5s
 		return;
 	}
@@ -130,18 +127,9 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 		mRunningTime = 0.0f;
 		return;
 	}
-
-	if (mIsGoAnim)
+	else if (mIsGoAnim)
 	{
-		mIsStartAnim = false;
-		mStartAnimTime = 0.0f;
-		for (int i = 0; i < 2; ++i)
-			mIsStartUI[i] = false;
-		//mStartAnimOpacities[2] = 0.0f;
-		// Bitmap위치 원래 위치로 조정
-		SetBitmapPos();
-		//UI띄우기
-		SetVisibleStateTextUI();
+		
 		GoAnimation(Elapsed);
 		return;
 	}
@@ -173,6 +161,17 @@ void InGameUI::Update(float Elapsed, Player* mPlayer)
 
 void InGameUI::GoAnimation(float Elapsed)
 {
+	mIsStartAnim = false;
+	mStartAnimTime = 0.0f;
+	for (int i = 0; i < 2; ++i)
+		mIsStartUI[i] = false; // 321 Invisible
+	for(int i=0;i<2;++i)
+		mStartAnimOpacities[i] = 0.0f; //321 Invisible
+	// Bitmap위치 원래 위치로 조정
+	SetBitmapPos();
+	//UI띄우기
+	SetVisibleStateTextUI();
+
 	mGoAnimTime += Elapsed;
 	mAnimEndTime = 1.0f;
 	if (mGoAnimTime >= 1.0f)
@@ -218,6 +217,7 @@ void InGameUI::GoAnimation(float Elapsed)
 
 void InGameUI::Start321Animation(float Elapsed)
 {
+	SetInvisibleStateTextUI();// UI Invisible
 	mStartAnimTime += Elapsed;
 	if (mStartAnimTime >=START_DELAY_TIME)
 	{
@@ -310,6 +310,9 @@ void InGameUI::Start321Animation(float Elapsed)
 
 void InGameUI::CheckScoreBoardTime(float Elapsed)
 {
+	SetInvisibleStateTextUI();//UI Invisible
+	SetScoreBoardTexts();// ScoreBoard Text Input
+
 	mScoreBoardTime += Elapsed;
 	if (mScoreBoardTime > 5.0f)
 	{
@@ -326,6 +329,12 @@ void InGameUI::CheckScoreBoardTime(float Elapsed)
 void InGameUI::ShowScoreBoard()
 {
 	mIsScoreBoard = true; 
+}
+
+void InGameUI::ShowGoAnim()
+{
+	mIsGoAnim = true; 
+	mIsStartUI[3] = true;
 }
 
 void InGameUI::TextUpdateIngameTime(float Elapsed)
