@@ -12,7 +12,6 @@ enum class Layer : int
 	Mirror,
 	Reflected,
 	Billboard,
-	DriftParticle,
 	ShadowDebug,
 	DynamicCubeMap,
 	MotionBlur,
@@ -21,7 +20,8 @@ enum class Layer : int
 	Instancing,
 	Color,
 	CheckPoint,
-	Transparent
+	Transparent,
+	DriftParticle
 };
 
 class Pipeline

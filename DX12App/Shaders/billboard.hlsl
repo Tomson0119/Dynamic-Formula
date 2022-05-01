@@ -52,10 +52,11 @@ void GSStreamOutput(point VertexIn gin[1],
             VertexIn vertex = (VertexIn)0;            
             vertex.PosL = particle.PosL;
             vertex.Size = particle.Size;
+            vertex.Color = particle.Color;
             
-            float3 dir = vertex.Direction;
-            dir.x *= gRandFloat4.x;
-            dir.y *= gRandFloat4.y;
+            float3 dir = particle.Direction;
+            //dir.x *= gRandFloat4.x;
+            //dir.y *= gRandFloat4.y;
             vertex.Direction = dir;
             
             vertex.Speed = particle.Speed * gRandFloat4.w;               

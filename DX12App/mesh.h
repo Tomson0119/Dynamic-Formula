@@ -231,7 +231,6 @@ public:
 
 	virtual void PrepareBufferViews(ID3D12GraphicsCommandList* cmdList, bool isSO) override;
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO=false) override;
-	void UpdateOffset(XMFLOAT3 offset);
 
 private:
 	void CreateStreamOutputBuffer(

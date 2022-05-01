@@ -730,7 +730,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if (wParam == VK_SHIFT)
 		{
-			//mParticleDestroyFlag = true;
+			mParticleDestroyFlag = true;
 		}
 		
 		if(wParam == VK_END)
@@ -853,7 +853,7 @@ void InGameScene::AddDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 			auto obj = std::make_shared<SOParticleObject>(*static_cast<PhysicsPlayer*>(mPlayer)->GetWheel(i));
 
 			//이후 개선, 작동하게만 만드는 중
-			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.2f, 0.2f), Vector3::Normalize(XMFLOAT3(0.0f, 1.0f, 0.0f)), 0.3f, 10, 50);
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.2f, 0.2f), Vector3::Normalize(XMFLOAT3(0.0f, 1.0f, 0.0f)), 10.0f, 100.0f, 50);
 			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 			obj->SetMesh(particleEmittor);
 
