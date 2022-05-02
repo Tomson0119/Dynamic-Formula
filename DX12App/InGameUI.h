@@ -119,6 +119,4 @@ private:
     std::atomic_bool mIsStartAnim = false;
     std::atomic_bool mIsScoreBoard = false;
     std::atomic_bool mIsWarning = false;
-
-    //ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

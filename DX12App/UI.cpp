@@ -59,9 +59,6 @@ void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommand
     mD2dDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory5), (IUnknown**)&mD2dWriteFactory));
-
-    //mvBitmaps.resize(2);
-
 }
 
 void UI::SetVectorSize(UINT nFrame)
@@ -105,7 +102,6 @@ HRESULT UI::LoadBitmapResourceFromFile(std::wstring ImageName, int index)
     ComPtr<IWICBitmapDecoder> Decoder;     
     ComPtr<IWICBitmapFrameDecode> Frame;   
     ComPtr<IWICFormatConverter> Converter;
-
     ComPtr<IWICStream> Stream;
     ComPtr<IWICBitmapScaler> Scaler;
 
@@ -361,6 +357,9 @@ void UI::Reset()
     mBitmaps.clear();
     mBitmapFileNames.clear();
     mColors.clear();
+
+   
+  
 }
 
 void UI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,

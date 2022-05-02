@@ -37,7 +37,7 @@ void InGameUI::SetVectorSize(UINT nFrame)
 	BitmapFileNames.push_back(L"Resources\\G.png");
 	BitmapFileNames.push_back(L"Resources\\O.png");
 	BitmapFileNames.push_back(L"Resources\\!.png");
-	BitmapFileNames.push_back(L"Resources\\!.png");
+	BitmapFileNames.push_back(L"Resources\\ScoreBoardBG.jpeg");
 
 	SetBitmapFileNames(BitmapFileNames);
 
@@ -454,7 +454,7 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
-		case 'S':
+		case 'I':
 			mMyScore += 100;
 			break;
 		//case 'L':
@@ -646,14 +646,14 @@ void InGameUI::CreateFontFormat()
 }
 
 void InGameUI::SetTextRect()
-{//Time, LapNum, Lap, Rank, Speed, km/h, Score
+{//Time, LapNum, Lap, Rank, Speed, km/h, Score, WRONG WAY
     GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.03f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.20f, GetFrameHeight() * 0.21f);
 	GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(-(GetFrameWidth() *0.1f) , GetFrameHeight() * 0.09f, GetFrameWidth() * 0.07f, GetFrameHeight() * 0.13f);
     GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.068f, GetFrameHeight() * 0.11f, GetFrameWidth() * 0.18f, GetFrameHeight() * 0.141f);
     GetTextBlock()[3].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.8f, GetFrameHeight() * 0.10f, GetFrameWidth() * 0.9f, GetFrameHeight() * 0.16f);
     GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.86f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.90f);
     GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.73f, GetFrameHeight() * 0.91f, GetFrameWidth() * 0.94f, GetFrameHeight() * 0.95f);
-	GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.75f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.93f, GetFrameHeight() * 0.23f);
+	GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.70f, GetFrameHeight() * 0.17f, GetFrameWidth() * 0.90f, GetFrameHeight() * 0.23f);
 	GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.15f, GetFrameHeight() * 0.30f, GetFrameWidth() * 0.85f, GetFrameHeight() * 0.70f);
 
 	//ScoreBoards Rank, Ninkname, Score, Lap, MissileHit
