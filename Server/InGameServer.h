@@ -23,12 +23,12 @@ struct GameConstant
 	const float WheelDefaultFriction = 5.0f;
 	const float MinSpeedForDrift = 100.0f;
 
-	const float DefaultMaxSpeed = 350.0f;
-	const float BoostedMaxSpeed = 400.0f;
+	const float DefaultMaxSpeed = 270.0f;
+	const float BoostedMaxSpeed = 320.0f;
 
 	const float DefaultBreakingForce = 10.0f;
 
-	const float MissileSpeed = 50.0f;
+	const float MissileSpeed = 5.0f;
 	const btVector3 MissileOffset = { 0.0f, 2.0f, 0.0f };
 	const float MissileForwardMag = 5.0f;
 	const btVector3 MissileGravity = { 0.0f, 0.0f, 0.0f };

@@ -236,12 +236,12 @@ void Player::UpdateInvincibleDuration(float elapsed)
 void Player::UpdateDriftGauge(float elapsed)
 {
 	float currentSpeed = mVehicleRigidBody.GetCurrentSpeed();
-	if (currentSpeed < mConstantPtr->MinSpeedForDrift) return;
-
 	auto& comp = mVehicleRigidBody.GetComponent();
 
 	if (mKeyMap[VK_LSHIFT])
 	{
+		if (currentSpeed < mConstantPtr->MinSpeedForDrift) return;
+
 		comp.FrontFrictionSlip = mConstantPtr->FrontWheelDriftFriction;
 		comp.BackFrictionSlip = mConstantPtr->RearWheelDriftFriction;
 
@@ -312,7 +312,7 @@ void Player::UpdateBooster(float elapsed)
 void Player::UpdateSteering(float elapsed)
 {
 	auto& comp = mVehicleRigidBody.GetComponent();
-	float scale = (comp.BoosterTimeLeft > 0.0f) ? 0.5f : 2.0f;
+	float scale = (1 - (comp.CurrentSpeed / mConstantPtr->BoostedMaxSpeed)) * 2.0f;
 
 	if (comp.VehicleSteering > 0)
 	{
