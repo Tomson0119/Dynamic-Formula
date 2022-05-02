@@ -638,7 +638,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_warning_message* pck = reinterpret_cast<SC::packet_warning_message*>(packet);
 		OutputDebugStringA("Reverse drive warning!\n");
 		mpUI->ShowWarning();
-		// 5초간 유지
 		break;
 	}
 	case SC::INGAME_INFO:

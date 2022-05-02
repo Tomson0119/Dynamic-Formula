@@ -487,6 +487,7 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 
 	GameObject::Update(elapsedTime, updateRate);
 	OutputDebugStringA(("Progress: " + std::to_string(mProgress/updateRate) + "\n").c_str());
+	
 	for (int i = 0; i < 4; ++i)
 		mWheel[i]->SetTransparent(mTransparentOn);
 
