@@ -87,7 +87,7 @@ void InGameScene::BuildObjects(
 	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
 	mDirectionalLight.SetInfo(
-		XMFLOAT3(0.1f, 0.1f, 0.1f),
+		XMFLOAT3(0.9f, 0.9f, 0.9f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		0.0f, 0.0f, 0.0f,
@@ -99,6 +99,8 @@ void InGameScene::BuildObjects(
 	BuildGameObjects(cmdList, physics);
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
+
+	BuildDriftParticleObject(cmdList);
 
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
@@ -730,7 +732,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if (wParam == VK_SHIFT)
 		{
-			mParticleDestroyFlag = true;
+			mDriftParticleEnable = false;
 		}
 		
 		if(wParam == VK_END)
@@ -740,7 +742,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		if (wParam == VK_SHIFT)
 		{
-			mParticleAddFlag = true;
+			mDriftParticleEnable = true;
 		}
 		break;
 	}
@@ -810,17 +812,6 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
 
-	if (mParticleAddFlag)
-	{
-		mParticleAddFlag = false;
-		AddDriftParticleObject(cmdList);
-	}
-	if (mParticleDestroyFlag)
-	{
-		mParticleDestroyFlag = false;
-		DestroyDriftParticleObject();
-	}
-
 	UpdatePlayerObjects();
 	UpdateMissileObject();
 	OnPreciseKeyInput(cmdList, physics, elapsed);
@@ -835,6 +826,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
 	
 	UpdateConstants(timer);
+	cmdList->SetGraphicsRoot32BitConstants(8, 1, &mDriftParticleEnable, 4);
 
 	if(mGameStarted)
 		mpUI.get()->Update(elapsed, mPlayer);
@@ -844,7 +836,7 @@ void InGameScene::UpdateLight(float elapsed)
 {
 }
 
-void InGameScene::AddDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
+void InGameScene::BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 {
 	if (mPipelines[Layer::DriftParticle]->GetRenderObjects().size() == 0)
 	{
@@ -854,7 +846,6 @@ void InGameScene::AddDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 		{
 			auto obj = std::make_shared<SOParticleObject>(*mPlayer);
 
-			//이후 개선, 작동하게만 만드는 중
 			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.2f, 0.2f), Vector3::Normalize(XMFLOAT3(0.0f, 1.0f, 0.0f)), 10.0f, 5.0f, 100);
 			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 			obj->SetMesh(particleEmittor);

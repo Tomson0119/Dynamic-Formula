@@ -56,6 +56,7 @@ cbuffer StandardCB : register(b5)
     float gZSplit1 : packoffset(c0.y);
     float gZSplit2 : packoffset(c0.z);
     int gInstancingOffset : packoffset(c0.w);
+    bool gParticleEnable : packoffset(c1.x);
 }
 
 struct InstancingInfo

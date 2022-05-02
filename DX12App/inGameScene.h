@@ -44,7 +44,7 @@ public:
 
 public:
 	void UpdateLight(float elapsed);
-	void AddDriftParticleObject(ID3D12GraphicsCommandList* cmdList);
+	void BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList);
 	void DestroyDriftParticleObject();
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
@@ -191,8 +191,7 @@ private:
 
 	bool mVolumetricEnable = true;
 
-	bool mParticleAddFlag = false;
-	bool mParticleDestroyFlag = false;
+	int32_t mDriftParticleEnable = false;
 
 	btRigidBody* mTrackRigidBody = NULL;
 

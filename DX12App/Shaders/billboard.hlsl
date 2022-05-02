@@ -43,7 +43,7 @@ void GSStreamOutput(point VertexIn gin[1],
     
     if (particle.Age.x <= particle.Age.y)
     {
-        if (particle.Type == PARTICLE_TYPE_EMMITER)
+        if (particle.Type == PARTICLE_TYPE_EMMITER && gParticleEnable)
         {
             particle.Age.x = 0.0f;
             particle.PosL = mul(float4(0, 0, 0, 1), gWorld).xyz;
@@ -83,50 +83,52 @@ void GSRender(point VertexIn gin[1],
         uint primID : SV_PrimitiveID,
         inout TriangleStream<GeoOut> triStream)
 {
-    float3 posW = gin[0].PosL;
-    
-    float3 up = float3(0.0f, 1.0f, 0.0f);
-    float3 look = gCameraPos - posW;
-    
-    look.y = 0.0f;
-    look = normalize(look);
-    
-    float3 right = cross(up, look);
-    
-    float hw = gin[0].Size.x * 0.5f;
-    float hh = gin[0].Size.y * 0.5f;
-    
-    float4 v[4];
-    v[0] = float4(posW + hw * right - hh * up, 1.0f);
-    v[1] = float4(posW + hw * right + hh * up, 1.0f);
-    v[2] = float4(posW - hw * right - hh * up, 1.0f);
-    v[3] = float4(posW - hw * right + hh * up, 1.0f);
-    
-    float2 TexCoord[4] =
+    if (gin[0].Type == PARTICLE_TYPE_FLARE)
     {
-        float2(0.0f, 1.0f),
+        float3 posW = gin[0].PosL;
+    
+        float3 up = float3(0.0f, 1.0f, 0.0f);
+        float3 look = gCameraPos - posW;
+    
+        look.y = 0.0f;
+        look = normalize(look);
+    
+        float3 right = cross(up, look);
+    
+        float hw = gin[0].Size.x * 0.5f;
+        float hh = gin[0].Size.y * 0.5f;
+    
+        float4 v[4];
+        v[0] = float4(posW + hw * right - hh * up, 1.0f);
+        v[1] = float4(posW + hw * right + hh * up, 1.0f);
+        v[2] = float4(posW - hw * right - hh * up, 1.0f);
+        v[3] = float4(posW - hw * right + hh * up, 1.0f);
+    
+        float2 TexCoord[4] =
+        {
+            float2(0.0f, 1.0f),
         float2(0.0f, 0.0f),
         float2(1.0f, 1.0f),
         float2(1.0f, 0.0f)
-    };
+        };
 
-    GeoOut gout;
-    [unroll]
-    for (int i = 0; i < 4; i++)
-    {
-        gout.PosH = mul(v[i], gViewProj);
-        gout.PosW = v[i].xyz;
-        gout.NormalW = look;
-        gout.TexCoord = TexCoord[i];
-        gout.PrimID = primID;
-        gout.Type = gin[0].Type;
-        gout.Age = gin[0].Age;
-        gout.Color = gin[0].Color;
+        GeoOut gout;
+        [unroll]
+        for (int i = 0; i < 4; i++)
+        {
+            gout.PosH = mul(v[i], gViewProj);
+            gout.PosW = v[i].xyz;
+            gout.NormalW = look;
+            gout.TexCoord = TexCoord[i];
+            gout.PrimID = primID;
+            gout.Type = gin[0].Type;
+            gout.Age = gin[0].Age;
+            gout.Color = gin[0].Color;
         
-        triStream.Append(gout);
+            triStream.Append(gout);
+        }
     }
 }
-
 float4 PSRender(GeoOut pin) : SV_Target
 {
     float3 uvw = float3(pin.TexCoord, pin.PrimID % 4);
