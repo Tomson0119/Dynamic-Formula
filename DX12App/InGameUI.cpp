@@ -91,12 +91,14 @@ void InGameUI::SetInvisibleStateTextUI()
 		SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
 	for(int i=0;i<3;++i)
 		mIsOutlined[i] = false;
-
+	//SetItemCount(0);
+	SetGradientCnt(0);
 	BuildSolidBrush(GetColors());
 }
 
 void InGameUI::SetVisibleStateTextUI()
 {
+	SetGradientCnt(1);
 	for (int i = 0; i < TEXTCOUNT; ++i)
 		SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 	for(int i=0;i<2;++i)
@@ -383,16 +385,16 @@ void InGameUI::SetScoreBoardTexts()
 	GetTextBlock()[TEXTCOUNT+2].strText.assign("SCORE");
 	GetTextBlock()[TEXTCOUNT+3].strText.assign("LAP");
 	GetTextBlock()[TEXTCOUNT+4].strText.assign("MISSILE");
-	int CategoryCount = 5;
+	size_t CategoryCount = 5;
 	SetPlayerCount(8);
 	//임시 set
 	for (int i = 0; i < mScoreboard.size(); ++i)
 	{
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + static_cast<size_t>(i)].strText.assign(std::to_string(i+1));
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (1 * 8) + static_cast<size_t>(i)].strText.assign("id" + std::to_string(i + 1)); //21 22 23...
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(500 * (i + 1)));// 29 30 31...
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(3*i));
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(2*i));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + static_cast<size_t>(i)].strText.assign(std::to_string(i+1));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (1 * 8) + static_cast<size_t>(i)].strText.assign("id" + std::to_string(i + 1)); //21 22 23...
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(500 * (i + 1)));// 29 30 31...
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(3*i));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(2*i));
 	}
 	GetTextBlock()[GetTextCnt()-1].strText.assign("SCORE BOARD");
 
@@ -404,7 +406,7 @@ void InGameUI::SetScoreBoardTexts()
 		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
 		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
 	}*/
-	SetIndexColor(GetTextCnt() + 3, D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
+	SetIndexColor(GetTextCnt() + 3, D2D1::ColorF(D2D1::ColorF::Black, 0.999f));
 	SetIndexColor(GetTextCnt() + 2, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	SetIndexColor(GetTextCnt()+1, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	BuildSolidBrush(GetColors());
@@ -584,7 +586,7 @@ void InGameUI::Draw(UINT nFrame)
 	
 	BeginDraw(nFrame);
 	DrawBmp(GetLTRB(), 6, 1, mBitmapAnimOpacities);
-	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt - mIsScoreBoard /*InvisibleRectCount*/, 1, mIsOutlined);
+	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt - mIsScoreBoard /*InvisibleRectCount*/, GetGradientCnt(), mIsOutlined);
 	DrawBmp(GetLTRB(), 0, 6, mBitmapAnimOpacities);
 	TextDraw(GetTextBlock());
 	EndDraw(nFrame);
@@ -725,7 +727,6 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	BuildBrush(GetColors(), 4, gradientColors);
     SetTextRect();
 	//임시 시간
-	SetRunningTime(180.0f);
 }
 
 void InGameUI::Reset()

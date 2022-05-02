@@ -164,10 +164,13 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT InvisibleRectCn
             mD2dDeviceContext->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mD2dLinearGradientBrush.Get());
         }
     }
-    for (size_t i = GradientCnt; i < mD2dSolidBrush.size() - static_cast<size_t>(mTextCnt) - static_cast<size_t>(InvisibleRectCnt); ++i)
+    for (size_t i = GradientCnt; i < mD2dSolidBrush.size() - static_cast<size_t>(mTextCnt); ++i)
     {
         if (IsOutlined[i])
             mD2dDeviceContext->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mD2dSolidBrush[static_cast<size_t>(i) + static_cast<size_t>(mTextCnt)].Get());
+    }
+    for (size_t i = GradientCnt; i < mD2dSolidBrush.size() - static_cast<size_t>(mTextCnt) - static_cast<size_t>(InvisibleRectCnt); ++i)
+    {
         mD2dDeviceContext->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mD2dSolidBrush[static_cast<size_t>(i) + static_cast<size_t>(mTextCnt)].Get());
     }
 }
