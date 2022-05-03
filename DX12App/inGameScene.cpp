@@ -747,7 +747,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if (wParam == VK_SHIFT)
 		{
-			//mDriftParticleEnable = false;
+			mDriftParticleEnable = false;
 		}
 		
 		if(wParam == VK_END)
@@ -965,9 +965,12 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 		Math::RandFloat(-1.0f, 1.0f),
 		Math::RandFloat(-1.0f, 1.0f),
 		Math::RandFloat(1.0f, 5.0f));
-	gameInfo.PlayerRotation = mPlayer->GetLook();
 	gameInfo.CurrentTime = timer.CurrentTime();
 	gameInfo.ElapsedTime = timer.ElapsedTime();
+
+	XMFLOAT4X4 rotation;
+	XMStoreFloat4x4(&rotation, XMMatrixRotationQuaternion(XMLoadFloat4(&mPlayer->GetQuaternion())));
+	gameInfo.PlayerRotation = rotation;
 
 	mGameInfoCB->CopyData(0, gameInfo);
 	

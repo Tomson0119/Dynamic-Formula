@@ -945,7 +945,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 
 	// Input Texture와 ProcessingTexture[0]를 이용해 다운 샘플링
-	float threshold = 1.0f;
+	float threshold = 0.5f;
 	cmdList->SetComputeRoot32BitConstants(2, 1, &threshold, 0);
 
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
