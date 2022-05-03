@@ -57,12 +57,11 @@ void GSStreamOutput(point VertexIn gin[1],
                 vertex.Size = particle.Size;
                 vertex.Color = particle.Color;
             
+                float4 velocity = particle.Velocity;
+                velocity.x *= randFloat[i];
+                velocity.z *= randFloat[i];
                 
-                //vertex.Velocity = mul(float4(particle.Velocity * randFloat[i], 0.0f), gPlayerRotation).xyz;
-
-                //float velocityY = particle.Velocity.y;
-                vertex.Velocity = mul(float4(particle.Velocity * randFloat[i], 1.0f), gPlayerRotation).xyz;
-                //vertex.Velocity.y = velocityY;
+                vertex.Velocity = mul(velocity, gPlayerRotation).xyz;
                 
                 vertex.Type = PARTICLE_TYPE_FLARE;
                 vertex.Age.x = 0.0f;
