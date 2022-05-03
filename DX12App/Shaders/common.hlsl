@@ -28,10 +28,10 @@ cbuffer LightCB : register(b1)
 
 cbuffer GameInfoCB : register(b2)
 {
-    float4 gRandFloat4  : packoffset(c0);
-    float3 gPlayerPos   : packoffset(c1);
-    float  gCurrentTime : packoffset(c1.w);
-    float  gElapsedTime : packoffset(c2.x);
+    float4 gRandFloat4    : packoffset(c0);
+    float3 gPlayerForward : packoffset(c1);
+    float  gCurrentTime   : packoffset(c1.w);
+    float  gElapsedTime   : packoffset(c2.x);
 }
 
 cbuffer MaterialCB : register(b3)

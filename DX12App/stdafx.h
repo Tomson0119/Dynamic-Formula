@@ -260,7 +260,7 @@ struct MaterialConstants
 struct GameInfoConstants
 {
 	XMFLOAT4 RandFloat4;
-	XMFLOAT3 PlayerPosition;
+	XMFLOAT3 PlayerForward;
 	float CurrentTime;
 	float ElapsedTime;
 };

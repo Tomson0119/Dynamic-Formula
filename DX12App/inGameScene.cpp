@@ -87,7 +87,7 @@ void InGameScene::BuildObjects(
 	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
 	mDirectionalLight.SetInfo(
-		XMFLOAT3(0.9f, 0.9f, 0.9f),
+		XMFLOAT3(0.1f, 0.1f, 0.1f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		0.0f, 0.0f, 0.0f,
@@ -732,7 +732,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if (wParam == VK_SHIFT)
 		{
-			mDriftParticleEnable = false;
+			//mDriftParticleEnable = false;
 		}
 		
 		if(wParam == VK_END)
@@ -840,16 +840,16 @@ void InGameScene::BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 {
 	if (mPipelines[Layer::DriftParticle]->GetRenderObjects().size() == 0)
 	{
-		XMFLOAT3 offset[2] = { XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 0.0f) };
+		XMFLOAT3 offset[2] = { XMFLOAT3(-1.3f, -0.8f, -1.8f), XMFLOAT3(1.3f, -0.8f, -1.8f) };
 
-		for (int i = 2; i < 4; ++i)
+		for (int i = 0; i < 2; ++i)
 		{
 			auto obj = std::make_shared<SOParticleObject>(*mPlayer);
 
-			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.2f, 0.2f), Vector3::Normalize(XMFLOAT3(0.0f, 1.0f, 0.0f)), 10.0f, 5.0f, 100);
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 15.0f, -10.0f), 5.0f, 100);
 			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 			obj->SetMesh(particleEmittor);
-			obj->SetLocalOffset(offset[i - 2]);
+			obj->SetLocalOffset(offset[i]);
 
 			Pipeline* p = mPipelines[Layer::DriftParticle].get();
 			auto particlePipeline = dynamic_cast<StreamOutputPipeline*>(p);
@@ -946,11 +946,11 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 
 	GameInfoConstants gameInfo{};
 	gameInfo.RandFloat4 = XMFLOAT4(
-		Math::RandFloat(0.0f, 1.0f),
-		Math::RandFloat(0.0f, 1.0f),
+		Math::RandFloat(-1.0f, 1.0f),
+		Math::RandFloat(-1.0f, 1.0f),
 		Math::RandFloat(-1.0f, 1.0f),
 		Math::RandFloat(1.0f, 5.0f));
-	gameInfo.PlayerPosition = { 0.0f,0.0f,0.0f };
+	gameInfo.PlayerRotation = mPlayer->GetLook();
 	gameInfo.CurrentTime = timer.CurrentTime();
 	gameInfo.ElapsedTime = timer.ElapsedTime();
 

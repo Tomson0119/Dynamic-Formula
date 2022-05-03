@@ -10,9 +10,8 @@ struct VertexIn
     float3 PosL      : POSITION;
     float2 Size      : SIZE;
     float4 Color     : COLOR;
-    float3 Direction : DIRECTION;
+    float3 Velocity  : VELOCITY;
     float2 Age       : LIFETIME;
-    float  Speed     : SPEED;
     uint   Type      : TYPE;
 };
 
@@ -45,29 +44,33 @@ void GSStreamOutput(point VertexIn gin[1],
     {
         if (particle.Type == PARTICLE_TYPE_EMMITER && gParticleEnable)
         {
-            particle.Age.x = 0.0f;
-            particle.PosL = mul(float4(0, 0, 0, 1), gWorld).xyz;
-            pointStream.Append(particle);
+            float randFloat[3] = { gRandFloat4.x, gRandFloat4.y, gRandFloat4.z };
             
-            VertexIn vertex = (VertexIn)0;            
-            vertex.PosL = particle.PosL;
-            vertex.Size = particle.Size;
-            vertex.Color = particle.Color;
+            for (int i = 0; i < 3; ++i)
+            {
+                particle.Age.x = 0.0f;
+                particle.PosL = mul(float4(0, 0, 0, 1), gWorld).xyz;
+                pointStream.Append(particle);
             
-            float3 dir = particle.Direction;
-            //dir.x *= gRandFloat4.x;
-            //dir.y *= gRandFloat4.y;
-            vertex.Direction = dir;
+                VertexIn vertex = (VertexIn) 0;
+                vertex.PosL = particle.PosL;
+                vertex.Size = particle.Size;
+                vertex.Color = particle.Color;
             
-            vertex.Speed = particle.Speed * gRandFloat4.w;               
-            vertex.Type = PARTICLE_TYPE_FLARE;
-            vertex.Age.x = 0.0f;
-            vertex.Age.y = 1.0f;
-            pointStream.Append(vertex);
+                float velocityY = particle.Velocity.y;
+                vertex.Velocity = particle.Velocity * randFloat[i] * gPlayerForward;
+                vertex.Velocity.y = velocityY;
+                
+                vertex.Type = PARTICLE_TYPE_FLARE;
+                vertex.Age.x = 0.0f;
+                vertex.Age.y = 0.3f;
+                pointStream.Append(vertex);
+            }
         }
         else
         {
-            particle.PosL += particle.Direction * gElapsedTime * particle.Speed;
+            particle.Velocity.y = particle.Velocity.y + (-9.8f) * gElapsedTime;
+            particle.PosL += particle.Velocity * gElapsedTime;
             pointStream.Append(particle);
         }        
     }
