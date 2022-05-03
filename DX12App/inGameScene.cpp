@@ -747,7 +747,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if (wParam == VK_SHIFT)
 		{
-			mDriftParticleEnable = false;
+			//mDriftParticleEnable = false;
 		}
 		
 		if(wParam == VK_END)
