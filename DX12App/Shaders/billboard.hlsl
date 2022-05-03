@@ -67,14 +67,12 @@ void GSStreamOutput(point VertexIn gin[1],
                 
                 vertex.Type = PARTICLE_TYPE_FLARE;
                 vertex.Age.x = 0.0f;
-                vertex.Age.y = 1.0f;
+                vertex.Age.y = 0.5f;
                 pointStream.Append(vertex);
             }
         }
         else
         {
-            //particle.Size.y *= (1 - (particle.Age.y / particle.Age.x));
-            //particle.Size.x *= (1 - (particle.Age.y / particle.Age.x));
             particle.Velocity.y = particle.Velocity.y + (-9.8f) * gElapsedTime;
             particle.PosL += particle.Velocity * gElapsedTime;
             pointStream.Append(particle);
@@ -103,9 +101,10 @@ void GSRender(point VertexIn gin[1],
         look = normalize(look);
     
         float3 right = cross(up, look);
-    
-        float hw = gin[0].Size.x * 0.5f;
-        float hh = gin[0].Size.y * 0.5f;
+        
+        float sizeScale = (1 - (gin[0].Age.x / gin[0].Age.y));
+        float hw = gin[0].Size.x * 0.5f * sizeScale;
+        float hh = gin[0].Size.y * 0.5f * sizeScale;
     
         float4 v[4];
         v[0] = float4(posW + hw * right - hh * up, 1.0f);
