@@ -21,7 +21,7 @@ public:
 	void SetTransform(const btVector3& pos, const btQuaternion& quat);
 
 	void CreateVehicleRigidBody(btScalar mass, BPHandler& physics, BtCarShape& shape);
-	void CreateMissileRigidBody(btScalar mass, BtBoxShape& shape);
+	void CreateMissileRigidBody(btScalar mass, BtCompoundShape& shape);
 
 	void StopVehicle();
 	void ChangeVehicleMaskGroup(int maskGroup, BPHandler& physics);

@@ -44,6 +44,7 @@ void Map::Reset(BPHandler& physics)
 		cp.RemoveRigidBody(physics);
 		cp.Flush();
 	}
+	mCheckpoints.clear();
 }
 
 int Map::GetMask(const btCollisionObject& obj) const

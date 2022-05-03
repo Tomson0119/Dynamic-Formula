@@ -21,12 +21,12 @@ public:
 	void InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape);
 	void InitPlayerList(WaitRoom* room, int cpCount);
 
-	void SetFinishTime(std::chrono::seconds sec);
+	void SetGameTime(std::chrono::seconds countdownSec, std::chrono::seconds finishSec);
 	void SetPlayerTransform(int idx, const btVector3& pos, const btQuaternion& quat);
 
 	void CreateRigidbodies(int idx,
 		btScalar carMass, BtCarShape& carShape,
-		btScalar missileMass, BtBoxShape& missileShape);
+		btScalar missileMass, BtCompoundShape& missileShape);
 
 	void UpdatePhysicsWorld();
 	void FlushPhysicsWorld();
@@ -43,7 +43,8 @@ public:
 	WSAOVERLAPPEDEX* GetPhysicsOverlapped();
 
 private:
-	void CheckRunningTime(float elapsed);
+	void CheckCountdownTime();
+	void CheckRunningTime();
 
 	void CheckCollision();
 	void UpdatePlayers(float elapsed);
@@ -67,7 +68,8 @@ private:
 
 public:
 	void SendGameStartSuccess();
-	void SendStartSignal();
+	void SendReadySignal();
+	void SendStartSignal(uint64_t latency);
 
 private:
 	void BroadcastAllTransform();
@@ -88,15 +90,14 @@ private:
 private:
 	int mID;
 	int mUpdateTick;
+	std::atomic_bool mGameStarted;
+	Clock::time_point mStartTime;
 	Clock::time_point mFinishTime;
 
 	std::atomic_bool mActive;
 	std::atomic_int mPlayerCount;
 
 	WSAOVERLAPPEDEX mPhysicsOverlapped;
-
-	// TEST
-	std::atomic_bool mTestFlag = false;
 	
 	Map mMap;
 	PlayerList mPlayerList;
@@ -107,4 +108,7 @@ private:
 	std::vector<int> mPrevRanks;
 	std::vector<int> mCurrRanks;
 	std::shared_ptr<GameConstant> mConstantPtr;
+
+	//TEST
+	Clock::time_point mSentTime;
 };

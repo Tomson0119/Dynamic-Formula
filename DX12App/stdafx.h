@@ -290,15 +290,24 @@ inline void Print(const std::string& info, const XMFLOAT4& vec)
 
 ////////////////////////////////////////////////////////////////////////////
 //
-struct AtomicInt3
+class AtomicInt3
 {
+private:
+	struct Int3
+	{
+		int x;
+		int y;
+		int z;
+	};
+
+public:
 	AtomicInt3()
-		: x{ 0 }, y{ 0 }, z{ 0 }
+		: mValue{ Int3{ 0, 0, 0 } }
 	{
 	}
 
 	AtomicInt3(int x_, int y_, int z_)
-		: x{ x_ }, y{ y_ }, z{ z_ }
+		: mValue{ Int3{ x_, y_, z_ } }
 	{
 	}
 
@@ -316,24 +325,18 @@ struct AtomicInt3
 
 	void SetZero()
 	{
-		std::scoped_lock<std::mutex> lock(mut);
-		x = 0;
-		y = 0;
-		z = 0;
+		mValue = Int3{ 0, 0, 0 };
 	}
 
 	bool IsZero()
 	{
-		std::scoped_lock<std::mutex> lock(mut);
-		return (x == 0 && y == 0 && z == 0);
+		Int3 val = mValue;
+		return (val.x == 0 && val.y == 0 && val.z == 0);
 	}
 
 	void SetValue(int x_, int y_, int z_)
 	{
-		std::scoped_lock<std::mutex> lock(mut);
-		x = x_;
-		y = y_;
-		z = z_;
+		mValue = Int3{ x_, y_, z_ };
 	}
 
 	// Set values from btVector3
@@ -365,37 +368,47 @@ struct AtomicInt3
 
 	btVector3 GetBtVector3() const
 	{
-		std::scoped_lock<std::mutex> lock(mut);
-		return btVector3{ 
-			x / FIXED_FLOAT_LIMIT, 
-			y / FIXED_FLOAT_LIMIT, 
-			z / FIXED_FLOAT_LIMIT };
+		Int3 val = mValue;
+
+		return btVector3{
+			val.x / FIXED_FLOAT_LIMIT, 
+			val.y / FIXED_FLOAT_LIMIT,
+			val.z / FIXED_FLOAT_LIMIT };
 	}
 
 	XMFLOAT3 GetXMFloat3() const
 	{
-		std::scoped_lock<std::mutex> lock(mut);
+		Int3 val = mValue;
+
 		return XMFLOAT3{ 
-			x / FIXED_FLOAT_LIMIT, 
-			y / FIXED_FLOAT_LIMIT, 
-			z / FIXED_FLOAT_LIMIT };
+			val.x / FIXED_FLOAT_LIMIT, 
+			val.y / FIXED_FLOAT_LIMIT, 
+			val.z / FIXED_FLOAT_LIMIT };
 	}
 
-	int x;
-	int y;
-	int z;
-	mutable std::mutex mut;
+private:
+	std::atomic<Int3> mValue;
 };
 
-struct AtomicInt4
+class AtomicInt4
 {
+private:
+	struct Int4
+	{
+		int x;
+		int y;
+		int z;
+		int w;
+	};
+
+public:
 	AtomicInt4()
-		: x{ 0 }, y{ 0 }, z{ 0 }, w{ (int)FIXED_FLOAT_LIMIT }
+		: mValue{ Int4{ 0, 0, 0, (int)FIXED_FLOAT_LIMIT } }
 	{
 	}
 
 	AtomicInt4(int x_, int y_, int z_, int w_)
-		: x{ x_ }, y{ y_ }, z{ z_ }, w{ w_ }
+		: mValue{ Int4{ x_, y_, z_, w_ } }
 	{
 	}
 
@@ -413,11 +426,7 @@ struct AtomicInt4
 
 	void SetValue(int x_, int y_, int z_, int w_)
 	{
-		std::scoped_lock<std::mutex> lock(mut);
-		x = x_;
-		y = y_;
-		z = z_;
-		w = w_;
+		mValue = Int4{ x_, y_, z_, w_ };
 	}
 
 	void SetValue(const btQuaternion& quat)
@@ -456,35 +465,34 @@ struct AtomicInt4
 
 	bool IsZero() const
 	{
-		std::scoped_lock<std::mutex> lock(mut);
-		return (x == 0.0f && y == 0.0f && z == 0.0f && w == 0.0f);
+		Int4 val = mValue;
+		return (val.x == 0.0f && val.y == 0.0f && val.z == 0.0f && val.w == 0.0f);
 	}
 
 	btQuaternion GetBtQuaternion() const
 	{
-		std::scoped_lock<std::mutex> lock(mut);
+		Int4 val = mValue;
+
 		return btQuaternion{
-			x / FIXED_FLOAT_LIMIT,
-			y / FIXED_FLOAT_LIMIT,
-			z / FIXED_FLOAT_LIMIT,
-			w / FIXED_FLOAT_LIMIT };
+			val.x / FIXED_FLOAT_LIMIT,
+			val.y / FIXED_FLOAT_LIMIT,
+			val.z / FIXED_FLOAT_LIMIT,
+			val.w / FIXED_FLOAT_LIMIT };
 	}
 
 	XMFLOAT4 GetXMFloat4() const
 	{
-		std::scoped_lock<std::mutex> lock(mut);
+		Int4 val = mValue;
+
 		return XMFLOAT4{
-			x / FIXED_FLOAT_LIMIT,
-			y / FIXED_FLOAT_LIMIT,
-			z / FIXED_FLOAT_LIMIT,
-			w / FIXED_FLOAT_LIMIT };
+			val.x / FIXED_FLOAT_LIMIT,
+			val.y / FIXED_FLOAT_LIMIT,
+			val.z / FIXED_FLOAT_LIMIT,
+			val.w / FIXED_FLOAT_LIMIT };
 	}
 
-	int x;
-	int y;
-	int z;
-	int w;
-	mutable std::mutex mut;
+private:
+	std::atomic<Int4> mValue;
 };
 
 

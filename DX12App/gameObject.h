@@ -185,7 +185,8 @@ protected:
 	XMFLOAT4X4 mRotation = Matrix4x4::Identity4x4();
 
 	// Members for interpolation.
-	std::atomic_int mProgress = 0;
+	std::mutex mProgressMut; // TEST
+	float mProgress = 0.0f;
 
 	AtomicInt3 mPrevOrigin;
 	AtomicInt4 mPrevQuat;

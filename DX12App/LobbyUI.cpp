@@ -395,7 +395,7 @@ void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     /*Text*/
     // MakeRoom, RoomNum[6]
     colorList.push_back(D2D1::ColorF::DarkGray); 
-    colorList.push_back(D2D1::ColorF(D2D1::ColorF::DarkGray, 1.0f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));  

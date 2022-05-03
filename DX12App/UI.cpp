@@ -59,9 +59,6 @@ void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommand
     mD2dDeviceContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 
     ThrowIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory5), (IUnknown**)&mD2dWriteFactory));
-
-    //mvBitmaps.resize(2);
-
 }
 
 void UI::SetVectorSize(UINT nFrame)
@@ -105,7 +102,6 @@ HRESULT UI::LoadBitmapResourceFromFile(std::wstring ImageName, int index)
     ComPtr<IWICBitmapDecoder> Decoder;     
     ComPtr<IWICBitmapFrameDecode> Frame;   
     ComPtr<IWICFormatConverter> Converter;
-
     ComPtr<IWICStream> Stream;
     ComPtr<IWICBitmapScaler> Scaler;
 
@@ -168,10 +164,13 @@ void UI::RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT InvisibleRectCn
             mD2dDeviceContext->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mD2dLinearGradientBrush.Get());
         }
     }
-    for (size_t i = GradientCnt; i < mD2dSolidBrush.size() - static_cast<size_t>(mTextCnt) - static_cast<size_t>(InvisibleRectCnt); ++i)
+    for (size_t i = GradientCnt; i < mD2dSolidBrush.size() - static_cast<size_t>(mTextCnt); ++i)
     {
         if (IsOutlined[i])
             mD2dDeviceContext->DrawRectangle(D2D1::RectF(RectLTRB[i].x, RectLTRB[i].y, RectLTRB[i].z, RectLTRB[i].w), mD2dSolidBrush[static_cast<size_t>(i) + static_cast<size_t>(mTextCnt)].Get());
+    }
+    for (size_t i = GradientCnt; i < mD2dSolidBrush.size() - static_cast<size_t>(mTextCnt) - static_cast<size_t>(InvisibleRectCnt); ++i)
+    {
         mD2dDeviceContext->FillRectangle(D2D1::RectF(FillLTRB[i].x, FillLTRB[i].y, FillLTRB[i].z, FillLTRB[i].w), mD2dSolidBrush[static_cast<size_t>(i) + static_cast<size_t>(mTextCnt)].Get());
     }
 }
@@ -361,6 +360,9 @@ void UI::Reset()
     mBitmaps.clear();
     mBitmapFileNames.clear();
     mColors.clear();
+
+   
+  
 }
 
 void UI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,

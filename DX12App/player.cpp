@@ -486,7 +486,7 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 	}
 
 	GameObject::Update(elapsedTime, updateRate);
-	
+	OutputDebugStringA(("Progress: " + std::to_string(mProgress/updateRate) + "\n").c_str());
 	for (int i = 0; i < 4; ++i)
 		mWheel[i]->SetTransparent(mTransparentOn);
 
@@ -499,6 +499,7 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 		}
 		else
 		{
+			mWheel[i]->Update(elapsedTime, updateRate);
 			if(i < 2) mWheel[i]->SetSteeringAngle(mVehicleSteering);
 		}
 	}
@@ -752,7 +753,10 @@ void PhysicsPlayer::BuildCameras()
 
 void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
 {
-	mProgress = 0;
+	mProgressMut.lock();
+	mProgress = 0.0f;
+	mProgressMut.unlock();
+
 	mPrevOrigin = mCorrectionOrigin;
 	mPrevQuat = mCorrectionQuat;
 

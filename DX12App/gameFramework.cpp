@@ -86,6 +86,7 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_F9:
+			mScenes.top()->GetUI()->Flush();
 			mScenes.top()->GetUI()->Reset();
 			D3DFramework::ChangeFullScreenState();
 			mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
@@ -150,6 +151,7 @@ void GameFramework::CheckAndChangeScene()
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
 		InitScene(static_cast<SCENE_STAT>(nextScene));
+		mTimer.Reset();
 		break;
 	}
 	case SCENE_CHANGE_FLAG::POP:

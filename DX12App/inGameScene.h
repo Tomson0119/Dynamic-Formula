@@ -101,7 +101,7 @@ private:
 	void UpdateMissileObject();
 	void UpdatePlayerObjects();
 
-	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path);
+	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::string& path);
 	void LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 	void LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 
