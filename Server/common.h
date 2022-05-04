@@ -31,7 +31,7 @@
 #include <crtdbg.h>
 #endif
 
-//#define USE_DATABASE
+#define USE_DATABASE
 #define DEBUG_PACKET_TRANSFER
 
 namespace Math

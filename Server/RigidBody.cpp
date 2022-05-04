@@ -225,7 +225,9 @@ void MissileRigidBody::SetMissileComponents()
 	mRigidBody->setWorldTransform(newTransform);
 	mRigidBody->setGravity(mConstantPtr->MissileGravity);
 
-	btVector3 velocity = forward.normalize() * mConstantPtr->MissileSpeed;
+	btVector3 linearVel = mVehiclePtr->GetLinearVelocity();	
+	float speed = (float)linearVel.length() + mConstantPtr->MissileSpeed;
+	btVector3 velocity = forward.normalize() * speed;
 	SetLinearVelocity(velocity);
 }
 

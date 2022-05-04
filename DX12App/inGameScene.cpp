@@ -429,9 +429,14 @@ void InGameScene::BuildCarObject(
 	Print("Rotation: ", rotation);
 
 	if (mMeshList["Car_Body.obj"].empty())
-		mMeshList["Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
+	{
+		carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
+		mMeshList["Car_Body.obj"] = carObj->GetMeshes();
+	}
 	else
+	{
 		carObj->CopyMeshes(mMeshList["Car_Body.obj"]);
+	}
 
 	carObj->SetDiffuse("Car_Texture", mColorMap[(int)color]);
 	for (int i = 0; i < 4; ++i)
@@ -452,18 +457,27 @@ void InGameScene::BuildCarObject(
 		if (i % 2 == 0)
 		{
 			if (mMeshList["Car_Wheel_L.obj"].empty())
-				mMeshList["Car_Wheel_L.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
+			{
+				wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
+				mMeshList["Car_Wheel_L.obj"] = wheelObj->GetMeshes();
+			}
 			else
+			{
 				wheelObj->CopyMeshes(mMeshList["Car_Wheel_L.obj"]);
+			}
 		}
 		else
 		{
 			if (mMeshList["Car_Wheel_R.obj"].empty())
-				mMeshList["Car_Wheel_R.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
+			{
+				wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
+				mMeshList["Car_Wheel_R.obj"] = wheelObj->GetMeshes();
+			}
 			else
+			{
 				wheelObj->CopyMeshes(mMeshList["Car_Wheel_R.obj"]);
-		}
-		
+			}
+		}		
 		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
@@ -485,9 +499,16 @@ void InGameScene::BuildMissileObject(
 	mMissileObjects[idx] = std::make_shared<MissileObject>(position);
 
 	if (mMeshList.find("Missile") == mMeshList.end())
-		mMeshList["Missile"] = mMissileObjects[idx]->LoadModel(mDevice.Get(), cmdList, L"Models\\Missile.obj");
+	{
+		mMissileObjects[idx]->LoadModel(mDevice.Get(), cmdList, L"Models\\Missile.obj");
+		mMeshList["Missile"] = mMissileObjects[idx]->GetMeshes();
+		mTextureList["Missile"] = mMissileObjects[idx]->GetTextures();
+	}
 	else
-		mMissileObjects[idx]->CopyMeshes(mMeshList["Missile"]);
+	{
+		mMissileObjects[idx]->SetMeshes(mMeshList["Missile"]);
+		mMissileObjects[idx]->SetTextures(mTextureList["Missile"]);
+	}
 }
 
 void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
@@ -642,7 +663,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_warning_message* pck = reinterpret_cast<SC::packet_warning_message*>(packet);
 		OutputDebugStringA("Reverse drive warning!\n");
 		mpUI->ShowWarning();
-		// 5초간 유지
 		break;
 	}
 	case SC::INGAME_INFO:
@@ -1164,10 +1184,10 @@ void InGameScene::UpdateMissileObject()
 		{
 		case UPDATE_FLAG::CREATE:
 		{
+			flag = true;
 			missile->SetActive(true);
 			mPipelines[Layer::Default]->AppendObject(mMissileObjects[i]);
 			missile->SetUpdateFlag(UPDATE_FLAG::NONE);
-			flag = true;
 			break;
 		}
 		case UPDATE_FLAG::REMOVE:
@@ -1249,13 +1269,12 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 		wstring transparentObjPath;
 		transparentObjPath.assign(transparentpath.begin(), transparentpath.end());
-
 		
 		auto obj = make_shared<StaticObject>();
-
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
-			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+			obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+			mMeshList[objName] = obj->GetMeshes();
 			mOOBBList[objName] = obj->GetBoundingBox();
 		}
 		else
@@ -1295,7 +1314,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			auto transparentObj = make_shared<StaticObject>();
 			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
 
-			auto& transparentMeshes = transparentObj->GetMesh();
+			auto& transparentMeshes = transparentObj->GetMeshes();
 			for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
 			{
 				if (i->get()->GetMeshShape())

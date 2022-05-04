@@ -21,7 +21,7 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 	}
 }
 
-std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
+void GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
 	const std::wstring& path,
@@ -112,8 +112,6 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
 	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
-
-	return mMeshes;
 }
 
 void GameObject::LoadMaterial(
@@ -598,19 +596,24 @@ void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
 
 void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 {
+	if (updateRate <= 0.0f) return;
+
+	mProgressMut.lock();
+	if (mProgress == 0.0f)
+	{
+		mPrevOrigin = mPosition;
+		mPrevQuat = mQuaternion;
+	}
+	mProgress += elapsed;
+	float progress = std::min(1.0f, mProgress / updateRate);
+	mProgressMut.unlock();
+	
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
 	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
 
 	// Get correction state of extrapolated server postion/rotation.
 	const XMFLOAT3& correctOrigin = mCorrectionOrigin.GetXMFloat3();
 	const XMFLOAT4& correctQuat = mCorrectionQuat.GetXMFloat4();
-
-	if (updateRate <= 0.0f) return;
-
-	mProgressMut.lock();
-	mProgress += elapsed;
-	float progress = std::min(1.0f, mProgress / updateRate);
-	mProgressMut.unlock();
 
 	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
 	mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
