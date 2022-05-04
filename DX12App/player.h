@@ -45,7 +45,7 @@ public:
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
 
-	virtual void SetItemNum() { }
+	virtual void SetItemNum(int num) { }
 	virtual int GetItemNum() { return 0; }
 	virtual float GetDriftGauge() { return 0.0f; }
 

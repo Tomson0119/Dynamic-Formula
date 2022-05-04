@@ -769,6 +769,13 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mDriftParticleEnable = false;
 		}
+
+		if (wParam == 'Z' || wParam == 'X')
+		{
+			auto item = mPlayer->GetItemNum();
+			if (item > 0)
+				mPlayer->SetItemNum(item - 1);
+		}
 		
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
@@ -781,7 +788,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	}
-	//mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
+	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
 }
 
 void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed)
