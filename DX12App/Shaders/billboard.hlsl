@@ -99,9 +99,10 @@ void GSRender(point VertexIn gin[1],
         look = normalize(look);
     
         float3 right = cross(up, look);
-    
-        float hw = gin[0].Size.x * 0.5f;
-        float hh = gin[0].Size.y * 0.5f;
+        
+        float sizeScale = (1 - (gin[0].Age.x / gin[0].Age.y));
+        float hw = gin[0].Size.x * 0.5f * sizeScale;
+        float hh = gin[0].Size.y * 0.5f * sizeScale;
     
         float4 v[4];
         v[0] = float4(posW + hw * right - hh * up, 1.0f);
@@ -112,9 +113,9 @@ void GSRender(point VertexIn gin[1],
         float2 TexCoord[4] =
         {
             float2(0.0f, 1.0f),
-        float2(0.0f, 0.0f),
-        float2(1.0f, 1.0f),
-        float2(1.0f, 0.0f)
+            float2(0.0f, 0.0f),
+            float2(1.0f, 1.0f),
+            float2(1.0f, 0.0f)
         };
 
         GeoOut gout;
