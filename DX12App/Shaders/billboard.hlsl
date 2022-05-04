@@ -40,9 +40,9 @@ void GSStreamOutput(point VertexIn gin[1],
     
     particle.Age.x += gElapsedTime;
     
-    if (particle.Age.x <= particle.Age.y)
+    if (particle.Type == PARTICLE_TYPE_EMMITER)
     {
-        if (particle.Type == PARTICLE_TYPE_EMMITER && gParticleEnable)
+        if(gParticleEnable && particle.Age.x > particle.Age.y)
         {
             float randFloat[3] = { gRandFloat4.x, gRandFloat4.y, gRandFloat4.z };
             
@@ -65,16 +65,21 @@ void GSStreamOutput(point VertexIn gin[1],
                 
                 vertex.Type = PARTICLE_TYPE_FLARE;
                 vertex.Age.x = 0.0f;
-                vertex.Age.y = 1.0f;
+                vertex.Age.y = 0.3f;
                 pointStream.Append(vertex);
             }
         }
         else
         {
-            particle.Velocity.y = particle.Velocity.y + (-9.8f) * gElapsedTime;
-            particle.PosL += mul(float4(particle.Velocity, 1.0f), gPlayerRotation) * gElapsedTime;
+            particle.PosL = mul(float4(0, 0, 0, 1), gWorld).xyz;
             pointStream.Append(particle);
-        }        
+        }
+    }
+    else if (particle.Type == PARTICLE_TYPE_FLARE && particle.Age.x <= particle.Age.y)
+    {
+        particle.Velocity.y = particle.Velocity.y + (-9.8f) * gElapsedTime;
+        particle.PosL += mul(float4(particle.Velocity, 1.0f), gPlayerRotation) * gElapsedTime;
+        pointStream.Append(particle);
     }
 }
 
