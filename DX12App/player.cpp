@@ -342,18 +342,6 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		}
 	}
 
-	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
-	{
-		mVehicleSteering -= mSteeringIncrement * 2 * Elapsed;
-		if (mVehicleSteering < -mSteeringClamp)
-			mVehicleSteering = -mSteeringClamp;
-	}
-	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
-	{
-		mVehicleSteering += mSteeringIncrement * 2  * Elapsed;
-		if (mVehicleSteering > mSteeringClamp)
-			mVehicleSteering = mSteeringClamp;
-	}
 	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
 		accel = true;
@@ -467,6 +455,39 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 		wheelIndex = 1;
 		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
+	}
+#endif
+
+#ifndef STANDALONE
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	{
+		mVehicleSteering -= mSteeringIncrement * 2 * Elapsed;
+		if (mVehicleSteering < -mSteeringClamp)
+			mVehicleSteering = -mSteeringClamp;
+	}
+	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	{
+		mVehicleSteering += mSteeringIncrement * 2 * Elapsed;
+		if (mVehicleSteering > mSteeringClamp)
+			mVehicleSteering = mSteeringClamp;
+	}
+
+	if (mVehicleSteering > 0)
+	{
+		mVehicleSteering -= mSteeringIncrement * Elapsed;
+		if (mVehicleSteering < 0)
+		{
+			mVehicleSteering = 0;
+		}
+	}
+
+	else if (mVehicleSteering < 0)
+	{
+		mVehicleSteering += mSteeringIncrement * Elapsed;
+		if (mVehicleSteering > 0)
+		{
+			mVehicleSteering = 0;
+		}
 	}
 #endif
 }
