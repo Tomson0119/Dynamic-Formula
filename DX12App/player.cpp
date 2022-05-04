@@ -364,10 +364,8 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState('Z') & 0x8000/*&&mItemNum>0*/)
 	{
-		#ifdef STANDALONE
 		if (mBoosterLeft == 0.0f)
 			mBoosterLeft = mBoosterTime;
-		#endif
 
 		//mItemNum-=1;
 		//ItemUsingTime Ã³¸®
@@ -459,6 +457,16 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 #endif
 
 #ifndef STANDALONE
+	if (mBoosterLeft > 0)
+	{
+		mBoosterLeft -= Elapsed;
+	}
+	else if(mBoosterLeft < 0)
+	{
+		mBoosterLeft = 0.0f;
+		mRimLightOn = false;
+	}
+
 	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 	{
 		mVehicleSteering -= mSteeringIncrement * 2 * Elapsed;
@@ -471,7 +479,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		if (mVehicleSteering > mSteeringClamp)
 			mVehicleSteering = mSteeringClamp;
 	}
-
+	
 	if (mVehicleSteering > 0)
 	{
 		mVehicleSteering -= mSteeringIncrement * Elapsed;

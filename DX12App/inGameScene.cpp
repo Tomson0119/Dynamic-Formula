@@ -737,6 +737,7 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	auto item = mPlayer->GetItemNum();
 	switch (uMsg)
 	{
 	case WM_KEYUP:
@@ -770,11 +771,15 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			mDriftParticleEnable = false;
 		}
 
-		if (wParam == 'Z' || wParam == 'X')
+		if ((wParam == 'Z' || wParam == 'X') && item > 0)
 		{
-			auto item = mPlayer->GetItemNum();
-			if (item > 0)
-				mPlayer->SetItemNum(item - 1);
+			mPlayer->SetItemNum(item - 1);
+
+			if (wParam == 'Z')
+			{
+				mPlayer->SetBooster();
+				mPlayer->SetRimLight(true);
+			}
 		}
 		
 		if(wParam == VK_END)

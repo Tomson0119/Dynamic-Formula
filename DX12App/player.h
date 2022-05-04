@@ -47,6 +47,9 @@ public:
 
 	virtual void SetItemNum(int num) { }
 	virtual int GetItemNum() { return 0; }
+	virtual void SetBooster() { }
+	virtual void SetRimLight(bool rimlight) { }
+
 	virtual float GetDriftGauge() { return 0.0f; }
 
 protected:
@@ -108,6 +111,8 @@ public:
 	
 	virtual void UpdateFrontLight();
 
+	virtual void SetBooster() { mBoosterLeft = mBoosterTime; }
+	virtual void SetRimLight(bool rimlight) { mRimLightOn = rimlight; }
 public:
 	void SetSpawnTransform(SC::packet_spawn_transform* pck);
 
