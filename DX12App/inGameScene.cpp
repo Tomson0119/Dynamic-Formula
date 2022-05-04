@@ -861,7 +861,7 @@ void InGameScene::BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 		{
 			auto obj = std::make_shared<SOParticleObject>(*mPlayer);
 
-			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 15.0f, -10.0f), 5.0f, 100);
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 20.0f, 10.0f), 5.0f, 100);
 			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 			obj->SetMesh(particleEmittor);
 			obj->SetLocalOffset(offset[i]);
@@ -964,7 +964,7 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 		Math::RandFloat(-1.0f, 1.0f),
 		Math::RandFloat(-1.0f, 1.0f),
 		Math::RandFloat(-1.0f, 1.0f),
-		Math::RandFloat(1.0f, 5.0f));
+		Math::RandFloat(0.0f, 1.0f));
 	gameInfo.CurrentTime = timer.CurrentTime();
 	gameInfo.ElapsedTime = timer.ElapsedTime();
 

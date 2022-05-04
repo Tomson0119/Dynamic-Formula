@@ -492,6 +492,10 @@ void GameObject::SetWorldByMotionState()
 	mBtRigidBody->getMotionState()->getWorldTransform(btMat);
 	btMat.getOpenGLMatrix(m);
 
+	btQuaternion quaternion = btMat.getRotation();
+
+	mQuaternion = XMFLOAT4(quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
+
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 	ResetTransformVectors();
 }
