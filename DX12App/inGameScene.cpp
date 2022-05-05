@@ -404,6 +404,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
+	mMainCamera->SetPosition(mPlayer->GetPosition());
 	mCurrentCamera = mMainCamera.get();
 
 	for (const auto& [_, pso] : mPipelines)
