@@ -2,17 +2,16 @@
 #include "gameFramework.h"
 #include "camera.h"
 
-
 #include "InGameUI.h"
 #include "LobbyUI.h"
 #include "RoomUI.h"
 #include "LoginUI.h"
 
-
 #include "loginScene.h"
 #include "lobbyScene.h"
 #include "roomScene.h"
 #include "inGameScene.h"
+#include "NetLib/NetModule.h"
 
 GameFramework::GameFramework()
 	: D3DFramework()
@@ -159,6 +158,7 @@ void GameFramework::CheckAndChangeScene()
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		mScenes.pop();
 		mScenes.top()->GetUI()->SetStatePop(mSwapChainBufferCount, mD3dDevice, mCommandQueue.Get(), mSwapChainBuffers->GetAddressOf(), static_cast<float>(gFrameWidth), static_cast<float>(gFrameHeight));
+		mNetwork->SetInterface(mScenes.top().get());
 		break;
 	}
 	case SCENE_CHANGE_FLAG::LOGOUT:
