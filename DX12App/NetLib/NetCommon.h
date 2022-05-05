@@ -7,3 +7,5 @@
 #include "../../Server/Network/MemoryPool.h"
 #include "../../Server/Network/BufferQueue.h"
 #include "../../Server/Network/EndPoint.h"
+
+//#define STANDALONE

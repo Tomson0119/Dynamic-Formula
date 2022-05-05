@@ -717,9 +717,8 @@ ParticleMesh::ParticleMesh(
 	const XMFLOAT3& position,
 	const XMFLOAT4& color,
 	const XMFLOAT2& size,
-	const XMFLOAT3& direction,
+	const XMFLOAT3& velocity,
 	float lifeTime,
-	float speed,
 	int maxParticle)
 	: mUploadBufferFilledSize(NULL), mMaxParticle(maxParticle), mStart(true)
 {
@@ -727,9 +726,8 @@ ParticleMesh::ParticleMesh(
 	vertex.Position = position;
 	vertex.Color = color;
 	vertex.Size = size;
-	vertex.Direction = direction;
+	vertex.Velocity = velocity;
 	vertex.Age = XMFLOAT2(0.0f, lifeTime);
-	vertex.Speed = speed;
 	vertex.Type = 0;
 
 	Mesh::CreateResourceInfo(device, cmdList,

@@ -63,11 +63,12 @@ protected:
 	void InterpolateWorldTransform(float elapsed, float updateRate);
 
 public:
-	virtual std::vector<std::shared_ptr<Mesh>> LoadModel(
+	virtual void LoadModel(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		const std::wstring& path,
 		bool collider = false);
+
 	void LoadMaterial(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList,
@@ -91,9 +92,13 @@ public:
 
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
-	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes = meshes; }
-	void CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
 
+	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes = meshes; }
+	void SetTextures(const std::vector<std::shared_ptr<Texture>>& textures) { mTextures = textures; }
+	const std::vector<std::shared_ptr<Mesh>>& GetMeshes() const { return mMeshes; }
+	const std::vector<std::shared_ptr<Texture>>& GetTextures() const { return mTextures; }
+	
+	void CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
 	void SetBoudingBox(BoundingOrientedBox oobb);
 
 	void SetBoudingBoxFromMeshes();
@@ -153,8 +158,6 @@ public:
 	UINT GetMeshCount() const { return (UINT)mMeshes.size(); }
 	UINT GetTextureCount() const { return (UINT)mTextures.size(); }
 
-	std::vector<std::shared_ptr<Mesh>>& GetMesh() { return mMeshes; }
-
 	virtual ULONG GetCubeMapSize() const { return 0; }	
 	virtual ObjectConstants GetObjectConstants();
 	virtual InstancingInfo GetInstancingInfo();
@@ -201,7 +204,7 @@ protected:
 	btRigidBody* mBtRigidBody = NULL;
 	btCompoundShape* mBtCollisionShape = NULL;
 	std::vector<std::shared_ptr<Mesh>> mMeshes;
-	std::vector<std::unique_ptr<Texture>> mTextures;
+	std::vector<std::shared_ptr<Texture>> mTextures;
 
 	D3D12_GPU_DESCRIPTOR_HANDLE mCbvGPUAddress{};
 	D3D12_GPU_DESCRIPTOR_HANDLE mSrvGPUAddress{};
@@ -331,4 +334,26 @@ public:
 	virtual ~StaticObject() = default;
 
 	virtual void Update(float elapsedTime, float updateRate) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class SOParticleObject : public GameObject
+{
+public:
+	SOParticleObject(GameObject& parent);
+	virtual ~SOParticleObject() = default;
+	virtual void Update(float elapsedTime, float updateRate) override;
+
+	virtual void Draw(
+		ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset, bool isSO = false);
+
+	void SetLocalOffset(XMFLOAT3 offset);
+
+private:
+	GameObject& mParent;
+	XMFLOAT3 mLocalOffset = {0.0f, 0.0f, 0.0f};
 };

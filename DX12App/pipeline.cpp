@@ -222,15 +222,29 @@ void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
-		mRenderObjects[i]->Draw(
-			cmdList,
-			mRootParamMatIndex,
-			mRootParamCBVIndex,
-			mRootParamSRVIndex,
-			mMaterialCB->GetGPUVirtualAddress(matOffset), 
-			mMaterialCB->GetByteSize(), isSO);
+		if (mMaterialCB)
+		{
+			mRenderObjects[i]->Draw(
+				cmdList,
+				mRootParamMatIndex,
+				mRootParamCBVIndex,
+				mRootParamSRVIndex,
+				mMaterialCB->GetGPUVirtualAddress(matOffset),
+				mMaterialCB->GetByteSize(), isSO);
 
-		matOffset += mRenderObjects[i]->GetMeshCount();
+			matOffset += mRenderObjects[i]->GetMeshCount();
+		}
+		else
+		{
+			mRenderObjects[i]->Draw(
+				cmdList,
+				mRootParamMatIndex,
+				mRootParamCBVIndex,
+				mRootParamSRVIndex,
+				NULL,
+				NULL, isSO);
+
+		}
 	}
 }
 
@@ -312,8 +326,12 @@ void Pipeline::UpdateConstants()
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++) {
 		mObjectCB->CopyData(i, mRenderObjects[i]->GetObjectConstants());
-		mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);		
-		matOffset += mRenderObjects[i]->GetMeshCount();
+
+		if (mMaterialCB)
+		{
+			mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
+			matOffset += mRenderObjects[i]->GetMeshCount();
+		}
 	}
 }
 
@@ -389,8 +407,8 @@ void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* ro
 
 /////////////////////////////////////////////////////////////////////////
 //
-StreamOutputPipeline::StreamOutputPipeline()
-	: Pipeline(), mStreamOutputDesc({})
+StreamOutputPipeline::StreamOutputPipeline(UINT objectMaxCount)
+	: Pipeline(), mStreamOutputDesc({}), mObjectMaxCount(objectMaxCount)
 {
 }
 
@@ -426,6 +444,32 @@ void StreamOutputPipeline::SetAndDraw(
 
 	cmdList->SetPipelineState(mPSO[0].Get()); // Draw
 	Pipeline::Draw(cmdList, false);
+}
+
+void StreamOutputPipeline::BuildDescriptorHeap(ID3D12Device* device, UINT matIndex, UINT cbvIndex, UINT srvIndex)
+{
+	mRootParamMatIndex = matIndex;
+	mRootParamCBVIndex = cbvIndex;
+	mRootParamSRVIndex = srvIndex;
+
+	UINT numDescriptors = mObjectMaxCount * 2;
+
+	ThrowIfFailed(device->CreateDescriptorHeap(
+		&Extension::DescriptorHeapDesc(
+			numDescriptors,
+			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
+		IID_PPV_ARGS(&mCbvSrvDescriptorHeap)));
+
+	mCbvSrvDescriptorHeap->SetName(L"SO Descriptor Heap");
+
+	BuildCBV(device);
+	BuildSRV(device);
+}
+
+void StreamOutputPipeline::BuildConstantBuffer(ID3D12Device* device)
+{
+	mObjectCB = std::make_unique<ConstantBuffer<ObjectConstants>>(device, mObjectMaxCount);
 }
 
 void StreamOutputPipeline::BuildSOPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader)
@@ -464,14 +508,28 @@ void StreamOutputPipeline::BuildSOPipeline(ID3D12Device* device, ID3D12RootSigna
 		&psoDesc, IID_PPV_ARGS(&mPSO[1])));
 }
 
+void StreamOutputPipeline::AppendObject(ID3D12Device* device, const std::shared_ptr<GameObject>& obj)
+{
+	obj->SetCBVAddress(mConstantBufferGPUHandles[mRenderObjects.size()]);
+	obj->SetSRVAddress(mShaderResourceGPUHandles[mRenderObjects.size()]);
+	
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	cpuHandle.ptr += mObjectMaxCount * gCbvSrvUavDescriptorSize;
+	cpuHandle.ptr += mRenderObjects.size() * gCbvSrvUavDescriptorSize;
+	
+	obj->BuildSRV(device, cpuHandle);
+	
+	mRenderObjects.push_back(obj);
+}
+
 void StreamOutputPipeline::CreateStreamOutputDesc()
 {
 	mSODeclarations.push_back({ 0, "POSITION",  0, 0, 3, 0 });
 	mSODeclarations.push_back({ 0, "SIZE",      0, 0, 2, 0 });
 	mSODeclarations.push_back({ 0, "COLOR",     0, 0, 4, 0 });
-	mSODeclarations.push_back({ 0, "DIRECTION", 0, 0, 3, 0 });
+	mSODeclarations.push_back({ 0, "VELOCITY",  0, 0, 3, 0 });
 	mSODeclarations.push_back({ 0, "LIFETIME",  0, 0, 2, 0 });
-	mSODeclarations.push_back({ 0, "SPEED",	    0, 0, 1, 0 });
 	mSODeclarations.push_back({ 0, "TYPE",	    0, 0, 1, 0 });
 	
 	mStrides.push_back(sizeof(BillboardVertex));
@@ -483,6 +541,46 @@ void StreamOutputPipeline::CreateStreamOutputDesc()
 	mStreamOutputDesc.pSODeclaration = mSODeclarations.data();
 	mStreamOutputDesc.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
 }
+
+void StreamOutputPipeline::BuildCBV(ID3D12Device* device)
+{
+	if (mObjectCB == nullptr) return;
+
+	UINT stride = mObjectCB->GetByteSize();
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+	cbvDesc.BufferLocation = mObjectCB->GetGPUVirtualAddress(0);
+	cbvDesc.SizeInBytes = stride;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+	for (int i = 0; i < mObjectMaxCount; ++i)
+	{
+		device->CreateConstantBufferView(&cbvDesc, cpuHandle);
+		
+		mConstantBufferGPUHandles.push_back(gpuHandle);
+
+		cbvDesc.BufferLocation += stride;
+		cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+		gpuHandle.ptr += gCbvSrvUavDescriptorSize;
+	}
+}
+
+void StreamOutputPipeline::BuildSRV(ID3D12Device* device)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+	gpuHandle.ptr += mObjectMaxCount * gCbvSrvUavDescriptorSize;
+
+	for (int i = 0; i < mObjectMaxCount; ++i)
+	{
+		mShaderResourceGPUHandles.push_back(gpuHandle);
+
+		gpuHandle.ptr += gCbvSrvUavDescriptorSize;
+	}
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -847,7 +945,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 
 	// Input Texture와 ProcessingTexture[0]를 이용해 다운 샘플링
-	float threshold = 1.0f;
+	float threshold = 0.5f;
 	cmdList->SetComputeRoot32BitConstants(2, 1, &threshold, 0);
 
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();

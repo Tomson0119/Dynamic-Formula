@@ -572,7 +572,7 @@ void GameWorld::HandleCollision(const btCollisionObject& objA, const btCollision
 
 		if (&gameObjB == &mMap)
 			HandleCollisionWithMap(idx, mMap.GetCheckpointIndex(objB), aMask);
-		else
+		else if (&gameObjA != &gameObjB)
 			HandleCollisionWithPlayer(idx, GetPlayerIndex(gameObjB), aMask, bMask);
 	}
 }

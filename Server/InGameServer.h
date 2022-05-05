@@ -23,13 +23,13 @@ struct GameConstant
 	const float WheelDefaultFriction = 5.0f;
 	const float MinSpeedForDrift = 100.0f;
 
-	const float DefaultMaxSpeed = 350.0f;
-	const float BoostedMaxSpeed = 400.0f;
+	const float DefaultMaxSpeed = 270.0f;
+	const float BoostedMaxSpeed = 320.0f;
 
 	const float DefaultBreakingForce = 10.0f;
 
 	const float MissileSpeed = 50.0f;
-	const btVector3 MissileOffset = { 0.0f, 2.0f, 0.0f };
+	const btVector3 MissileOffset = { 0.0f, 1.0f, 0.0f };
 	const float MissileForwardMag = 5.0f;
 	const btVector3 MissileGravity = { 0.0f, 0.0f, 0.0f };
 
@@ -43,7 +43,7 @@ struct GameConstant
 	const btQuaternion StartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
 
 	const std::chrono::seconds CountdownTime = 4s; // 4초 후 시작
-	const std::chrono::seconds GameRunningTime = 180s; // 30초 TEST
+	const std::chrono::seconds GameRunningTime = 10s; // 30초 TEST
 };
 
 class InGameServer

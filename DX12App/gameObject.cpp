@@ -21,7 +21,7 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 	}
 }
 
-std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
+void GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
 	const std::wstring& path,
@@ -112,8 +112,6 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
 	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
-
-	return mMeshes;
 }
 
 void GameObject::LoadMaterial(
@@ -492,6 +490,10 @@ void GameObject::SetWorldByMotionState()
 	mBtRigidBody->getMotionState()->getWorldTransform(btMat);
 	btMat.getOpenGLMatrix(m);
 
+	btQuaternion quaternion = btMat.getRotation();
+
+	mQuaternion = XMFLOAT4(quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
+
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 	ResetTransformVectors();
 }
@@ -594,19 +596,24 @@ void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
 
 void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 {
+	if (updateRate <= 0.0f) return;
+
+	mProgressMut.lock();
+	if (mProgress == 0.0f)
+	{
+		mPrevOrigin = mPosition;
+		mPrevQuat = mQuaternion;
+	}
+	mProgress += elapsed;
+	float progress = std::min(1.0f, mProgress / updateRate);
+	mProgressMut.unlock();
+	
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
 	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
 
 	// Get correction state of extrapolated server postion/rotation.
 	const XMFLOAT3& correctOrigin = mCorrectionOrigin.GetXMFloat3();
 	const XMFLOAT4& correctQuat = mCorrectionQuat.GetXMFloat4();
-
-	if (updateRate <= 0.0f) return;
-
-	mProgressMut.lock();
-	mProgress += elapsed;
-	float progress = std::min(1.0f, mProgress / updateRate);
-	mProgressMut.unlock();
 
 	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
 	mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
@@ -1014,6 +1021,45 @@ void StaticObject::Update(float elapsedTime, float updateRate)
 	mOldWorld = mWorld;
 
 	UpdateTransform();
+}
 
-	//UpdateBoundingBox();
+SOParticleObject::SOParticleObject(GameObject& parent) : GameObject(), mParent{ parent }
+{
+}
+
+void SOParticleObject::Update(float elapsedTime, float updateRate)
+{
+	mPosition = mLocalOffset;
+
+	RotateDirectionVectors();
+	UpdateTransform();
+
+	mWorld = Matrix4x4::Multiply(mWorld, mParent.GetWorld());
+}
+
+void SOParticleObject::Draw(ID3D12GraphicsCommandList* cmdList, UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex, UINT64 matGPUAddress, UINT64 byteOffset, bool isSO)
+{
+	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
+
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	for (int i = 0; i < mMeshes.size(); i++)
+	{
+		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
+
+		int srvIndex = mMeshes[i]->GetSrvIndex();
+
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
+
+		mMeshes[i]->Draw(cmdList, isSO);
+	}
+}
+
+void SOParticleObject::SetLocalOffset(XMFLOAT3 offset)
+{
+	mLocalOffset = offset;
 }

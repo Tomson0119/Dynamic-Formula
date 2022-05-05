@@ -342,18 +342,6 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		}
 	}
 
-	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
-	{
-		mVehicleSteering -= mSteeringIncrement * 2 * Elapsed;
-		if (mVehicleSteering < -mSteeringClamp)
-			mVehicleSteering = -mSteeringClamp;
-	}
-	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
-	{
-		mVehicleSteering += mSteeringIncrement * 2  * Elapsed;
-		if (mVehicleSteering > mSteeringClamp)
-			mVehicleSteering = mSteeringClamp;
-	}
 	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
 		accel = true;
@@ -376,10 +364,8 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState('Z') & 0x8000/*&&mItemNum>0*/)
 	{
-		#ifdef STANDALONE
 		if (mBoosterLeft == 0.0f)
 			mBoosterLeft = mBoosterTime;
-		#endif
 
 		//mItemNum-=1;
 		//ItemUsingTime Ã³¸®
@@ -469,6 +455,49 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	}
 #endif
+
+#ifndef STANDALONE
+	if (mBoosterLeft > 0)
+	{
+		mBoosterLeft -= Elapsed;
+	}
+	else if(mBoosterLeft < 0)
+	{
+		mBoosterLeft = 0.0f;
+		mRimLightOn = false;
+	}
+
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	{
+		mVehicleSteering -= mSteeringIncrement * 2 * Elapsed;
+		if (mVehicleSteering < -mSteeringClamp)
+			mVehicleSteering = -mSteeringClamp;
+	}
+	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	{
+		mVehicleSteering += mSteeringIncrement * 2 * Elapsed;
+		if (mVehicleSteering > mSteeringClamp)
+			mVehicleSteering = mSteeringClamp;
+	}
+	
+	if (mVehicleSteering > 0)
+	{
+		mVehicleSteering -= mSteeringIncrement * Elapsed;
+		if (mVehicleSteering < 0)
+		{
+			mVehicleSteering = 0;
+		}
+	}
+
+	else if (mVehicleSteering < 0)
+	{
+		mVehicleSteering += mSteeringIncrement * Elapsed;
+		if (mVehicleSteering > 0)
+		{
+			mVehicleSteering = 0;
+		}
+	}
+#endif
 }
 
 void PhysicsPlayer::Update(float elapsedTime, float updateRate)
@@ -487,6 +516,7 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 
 	GameObject::Update(elapsedTime, updateRate);
 	OutputDebugStringA(("Progress: " + std::to_string(mProgress/updateRate) + "\n").c_str());
+	
 	for (int i = 0; i < 4; ++i)
 		mWheel[i]->SetTransparent(mTransparentOn);
 

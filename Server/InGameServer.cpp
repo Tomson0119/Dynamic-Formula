@@ -158,9 +158,13 @@ void InGameServer::RunPhysicsSimulation(int roomID)
 	msWorlds[roomID]->UpdatePhysicsWorld();
 
 	if (msWorlds[roomID]->IsActive())
+	{
 		AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
+	}
 	else
+	{
 		msWorlds[roomID]->FlushPhysicsWorld();
+	}
 }
 
 void InGameServer::PostPhysicsOperation(int roomID)

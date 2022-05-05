@@ -44,8 +44,8 @@ public:
 
 public:
 	void UpdateLight(float elapsed);
-	void AddParticleObject();
-	void DestroyParticleObject();
+	void BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList);
+	void DestroyDriftParticleObject();
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
 	void UpdateVolumetricConstant();
@@ -140,6 +140,8 @@ private:
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
 
 	std::map<std::string, std::vector<std::shared_ptr<Mesh>>> mMeshList;
+	std::map<std::string, std::vector<std::shared_ptr<Texture>>> mTextureList;
+
 	std::map<std::string, BoundingOrientedBox> mOOBBList;
 	std::map<Layer, std::unique_ptr<Pipeline>> mPipelines;
 	std::map<Layer, std::unique_ptr<ComputePipeline>> mPostProcessingPipelines;
@@ -158,7 +160,6 @@ private:
 
 	float mMissileInterval = 0.0f;
 	float mCubemapInterval = 0.0f;
-	float mParticleInterval = 0.0f;
 
 	UINT mCubemapDrawIndex = 0;
 
@@ -192,6 +193,8 @@ private:
 
 	bool mVolumetricEnable = true;
 
+	int32_t mDriftParticleEnable = false;
+
 	btRigidBody* mTrackRigidBody = NULL;
 
 	/*float mVolumetricOuter = 7.0f;
@@ -200,6 +203,10 @@ private:
 	
 	std::vector<LightBundle> mLights;
 	LightInfo mDirectionalLight;
+
+	// Game end counter
+	std::atomic_bool mGameEnded = false;
+	Clock::time_point mRevertTime;
 
 	std::unique_ptr<InGameUI> mpUI;
 };
