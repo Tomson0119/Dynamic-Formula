@@ -551,13 +551,12 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_start_signal* pck = reinterpret_cast<SC::packet_start_signal*>(packet);
 		mGameStarted = true;
+
 		OutputDebugStringA(("Delay: " + std::to_string(pck->delay_time_msec) + "\n").c_str());
 		OutputDebugStringA(("Delay: " + std::to_string(pck->running_time_sec) + "\n").c_str());
 
-		//mpUI->SetDelayTime((float)pck->delay_time_msec / 1000.0f);
 		mpUI->ShowGoAnim();
 		mpUI->SetRunningTime((float)pck->running_time_sec);
-		//mpUI->ShowStartAnim(); // 
 
 		break;
 	}
@@ -697,7 +696,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 
 		mpUI->ShowScoreBoard();
 		mGameEnded = true;
-		mRevertTime = Clock::now() + 5s; // waits for 5 seconds before revert.
+		mRevertTime = Clock::now() + std::chrono::seconds(WAIT_TO_REVERT); // waits for 5 seconds before revert.
 		break;
 	}
 	default:

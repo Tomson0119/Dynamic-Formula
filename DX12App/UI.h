@@ -24,6 +24,7 @@ public:
     virtual void Update(std::vector<std::string>& Texts) {}
     virtual void Update(float GTime) {}
     virtual void Draw(UINT nFrame);
+    virtual void SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue, ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) {}
 
     virtual HRESULT LoadBitmapResourceFromFile(std::wstring ImageName, int index);
     

@@ -17,22 +17,28 @@ public:
 	virtual void OnResize(ID3D12Resource **ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height) override;
 	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y)  override { return 0; }
+	virtual void SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue,
+		ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
 	void CreateFontFormat();
 	//For Packet
+	void SetAllPlayerNickNames(std::array<std::string, 8>& names);
 	void SetStartOrReady();
-	void UpdatePlayerState(int index, bool state) { mIsInRooms[index] = state; }
-	void UpdatePlayerNickName(int index, const std::string& name) { mNicknames[index] = name; }
+	void SetPlayerState(int index, bool state) { mIsInRooms[index] = state; }
+	void SetPlayerNickName(int index, const std::string& name) { mNicknames[index] = name; }
+	void SetPlayerAdmin(std::array<bool, 8> IsAdmins);
 private:
 	//For Packet
 	int mMyRoomID;
-	bool mIsRoomMaster = false;
-	bool mIsReady = false;
-
-	int mMapNum;
-	//std::array<D2D1::ColorF, 8> maColors;
-
+	std::array<bool, 8> mIsAdmin;
 	std::array<bool, 8> mIsInRooms;
 	std::array<std::string, 8> mNicknames;
+	bool mIsReady = false;
+
+	//int mMapNum;
+	//int mCarNum;
+	//std::array<D2D1::ColorF, 8> maColors;
+
+	
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
