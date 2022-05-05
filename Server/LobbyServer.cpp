@@ -156,6 +156,15 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 	switch (currentState)
 	{
 	case CLIENT_STAT::IN_GAME:
+	{
+		const int roomID = gClients[hostID]->RoomID;
+		if (roomID < 0 || gClients[hostID]->ChangeState(currentState, CLIENT_STAT::IN_ROOM) == false)
+		{
+			mLoginPtr->Disconnect(hostID);
+		}
+		mInGameServer.RemovePlayer(roomID, hostID);
+		break;
+	}
 	case CLIENT_STAT::IN_ROOM:
 	{
 		const int roomID = gClients[hostID]->RoomID;
@@ -168,9 +177,6 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 			break;
 		}
 
-		if(currentState == CLIENT_STAT::IN_GAME)
-			mInGameServer.RemovePlayer(roomID, hostID);
-		
 		// Packet must be sended before initializing client.
 		mRooms[roomID]->SendRemovePlayerInfoToAll(hostID);
 		SendRoomInfoToLobbyPlayers(roomID, hostID);
