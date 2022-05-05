@@ -117,7 +117,7 @@ bool LobbyServer::TryOpenRoom(int hostID)
 		if (gClients[hostID]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
 		{
 			mRooms[roomCount]->CloseRoom();	// if it fails : logic error
-			mLoginPtr->Disconnect(hostID);
+			//mLoginPtr->Disconnect(hostID);
 			return false;
 		}
 		return mRooms[roomCount]->AddPlayer(hostID); // if it fails : logic error
@@ -142,7 +142,7 @@ bool LobbyServer::TryEnterRoom(int roomID, int hostID)
 	{
 		if (gClients[hostID]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
 		{
-			mLoginPtr->Disconnect(hostID);
+			//mLoginPtr->Disconnect(hostID);
 			return false;
 		}
 		return mRooms[roomID]->AddPlayer(hostID); // if it fails : logic error.
@@ -158,23 +158,34 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 	case CLIENT_STAT::IN_GAME:
 	{
 		const int roomID = gClients[hostID]->RoomID;
-		if (roomID < 0 || gClients[hostID]->ChangeState(currentState, CLIENT_STAT::IN_ROOM) == false)
+		if (logout == false)
 		{
-			mLoginPtr->Disconnect(hostID);
+			if (roomID < 0 || gClients[hostID]->ChangeState(currentState, CLIENT_STAT::IN_ROOM) == false)
+			{
+				mLoginPtr->Disconnect(hostID);
+				break;
+			}
 		}
 		mInGameServer.RemovePlayer(roomID, hostID);
+		if (mInGameServer.IsWorldActive(roomID) == false
+			&& mRooms[roomID]->GameRunning())
+		{
+			mRooms[roomID]->RevertRoomState();
+		}
 		break;
 	}
 	case CLIENT_STAT::IN_ROOM:
 	{
 		const int roomID = gClients[hostID]->RoomID;
-
-		if (roomID < 0 || gClients[hostID]->PlayerIndex < 0 
-			|| gClients[hostID]->ChangeState(currentState, CLIENT_STAT::LOBBY) == false
-			|| mRooms[roomID]->RemovePlayer(hostID) == false)
+		if (logout == false)
 		{
-			mLoginPtr->Disconnect(hostID);
-			break;
+			if (roomID < 0 || gClients[hostID]->PlayerIndex < 0
+				|| gClients[hostID]->ChangeState(currentState, CLIENT_STAT::LOBBY) == false
+				|| mRooms[roomID]->RemovePlayer(hostID) == false)
+			{
+				mLoginPtr->Disconnect(hostID);
+				break;
+			}
 		}
 
 		// Packet must be sended before initializing client.
@@ -186,6 +197,7 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 		gClients[hostID]->PlayerIndex = -1;
 
 		if (mRooms[roomID]->Closed()) mRoomCount.fetch_sub(1);
+		
 		if (logout == false)
 		{
 			IncreasePlayerCount();
@@ -195,7 +207,7 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 	}
 	case CLIENT_STAT::LOBBY:
 	{
-		if (logout == false) 
+		if (logout == false)
 		{
 			DecreasePlayerCount();
 			mLoginPtr->Logout(hostID);
@@ -214,7 +226,7 @@ void LobbyServer::PressStartOrReady(int roomID, int hostID)
 	{
 		if (mRooms[roomID]->TryGameStart())
 		{
-			mRooms[roomID]->ChangeRoomState(ROOM_STAT::AVAILABLE, ROOM_STAT::GAME_STARTED);
+			mRooms[roomID]->SetRoomState(ROOM_STAT::GAME_STARTED);
 
 			// update game started flag of room
 			SendRoomInfoToLobbyPlayers(roomID);

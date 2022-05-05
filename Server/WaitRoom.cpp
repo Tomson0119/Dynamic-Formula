@@ -92,27 +92,6 @@ bool WaitRoom::RemovePlayer(int hostID)
 	return false;
 }
 
-void WaitRoom::IncreasePlayerCount()
-{
-	if (mPlayerCount < MAX_ROOM_CAPACITY) 
-		mPlayerCount += 1;
-
-	if (mPlayerCount >= MAX_ROOM_CAPACITY)
-	{
-		ROOM_STAT expected{ ROOM_STAT::AVAILABLE };
-		mState.compare_exchange_strong(expected, ROOM_STAT::ROOM_IS_FULL); // this should not fail.
-	}
-}
-
-void WaitRoom::DecreasePlayerCount()
-{
-	if (Empty() == false)
-		mPlayerCount -= 1;
-
-	if (Empty())
-		CloseRoom();
-}
-
 void WaitRoom::SwitchMap(int hostID)
 {
 	if (gClients[hostID]->PlayerIndex == mAdminIndex)
@@ -133,7 +112,7 @@ bool WaitRoom::TryGameStart()
 		}
 		return (mPlayerCount >= MIN_PLAYER_TO_START);
 	}();
-	return allReady;	
+	return allReady;
 }
 
 void WaitRoom::ToggleReady(int hostID)
@@ -141,6 +120,40 @@ void WaitRoom::ToggleReady(int hostID)
 	const int idx = gClients[hostID]->PlayerIndex;
 	mPlayers[idx]->Ready = !mPlayers[idx]->Ready;
 	SendUpdatePlayerInfoToAll(hostID, hostID);
+}
+
+void WaitRoom::RevertRoomState()
+{
+	ROOM_STAT expected{ ROOM_STAT::GAME_STARTED };
+	ROOM_STAT desired = (mPlayerCount == MAX_ROOM_CAPACITY) 
+		? ROOM_STAT::ROOM_IS_FULL : ROOM_STAT::AVAILABLE;
+	ChangeRoomState(expected, desired);
+}
+
+bool WaitRoom::ChangeRoomState(ROOM_STAT expected, const ROOM_STAT& desired)
+{
+	return mState.compare_exchange_strong(expected, desired);
+}
+
+void WaitRoom::IncreasePlayerCount()
+{
+	if (mPlayerCount < MAX_ROOM_CAPACITY) 
+		mPlayerCount += 1;
+
+	if (mPlayerCount >= MAX_ROOM_CAPACITY)
+	{
+		ROOM_STAT expected{ ROOM_STAT::AVAILABLE };
+		mState.compare_exchange_strong(expected, ROOM_STAT::ROOM_IS_FULL); // this should not fail.
+	}
+}
+
+void WaitRoom::DecreasePlayerCount()
+{
+	if (Empty() == false)
+		mPlayerCount -= 1;
+
+	if (Empty())
+		CloseRoom();
 }
 
 bool WaitRoom::IsAdmin(int hostID) const
@@ -261,7 +274,4 @@ void WaitRoom::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instSe
 	}
 }
 
-bool WaitRoom::ChangeRoomState(ROOM_STAT expected, const ROOM_STAT& desired)
-{
-	return mState.compare_exchange_strong(expected, desired);
-}
+
