@@ -56,7 +56,7 @@ void RoomUI::SetVectorSize(UINT nFrame)
     Fonts.push_back(L"Fonts\\Blazed.ttf");
     Fonts.push_back(L"Fonts\\Xenogears.ttf");
     Fonts.push_back(L"Fonts\\abberancy.ttf");
-    for(int i=0;i<GetTextCnt()-3;++i)
+    for(size_t i=0;i<static_cast<size_t>(GetTextCnt())-3;++i)
         Fonts.push_back(L"Fonts\\abberancy.ttf");
     FontLoad(Fonts);
 }
@@ -86,8 +86,9 @@ void RoomUI::Update(float GTime)
 {
     //for (UINT i = 0; i < GetTextCnt(); ++i)
         //GetTextBlock()[i].strText.clear();
-    for (int i = 3; i < GetTextCnt()-8; ++i)
+    for (size_t i = 3; i < static_cast<size_t>(GetTextCnt())-8; ++i)
         GetTextBlock()[i].strText.assign(mNicknames[i - 3]);
+
     GetTextBlock()[0].strText.assign("Ready");
     GetTextBlock()[1].strText.assign("Car");
     GetTextBlock()[2].strText.assign("Map");
@@ -313,7 +314,7 @@ void RoomUI::CreateFontFormat()
     fFontSize.push_back(GetFrameHeight() * 0.07f);  //Start
     fFontSize.push_back(GetFrameHeight() * 0.07f); //CarSelect
     fFontSize.push_back(GetFrameHeight() * 0.07f); //MapSelect
-    for(int i=0;i<GetTextCnt()-3;++i)
+    for(size_t i=0;i<static_cast<size_t>(GetTextCnt())-3;++i)
         fFontSize.push_back(GetFrameHeight() * 0.05f);
     SetFontSize(fFontSize);
 
@@ -321,7 +322,7 @@ void RoomUI::CreateFontFormat()
     Fonts.push_back(L"Blazed");
     Fonts.push_back(L"Xenogears");
     Fonts.push_back(L"abberancy");
-    for(int i=0;i<GetTextCnt()-3;++i)
+    for(size_t i=0;i<static_cast<size_t>(GetTextCnt())-3;++i)
         Fonts.push_back(L"abberancy");
     SetFonts(Fonts);
 
@@ -330,11 +331,16 @@ void RoomUI::CreateFontFormat()
     TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
     TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    for(int i=3;i<GetTextCnt();++i)
+    for(size_t i=3;i<static_cast<size_t>(GetTextCnt());++i)
         TextAlignments[i] = DWRITE_TEXT_ALIGNMENT_CENTER;
     SetTextAllignments(TextAlignments);
 
     UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextAlignment());
+}
+
+void RoomUI::SetPlayerInfo(int index, char* name, uint8_t color, bool empty, bool ready)
+{
+
 }
 
 void RoomUI::SetTextRect()
@@ -371,15 +377,16 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     
     std::vector<D2D1::ColorF> colorList;
     /*Text*/
-    //Text: StartOrReady, CarSelect, MapSelect, Nickname[8]
+    //Text: StartOrReady, CarSelect, MapSelect, Nickname[8], RedayOrStart[8]
     colorList.push_back(D2D1::ColorF::FloralWhite);
     colorList.push_back(D2D1::ColorF::Beige);
     colorList.push_back(D2D1::ColorF::Beige);
-    for(int i=0;i<GetTextCnt()-3;++i)
+    for(size_t i=0;i<static_cast<size_t>(GetTextCnt())-3;++i)
         colorList.push_back(D2D1::ColorF::Black);
     /*UI*/
     //UI:  StartBox, CarSelectBox[2], NicknameBox[8], MapSelectBox[2]
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Gold , 0.9f));
+
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Orange, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f));
@@ -388,9 +395,11 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Navy, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Violet, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Pink, 1.0f));
+
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Green, 1.0f));
+
     SetColors(colorList);
 
     BuildSolidBrush(GetColors());
@@ -399,7 +408,7 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     GetTextBlock()[0].strText.assign("Start");
     GetTextBlock()[1].strText.assign("Car");
     GetTextBlock()[2].strText.assign("Map");
-    for (int i = 0; i < 8; ++i)
+    for (size_t i = 0; i < 8; ++i)
         GetTextBlock()[i + 3].strText.assign("Nickname" + std::to_string(i + 1));
 
 }

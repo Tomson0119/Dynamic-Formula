@@ -1,6 +1,14 @@
 #pragma once
 #include "UI.h"
 
+struct Player
+{
+	std::string Nickname;
+	D2D1::ColorF color;
+	bool IsEmpty;
+	bool IsReady;
+};
+
 class RoomUI : public UI
 {
 public:
@@ -19,6 +27,8 @@ public:
 	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y)  override { return 0; }
 	virtual void SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue,
 		ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
+	virtual void SetPlayerInfo(int index, char* name, uint8_t color, bool empty, bool ready) override;
+
 	void CreateFontFormat();
 	//For Packet
 	void SetAllPlayerNickNames(std::array<std::string, 8>& names);

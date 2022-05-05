@@ -71,6 +71,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);
 		// 모든 플레이어 정보 초기화
+		mpUI->SetPlayerInfo();
 		break;
 	}
 	case SC::UPDATE_PLAYER_INFO:
