@@ -398,14 +398,6 @@ void InGameUI::SetScoreBoardTexts()
 	}
 	GetTextBlock()[GetTextCnt()-1].strText.assign("SCORE BOARD");
 
-	/*for (int i = 0; i < mScoreboard.size(); ++i)
-	{
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) +  static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname);
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT+CategoryCount) + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
-	}*/
 	SetIndexColor(GetTextCnt() + 3, D2D1::ColorF(D2D1::ColorF::Black, 0.999f));
 	SetIndexColor(GetTextCnt() + 2, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	SetIndexColor(GetTextCnt()+1, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));

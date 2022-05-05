@@ -19,20 +19,24 @@ public:
 	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y)  override { return 0; }
 	void CreateFontFormat();
 	//For Packet
+	void SetAllPlayerNickNames(std::array<std::string, 8>& names);
 	void SetStartOrReady();
-	void UpdatePlayerState(int index, bool state) { mIsInRooms[index] = state; }
-	void UpdatePlayerNickName(int index, const std::string& name) { mNicknames[index] = name; }
+	void SetPlayerState(int index, bool state) { mIsInRooms[index] = state; }
+	void SetPlayerNickName(int index, const std::string& name) { mNicknames[index] = name; }
+	void SetPlayerAdmin(std::array<bool, 8> IsAdmins);
 private:
 	//For Packet
 	int mMyRoomID;
-	bool mIsRoomMaster = false;
-	bool mIsReady = false;
-
-	int mMapNum;
-	//std::array<D2D1::ColorF, 8> maColors;
-
+	std::array<bool, 8> mIsAdmin;
 	std::array<bool, 8> mIsInRooms;
 	std::array<std::string, 8> mNicknames;
+	bool mIsReady = false;
+
+	//int mMapNum;
+	//int mCarNum;
+	//std::array<D2D1::ColorF, 8> maColors;
+
+	
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
