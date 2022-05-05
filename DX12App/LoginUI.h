@@ -20,11 +20,15 @@ public:
 	virtual int  OnProcessMouseClick(WPARAM buttonState, int x, int y) override;
 	virtual void ChangeTextAlignment(UINT uNum, UINT uState) override;
 	virtual std::pair<const std::string&, const std::string&> GetLoginPacket() { return std::make_pair(GetTextBlock()[3].strText, GetTextBlock()[4].strText); }
+	virtual void SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue, 
+		ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
 
 	void CreateFontFormat();
 	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
 	void SetLoginFail(bool TF) { mIsLoginFail = TF; }
 	void SetSignupBool(bool TF) { mIsSignup = TF; }
+
+
 	//void SetLoginOrSignup(std::string msg) { GetTextBlock()[1].strText = LoginOrSignup = msg; }
 	//void SetLoginOrSignupReverse(std::string msg) { GetTextBlock()[5].strText = LoginOrSignupReverse = msg; }
 private:

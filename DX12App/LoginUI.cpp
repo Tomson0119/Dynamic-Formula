@@ -17,6 +17,24 @@ LoginUI::LoginUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
         LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
 }
 
+void LoginUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue *pd3dCommandQueue,
+    ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
+{
+    Reset();
+
+    UI::Initialize(device, pd3dCommandQueue);
+    SetTextCnt(7);
+    SetRoundRectCnt(9);
+    SetBitmapCnt(1);
+    SetUICnt();
+
+    SetVectorSize(nFrame);
+    for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
+        LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
+
+    BuildObjects(ppd3dRenderTargets, width, height);
+}
+
 void LoginUI::SetVectorSize(UINT nFrame)
 {
     UI::SetVectorSize(nFrame);
@@ -197,9 +215,6 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
 void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
 {
-    //mTextBlocks[3].strText.clear();
-    //mTextBlocks[5].strText.clear();
-
     if (!Texts[0].empty())
     {
         GetTextBlock()[2].strText.clear();

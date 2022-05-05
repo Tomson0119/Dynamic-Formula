@@ -16,6 +16,24 @@ RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
         LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
 }
 
+void RoomUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue,
+    ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
+{
+    Reset();
+
+    UI::Initialize(device, pd3dCommandQueue);
+    SetTextCnt(19);
+    SetRoundRectCnt(12);
+    SetBitmapCnt(9);
+    SetUICnt();
+
+    SetVectorSize(nFrame);
+    for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
+        LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
+
+    BuildObjects(ppd3dRenderTargets, width, height);
+}
+
 void RoomUI::SetVectorSize(UINT nFrame)
 {
     UI::SetVectorSize(nFrame);
@@ -68,7 +86,7 @@ void RoomUI::Update(float GTime)
 {
     //for (UINT i = 0; i < GetTextCnt(); ++i)
         //GetTextBlock()[i].strText.clear();
-    for (int i = 3; i < GetTextCnt(); ++i)
+    for (int i = 3; i < GetTextCnt()-8; ++i)
         GetTextBlock()[i].strText.assign(mNicknames[i - 3]);
     GetTextBlock()[0].strText.assign("Ready");
     GetTextBlock()[1].strText.assign("Car");
@@ -295,14 +313,8 @@ void RoomUI::CreateFontFormat()
     fFontSize.push_back(GetFrameHeight() * 0.07f);  //Start
     fFontSize.push_back(GetFrameHeight() * 0.07f); //CarSelect
     fFontSize.push_back(GetFrameHeight() * 0.07f); //MapSelect
-    fFontSize.push_back(GetFrameHeight() * 0.05f);
-    fFontSize.push_back(GetFrameHeight() * 0.05f);
-    fFontSize.push_back(GetFrameHeight() * 0.05f);
-    fFontSize.push_back(GetFrameHeight() * 0.05f);
-    fFontSize.push_back(GetFrameHeight() * 0.05f);
-    fFontSize.push_back(GetFrameHeight() * 0.05f);
-    fFontSize.push_back(GetFrameHeight() * 0.05f);
-    fFontSize.push_back(GetFrameHeight() * 0.05f);
+    for(int i=0;i<GetTextCnt()-3;++i)
+        fFontSize.push_back(GetFrameHeight() * 0.05f);
     SetFontSize(fFontSize);
 
     std::vector<std::wstring> Fonts;

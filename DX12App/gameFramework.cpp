@@ -158,6 +158,7 @@ void GameFramework::CheckAndChangeScene()
 	{
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		mScenes.pop();
+		mScenes.top()->GetUI()->SetStatePop(mSwapChainBufferCount, mD3dDevice, mCommandQueue.Get(), mSwapChainBuffers->GetAddressOf(), static_cast<float>(gFrameWidth), static_cast<float>(gFrameHeight));
 		break;
 	}
 	case SCENE_CHANGE_FLAG::LOGOUT:
