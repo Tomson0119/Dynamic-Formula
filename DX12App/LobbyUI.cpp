@@ -16,6 +16,24 @@ LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
         LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
 }
 
+void LobbyUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue,
+    ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height)
+{
+    Reset();
+
+    UI::Initialize(device, pd3dCommandQueue);
+    SetTextCnt(7);
+    SetRoundRectCnt(18);
+    SetBitmapCnt(3);
+    SetUICnt();
+
+    SetVectorSize(nFrame);
+    for (int i = 0; i < static_cast<int>(GetBitmapCnt()); ++i)
+        LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
+
+    BuildObjects(ppd3dRenderTargets, width, height);
+}
+
 bool LobbyUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
 {
     if (x<TB.d2dLayoutRect.right && x>TB.d2dLayoutRect.left &&

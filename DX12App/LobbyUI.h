@@ -19,6 +19,8 @@ public:
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) override;
 	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y) override;
+	virtual void SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue,
+		ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
 	void CreateFontFormat();
 	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
 	void SetRoomNums(int num, int index) { mRoomNums[index] = num; }

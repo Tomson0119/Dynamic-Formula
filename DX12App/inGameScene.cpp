@@ -87,7 +87,7 @@ void InGameScene::BuildObjects(
 	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
 	mDirectionalLight.SetInfo(
-		XMFLOAT3(0.1f, 0.1f, 0.1f),
+		XMFLOAT3(0.9f, 0.9f, 0.9f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		0.0f, 0.0f, 0.0f,
@@ -747,7 +747,8 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			if (mCurrentCamera == mDirectorCamera.get())
 				mCurrentCamera = mMainCamera.get();
-			else {
+			else
+			{
 				mDirectorCamera->SetPosition(mMainCamera->GetPosition());
 				mCurrentCamera = mDirectorCamera.get();
 			}
