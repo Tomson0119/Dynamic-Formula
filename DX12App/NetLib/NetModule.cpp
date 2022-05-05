@@ -28,7 +28,7 @@ bool NetModule::Connect(const char* ip, short port)
 {
 	if (mNetClient->Connect(ip, port))
 	{
-		Init();		
+		Init();	
 		return true;
 	}
 	return false;
@@ -211,6 +211,7 @@ void NetModule::Init()
 	mIOCP.RegisterDevice(mNetClient->GetTCPSocket(), 0);
 	mNetClient->RecvMsg(false);
 
+	mNetClient->BindUDPSocket(CLIENT_PORT);
 	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
 	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };
