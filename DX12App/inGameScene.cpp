@@ -680,7 +680,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::GAME_END:
 	{
 		SC::packet_game_end* pck = reinterpret_cast<SC::packet_game_end*>(packet);
-		std::scoped_lock<std::mutex> lock(mpUI->GetMutex());
+		mpUI->GetMutex().lock();
 		for (int i = 0, idx=0; i < mPlayerObjects.size(); i++)
 		{
 			if (mPlayerObjects[i])
@@ -693,7 +693,11 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			}
 		}
 		mpUI->SortScoreboard();
+		mpUI->GetMutex().unlock();
+
 		mpUI->ShowScoreBoard();
+		mGameEnded = true;
+		mRevertTime = Clock::now() + 5s; // waits for 5 seconds before revert.
 		break;
 	}
 	default:
@@ -737,7 +741,6 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	auto item = mPlayer->GetItemNum();
 	switch (uMsg)
 	{
 	case WM_KEYUP:
@@ -770,17 +773,6 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mDriftParticleEnable = false;
 		}
-
-		if ((wParam == 'Z' || wParam == 'X') && item > 0)
-		{
-			mPlayer->SetItemNum(item - 1);
-
-			if (wParam == 'Z')
-			{
-				mPlayer->SetBooster();
-				mPlayer->SetRimLight(true);
-			}
-		}
 		
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
@@ -790,6 +782,20 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (wParam == VK_SHIFT)
 		{
 			mDriftParticleEnable = true;
+		}
+		if ((wParam == 'Z' || wParam == 'X'))
+		{
+			auto item = mPlayer->GetItemNum();
+			if (item > 0)
+			{
+				mPlayer->SetItemNum(item - 1);
+
+				if (wParam == 'Z')
+				{
+					mPlayer->SetBooster();
+					mPlayer->SetRimLight(true);
+				}
+			}
 		}
 		break;
 	}
@@ -816,19 +822,6 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		if (GetAsyncKeyState(VK_LSHIFT) & 0x8000)
 			mDirectorCamera->Upward(-dist * elapsed);
 	}
-	
-	if (mMissileInterval < 0.0f)
-	{
-		if (GetAsyncKeyState('X') & 0x8000)
-		{
-			//mMissileInterval = 1.0f;
-			//AppendMissileObject(cmdList, physics);
-		}
-	}
-	else
-	{
-		mMissileInterval -= elapsed;
-	}
 		
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 
@@ -854,6 +847,16 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
+	if (mGameEnded)
+	{
+		auto now = Clock::now();
+		if (now >= mRevertTime)
+		{
+			mNetPtr->Client()->RevertScene();
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+		}
+	}
+
 	float elapsed = timer.ElapsedTime();
 
 	if(mGameStarted)
@@ -874,7 +877,6 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	
 	UpdateConstants(timer);
 	cmdList->SetGraphicsRoot32BitConstants(8, 1, &mDriftParticleEnable, 4);
-
 	
 	mpUI.get()->Update(elapsed, mPlayer);
 }

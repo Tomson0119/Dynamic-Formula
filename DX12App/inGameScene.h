@@ -204,5 +204,9 @@ private:
 	std::vector<LightBundle> mLights;
 	LightInfo mDirectionalLight;
 
+	// Game end counter
+	std::atomic_bool mGameEnded = false;
+	Clock::time_point mRevertTime;
+
 	std::unique_ptr<InGameUI> mpUI;
 };
