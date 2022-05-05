@@ -9,14 +9,10 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	OutputDebugStringW(L"Login Scene Entered.\n");
 	Texts.resize(2);
 #ifndef STANDALONE
-	if (mNetPtr->Connect(SERVER_IP, SERVER_PORT))
+	if (mNetPtr->Connect(SERVER_IP, SERVER_PORT) == false)
 	{
-		// TEST
-		mNetPtr->Client()->RequestLogin("GM", "GM");
+		MessageBoxA(hwnd, "Cannot connect to server", "Connection Failed", MB_OK);
 	}
-	else OutputDebugStringW(L"Failed to connect to server.\n");
-#else
-	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 #endif
 }
 
@@ -27,8 +23,7 @@ void LoginScene::KeyInputFunc()
 void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
 	const std::shared_ptr<BulletWrapper>& physics)
-{
-	
+{	
 	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
 	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
@@ -65,6 +60,17 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
+	case WM_KEYUP:
+		if (wParam == VK_HOME)
+		{
+		#ifdef STANDALONE
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		#else
+			mNetPtr->Client()->RequestLogin("GM", "GM");
+		#endif
+		}
+		break;
+
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
@@ -85,12 +91,6 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			if(!Texts[IsPwd].empty() && (Texts[0].compare("ID") != 0||Texts[1].compare("Password") != 0))
 				Texts[IsPwd].pop_back();
 			break;
-		case VK_HOME:
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
-			return;
-		case VK_END:
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
-			return;
 		}
 		
 		if (!( (wParam < 57 && wParam>47) || (wParam > 64 && wParam < 91) || (wParam > 96 && wParam < 123) || wParam == 32) || 

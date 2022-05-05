@@ -36,7 +36,5 @@ public:
 	virtual UI* GetUI() const override { return mpUI.get(); }
 
 private:
-	std::chrono::high_resolution_clock::time_point mStartTime;
-	std::atomic_bool mSendFlag;
 	std::unique_ptr<RoomUI> mpUI;
 };

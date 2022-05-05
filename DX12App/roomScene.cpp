@@ -6,13 +6,6 @@ RoomScene::RoomScene(HWND hwnd, NetModule* netPtr)
 	: Scene{ hwnd, SCENE_STAT::ROOM, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"Room Scene Entered.\n");
-#ifdef STANDALONE
-	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
-#elif defined(START_GAME_INSTANT)
-	mStartTime = std::chrono::high_resolution_clock::now();
-	mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
-	mSendFlag = false;
-#endif
 }
 
 void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
@@ -32,11 +25,21 @@ void RoomScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_HOME:
+		{
+		#ifdef STANDALONE
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		#else
+			int roomId = mNetPtr->GetRoomID();
+			mNetPtr->Client()->ToggleReady(roomId);
+		#endif
 			break;
+		}
 		case VK_END:
+		{
+			mNetPtr->Client()->RevertScene();
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 			break;
+		}
 		}
 	}
 }
@@ -51,15 +54,6 @@ void RoomScene::OnProcessMouseDown(WPARAM btnState, int x, int y)
 void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mpUI->Update(timer.TotalTime());
-	// TEST
-#ifdef START_GAME_INSTANT
-	// send start packet again until game actually start
-	auto currTime = std::chrono::high_resolution_clock::now();
-	if ((currTime - mStartTime) > 1000ms && mSendFlag) {
-		mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
-		mSendFlag = false;
-	}
-#endif
 }
 
 void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
@@ -119,10 +113,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_game_start_fail* pck = reinterpret_cast<SC::packet_game_start_fail*>(packet);
 		if (pck->room_id == mNetPtr->GetRoomID())
 		{
-		#ifdef START_GAME_INSTANT
-			mStartTime = std::chrono::high_resolution_clock::now();
-			mSendFlag = true;	
-		#endif
+			OutputDebugStringA("Not everyone is ready.\n");
 		}
 		break;
 	}

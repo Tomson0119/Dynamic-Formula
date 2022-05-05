@@ -6,13 +6,6 @@ LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
 	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
-#ifdef STANDALONE
-	//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
-#else
-	#ifdef START_GAME_INSTANT
-		mNetPtr->Client()->RequestEnterRoom(0);
-	#endif
-#endif
 }
 
 void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
@@ -32,11 +25,20 @@ void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_HOME:
+		{
+		#ifdef STANDALONE
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		#else
+			mNetPtr->Client()->RequestEnterRoom(0); // TEST
+		#endif
 			break;
+		}
 		case VK_END:
+		{
+			mNetPtr->Client()->RevertScene();
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 			break;
+		}
 		}
 	}
 }
@@ -96,14 +98,12 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			break;
 
 		case static_cast<char>(ROOM_STAT::ROOM_IS_CLOSED):
+			mNetPtr->Client()->RequestNewRoom(); // TEST
 			break;
 
 		case static_cast<char>(ROOM_STAT::ROOM_IS_FULL):
 			break;
 		}
-	#ifdef START_GAME_INSTANT
-		mNetPtr->Client()->RequestNewRoom();
-	#endif
 		break;
 	}
 	case SC::ROOM_INSIDE_INFO:
