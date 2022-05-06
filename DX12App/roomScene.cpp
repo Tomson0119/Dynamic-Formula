@@ -44,11 +44,34 @@ void RoomScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 }
 
+void RoomScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
+{
+	mpUI->OnProcessMouseMove(btnState, x, y);
+}
+
 void RoomScene::OnProcessMouseDown(WPARAM btnState, int x, int y)
 {
+	
+}
+
+void RoomScene::OnProcessMouseUp(WPARAM btnState, int x, int y)
+{
 	// 레디/시작 버튼
+	if (mpUI->OnProcessMouseClick(btnState, x, y) == 1)
+	{
+		//mNetPtr->//??
+		//mNetPtr->Client()->ToggleReady();
+	}
 	// 맵 변경 버튼
+	if (mpUI->OnProcessMouseClick(btnState, x, y) == 2)
+	{
+		//NetPtr->//??
+	}
 	// 나가기 버튼
+	if (mpUI->OnProcessMouseClick(btnState, x, y) == 3)
+	{
+		//NetPtr->//??
+	}
 }
 
 void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
@@ -71,7 +94,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);
 		// 모든 플레이어 정보 초기화
-		mpUI->SetPlayerInfo();
+		//mpUI->SetPlayerInfo();
 		break;
 	}
 	case SC::UPDATE_PLAYER_INFO:
@@ -87,6 +110,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received update map info packet.\n");
 		SC::packet_update_map_info* pck = reinterpret_cast<SC::packet_update_map_info*>(packet);
 		mNetPtr->UpdateMapIndex(pck);
+		
 		break;
 	}
 	case SC::REMOVE_PLAYER:
@@ -106,6 +130,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 			mNetPtr->InitPlayerTransform(pck);
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+			
 		}
 		break;
 	}
@@ -115,6 +140,8 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (pck->room_id == mNetPtr->GetRoomID())
 		{
 			OutputDebugStringA("Not everyone is ready.\n");
+			//mpUI->SetStartFail();
+			
 		}
 		break;
 	}
