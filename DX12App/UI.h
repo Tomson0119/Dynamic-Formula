@@ -49,7 +49,6 @@ public:
     virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) {  }
     virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y) { return 0; }
     virtual void ChangeTextAlignment(UINT uNum, UINT uState) {}
-    virtual void SetPlayerInfo(int index, char* name, uint8_t color, bool empty, bool ready) {}
 
     void BeginDraw(UINT nFrame);
     void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);

@@ -1,12 +1,13 @@
 #pragma once
 #include "UI.h"
 
-struct PlayerDatas
+struct PlayerData
 {
 	std::string Nickname;
-	D2D1::ColorF color;
+	uint8_t color;
 	bool IsEmpty;
 	bool IsReady;
+	PlayerData() {}
 };
 
 class RoomUI : public UI
@@ -24,43 +25,62 @@ public:
 	virtual void Reset() override;
 	virtual void OnResize(ID3D12Resource **ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height) override;
+
+	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
 	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y) override;
 	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y)  override;
+	virtual void OnProcessMouseDown(WPARAM btnState, int x, int y) override;
+
 	virtual void SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue,
 		ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
-	virtual void SetPlayerInfo(int index, char* name, uint8_t color, bool empty, bool ready) override;
-
+	void SetIndexPlayerInfo(int index, char* name, uint8_t color, bool empty, bool ready);
+	const std::array<PlayerData, 8>& GetPlayerDatas() const { return mPlayerDatas; }
 	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
 	void CreateFontFormat();
+	void SetStateFail(int result);
+	void SetStateNotFail();
 	//For Packet
-	void SetAllPlayerNickNames(std::array<std::string, 8>& names);
-	void SetStartOrReady();
-	void SetPlayerState(int index, bool state) { mIsInRooms[index] = state; }
-	void SetPlayerNickName(int index, const std::string& name) { mNicknames[index] = name; }
-	void SetPlayerAdmin(std::array<bool, 8> IsAdmins);
-
+	// BackgroundCarVisible, BackgoundCarInvisible
+	void SetIndexCar(int index) { BitmapOpacities[index + 1] = 1.0f; }
+	void SetIndexCarInvisible(int index) { BitmapOpacities[index + 1] = 0.0f; }
+	// NicknameVisible, NicknameInvisible
+	void SetIndexNicknameVisible(int index) { SetIndexColor(index + 3, D2D1::ColorF(D2D1::ColorF::LightGray, 1.0f)); }
+	void SetIndexNicknameInvisible(int index) { SetIndexColor(index + 3, D2D1::ColorF(D2D1::ColorF::LightGray, 0.0f)); }
+	// BackgroundColorVisible, BackgroundColorInvisible
+	void SetIndexBackGroundVisible(int index);
+	void SetIndexBackGroundInvisible(int index);
+	//SetIsAdmin else NotAdmin
+	void SetIndexIsAdmin(int index);
+	// VisibleState, InvisibleState
+	void SetIndexInvisibleState(int index);
+	void SetIndexVisibleState(int index);
+	//SetNickname
+	void SetPlayerNickName(int index, const char* name) { mPlayerDatas[index].Nickname = name; }
+	//Ready Visible, Invisible
 	void SetIndexReady(int index);
-	void SetIndexCar(int index) { aOpacities[index + 1] = 1.0f; }
-	void SetIndexCarInvisible(int index) { aOpacities[index + 1] = 0.1f; }
-	void SetIndexNickname(int index) { SetIndexColor(index + 3, D2D1::ColorF(D2D1::ColorF::White, 1.0f)); }
-	void SetIndexNicknameInvisible(int index) { SetIndexColor(index + 3, D2D1::ColorF(D2D1::ColorF::White, 0.1f)); }
-	void SetIndexBackGround(int index, uint8_t color);
+	void SetIndexNotReady(int index);
 
+	void SetIndexReadyOrAdminText();
+	//RoomID
+	void SetRoomID(int roomid) { mRoomID = roomid; }
+	//MapID
+	void SetMapID(int mapid) { mMapID = mapid; }
+	//MyID
+	void SetMyIndex(int clientid) { mMyIndex = clientid; }
+	//AllPlayerSet
+	void SetAllPlayerState();
 private:
-	float aOpacities[9] = { 1.0f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
+	float BitmapOpacities[9] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 	//For Packet
-	int mMyRoomID;
+	int mRoomID;
+	int mMapID;
+	int mMyIndex = 0;
+	std::array<PlayerData, 8> mPlayerDatas;
 	std::array<bool, 8> mIsAdmin;
-	std::array<bool, 8> mIsInRooms;
-	std::array<std::string, 8> mNicknames;
-	bool mIsReady = false;
 
-	//int mMapNum;
-	//int mCarNum;
-	//std::array<D2D1::ColorF, 8> maColors;
-
+	std::array<bool, 8> mIsInvisible;
 	
-
+	std::array<std::string, 8> mReadyOrAdmin;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
 
