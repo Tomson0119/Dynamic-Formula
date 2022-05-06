@@ -157,11 +157,14 @@ void GameWorld::FlushPhysicsWorld()
 
 void GameWorld::RemovePlayerRigidBody(int idx)
 {
-	mPlayerList[idx]->SetRemoveFlag();
-	mPlayerCount -= 1;
+	if (IsActive())
+	{
+		mPlayerList[idx]->SetRemoveFlag();
+		mPlayerCount -= 1;
 
-	if (mPlayerCount == 0)
-		SetActive(false);
+		if (mPlayerCount == 0)
+			SetActive(false);
+	}
 }
 
 void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)

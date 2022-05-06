@@ -46,8 +46,7 @@ void Client::AssignAcceptedID(int id, SOCKET sck, sockaddr_in* addr)
 	mTCPSocket.SetSocket(sck);
 	mIsConnected = true;
 	
-	// TOOD: Shouldn't assing port by server..
-	addr->sin_port = htons(CLIENT_PORT + (short)id); // test	
+	addr->sin_port = htons(CLIENT_PORT); // test	
 	SetHostEp(EndPoint(*addr));
 }
 
@@ -121,7 +120,7 @@ void Client::SendLoginResult(LOGIN_STAT result, bool instSend)
 	pck.type = SC::LOGIN_RESULT;
 	pck.result = (char)result;
 	// TODO: Shouldn't send port in real life enviroment.
-	pck.port = ntohs(mHostEp.mAddress.sin_port);
+	//pck.port = ntohs(mHostEp.mAddress.sin_port);
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if(instSend) SendMsg();
 }

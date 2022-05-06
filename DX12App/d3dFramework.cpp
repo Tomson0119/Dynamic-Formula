@@ -1,4 +1,4 @@
- #include "stdafx.h"
+#include "stdafx.h"
 #include "d3dFramework.h"
 
 #include "InGameUI.h"

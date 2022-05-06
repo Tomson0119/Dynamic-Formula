@@ -78,7 +78,7 @@ void GSStreamOutput(point VertexIn gin[1],
     else if (particle.Type == PARTICLE_TYPE_FLARE && particle.Age.x <= particle.Age.y)
     {
         particle.Velocity.y = particle.Velocity.y + (-9.8f) * gElapsedTime;
-        particle.PosL += mul(float4(particle.Velocity, 1.0f), gPlayerRotation) * gElapsedTime;
+        particle.PosL += mul(float4(particle.Velocity, 1.0f), gPlayerRotation).xyz * gElapsedTime;
         pointStream.Append(particle);
     }
 }

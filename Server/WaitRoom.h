@@ -23,6 +23,7 @@ public:
 	bool TryGameStart();
 	void ToggleReady(int hostID);
 
+	void RevertRoomState();
 	bool ChangeRoomState(ROOM_STAT expected, const ROOM_STAT& desired);
 
 public:
@@ -40,6 +41,7 @@ public:
 	bool GameRunning() const { return (mState == ROOM_STAT::GAME_STARTED); }
 
 	bool IsAdmin(int hostID) const;
+	void SetRoomState(const ROOM_STAT& stat) { mState = stat; }
 	ROOM_STAT GetRoomState() const { return mState; }
 
 	int GetID() const { return mID; }

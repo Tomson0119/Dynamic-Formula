@@ -87,7 +87,7 @@ void InGameScene::BuildObjects(
 	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
 	mDirectionalLight.SetInfo(
-		XMFLOAT3(0.9f, 0.9f, 0.9f),
+		XMFLOAT3(0.2f, 0.2f, 0.2f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		0.0f, 0.0f, 0.0f,
@@ -404,6 +404,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
+	mMainCamera->SetPosition(mPlayer->GetPosition());
 	mCurrentCamera = mMainCamera.get();
 
 	for (const auto& [_, pso] : mPipelines)
@@ -551,13 +552,12 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_start_signal* pck = reinterpret_cast<SC::packet_start_signal*>(packet);
 		mGameStarted = true;
+
 		OutputDebugStringA(("Delay: " + std::to_string(pck->delay_time_msec) + "\n").c_str());
 		OutputDebugStringA(("Delay: " + std::to_string(pck->running_time_sec) + "\n").c_str());
 
-		//mpUI->SetDelayTime((float)pck->delay_time_msec / 1000.0f);
 		mpUI->ShowGoAnim();
 		mpUI->SetRunningTime((float)pck->running_time_sec);
-		//mpUI->ShowStartAnim(); // 
 
 		break;
 	}
@@ -697,7 +697,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 
 		mpUI->ShowScoreBoard();
 		mGameEnded = true;
-		mRevertTime = Clock::now() + 5s; // waits for 5 seconds before revert.
+		mRevertTime = Clock::now() + std::chrono::seconds(WAIT_TO_REVERT); // waits for 5 seconds before revert.
 		break;
 	}
 	default:
@@ -1442,7 +1442,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 		v.Direction = direction;
 		v.Position = pos;
 		v.Range = 30.0f;
-		v.VolumetricStrength = 1.0f;
+		v.VolumetricStrength = 0.5f;
 		v.outerCosine = cos(7.0f);
 		v.innerCosine = cos(6.0f);
 		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);

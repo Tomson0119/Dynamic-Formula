@@ -205,6 +205,7 @@ private:
 	LightInfo mDirectionalLight;
 
 	// Game end counter
+	static const int WAIT_TO_REVERT = 5;
 	std::atomic_bool mGameEnded = false;
 	Clock::time_point mRevertTime;
 
