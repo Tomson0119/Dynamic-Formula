@@ -1442,7 +1442,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 		v.Direction = direction;
 		v.Position = pos;
 		v.Range = 30.0f;
-		v.VolumetricStrength = 1.0f;
+		v.VolumetricStrength = 0.5f;
 		v.outerCosine = cos(7.0f);
 		v.innerCosine = cos(6.0f);
 		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
