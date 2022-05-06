@@ -2,17 +2,16 @@
 #include "gameFramework.h"
 #include "camera.h"
 
-
 #include "InGameUI.h"
 #include "LobbyUI.h"
 #include "RoomUI.h"
 #include "LoginUI.h"
 
-
 #include "loginScene.h"
 #include "lobbyScene.h"
 #include "roomScene.h"
 #include "inGameScene.h"
+#include "NetLib/NetModule.h"
 
 GameFramework::GameFramework()
 	: D3DFramework()
@@ -39,8 +38,8 @@ void GameFramework::OnResize()
 {
 	if (!mScenes.empty())
 	{
-		mScenes.top().get()->GetUI().get()->Flush();
-		mScenes.top().get()->GetUI().get()->Reset();
+		mScenes.top().get()->GetUI()->Flush();
+		mScenes.top().get()->GetUI()->Reset();
 	}
 	D3DFramework::OnResize();
 	if (!mScenes.empty()) 
@@ -78,6 +77,7 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			//if (mScenes.size() > 0);
 				//mScenes.pop();
 
+			OutputDebugStringA("Escape key inserted\n");
 			if (mScenes.empty()) {
 				PostQuitMessage(0);
 				return;
@@ -85,10 +85,10 @@ void GameFramework::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_F9:
-			mScenes.top().get()->GetUI()->Reset();
+			mScenes.top()->GetUI()->Flush();
+			mScenes.top()->GetUI()->Reset();
 			D3DFramework::ChangeFullScreenState();
 			mScenes.top().get()->GetUI()->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
-
 
 			break;
 		}
@@ -141,11 +141,6 @@ void GameFramework::InitScene(SCENE_STAT state)
 	WaitUntilGPUComplete();
 }
 
-void GameFramework::OnPreciseKeyInput()
-{
-
-}
-
 void GameFramework::CheckAndChangeScene()
 {
 	switch (mScenes.top()->GetSceneChangeFlag())
@@ -155,12 +150,15 @@ void GameFramework::CheckAndChangeScene()
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		char nextScene = static_cast<char>(mScenes.top()->GetSceneState()) + 1;
 		InitScene(static_cast<SCENE_STAT>(nextScene));
+		mTimer.Reset();
 		break;
 	}
 	case SCENE_CHANGE_FLAG::POP:
 	{
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		mScenes.pop();
+		mScenes.top()->GetUI()->SetStatePop(mSwapChainBufferCount, mD3dDevice, mCommandQueue.Get(), mSwapChainBuffers->GetAddressOf(), static_cast<float>(gFrameWidth), static_cast<float>(gFrameHeight));
+		mNetwork->SetInterface(mScenes.top().get());
 		break;
 	}
 	case SCENE_CHANGE_FLAG::LOGOUT:
@@ -177,9 +175,6 @@ void GameFramework::CheckAndChangeScene()
 void GameFramework::Update()
 {
 	D3DFramework::UpdateFrameStates();
-	
-	OnPreciseKeyInput();
-
 	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
 }
 
@@ -215,7 +210,7 @@ void GameFramework::Draw()
 
 	// 렌더링할 버퍼를 구체적으로 설정한다.
 
-	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer(), mCurrBackBufferIndex);
+	mScenes.top()->Draw(mCommandList.Get(), CurrentBackBufferView(), DepthStencilView(), CurrentBackBuffer(), mDepthStencilBuffer.Get(), mCurrBackBufferIndex);
 
 	// 화면 버퍼의 상태를 다시 PRESENT 상태로 전이한다.
 	/*mCommandList->ResourceBarrier(1, &Extension::ResourceBarrier(
@@ -232,7 +227,7 @@ void GameFramework::Draw()
 	// 커맨드 리스트의 명령어들을 다 실행하기까지 기다린다.
 	WaitUntilGPUComplete();
 
-	ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
+		ThrowIfFailed(mD3dDevice->GetDeviceRemovedReason());
 	ThrowIfFailed(mSwapChain->Present(0, 0));  // 화면버퍼를 Swap한다.	
 	
 	// 다음 후면버퍼 위치로 이동한 후 다시 기다린다.
@@ -240,4 +235,3 @@ void GameFramework::Draw()
 	
 	WaitUntilGPUComplete();
 }
-

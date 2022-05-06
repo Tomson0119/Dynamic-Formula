@@ -10,7 +10,6 @@ enum class OP : char
 	RECV,
 	SEND,
 	ACCEPT,
-	DISCONNECT,
 	PHYSICS
 };
 

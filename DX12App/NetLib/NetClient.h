@@ -4,7 +4,7 @@ class NetClient
 {	
 public:
 	NetClient();
-	~NetClient() = default;
+	~NetClient();
 
 public:
 	bool Connect(const char* ip, short port);
@@ -36,6 +36,7 @@ public:
 public:
 	SOCKET GetTCPSocket() const { return mTCPSocket.GetSocket(); }
 	SOCKET GetUDPSocket() const { return mUDPSocket.GetSocket(); }
+	bool IsConnected() const { return mIsConnected; }
 
 private:
 	Socket mTCPSocket;

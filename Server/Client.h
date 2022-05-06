@@ -25,7 +25,7 @@ public:
 
 public:
 	void SetLatency(uint64_t sendTime);
-	float GetLatency() const { return (float)mLatency / 1000.0f; }
+	uint64_t GetLatency() const { return mLatency; }
 
 	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
 	void SetState(const CLIENT_STAT& stat) { mState = stat; }

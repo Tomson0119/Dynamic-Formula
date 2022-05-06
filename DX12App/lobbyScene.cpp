@@ -1,19 +1,11 @@
 #include "stdafx.h"
 #include "lobbyScene.h"
 #include "NetLib/NetModule.h"
-#include "LobbyUI.h"
 
 LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::Bisque, netPtr }
+	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
-#ifdef STANDALONE
-	SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
-#else
-	#ifdef START_GAME_INSTANT
-		mNetPtr->Client()->RequestEnterRoom(0);
-	#endif
-#endif
 }
 
 void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
@@ -22,7 +14,7 @@ void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 {
 	mDevice = device;
 	mpUI = std::make_unique<LobbyUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
 void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -33,11 +25,20 @@ void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_HOME:
+		{
+		#ifdef STANDALONE
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		#else
+			mNetPtr->Client()->RequestEnterRoom(0); // TEST
+		#endif
 			break;
+		}
 		case VK_END:
+		{
+			mNetPtr->Client()->RevertScene();
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 			break;
+		}
 		}
 	}
 }
@@ -46,7 +47,7 @@ void LobbyScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 {
 	float dx = static_cast<float>(x);
 	float dy = static_cast<float>(y);
-	mpUI.get()->OnProcessMouseMove(btnState, x, y);
+	mpUI->OnProcessMouseMove(btnState, x, y);
 }
 
 void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
@@ -54,19 +55,19 @@ void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 	if (buttonState)
 	{
 		//LoginCheck
-		if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		//if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
+			//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 	}
 }
 
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
-	mpUI.get()->Update(timer.TotalTime());
+	mpUI->Update(timer.TotalTime());
 }
 
-void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, UINT nFrame)
+void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
 {
-	mpUI.get()->Draw(nFrame);
+	mpUI->Draw(nFrame);
 }
 
 bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
@@ -88,10 +89,21 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		
 		SC::packet_access_room_deny* pck = reinterpret_cast<SC::packet_access_room_deny*>(packet);
 		// show room access deny message
+		switch (pck->reason)
+		{
+		case static_cast<char>(ROOM_STAT::GAME_STARTED):
+			break;
 
-	#ifdef START_GAME_INSTANT
-		mNetPtr->Client()->RequestNewRoom();
-	#endif
+		case static_cast<char>(ROOM_STAT::MAX_ROOM_REACHED):
+			break;
+
+		case static_cast<char>(ROOM_STAT::ROOM_IS_CLOSED):
+			mNetPtr->Client()->RequestNewRoom(); // TEST
+			break;
+
+		case static_cast<char>(ROOM_STAT::ROOM_IS_FULL):
+			break;
+		}
 		break;
 	}
 	case SC::ROOM_INSIDE_INFO:
@@ -115,10 +127,16 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 					  pck->map_id, 
 					  pck->game_started, 
 					  pck->room_closed };
+
+			// 规 积己
+			// 
+			//mpUI->setRoomActive(pck->room_id);
 		}
 		else
 		{
 			mRoomList.erase(pck->room_id);
+
+			// 规 力芭
 		}
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);

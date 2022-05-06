@@ -21,7 +21,7 @@ void GameObject::BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuH
 	}
 }
 
-std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
+void GameObject::LoadModel(
 	ID3D12Device* device, 
 	ID3D12GraphicsCommandList* cmdList, 
 	const std::wstring& path,
@@ -112,8 +112,6 @@ std::vector<std::shared_ptr<Mesh>> GameObject::LoadModel(
 
 	mOOBB.Center = { (min_x->x + max_x->x) / 2, (min_y->y + max_y->y) / 2, (min_z->z + max_z->z) / 2 };
 	mOOBB.Extents = { (max_x->x - min_x->x) / 2, (max_y->y - min_y->y) / 2, (max_z->z - min_z->z) / 2 };
-
-	return mMeshes;
 }
 
 void GameObject::LoadMaterial(
@@ -294,6 +292,7 @@ void GameObject::BuildRigidBody(float mass, const std::shared_ptr<BulletWrapper>
 		btTransform btObjectTransform;
 		btObjectTransform.setIdentity();
 		btObjectTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
+		btObjectTransform.setRotation(btQuaternion(mQuaternion.x, mQuaternion.y, mQuaternion.z, mQuaternion.w));
 		mBtRigidBody = physics->CreateRigidBody(mass, btObjectTransform, mBtCollisionShape);
 	}
 }
@@ -336,7 +335,7 @@ void GameObject::Update(float elapsedTime, float updateRate)
 		UpdateTransform();
 	}
 
-	UpdateBoundingBox();
+	//UpdateBoundingBox();
 }
 
 void GameObject::Draw(
@@ -491,6 +490,10 @@ void GameObject::SetWorldByMotionState()
 	mBtRigidBody->getMotionState()->getWorldTransform(btMat);
 	btMat.getOpenGLMatrix(m);
 
+	btQuaternion quaternion = btMat.getRotation();
+
+	mQuaternion = XMFLOAT4(quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
+
 	mWorld = Matrix4x4::glMatrixToD3DMatrix(m);
 	ResetTransformVectors();
 }
@@ -534,6 +537,17 @@ void GameObject::UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, 
 {
 	for (int i = 0; i < mMeshes.size(); i++)
 		matCnst->CopyData(offset + i, mMeshes[i]->GetMaterialConstant());
+}
+
+void GameObject::SortMeshes()
+{
+	std::sort(
+		mMeshes.begin(), mMeshes.end(),
+		[](std::shared_ptr<Mesh> first, std::shared_ptr<Mesh> second)
+		{
+			return first->mOOBB.Center.z > second->mOOBB.Center.z;
+		}
+	);
 }
 
 void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
@@ -582,12 +596,18 @@ void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
 
 void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 {
-	if (mPrevOrigin.IsZero())
-	{
-		mPrevOrigin.SetValue(mPosition);
-		mPrevQuat.SetValue(mQuaternion);
-	}
+	if (updateRate <= 0.0f) return;
 
+	mProgressMut.lock();
+	if (mProgress == 0.0f)
+	{
+		mPrevOrigin = mPosition;
+		mPrevQuat = mQuaternion;
+	}
+	mProgress += elapsed;
+	float progress = std::min(1.0f, mProgress / updateRate);
+	mProgressMut.unlock();
+	
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
 	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
 
@@ -595,24 +615,20 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 	const XMFLOAT3& correctOrigin = mCorrectionOrigin.GetXMFloat3();
 	const XMFLOAT4& correctQuat = mCorrectionQuat.GetXMFloat4();
 
-	if (updateRate <= 0.0f) return;
-
-	float progress = mProgress / FIXED_FLOAT_LIMIT;
-	progress = std::min(1.0f, progress + elapsed / updateRate);
-	mProgress = (int)(progress * FIXED_FLOAT_LIMIT);
-
 	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
 	mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
 }
 
 void GameObject::SetPosition(float x, float y, float z)
 {
-	mPosition = { x,y,z };
+	SetPosition({ x, y, z });
 }
 
 void GameObject::SetPosition(const XMFLOAT3& pos)
 {
-	SetPosition(pos.x, pos.y, pos.z);
+	mPosition = pos;
+	mPrevOrigin = pos;
+	mCorrectionOrigin = pos;
 }
 
 void GameObject::SetDiffuse(const std::string& name, const XMFLOAT4& color)
@@ -637,6 +653,11 @@ void GameObject::CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes)
 		mMeshes.push_back(std::make_shared<Mesh>(*meshes[i]));
 	}
 	SetBoudingBoxFromMeshes();
+}
+
+void GameObject::SetBoudingBox(BoundingOrientedBox oobb)
+{
+	mOOBB = oobb;
 }
 
 void GameObject::SetBoudingBoxFromMeshes()
@@ -689,6 +710,13 @@ void GameObject::SetMovement(XMFLOAT3& dir, float speed)
 void GameObject::ChangeUpdateFlag(UPDATE_FLAG expected, const UPDATE_FLAG& desired)
 {
 	mUpdateFlag.compare_exchange_strong(expected, desired);
+}
+
+const XMFLOAT4& GameObject::GetMeshDiffuse(const std::string& name)
+{
+	auto iter = std::find_if(mMeshes.begin(), mMeshes.end(),
+		[&name](const auto& mesh) { return (mesh->GetMaterialName() == name); });
+	return (*iter)->GetDiffuse();
 }
 
 void GameObject::Move(float dx, float dy, float dz)
@@ -750,6 +778,8 @@ void GameObject::Rotate(const XMFLOAT3& axis, float angle)
 void GameObject::SetQuaternion(const XMFLOAT4& quaternion)
 {
 	mQuaternion = quaternion;
+	mPrevQuat = quaternion;
+	mCorrectionQuat = quaternion;
 }
 
 void GameObject::SetQuaternion(float x, float y, float z, float w)
@@ -797,6 +827,8 @@ ObjectConstants GameObject::GetObjectConstants()
 	}
 	objCnst.cubemapOn = mCubemapOn;
 	objCnst.motionBlurOn = mMotionBlurOn;
+	objCnst.rimLightOn = mRimLightOn;
+	objCnst.invincibleOn = mTransparentOn;
 
 	return objCnst;
 }
@@ -952,16 +984,26 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 	mPrevQuat = mCorrectionQuat;
 
 	mCorrectionOrigin.SetValue(
-		(int)(pck->position[0] + pck->linear_vel[0] * latency),
-		(int)(pck->position[1] + pck->linear_vel[1] * latency),
-		(int)(pck->position[2] + pck->linear_vel[2] * latency));
+		pck->position[0],
+		pck->position[1],
+		pck->position[2]);
 
-	// Convert to left-handed
+	mCorrectionOrigin.Extrapolate(
+		pck->linear_vel[0],
+		pck->linear_vel[1],
+		pck->linear_vel[2],
+		latency);
+
 	mCorrectionQuat.SetValue(
-		+pck->quaternion[0],
-		-(int)(pck->quaternion[1]),
-		-(int)(pck->quaternion[3]),
-		-(int)(pck->quaternion[2]));
+		pck->quaternion[0],
+		pck->quaternion[1],
+		pck->quaternion[2],
+		pck->quaternion[3]);
+}
+
+void MissileObject::SetActive(bool state)
+{
+	mActive = state;
 }
 
 void MissileObject::Update(float elapsedTime, float updateRate)
@@ -969,16 +1011,7 @@ void MissileObject::Update(float elapsedTime, float updateRate)
 	if (mActive)
 	{
 		GameObject::Update(elapsedTime, updateRate);
-		mDuration -= elapsedTime;
 	}
-}
-
-StaticObject::StaticObject()
-{
-}
-
-StaticObject::~StaticObject()
-{
 }
 
 void StaticObject::Update(float elapsedTime, float updateRate)
@@ -988,6 +1021,45 @@ void StaticObject::Update(float elapsedTime, float updateRate)
 	mOldWorld = mWorld;
 
 	UpdateTransform();
+}
 
-	UpdateBoundingBox();
+SOParticleObject::SOParticleObject(GameObject& parent) : GameObject(), mParent{ parent }
+{
+}
+
+void SOParticleObject::Update(float elapsedTime, float updateRate)
+{
+	mPosition = mLocalOffset;
+
+	RotateDirectionVectors();
+	UpdateTransform();
+
+	mWorld = Matrix4x4::Multiply(mWorld, mParent.GetWorld());
+}
+
+void SOParticleObject::Draw(ID3D12GraphicsCommandList* cmdList, UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex, UINT64 matGPUAddress, UINT64 byteOffset, bool isSO)
+{
+	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
+
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
+	for (int i = 0; i < mMeshes.size(); i++)
+	{
+		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
+
+		int srvIndex = mMeshes[i]->GetSrvIndex();
+
+		if (srvIndex >= 0)
+		{
+			srvGpuHandle = mSrvGPUAddress;
+			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
+			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
+		}
+
+		mMeshes[i]->Draw(cmdList, isSO);
+	}
+}
+
+void SOParticleObject::SetLocalOffset(XMFLOAT3 offset)
+{
+	mLocalOffset = offset;
 }

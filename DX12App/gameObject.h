@@ -47,6 +47,7 @@ public:
 	virtual void ChangeCurrentRenderTarget() {}
 
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
+	void SortMeshes();
 
 protected:
 	virtual void UpdateTransform();
@@ -62,11 +63,12 @@ protected:
 	void InterpolateWorldTransform(float elapsed, float updateRate);
 
 public:
-	virtual std::vector<std::shared_ptr<Mesh>> LoadModel(
+	virtual void LoadModel(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList, 
 		const std::wstring& path,
 		bool collider = false);
+
 	void LoadMaterial(
 		ID3D12Device* device, 
 		ID3D12GraphicsCommandList* cmdList,
@@ -90,8 +92,14 @@ public:
 
 	void SetLook(XMFLOAT3& look);
 	void SetMesh(const std::shared_ptr<Mesh>& mesh) { mMeshes.push_back(mesh); }
+
 	void SetMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes) { mMeshes = meshes; }
+	void SetTextures(const std::vector<std::shared_ptr<Texture>>& textures) { mTextures = textures; }
+	const std::vector<std::shared_ptr<Mesh>>& GetMeshes() const { return mMeshes; }
+	const std::vector<std::shared_ptr<Texture>>& GetTextures() const { return mTextures; }
+	
 	void CopyMeshes(const std::vector<std::shared_ptr<Mesh>>& meshes);
+	void SetBoudingBox(BoundingOrientedBox oobb);
 
 	void SetBoudingBoxFromMeshes();
 
@@ -133,14 +141,16 @@ public:
 	void Scale(const XMFLOAT3& scale);
 	void Scale(float scale);
 
-public:
-	XMFLOAT3 GetPosition() const { return mPosition; }
-	XMFLOAT3 GetRight() const { return mRight; }
-	XMFLOAT3 GetLook() const { return mLook; }
-	XMFLOAT3 GetUp() const { return mUp; }
-	XMFLOAT4 GetQuaternion() const { return mQuaternion; }
+	void SetTransparent(bool transparent) { mTransparentOn = transparent; }
 
-	XMFLOAT4X4 GetWorld() const { return mWorld; }
+public:
+	const XMFLOAT3& GetPosition() const { return mPosition; }
+	const XMFLOAT3& GetRight() const { return mRight; }
+	const XMFLOAT3& GetLook() const { return mLook; }
+	const XMFLOAT3& GetUp() const { return mUp; }
+	const XMFLOAT4& GetQuaternion() const { return mQuaternion; }
+
+	const XMFLOAT4X4& GetWorld() const { return mWorld; }
 
 	const AtomicInt3& GetLinearVelocity() { return mLinearVelocity; }
 
@@ -148,18 +158,22 @@ public:
 	UINT GetMeshCount() const { return (UINT)mMeshes.size(); }
 	UINT GetTextureCount() const { return (UINT)mTextures.size(); }
 
-	std::vector<std::shared_ptr<Mesh>>& GetMesh() { return mMeshes; }
-
 	virtual ULONG GetCubeMapSize() const { return 0; }	
 	virtual ObjectConstants GetObjectConstants();
 	virtual InstancingInfo GetInstancingInfo();
-	BoundingOrientedBox GetBoundingBox() const { return mOOBB; }	
+	const BoundingOrientedBox GetBoundingBox() const { return mOOBB; }
 	
 	btRigidBody* GetRigidBody() { return mBtRigidBody; }
 
 	void ChangeUpdateFlag(UPDATE_FLAG expected, const UPDATE_FLAG& desired);
 	void SetUpdateFlag(const UPDATE_FLAG& flag) { mUpdateFlag = flag; }
-	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
+
+	void SetRimLight(bool rimlight) { mRimLightOn = rimlight; }
+
+	const UPDATE_FLAG& GetUpdateFlag() const { return mUpdateFlag; }
+
+	// test
+	const XMFLOAT4& GetMeshDiffuse(const std::string& name);
 
 protected:
 	XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
@@ -174,7 +188,8 @@ protected:
 	XMFLOAT4X4 mRotation = Matrix4x4::Identity4x4();
 
 	// Members for interpolation.
-	std::atomic_int mProgress = 0;
+	std::mutex mProgressMut; // TEST
+	float mProgress = 0.0f;
 
 	AtomicInt3 mPrevOrigin;
 	AtomicInt4 mPrevQuat;
@@ -189,7 +204,7 @@ protected:
 	btRigidBody* mBtRigidBody = NULL;
 	btCompoundShape* mBtCollisionShape = NULL;
 	std::vector<std::shared_ptr<Mesh>> mMeshes;
-	std::vector<std::unique_ptr<Texture>> mTextures;
+	std::vector<std::shared_ptr<Texture>> mTextures;
 
 	D3D12_GPU_DESCRIPTOR_HANDLE mCbvGPUAddress{};
 	D3D12_GPU_DESCRIPTOR_HANDLE mSrvGPUAddress{};
@@ -207,6 +222,8 @@ protected:
 
 	bool mCubemapOn = false;
 	bool mMotionBlurOn = true;
+	bool mRimLightOn = false;
+	bool mTransparentOn = false;
 
 	std::string mName;
 };
@@ -299,7 +316,7 @@ public:
 	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
 
 public:
-	void SetActive(bool state) { mActive = state; }
+	void SetActive(bool state);
 	bool IsActive() const { return mActive; }
 
 private:
@@ -313,8 +330,30 @@ private:
 class StaticObject : public GameObject
 {
 public:
-	StaticObject();
-	virtual ~StaticObject();
+	StaticObject() = default;
+	virtual ~StaticObject() = default;
 
 	virtual void Update(float elapsedTime, float updateRate) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class SOParticleObject : public GameObject
+{
+public:
+	SOParticleObject(GameObject& parent);
+	virtual ~SOParticleObject() = default;
+	virtual void Update(float elapsedTime, float updateRate) override;
+
+	virtual void Draw(
+		ID3D12GraphicsCommandList* cmdList,
+		UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
+		UINT64 matGPUAddress, UINT64 byteOffset, bool isSO = false);
+
+	void SetLocalOffset(XMFLOAT3 offset);
+
+private:
+	GameObject& mParent;
+	XMFLOAT3 mLocalOffset = {0.0f, 0.0f, 0.0f};
 };

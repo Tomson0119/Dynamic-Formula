@@ -11,7 +11,7 @@
 NetModule::NetModule()
 	: mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
 	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 },
-	  mIsConnected{ false }, mLatency{ 0 }
+	  mLatency{ 0 }, mUpdateRate{ 0 }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
 		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
@@ -26,9 +26,9 @@ NetModule::~NetModule()
 
 bool NetModule::Connect(const char* ip, short port)
 {
-	if (mIsConnected = mNetClient->Connect(ip, port))
+	if (mNetClient->Connect(ip, port))
 	{
-		Init();		
+		Init();	
 		return true;
 	}
 	return false;
@@ -36,11 +36,10 @@ bool NetModule::Connect(const char* ip, short port)
 
 void NetModule::PostDisconnect()
 {	
-	if (mIsConnected)
+	if (mNetClient->IsConnected())
 	{
-		// Post disconnect operation to get out of the thread loop	
-		WSAOVERLAPPEDEX* over = new WSAOVERLAPPEDEX(OP::DISCONNECT);
-		mIOCP.PostToCompletionQueue(over, 0);
+		mIOCP.PostToCompletionQueue(nullptr, -1);
+		OutputDebugStringA("Posting disconnection operation.\n");
 	}
 }
 
@@ -57,7 +56,8 @@ void NetModule::NetworkFunc(NetModule& net)
 			
 			if (over_ex == nullptr)
 			{
-				net.PostDisconnect();
+				net.mLoop = false;
+				net.mNetClient->Disconnect();
 				continue;
 			}
 			if (info.success == FALSE)
@@ -125,16 +125,22 @@ void NetModule::UpdatePlayerInfo(SC::packet_update_player_info* pck)
 	}
 }
 
-void NetModule::InitPlayersPosition(SC::packet_game_start_success* pck)
+void NetModule::InitPlayerTransform(SC::packet_game_start_success* pck)
 {
 	if (mRoomID == pck->room_id)
 	{
 		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 		{
 			auto& pos = mPlayerList[i].StartPosition;
-			pos.x = pck->x[i] / FIXED_FLOAT_LIMIT;
-			pos.y = pck->y[i] / FIXED_FLOAT_LIMIT;
-			pos.z = pck->z[i] / FIXED_FLOAT_LIMIT;
+			auto& quat = mPlayerList[i].StartRotation;
+
+			pos.x = pck->px[i] / FIXED_FLOAT_LIMIT;
+			pos.y = pck->py[i] / FIXED_FLOAT_LIMIT;
+			pos.z = pck->pz[i] / FIXED_FLOAT_LIMIT;
+			quat.x = pck->rx[i] / FIXED_FLOAT_LIMIT;
+			quat.y = pck->ry[i] / FIXED_FLOAT_LIMIT;
+			quat.z = pck->rz[i] / FIXED_FLOAT_LIMIT;
+			quat.w = pck->rw[i] / FIXED_FLOAT_LIMIT;
 		}
 	}
 }
@@ -158,15 +164,10 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
 	case OP::SEND:
 	{
 		if (bytes != over->WSABuffer.len)
-			PostDisconnect();
-		delete over;
-		break;
-	}
-	case OP::DISCONNECT:
-	{
-		bool b = true;
-		mLoop.compare_exchange_strong(b, false);
-		mNetClient->Disconnect();
+		{
+			// NEED TEST
+			// PostDisconnect();
+		}
 		delete over;
 		break;
 	}
@@ -200,9 +201,9 @@ void NetModule::SetLatency(uint64_t sendTime)
 
 void NetModule::SetUpdateRate()
 {
-	auto duration = Clock::now().time_since_epoch();
-	mUpdateRate = std::chrono::duration_cast<std::chrono::milliseconds>(duration - mTimeStamp).count();
-	mTimeStamp = duration;
+	auto now = Clock::now();
+	mUpdateRate = std::chrono::duration_cast<std::chrono::milliseconds>(now - mTimeStamp).count();
+	mTimeStamp = now;
 }
 
 void NetModule::Init()
@@ -210,6 +211,7 @@ void NetModule::Init()
 	mIOCP.RegisterDevice(mNetClient->GetTCPSocket(), 0);
 	mNetClient->RecvMsg(false);
 
+	mNetClient->BindUDPSocket(CLIENT_PORT);
 	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
 	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };

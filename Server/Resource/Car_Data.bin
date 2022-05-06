@@ -1,32 +1,32 @@
 BodyExtents 
-10.0 4.0 14.0
+1.67 0.67 2.33
 
 WheelExtents 
-1.11827 2.76809 2.77357 
+0.18563 0.45950 0.46041 
 
 FrontOffset 
--2.5 0.0 -2.8
+-0.4 0.0 -0.5
 
 BackOffset 
--2.3 0.0 -2.6
+-0.4 0.0 -0.5
 
 Friction 
-25.0
+10.0
 
 SuspensionStiffness
 20.0
 
 SuspensionDamping 
-2.3
+2.5
 
 SuspensionCompression 
 4.4
 
 SuspensionRestLength
-0.6
+0.1
 
 RollInfluence
-0.01
+0.001
 
 ConnectionHeight
--0.9
+-0.4

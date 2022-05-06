@@ -1,23 +1,19 @@
 #include "common.h"
 #include "InGameServer.h"
 #include "LoginServer.h"
-#include "WaitRoom.h"
 #include "Client.h"
 #include "Player.h"
-#include "GameWorld.h"
 #include "RigidBody.h"
-
-InGameServer::WorldList InGameServer::msWorlds;
 
 InGameServer::InGameServer()
 	: mLoginPtr{ nullptr }
 {
-	mBulletConstants = std::make_shared<BulletConstant>();
+	mGameConstants = std::make_shared<GameConstant>();
 
-	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin");
-	mBtCarShape->LoadConvexHullShape("Resource\\Car_Body_Convex_Hull.obj");
-	mMissileShape = std::make_unique<BtBoxShape>("Resource\\Missile_Data.bin");
-	mTerrainShapes[0] = std::make_unique<BtTerrainShape>("Resource\\PlaneMap_Data.bin");
+	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin", "Resource\\Models\\Car_Body_Convex_Hull.obj");
+	mMissileShape = std::make_unique<BtMissileShape>("Resource\\Models\\Missile_Convex_Hull.obj");
+	mMapShape = std::make_unique<BtMapShape>("Resource\\MapData.tmap");
+	mCheckpointShape = std::make_unique<CheckpointShape>("Resource\\CheckPoint.tmap");
 }
 
 void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
@@ -27,14 +23,15 @@ void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 
 	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
-		msWorlds[i] = std::make_unique<GameWorld>(mBulletConstants);
-		msWorlds[i]->InitPhysics(-10.0f);	
-		msWorlds[i]->InitPlayerList(roomList[i].get());
+		msWorlds[i] = std::make_unique<GameWorld>(mGameConstants);
+		msWorlds[i]->InitPhysics(-9.8f);	
+		msWorlds[i]->InitPlayerList(roomList[i].get(), (int)mCheckpointShape->GetInfos().size());
 	}
 }
 
 void InGameServer::PrepareToStartGame(int roomID)
 {
+	btVector3 offset = { 0.0f,0.0f,0.0f };
 	const auto& players = msWorlds[roomID]->GetPlayerList();
 	for (int i = 0; i < players.size(); i++)
 	{
@@ -47,28 +44,39 @@ void InGameServer::PrepareToStartGame(int roomID)
 			continue;
 		}
 
-		// Test
-		if (i == 1)
+		// test
+		/*if (i == 0)
 		{
-			btVector3 pos = mStartPosition;
-			pos.setZ(pos.z() + 100.0f);
-
-			btQuaternion quat = btQuaternion::getIdentity();
-			quat.setRotation({ 0.0f,1.0f,0.0f }, 3.141592);
-
-			msWorlds[roomID]->SetPlayerPosition(i, pos);
-			msWorlds[roomID]->SetPlayerRotation(i, quat);
+			msWorlds[roomID]->SetPlayerTransform(i, 
+				mGameConstants->StartPosition,
+				mGameConstants->StartRotation);
+		}
+		else if(i == 1)
+		{
+			btQuaternion rot = mGameConstants->StartRotation;
+			rot.setRotation(btVector3{ 0.0f,1.0f,0.0f }, (btScalar)Math::PI / 2);
+			msWorlds[roomID]->SetPlayerTransform(i, mGameConstants->StartPosition, rot);
 		}
 		else
 		{
-			msWorlds[roomID]->SetPlayerPosition(i, mStartPosition + mOffset * (btScalar)i);
-			msWorlds[roomID]->SetPlayerRotation(i, { 0.0f,0.0f,0.0f,1.0f });
-		}
-		// Test
+			msWorlds[roomID]->SetPlayerTransform(i, 
+				mGameConstants->StartPosition, 
+				mGameConstants->StartRotation);
+		}*/
 
-		msWorlds[roomID]->CreateRigidbodies(i, 1000.0f, mBtCarShape.get(), 1.0f, mMissileShape.get());
+		btVector3 offset = mOffset;
+		offset.setX(offset.x() * i);
+		if (i % 2 == 1)
+		{
+			offset.setZ(-offset.z());
+		}
+
+		msWorlds[roomID]->SetPlayerTransform(i,
+			mGameConstants->StartPosition + offset,
+			mGameConstants->StartRotation);
+		msWorlds[roomID]->CreateRigidbodies(i, 500.0f, *mBtCarShape, 1.0f, *mMissileShape);
 	}
-	msWorlds[roomID]->InitMapRigidBody(mTerrainShapes[0].get(), mObjRigidBodies);
+	msWorlds[roomID]->InitMapRigidBody(*mMapShape.get(), *mCheckpointShape.get());
 	msWorlds[roomID]->SendGameStartSuccess();
 }
 
@@ -122,7 +130,10 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 void InGameServer::StartMatch(int roomID)
 {
 	msWorlds[roomID]->SetActive(true);
-	msWorlds[roomID]->SendStartSignal();
+	msWorlds[roomID]->SetGameTime(
+		mGameConstants->CountdownTime,
+		mGameConstants->GameRunningTime);
+	msWorlds[roomID]->SendReadySignal();
 	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
 }
 
@@ -147,9 +158,13 @@ void InGameServer::RunPhysicsSimulation(int roomID)
 	msWorlds[roomID]->UpdatePhysicsWorld();
 
 	if (msWorlds[roomID]->IsActive())
+	{
 		AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
+	}
 	else
+	{
 		msWorlds[roomID]->FlushPhysicsWorld();
+	}
 }
 
 void InGameServer::PostPhysicsOperation(int roomID)

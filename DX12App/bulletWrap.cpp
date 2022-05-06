@@ -57,7 +57,7 @@ btRigidBody* BulletWrapper::CreateRigidBody(btScalar mass, const btTransform& st
 
 	bool isDynamic = (mass != 0.f);
 
-	btVector3 localInertia(0, 0, 0);
+	btVector3 localInertia(0, -1, 0);
 
 	if (isDynamic)
 		shape->calculateLocalInertia(mass, localInertia);

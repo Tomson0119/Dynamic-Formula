@@ -45,6 +45,8 @@
 #include <d2d1_3.h>
 #include <d3d11on12.h>
 #include <dwrite.h>
+#include<dwrite_3.h>
+#include<Wincodec.h>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d2d1.lib")
@@ -133,35 +135,59 @@ inline std::wstring AnsiToWString(const std::string& str)
 
 ////////////////////////////////////////////////////////////////////////////
 //
-#define NUM_LIGHTS 3
+#define NUM_LIGHTS 16
 
 #define POINT_LIGHT		  1
 #define SPOT_LIGHT		  2
 #define DIRECTIONAL_LIGHT 3
 
+
 struct LightInfo
 {
 	XMFLOAT3 Diffuse = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	float    padding0;
+	float    FalloffStart = 0.0f;
 	XMFLOAT3 Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	float	 padding1;
+	float    FalloffEnd = 0.0f;
 	XMFLOAT3 Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	float	 padding2;
-	float    Range;
-	int		 Type;
+	float    SpotPower = 0.0f;
+	float    Range = 0.f;
+	int		 Type = 0;
+	int		 pad0 = 0;
+	int		 pad1 = 0;
 	
 	void SetInfo(
 		const XMFLOAT3& diffuse,
 		const XMFLOAT3& position,
 		const XMFLOAT3& direction,
+		const float& falloffStart,
+		const float& falloffEnd,
+		const float& spotPower,
 		float range, int type)
 	{
 		Diffuse = diffuse;
 		Position = position;
 		Direction = direction;
+		FalloffStart = falloffStart;
+		FalloffEnd = falloffEnd;
+		SpotPower = spotPower;
 		Range = range;
 		Type = type;
 	}
+};
+
+struct VolumetricInfo
+{
+	XMFLOAT3 Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	int Type = 0;
+	XMFLOAT3 Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float Range = 0.f;
+	XMFLOAT3 Color = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float innerCosine = 0.0f;
+	float VolumetricStrength = 0.0f;
+	float outerCosine = 0.0f;
+
+	int pad0 = 0;
+	int pad1 = 0;
 };
 
 struct LightConstants
@@ -169,6 +195,21 @@ struct LightConstants
 	XMFLOAT4X4 ShadowTransform[3];
 	XMFLOAT4 Ambient;
 	LightInfo Lights[NUM_LIGHTS];
+};
+
+struct VolumetricConstants
+{
+	XMFLOAT4X4 InvProj;
+	XMFLOAT4X4 View;
+
+	VolumetricInfo Lights[NUM_LIGHTS];
+};
+
+
+struct LightBundle
+{
+	LightInfo light;
+	VolumetricInfo volumetric;
 };
 
 struct CameraConstants
@@ -205,8 +246,10 @@ struct ObjectConstants
 {
 	XMFLOAT4X4 World;
 	XMFLOAT4X4 oldWorld;
-	bool cubemapOn;
-	bool motionBlurOn;
+	int32_t cubemapOn;
+	int32_t motionBlurOn;
+	int32_t rimLightOn;
+	int32_t invincibleOn;
 };
 
 struct MaterialConstants
@@ -218,9 +261,13 @@ struct MaterialConstants
 struct GameInfoConstants
 {
 	XMFLOAT4 RandFloat4;
-	XMFLOAT3 PlayerPosition;
 	float CurrentTime;
 	float ElapsedTime;
+
+	int pad0 = 0;
+	int pad1 = 0;
+
+	XMFLOAT4X4 PlayerRotation;
 };
 
 struct InstancingInfo
@@ -230,45 +277,71 @@ struct InstancingInfo
 };
 
 
+inline void Print(const std::string& info, const XMFLOAT3& vec)
+{
+	std::stringstream ss;
+	ss << info;
+	ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << "]\n";
+	OutputDebugStringA(ss.str().c_str());
+}
+
+inline void Print(const std::string& info, const XMFLOAT4& vec)
+{
+	std::stringstream ss;
+	ss << info;
+	ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << "]\n";
+	OutputDebugStringA(ss.str().c_str());
+}
+
 ////////////////////////////////////////////////////////////////////////////
 //
-struct AtomicInt3
+class AtomicInt3
 {
+private:
+	struct Int3
+	{
+		int x;
+		int y;
+		int z;
+	};
+
+public:
 	AtomicInt3()
-		: x{ 0 }, y{ 0 }, z{ 0 }
+		: mValue{ Int3{ 0, 0, 0 } }
 	{
 	}
 
 	AtomicInt3(int x_, int y_, int z_)
-		: x{ x_ }, y{ y_ }, z{ z_ }
+		: mValue{ Int3{ x_, y_, z_ } }
 	{
 	}
 
 	AtomicInt3& operator=(const AtomicInt3& other)
 	{
-		x.store(other.x);
-		y.store(other.y);
-		z.store(other.z);
+		SetValue(other.GetXMFloat3());
+		return *this;
+	}
+
+	AtomicInt3& operator=(const XMFLOAT3& other)
+	{
+		SetValue(other);
 		return *this;
 	}
 
 	void SetZero()
 	{
-		x = 0;
-		y = 0;
-		z = 0;
+		mValue = Int3{ 0, 0, 0 };
 	}
 
 	bool IsZero()
 	{
-		return (x == 0 && y == 0 && z == 0);
+		Int3 val = mValue;
+		return (val.x == 0 && val.y == 0 && val.z == 0);
 	}
 
 	void SetValue(int x_, int y_, int z_)
 	{
-		x = x_;
-		y = y_;
-		z = z_;
+		mValue = Int3{ x_, y_, z_ };
 	}
 
 	// Set values from btVector3
@@ -289,54 +362,76 @@ struct AtomicInt3
 			(int)(xmf3.z * FIXED_FLOAT_LIMIT));
 	}
 
+	void Extrapolate(int dx, int dy, int dz, float dt)
+	{
+		XMFLOAT3& val = GetXMFloat3();
+		val.x += dx / FIXED_FLOAT_LIMIT * dt;
+		val.y += dy / FIXED_FLOAT_LIMIT * dt;
+		val.z += dz / FIXED_FLOAT_LIMIT * dt;
+		SetValue(val);
+	}
+
 	btVector3 GetBtVector3() const
 	{
-		return btVector3{ 
-			x / FIXED_FLOAT_LIMIT, 
-			y / FIXED_FLOAT_LIMIT, 
-			z / FIXED_FLOAT_LIMIT };
+		Int3 val = mValue;
+
+		return btVector3{
+			val.x / FIXED_FLOAT_LIMIT, 
+			val.y / FIXED_FLOAT_LIMIT,
+			val.z / FIXED_FLOAT_LIMIT };
 	}
 
 	XMFLOAT3 GetXMFloat3() const
 	{
+		Int3 val = mValue;
+
 		return XMFLOAT3{ 
-			x / FIXED_FLOAT_LIMIT, 
-			y / FIXED_FLOAT_LIMIT, 
-			z / FIXED_FLOAT_LIMIT };
+			val.x / FIXED_FLOAT_LIMIT, 
+			val.y / FIXED_FLOAT_LIMIT, 
+			val.z / FIXED_FLOAT_LIMIT };
 	}
 
-	std::atomic_int x;
-	std::atomic_int y;
-	std::atomic_int z;
+private:
+	std::atomic<Int3> mValue;
 };
 
-struct AtomicInt4
+class AtomicInt4
 {
+private:
+	struct Int4
+	{
+		int x;
+		int y;
+		int z;
+		int w;
+	};
+
+public:
 	AtomicInt4()
-		: x{ 0 }, y{ 0 }, z{ 0 }, w{ (int)FIXED_FLOAT_LIMIT }
+		: mValue{ Int4{ 0, 0, 0, (int)FIXED_FLOAT_LIMIT } }
 	{
 	}
 
 	AtomicInt4(int x_, int y_, int z_, int w_)
-		: x{ x_ }, y{ y_ }, z{ z_ }, w{ w_ }
+		: mValue{ Int4{ x_, y_, z_, w_ } }
 	{
 	}
 
 	AtomicInt4& operator=(const AtomicInt4& other)
 	{
-		x.store(other.x);
-		y.store(other.y);
-		z.store(other.z);
-		w.store(other.w);
+		SetValue(other.GetXMFloat4());
+		return *this;
+	}
+
+	AtomicInt4& operator=(const XMFLOAT4& other)
+	{
+		SetValue(other);
 		return *this;
 	}
 
 	void SetValue(int x_, int y_, int z_, int w_)
 	{
-		x = x_;
-		y = y_;
-		z = z_;
-		w = w_;
+		mValue = Int4{ x_, y_, z_, w_ };
 	}
 
 	void SetValue(const btQuaternion& quat)
@@ -357,33 +452,52 @@ struct AtomicInt4
 			(int)(quat.w * FIXED_FLOAT_LIMIT));
 	}
 
+	void Extrapolate(int dx, int dy, int dz, float dt)
+	{
+		XMFLOAT3 vec = {
+			dx / FIXED_FLOAT_LIMIT * dt,
+			dy / FIXED_FLOAT_LIMIT * dt,
+			dz / FIXED_FLOAT_LIMIT * dt };
+		
+		XMVECTOR a = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&vec));
+
+		XMFLOAT4 origin = GetXMFloat4();
+		XMVECTOR nextQuat = XMVector4Normalize(XMQuaternionMultiply(a, XMLoadFloat4(&origin)));
+		
+		XMStoreFloat4(&origin, nextQuat);
+		SetValue(origin);
+	}
+
 	bool IsZero() const
 	{
-		return (x == 0.0f && y == 0.0f && z == 0.0f && w == 0.0f);
+		Int4 val = mValue;
+		return (val.x == 0.0f && val.y == 0.0f && val.z == 0.0f && val.w == 0.0f);
 	}
 
 	btQuaternion GetBtQuaternion() const
 	{
+		Int4 val = mValue;
+
 		return btQuaternion{
-			x / FIXED_FLOAT_LIMIT,
-			y / FIXED_FLOAT_LIMIT,
-			z / FIXED_FLOAT_LIMIT,
-			w / FIXED_FLOAT_LIMIT };
+			val.x / FIXED_FLOAT_LIMIT,
+			val.y / FIXED_FLOAT_LIMIT,
+			val.z / FIXED_FLOAT_LIMIT,
+			val.w / FIXED_FLOAT_LIMIT };
 	}
 
 	XMFLOAT4 GetXMFloat4() const
 	{
+		Int4 val = mValue;
+
 		return XMFLOAT4{
-			x / FIXED_FLOAT_LIMIT,
-			y / FIXED_FLOAT_LIMIT,
-			z / FIXED_FLOAT_LIMIT,
-			w / FIXED_FLOAT_LIMIT };
+			val.x / FIXED_FLOAT_LIMIT,
+			val.y / FIXED_FLOAT_LIMIT,
+			val.z / FIXED_FLOAT_LIMIT,
+			val.w / FIXED_FLOAT_LIMIT };
 	}
 
-	std::atomic_int x;
-	std::atomic_int y;
-	std::atomic_int z;
-	std::atomic_int w;
+private:
+	std::atomic<Int4> mValue;
 };
 
 
@@ -435,6 +549,11 @@ namespace Math
 
 namespace Vector3
 {
+	inline float Distance(const XMFLOAT3& v1, const XMFLOAT3& v2)
+	{
+		return (float)sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2) + pow(v1.z - v2.z, 2));
+	}
+
 	inline XMFLOAT3 btVectorToXM(const btVector3& v)
 	{
 		return XMFLOAT3(v.x(), v.y(), v.z());
@@ -476,7 +595,7 @@ namespace Vector3
 		return ret;
 	}
 
-	inline XMFLOAT3 MultiplyAdd(float delta, XMFLOAT3& src, XMFLOAT3& dst)
+	inline XMFLOAT3 MultiplyAdd(float delta, const XMFLOAT3& src, const XMFLOAT3& dst)
 	{		
 		XMVECTOR v1 = XMLoadFloat3(&Replicate(delta));
 		XMVECTOR v2 = XMLoadFloat3(&src);
@@ -504,48 +623,48 @@ namespace Vector3
 		return VectorToFloat3(XMVector3Normalize(XMLoadFloat3(&v)));
 	}
 
-	inline XMFLOAT3 Subtract(XMFLOAT3& v1, XMFLOAT3& v2)
+	inline XMFLOAT3 Subtract(const XMFLOAT3& v1, const XMFLOAT3& v2)
 	{
 		return VectorToFloat3(XMVectorSubtract(XMLoadFloat3(&v1), XMLoadFloat3(&v2)));
 	}
 
-	inline XMFLOAT3 ScalarProduct(XMFLOAT3& v, float scalar)
+	inline XMFLOAT3 ScalarProduct(const XMFLOAT3& v, float scalar)
 	{
 		return VectorToFloat3(XMLoadFloat3(&v) * scalar);
 	}
 
-	inline XMFLOAT3 Cross(XMFLOAT3& v1, XMFLOAT3& v2)
+	inline XMFLOAT3 Cross(const XMFLOAT3& v1, const XMFLOAT3& v2)
 	{
 		return VectorToFloat3(XMVector3Cross(XMLoadFloat3(&v1), XMLoadFloat3(&v2)));
 	}
 
-	inline float Length(XMFLOAT3& v)
+	inline float Length(const XMFLOAT3& v)
 	{
 		XMFLOAT3 ret = VectorToFloat3(XMVector3Length(XMLoadFloat3(&v)));
 		return ret.x;
 	}
 
-	inline float Dot(XMFLOAT3& v1, XMFLOAT3& v2)
+	inline float Dot(const XMFLOAT3& v1, const XMFLOAT3& v2)
 	{
 		return XMVectorGetX(XMVector3Dot(XMLoadFloat3(&v1), XMLoadFloat3(&v2)));
 	}
 
-	inline XMFLOAT3 Add(XMFLOAT3& v, float value)
+	inline XMFLOAT3 Add(const XMFLOAT3& v, float value)
 	{
 		return VectorToFloat3(XMVectorAdd(XMLoadFloat3(&v), XMVectorReplicate(value)));
 	}
 
-	inline XMFLOAT3 Add(XMFLOAT3& v1, XMFLOAT3& v2)
+	inline XMFLOAT3 Add(const XMFLOAT3& v1, const XMFLOAT3& v2)
 	{
 		return VectorToFloat3(XMLoadFloat3(&v1) + XMLoadFloat3(&v2));
 	}
 
-	inline XMFLOAT3 Add(XMFLOAT3& v1, XMFLOAT3& v2, float distance)
+	inline XMFLOAT3 Add(const XMFLOAT3& v1, const XMFLOAT3& v2, float distance)
 	{
 		return VectorToFloat3(XMLoadFloat3(&v1) + XMLoadFloat3(&v2) * distance);
 	}
 
-	inline XMFLOAT3 ClampFloat3(XMFLOAT3& input, XMFLOAT3& min, XMFLOAT3& max)
+	inline XMFLOAT3 ClampFloat3(const XMFLOAT3& input, const XMFLOAT3& min, const XMFLOAT3& max)
 	{
 		XMFLOAT3 ret;
 		ret.x = (min.x > input.x) ? min.x : ((max.x < input.x) ? max.x : input.x);
@@ -632,21 +751,21 @@ namespace Matrix4x4
 		return ret;
 	}
 
-	inline XMFLOAT4X4 Transpose(XMFLOAT4X4& mat)
+	inline XMFLOAT4X4 Transpose(const XMFLOAT4X4& mat)
 	{
 		XMFLOAT4X4 ret;
 		XMStoreFloat4x4(&ret, XMMatrixTranspose(XMLoadFloat4x4(&mat)));
 		return ret;
 	}
 
-	inline XMFLOAT4X4 Multiply(XMFLOAT4X4& mat1, XMFLOAT4X4& mat2)
+	inline XMFLOAT4X4 Multiply(const XMFLOAT4X4& mat1, const XMFLOAT4X4& mat2)
 	{
 		XMFLOAT4X4 ret;
 		XMStoreFloat4x4(&ret, XMMatrixMultiply(XMLoadFloat4x4(&mat1), XMLoadFloat4x4(&mat2)));
 		return ret;
 	}
 
-	inline XMFLOAT4X4 Multiply(FXMMATRIX& mat1, XMFLOAT4X4& mat2)
+	inline XMFLOAT4X4 Multiply(const FXMMATRIX& mat1, const XMFLOAT4X4& mat2)
 	{
 		XMFLOAT4X4 ret;
 		XMStoreFloat4x4(&ret, mat1 * XMLoadFloat4x4(&mat2));

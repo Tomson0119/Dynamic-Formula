@@ -248,7 +248,7 @@ void Mesh::CreateMeshShape(const std::vector<Vertex>& targetVertices, const std:
 
 	const int32_t VERTICES_PER_TRIANGLE = 3;
 	size_t numIndices = targetIndices.size();
-	mesh.m_numTriangles = numIndices / VERTICES_PER_TRIANGLE;
+	mesh.m_numTriangles = (int)numIndices / VERTICES_PER_TRIANGLE;
 	if (numIndices < std::numeric_limits<int16_t>::max())
 	{
 		mesh.m_triangleIndexBase = new unsigned char[sizeof(int16_t) * (size_t)numIndices];
@@ -261,7 +261,7 @@ void Mesh::CreateMeshShape(const std::vector<Vertex>& targetVertices, const std:
 		mesh.m_indexType = PHY_INTEGER;
 		mesh.m_triangleIndexStride = VERTICES_PER_TRIANGLE * sizeof(int32_t);
 	}
-	mesh.m_numVertices = targetVertices.size();
+	mesh.m_numVertices = (int)targetVertices.size();
 	mesh.m_vertexBase = new unsigned char[VERTICES_PER_TRIANGLE * sizeof(btScalar) * (size_t)mesh.m_numVertices];
 	mesh.m_vertexStride = VERTICES_PER_TRIANGLE * sizeof(btScalar);
 	btScalar* vertexData = static_cast<btScalar*>((void*)(mesh.m_vertexBase));
@@ -715,19 +715,19 @@ ParticleMesh::ParticleMesh(
 	ID3D12Device* device,
 	ID3D12GraphicsCommandList* cmdList,
 	const XMFLOAT3& position,
+	const XMFLOAT4& color,
 	const XMFLOAT2& size,
-	const XMFLOAT3& direction,
+	const XMFLOAT3& velocity,
 	float lifeTime,
-	float speed,
 	int maxParticle)
 	: mUploadBufferFilledSize(NULL), mMaxParticle(maxParticle), mStart(true)
 {
 	BillboardVertex vertex;
 	vertex.Position = position;
+	vertex.Color = color;
 	vertex.Size = size;
-	vertex.Direction = direction;
+	vertex.Velocity = velocity;
 	vertex.Age = XMFLOAT2(0.0f, lifeTime);
-	vertex.Speed = speed;
 	vertex.Type = 0;
 
 	Mesh::CreateResourceInfo(device, cmdList,

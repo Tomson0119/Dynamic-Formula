@@ -1,5 +1,6 @@
 #include "common.h"
 #include "BPHandler.h"
+#include "GameObject.h"
 
 BPHandler::BPHandler(float gravity)
 {
@@ -8,13 +9,6 @@ BPHandler::BPHandler(float gravity)
 
 BPHandler::~BPHandler()
 {
-	if (mBtDynamicsWorld)
-	{
-		for (int i = mBtDynamicsWorld->getNumConstraints() - 1; i >= 0; i--)
-		{
-			mBtDynamicsWorld->removeConstraint(mBtDynamicsWorld->getConstraint(i));
-		}
-	}
 	Flush();
 }
 
@@ -31,25 +25,33 @@ void BPHandler::Init(float gravity)
 
 void BPHandler::StepSimulation(float elapsed)
 {
-	/*btScalar timeStep = mPhysicsTimer.getTimeSeconds();
-	mPhysicsTimer.reset();*/
 	mBtDynamicsWorld->stepSimulation(elapsed, 2);
 }
 
 void BPHandler::Flush()
 {
 	if (mBtDynamicsWorld)
-	{				
-		for (int i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	{
+		for (int i = mBtDynamicsWorld->getNumConstraints() - 1; i >= 0; i--)
+		{
+			mBtDynamicsWorld->removeConstraint(mBtDynamicsWorld->getConstraint(i));
+		}
+
+		// NOTE: prevent double delete
+		/*for (int i = mBtDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 		{
 			btCollisionObject* obj = mBtDynamicsWorld->getCollisionObjectArray()[i];
-			btRigidBody* body = btRigidBody::upcast(obj);
-			if (body && body->getMotionState())
+			if (obj)
 			{
-				delete body->getMotionState();
+				btRigidBody* body = btRigidBody::upcast(obj);
+				if (body && body->getMotionState())
+				{
+					delete body->getMotionState();
+					body->setMotionState(nullptr);
+				}
+				mBtDynamicsWorld->removeCollisionObject(obj);
+				delete obj;
 			}
-			mBtDynamicsWorld->removeCollisionObject(obj);
-			if (obj) delete obj;
-		}
+		}*/
 	}
 }

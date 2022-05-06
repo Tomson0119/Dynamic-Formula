@@ -1,4 +1,4 @@
- #include "stdafx.h"
+#include "stdafx.h"
 #include "d3dFramework.h"
 
 #include "InGameUI.h"
@@ -16,7 +16,11 @@ D3DFramework::D3DFramework()
 
 D3DFramework::~D3DFramework()
 {
-	//if(mD3dDevice) WaitUntilGPUComplete();
+	if (mFullScreen)
+	{
+		mSwapChain->SetFullscreenState(FALSE, nullptr);
+	}
+	if(mD3dDevice) WaitUntilGPUComplete();
 	if (mFenceEvent) CloseHandle(mFenceEvent);
 }
 
@@ -76,6 +80,7 @@ bool D3DFramework::InitDirect3D()
 	CreateRtvDsvDescriptorHeaps();
 	CreateSwapChain();
 
+	//ChangeFullScreenState();
 	OnResize();
 
 	return true;
@@ -237,7 +242,6 @@ void D3DFramework::CreateRtvDsvDescriptorHeaps()
 void D3DFramework::OnResize()
 {
 	// 사이즈를 변경하기 전에 명령 목록을 비운다.
-
 	WaitUntilGPUComplete();
 
 	// 커맨드 리스트를 초기화하고, 리소스들의 Com 포인터를 Release한다.
@@ -282,6 +286,8 @@ void D3DFramework::CreateRenderTargetViews()
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffers[i])));
 		mD3dDevice->CreateRenderTargetView(mSwapChainBuffers[i].Get(), nullptr, rtvHandle);
 		rtvHandle.ptr += gRtvDescriptorSize;
+
+		mSwapChainBuffers[i]->SetName(L"Back Buffer");
 	}
 }
 
@@ -474,6 +480,7 @@ void D3DFramework::ChangeFullScreenState()
 
 	mSwapChain->GetFullscreenState(&mFullScreen, NULL);
 	mSwapChain->SetFullscreenState(!mFullScreen, NULL);
+	mFullScreen = !mFullScreen;
 
 	OnResize();
 }

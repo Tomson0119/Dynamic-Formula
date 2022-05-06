@@ -29,9 +29,7 @@ private:
 	virtual void Draw() override;
 
 private:
-	void InitScene(SCENE_STAT state);
-	void OnPreciseKeyInput();
-	
+	void InitScene(SCENE_STAT state);	
 	void CheckAndChangeScene();
 
 private:

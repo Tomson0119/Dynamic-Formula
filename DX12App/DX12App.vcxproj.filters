@@ -55,9 +55,6 @@
     <ClCompile Include="bulletWrap.cpp">
       <Filter>소스 파일\Helper</Filter>
     </ClCompile>
-    <ClCompile Include="DDSTextureLoader12.cpp">
-      <Filter>소스 파일\Helper</Filter>
-    </ClCompile>
     <ClCompile Include="dxException.cpp">
       <Filter>소스 파일\Helper</Filter>
     </ClCompile>
@@ -90,6 +87,9 @@
     </ClCompile>
     <ClCompile Include="AudioSystem.cpp">
       <Filter>소스 파일</Filter>
+	</ClCompile>
+    <ClCompile Include="DDSTextureLoader12.cpp">
+      <Filter>소스 파일\Helper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -243,6 +243,18 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="Shaders\shadowInstancing.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\simple.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\thresholdDownSample.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\bloomMerge.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\volumetricScattering.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>

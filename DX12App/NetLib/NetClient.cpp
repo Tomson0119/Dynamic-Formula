@@ -14,6 +14,11 @@ NetClient::NetClient()
 	mUDPSocket.Init(SocketType::UDP);
 }
 
+NetClient::~NetClient()
+{
+	Disconnect();
+}
+
 bool NetClient::Connect(const char* ip, short port)
 {
 	mServerEp = EndPoint(ip, port);
@@ -23,18 +28,18 @@ bool NetClient::Connect(const char* ip, short port)
 
 void NetClient::Disconnect()
 {
-	OutputDebugStringA("Disconnecting...\n");
-
 	if (mTCPSendOverlapped)
 	{
 		delete mTCPSendOverlapped;
 		mTCPSendOverlapped = nullptr;
 	}
-
-	mTCPSocket.Close();
-	mUDPSocket.Close();
-
-	mIsConnected = false;
+	if (mIsConnected)
+	{
+		OutputDebugStringA("Disconnecting...\n");
+		mTCPSocket.Close();
+		mUDPSocket.Close();
+		mIsConnected = false;
+	}
 }
 
 void NetClient::BindUDPSocket(short port)
@@ -45,7 +50,7 @@ void NetClient::BindUDPSocket(short port)
 
 void NetClient::PushPacket(std::byte* pck, int bytes)
 {
-	// Maybe memory leak spot. I shouldn't allocate overlapped object when connection is closed.
+	if (mIsConnected == false) return;
 	if (mTCPSendOverlapped == nullptr)
 		mTCPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
 	else
@@ -54,20 +59,18 @@ void NetClient::PushPacket(std::byte* pck, int bytes)
 
 void NetClient::SendMsg(std::byte* pck, int bytes)
 {
-	if (mIsConnected)
-	{
-		PushPacket(pck, bytes);
-		SendMsg();
-	}
+	PushPacket(pck, bytes);
+	SendMsg();
 }
 
 void NetClient::SendMsg()
 {
+	if (mIsConnected == false) return;
 	if (mTCPSendOverlapped)
 	{
 		if (mTCPSocket.Send(mTCPSendOverlapped) < 0)
 		{
-			delete mTCPSendOverlapped;
+			//delete mTCPSendOverlapped;
 		}
 		mTCPSendOverlapped = nullptr;
 	}

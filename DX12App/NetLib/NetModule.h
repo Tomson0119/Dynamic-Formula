@@ -9,6 +9,7 @@ struct PlayerInfo
 	bool Ready;
 	char Name[MAX_NAME_SIZE];
 	XMFLOAT3 StartPosition;
+	XMFLOAT4 StartRotation;
 };
 
 class Scene;
@@ -34,7 +35,7 @@ public:
 	void UpdateMapIndex(SC::packet_update_map_info* pck);
 	void UpdatePlayerInfo(SC::packet_update_player_info* pck);
 
-	void InitPlayersPosition(SC::packet_game_start_success* pck);
+	void InitPlayerTransform(SC::packet_game_start_success* pck);
 
 public:
 	void SetInterface(Scene* scenePtr) { mScenePtr = scenePtr; }
@@ -71,12 +72,10 @@ private:
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;
 
-	Clock::duration mTimeStamp;
+	Clock::time_point mTimeStamp;
 	std::atomic_uint64_t mLatency;
 	std::atomic_uint64_t mUpdateRate;
 
 	IOCP mIOCP;
 	Scene* mScenePtr;
-
-	bool mIsConnected;
 };

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "gameObject.h"
-#include "camera.h"
-#include "inGameScene.h"
+
+class Camera;
+class InGameScene;
 
 class Player : public GameObject
 {
@@ -44,7 +45,11 @@ public:
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
 
+	virtual void SetItemNum(int num) { }
 	virtual int GetItemNum() { return 0; }
+	virtual void SetBooster() { }
+	virtual void SetRimLight(bool rimlight) { }
+
 	virtual float GetDriftGauge() { return 0.0f; }
 
 protected:
@@ -90,8 +95,6 @@ public:
 	PhysicsPlayer(UINT netID);
 	virtual ~PhysicsPlayer();
 
-	//virtual void UpdateTransform() override;
-
 	virtual void OnCameraUpdate(float elapsedTime);
 	virtual void Update(float elapsedTime, float updateRate) override;
 	virtual void OnPreciseKeyInput(float Elapsed) override;
@@ -105,15 +108,25 @@ public:
 	virtual void ChangeCurrentRenderTarget() { mCurrentRenderTarget = 1 - mCurrentRenderTarget; }
 
 	virtual void RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& pipeline) override;
+	
+	virtual void UpdateFrontLight();
 
+	virtual void SetBooster() { mBoosterLeft = mBoosterTime; }
+	virtual void SetRimLight(bool rimlight) { mRimLightOn = rimlight; }
 public:
+	void SetSpawnTransform(SC::packet_spawn_transform* pck);
+
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics);
 	void SetMesh(const std::shared_ptr<Mesh>& Mesh);
 	void SetWheel(std::shared_ptr<WheelObject> wheel, int index) { mWheel[index] = wheel; }
+	void SetInvincibleOn(int duration);
 
 	void BuildCameras();
 
 	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
+
+private:
+	void UpdateInvincibleState(float elapsed);
 
 public:
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return mVehicle; }
@@ -122,21 +135,28 @@ public:
 	WheelObject* GetWheel(int index) { return mWheel[index].get(); }
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 
+	virtual void SetItemNum(int num) { mItemNum = num; }
 	virtual int GetItemNum() { return mItemNum; }
 	virtual float GetDriftGauge() { return mDriftGauge; }
 
 	virtual ULONG GetCubeMapSize() const { return mCubeMapSize; }
 
+	LightBundle* GetLightBundle() { return mFrontLight; }
+
 private:
 	static const int RtvCounts = 12;
+	static const float TransparentInterval;
+	
+	const float mWheelFriction = 5.0f;
+	const float mWheelDriftFriction = 0.0f;
 
 	ULONG mCubeMapSize = 500;
 
 	std::array<std::unique_ptr<Camera>, RtvCounts / 2> mCameras;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE mRtvCPUDescriptorHandles[RtvCounts];
-	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE mSrvCPUDescriptorHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE mRtvCPUDescriptorHandles[RtvCounts]{};
+	D3D12_CPU_DESCRIPTOR_HANDLE mDsvCPUDescriptorHandle{};
+	D3D12_CPU_DESCRIPTOR_HANDLE mSrvCPUDescriptorHandle{};
 
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
 	std::unique_ptr<Texture> mCubeMap[2];
@@ -162,21 +182,35 @@ private:
 
 	float mEngineForce = 0.f;
 
-	float mMaxEngineForce = 8000.f;
-	float mMaxBackwardEngineForce = 10000.f;
-	float mBoosterEngineForce = 300000.f;
+	float mMaxEngineForce = 1000.f;
+	const float mBoosterEngineForce = 3000.f;
+	const float mBaseEngineForce = 1000.f;
 
 	float mVehicleSteering = 0.f;
-	float mSteeringIncrement = 8.0f;
-	float mSteeringClamp = 0.5f;
+	float mSteeringIncrement = 5.0f;
+	float mSteeringClamp = 0.15f;
 
 	float mCurrentSpeed = 0.0f;
-	float mMaxSpeed = 1000.0f;
+	float mMaxSpeed = 350.0f;
 
 	float mBreakingForce = 0.0f;
 
 	float mFovCoefficient = 1.0f;
 
-	int mItemNum = 0;
+	std::atomic_int mItemNum = 0;
 	float mDriftGauge = 0.0f;
+
+	std::atomic_bool mSpawnFlag = false;
+	AtomicInt3 mSpawnPosition;
+	AtomicInt4 mSpawnRotation;
+
+	std::atomic_bool mInvincibleOnFlag = false;
+	std::atomic_int mInvincibleInterval = 0;
+	
+	bool mInvincible = false;
+	float mInvincibleDuration = 0.0f;
+	float mTransparentTime = TransparentInterval;
+
+	XMFLOAT3 mLightOffset[2] = { {1.0f, 0.0f, 1.5f}, {-1.0f, 0.0f, 1.5f} };
+	LightBundle mFrontLight[2];
 };

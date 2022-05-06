@@ -78,7 +78,7 @@ void Camera::SetFovCoefficient(float FovCoefficient)
 	mFovCoefficient = FovCoefficient;
 }
 
-void Camera::LookAt(XMFLOAT3& pos, XMFLOAT3& target, XMFLOAT3& up)
+void Camera::LookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT3& up)
 {
 	mPosition = pos;
 	mLook = Vector3::Normalize(Vector3::Subtract(target, pos));
@@ -88,7 +88,7 @@ void Camera::LookAt(XMFLOAT3& pos, XMFLOAT3& target, XMFLOAT3& up)
 	mViewDirty = true;
 }
 
-void Camera::LookAt(XMFLOAT3& target)
+void Camera::LookAt(const XMFLOAT3& target)
 {
 	LookAt(mPosition, target, GetUp());
 }
@@ -98,20 +98,30 @@ void Camera::LookAt(float x, float y, float z)
 	LookAt(mPosition, XMFLOAT3(x,y,z), GetUp());
 }
 
-XMFLOAT4X4 Camera::GetView() const
+const XMFLOAT4X4& Camera::GetView() const
 {
 	assert(!mViewDirty && "Camera -> mView is not updated!!");
 	return mView;
 }
 
-XMFLOAT4X4 Camera::GetOldView() const
+const XMFLOAT4X4& Camera::GetOldView() const
 {
 	return mOldView;
 }
 
-XMFLOAT4X4 Camera::GetInverseView() const
+const XMFLOAT4X4& Camera::GetInverseView() const
 {
 	return mInvView;
+}
+
+XMFLOAT4X4 Camera::GetInverseProj() const
+{
+	auto Proj = XMLoadFloat4x4(&GetProj());
+
+	XMFLOAT4X4 invProj;
+	XMStoreFloat4x4(&invProj, XMMatrixInverse(&XMMatrixDeterminant(Proj), Proj));
+
+	return invProj;
 }
 
 CameraConstants Camera::GetConstants() const
@@ -135,7 +145,7 @@ void Camera::Move(float dx, float dy, float dz)
 	mViewDirty = true;
 }
 
-void Camera::Move(XMFLOAT3& dir, float dist)
+void Camera::Move(const XMFLOAT3& dir, float dist)
 {
 	mPosition = Vector3::MultiplyAdd(dist, dir, mPosition);
 	mViewDirty = true;
@@ -177,6 +187,7 @@ void Camera::RotateY(float angle)
 
 void Camera::Update(const float elapsedTime)
 {
+	mOldView = mView;
 	UpdateViewMatrix();
 }
 
@@ -187,8 +198,6 @@ void Camera::UpdateViewMatrix()
 		mLook = Vector3::Normalize(mLook);
 		mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
 		mRight = Vector3::Cross(mUp, mLook);
-
-		mOldView = mView;
 
 		mView(0, 0) = mRight.x; mView(0, 1) = mUp.x; mView(0, 2) = mLook.x;
 		mView(1, 0) = mRight.y; mView(1, 1) = mUp.y; mView(1, 2) = mLook.y;
