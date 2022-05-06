@@ -1,7 +1,7 @@
 #pragma once
 #include "UI.h"
 
-struct Player
+struct PlayerDatas
 {
 	std::string Nickname;
 	D2D1::ColorF color;
@@ -24,11 +24,13 @@ public:
 	virtual void Reset() override;
 	virtual void OnResize(ID3D12Resource **ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height) override;
-	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y)  override { return 0; }
+	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y) override;
+	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y)  override;
 	virtual void SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue,
 		ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
 	virtual void SetPlayerInfo(int index, char* name, uint8_t color, bool empty, bool ready) override;
 
+	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
 	void CreateFontFormat();
 	//For Packet
 	void SetAllPlayerNickNames(std::array<std::string, 8>& names);
@@ -36,7 +38,16 @@ public:
 	void SetPlayerState(int index, bool state) { mIsInRooms[index] = state; }
 	void SetPlayerNickName(int index, const std::string& name) { mNicknames[index] = name; }
 	void SetPlayerAdmin(std::array<bool, 8> IsAdmins);
+
+	void SetIndexReady(int index);
+	void SetIndexCar(int index) { aOpacities[index + 1] = 1.0f; }
+	void SetIndexCarInvisible(int index) { aOpacities[index + 1] = 0.1f; }
+	void SetIndexNickname(int index) { SetIndexColor(index + 3, D2D1::ColorF(D2D1::ColorF::White, 1.0f)); }
+	void SetIndexNicknameInvisible(int index) { SetIndexColor(index + 3, D2D1::ColorF(D2D1::ColorF::White, 0.1f)); }
+	void SetIndexBackGround(int index, uint8_t color);
+
 private:
+	float aOpacities[9] = { 1.0f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
 	//For Packet
 	int mMyRoomID;
 	std::array<bool, 8> mIsAdmin;

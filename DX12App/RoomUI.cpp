@@ -82,15 +82,98 @@ void RoomUI::SetStartOrReady()
         GetTextBlock()[0].strText.assign("READY");*/
 }
 
+void RoomUI::SetIndexReady(int index)
+{
+    SetIndexColor(11+index, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+    BuildSolidBrush(GetColors());
+}
+
+void RoomUI::SetIndexBackGround(int index, uint8_t color)
+{
+    switch (color)
+    {
+    case 0:
+        SetIndexColor(index + 20, D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
+        break;
+    case 1:
+        SetIndexColor(index + 20, D2D1::ColorF(D2D1::ColorF::Orange, 1.0f));
+        break;
+    case 2:
+        SetIndexColor(index + 20, D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f));
+        break;
+    case 3:
+        SetIndexColor(index + 20, D2D1::ColorF(D2D1::ColorF::Green, 1.0f));
+        break;
+    case 4:
+        SetIndexColor(index + 20, D2D1::ColorF(D2D1::ColorF::Blue, 1.0f));
+        break;
+    case 5:
+        SetIndexColor(index + 20, D2D1::ColorF(D2D1::ColorF::Navy, 1.0f));
+        break;
+    case 6:
+        SetIndexColor(index + 20, D2D1::ColorF(D2D1::ColorF::Violet, 1.0f));
+        break;
+    case 7:
+        SetIndexColor(index + 20, D2D1::ColorF(D2D1::ColorF::Pink, 1.0f));
+        break;
+    }
+    BuildSolidBrush(GetColors());
+}
+
+bool RoomUI::MouseCollisionCheck(float x, float y, const TextBlock& TB)
+{
+    if (x<TB.d2dLayoutRect.right && x>TB.d2dLayoutRect.left &&
+        y<TB.d2dLayoutRect.bottom && y>TB.d2dLayoutRect.top)
+        return true;
+    return false;
+}
+
+void RoomUI::OnProcessMouseMove(WPARAM btnState, int x, int y)
+{
+    float dx = static_cast<float>(x);
+    float dy = static_cast<float>(y);
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]))
+        SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::FloralWhite, 0.3f));
+    else
+        SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::FloralWhite, 1.0f));
+
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[1]))
+        SetIndexColor(1, D2D1::ColorF(D2D1::ColorF::Beige, 0.3f));
+    else
+        SetIndexColor(1, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[2]))
+        SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 0.3f));
+    else
+        SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+
+    BuildSolidBrush(GetColors());
+}
+
+int RoomUI::OnProcessMouseClick(WPARAM btnState, int x, int y)
+{
+    float dx = static_cast<float>(x);
+    float dy = static_cast<float>(y);
+    //레디 시작 버튼
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]) && WM_LBUTTONUP)
+        return 1;
+    //맵 변경 버튼
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[2]) && WM_LBUTTONUP)
+        return 2;
+    //나가기 버튼 == CarButton
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[1]) && WM_LBUTTONUP)
+        return 3;
+}
+
 void RoomUI::Update(float GTime)
 {
     //for (UINT i = 0; i < GetTextCnt(); ++i)
         //GetTextBlock()[i].strText.clear();
-    for (size_t i = 3; i < static_cast<size_t>(GetTextCnt())-8; ++i)
-        GetTextBlock()[i].strText.assign(mNicknames[i - 3]);
+    //for (size_t i = 3; i < static_cast<size_t>(GetTextCnt())-8; ++i)
+        //GetTextBlock()[i].strText.assign(mNicknames[i - 3]);
 
     GetTextBlock()[0].strText.assign("Ready");
-    GetTextBlock()[1].strText.assign("Car");
+    GetTextBlock()[1].strText.assign("Out");
     GetTextBlock()[2].strText.assign("Map");
 }
 
@@ -167,55 +250,55 @@ void RoomUI::Draw(UINT nFrame)
     };
     XMFLOAT4 FillLTRB[] =
     {
-        {
+        {//BackGround
         GetFrameWidth() * 0.015f,
         GetFrameHeight() * 0.015f,
         GetFrameWidth() * 0.985f,
         GetFrameHeight() * 0.985f
         },
-        {
+        {//Car[0]
         GetFrameWidth() * 0.025f,
         GetFrameHeight() * 0.025f,
         GetFrameWidth() * 0.255f,
         GetFrameHeight() * 0.32f
         },
-        {
+        {//Car[1]
         GetFrameWidth() * 0.265f,
         GetFrameHeight() * 0.025f,
         GetFrameWidth() * 0.495f,
         GetFrameHeight() * 0.32f
         },
-        {
+        {//Car[2]
         GetFrameWidth() * 0.505f,
         GetFrameHeight() * 0.025f,
         GetFrameWidth() * 0.735f,
         GetFrameHeight() * 0.32f
         },
-        {
+        {//Car[3]
         GetFrameWidth() * 0.745f,
         GetFrameHeight() * 0.025f,
         GetFrameWidth() * 0.975f,
         GetFrameHeight() * 0.32f
         },
-        {
+        {//Car[4]
         GetFrameWidth() * 0.025f,
         GetFrameHeight() * 0.33f,
         GetFrameWidth() * 0.255f,
         GetFrameHeight() * 0.625f
         },
-        {
+        {//Car[5]
         GetFrameWidth() * 0.265f,
         GetFrameHeight() * 0.33f,
         GetFrameWidth() * 0.495f,
         GetFrameHeight() * 0.625f
         },
-        {
+        {//Car[6]
         GetFrameWidth() * 0.505f,
         GetFrameHeight() * 0.33f,
         GetFrameWidth() * 0.735f,
         GetFrameHeight() * 0.625f
         },
-        {
+        {//Car[7]
         GetFrameWidth() * 0.745f,
         GetFrameHeight() * 0.33f,
         GetFrameWidth() * 0.975f,
@@ -298,7 +381,6 @@ void RoomUI::Draw(UINT nFrame)
         }
     };
     bool IsOutlined[12] = { false,false,false,false,false,false,false,false,false,false,false,false };
-    float aOpacities[9] = { 1.0f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f };
 
     BeginDraw(nFrame); 
     DrawBmp(LTRB, 0, 1, aOpacities);
@@ -353,19 +435,19 @@ void RoomUI::SetTextRect()
     GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.075f);
     GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.075f);
     GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.075f);
-    GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.235f, GetFrameHeight() * 0.385f);
-    GetTextBlock()[8].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.385f);
-    GetTextBlock()[9].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.385f);
-    GetTextBlock()[10].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.385f);
+    GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.235f, GetFrameHeight() * 0.38f);
+    GetTextBlock()[8].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.38f);
+    GetTextBlock()[9].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.38f);
+    GetTextBlock()[10].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.38f);
     
-    GetTextBlock()[11].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.235f, GetFrameHeight() * 0.075f);
-    GetTextBlock()[12].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.075f);
-    GetTextBlock()[13].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.075f);
-    GetTextBlock()[14].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.025f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.075f);
-    GetTextBlock()[15].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.235f, GetFrameHeight() * 0.385f);
-    GetTextBlock()[16].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.385f);
-    GetTextBlock()[17].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.385f);
-    GetTextBlock()[18].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.33f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.385f);
+    GetTextBlock()[11].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.27f, GetFrameWidth() * 0.235f, GetFrameHeight() * 0.325f);
+    GetTextBlock()[12].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.27f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.325f);
+    GetTextBlock()[13].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.27f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.325f);
+    GetTextBlock()[14].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.27f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.325f);
+    GetTextBlock()[15].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.025f, GetFrameHeight() * 0.575f, GetFrameWidth() * 0.235f, GetFrameHeight() * 0.625f);
+    GetTextBlock()[16].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.575f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.625f);
+    GetTextBlock()[17].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.575f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.625f);
+    GetTextBlock()[18].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.575f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.625f);
 }
 
 void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
@@ -377,14 +459,14 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     
     std::vector<D2D1::ColorF> colorList;
     /*Text*/
-    //Text: StartOrReady, CarSelect, MapSelect, Nickname[8], RedayOrStart[8]
+    //Text: StartOrReady, CarSelect, MapSelect, Nickname[8], RedayOrStart[8] - 19
     colorList.push_back(D2D1::ColorF::FloralWhite);
     colorList.push_back(D2D1::ColorF::Beige);
     colorList.push_back(D2D1::ColorF::Beige);
-    for(size_t i=0;i<static_cast<size_t>(GetTextCnt())-3;++i)
-        colorList.push_back(D2D1::ColorF::Black);
+    for(size_t i=0;i<static_cast<size_t>(GetTextCnt())-3;++i) // Nckname[8] + StartOrReady[8]
+        colorList.push_back(D2D1::ColorF::White);
     /*UI*/
-    //UI:  StartBox, CarSelectBox[2], NicknameBox[8], MapSelectBox[2]
+    //UI:  BackGround, NickNameBox[8], StartBox, CarBox, MapBox - 12
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Gold , 0.9f));
 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
@@ -406,11 +488,13 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
 
     SetTextRect(); 
     GetTextBlock()[0].strText.assign("Start");
-    GetTextBlock()[1].strText.assign("Car");
+    GetTextBlock()[1].strText.assign("Out");
     GetTextBlock()[2].strText.assign("Map");
     for (size_t i = 0; i < 8; ++i)
         GetTextBlock()[i + 3].strText.assign("Nickname" + std::to_string(i + 1));
-
+    GetTextBlock()[11].strText.assign("Admin");
+    for (size_t i = 1; i < 8; ++i)
+        GetTextBlock()[i + 11].strText.assign("Ready");
 }
 
 void RoomUI::Reset()
