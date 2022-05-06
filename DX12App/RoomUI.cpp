@@ -22,8 +22,8 @@ void RoomUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12Command
     Reset();
 
     UI::Initialize(device, pd3dCommandQueue);
-    SetTextCnt(19);
-    SetRoundRectCnt(12);
+    SetTextCnt(20);
+    SetRoundRectCnt(13);
     SetBitmapCnt(9);
     SetUICnt();
 
@@ -661,7 +661,7 @@ void RoomUI::CreateFontFormat()
     TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
     for(size_t i=3;i<static_cast<size_t>(GetTextCnt());++i)
         TextAlignments[i] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[19] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    //TextAlignments[19] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
     SetTextAllignments(TextAlignments);
 
@@ -692,6 +692,7 @@ void RoomUI::SetTextRect()
     GetTextBlock()[16].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.265f, GetFrameHeight() * 0.575f, GetFrameWidth() * 0.475f, GetFrameHeight() * 0.625f);
     GetTextBlock()[17].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.505f, GetFrameHeight() * 0.575f, GetFrameWidth() * 0.715f, GetFrameHeight() * 0.625f);
     GetTextBlock()[18].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.745f, GetFrameHeight() * 0.575f, GetFrameWidth() * 0.955f, GetFrameHeight() * 0.625f);
+
     GetTextBlock()[19].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.4f, GetFrameHeight() * 0.4f, GetFrameWidth() * 0.6f, GetFrameHeight() * 0.6f);
 }
 

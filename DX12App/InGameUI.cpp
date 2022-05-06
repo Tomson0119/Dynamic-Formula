@@ -89,10 +89,12 @@ void InGameUI::SetInvisibleStateTextUI()
 {
 	for (int i = 0; i < TEXTCOUNT; ++i)
 		SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
-	for(int i=0;i<3;++i)
+	for(int i=0;i<4;++i)
 		mIsOutlined[i] = false;
 	//SetItemCount(0);
 	SetGradientCnt(0);
+	SetDriftGauge(0.0f);
+	SetItemCount(0);
 	BuildSolidBrush(GetColors());
 }
 
@@ -101,9 +103,10 @@ void InGameUI::SetVisibleStateTextUI()
 	SetGradientCnt(1);
 	for (int i = 0; i < TEXTCOUNT; ++i)
 		SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-	for(int i=0;i<2;++i)
-	SetIndexColor(GetTextCnt() + 1 + i, D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
-	for (int i = 0; i < 3; ++i)
+	for(int i=2;i<4;++i)
+	SetIndexColor(GetTextCnt() + i, D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
+	mIsOutlined[0] = true;
+	for (int i = 2; i < 4; ++i)
 		mIsOutlined[i] = true;
 	mBitmapAnimOpacities[6] = 0.0f;
 	BuildSolidBrush(GetColors());
@@ -111,9 +114,6 @@ void InGameUI::SetVisibleStateTextUI()
 
 void InGameUI::Update(float Elapsed, Player* mPlayer)
 {
-	//4초를 세는게 문제. @@ 여기 해야 함
-	//StartTime Set
-	
 	//Time Set
 	if (mIsStartAnim)
 	{
@@ -172,8 +172,7 @@ void InGameUI::GoAnimation(float Elapsed)
 		mBitmapAnimOpacities[i] = 0.0f; //321 Invisible
 	// Bitmap위치 원래 위치로 조정
 	SetBitmapPos();
-	//UI띄우기
-	SetVisibleStateTextUI();
+	
 
 	mGoAnimTime += Elapsed;
 	mAnimEndTime = 1.0f;
@@ -182,6 +181,8 @@ void InGameUI::GoAnimation(float Elapsed)
 		mIsGoAnim = false;
 		mGoAnimTime = 0.0f;
 		mIsStartUI[3] = false;
+		//UI띄우기
+		SetVisibleStateTextUI();
 		SetBitmapPos();
 	}
 	if (mIsStartUI[3])
@@ -216,7 +217,7 @@ void InGameUI::Start321Animation(float Elapsed)
 		// Bitmap위치 원래 위치로 조정
 		SetBitmapPos();
 		//UI띄우기
-		SetVisibleStateTextUI();
+		//SetVisibleStateTextUI();
 	}
 	else if (mStartAnimTime >= START_DELAY_TIME - 1.0f)
 	{
@@ -298,7 +299,7 @@ void InGameUI::Start321Animation(float Elapsed)
 void InGameUI::SetScoreBoard()
 {
 	SetInvisibleStateTextUI();//UI Invisible
-	SetScoreBoardTexts();// ScoreBoard Text Input
+	//SetScoreBoardTexts();// ScoreBoard Text Input
 	mBitmapAnimOpacities[6] = 1.0f;
 }
 
@@ -398,9 +399,9 @@ void InGameUI::SetScoreBoardTexts()
 	}
 	GetTextBlock()[GetTextCnt()-1].strText.assign("SCORE BOARD");
 
-	SetIndexColor(GetTextCnt() + 3, D2D1::ColorF(D2D1::ColorF::Black, 0.999f));
+	SetIndexColor(GetTextCnt() + 1, D2D1::ColorF(D2D1::ColorF::Black, 0.999f));
 	SetIndexColor(GetTextCnt() + 2, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
-	SetIndexColor(GetTextCnt()+1, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
+	SetIndexColor(GetTextCnt()+3, D2D1::ColorF(D2D1::ColorF::Red, 0.0f));
 	BuildSolidBrush(GetColors());
 }
 
@@ -471,8 +472,8 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		case 'Y':
 			if (!mIsScoreBoard)
 			{
+				SetInvisibleStateTextUI();
 				mIsScoreBoard = true;
-				mItemCnt = 2;
 			}
 			else
 			{
@@ -529,24 +530,24 @@ void InGameUI::Draw(UINT nFrame)
 		GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)),
         GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
-        {
-			GetFrameWidth()* (17.0f / 32.0f),
-			GetFrameHeight() * (5.0f / 6.0f),
-		GetFrameWidth()* (18.0f / 32.0f),
-		GetFrameHeight() * (8.0f / 9.0f)
-        }, //Item1 UI
-        {
-			GetFrameWidth()* (19.0f / 32.0f),
-			GetFrameHeight() * (5.0f / 6.0f),
-		GetFrameWidth()* (20.0f / 32.0f),
-		GetFrameHeight() * (8.0f / 9.0f)
-        }, //Item2 UI
 		{
 			GetFrameWidth() * 0.1f,
 			GetFrameHeight() * 0.1f,
 			GetFrameWidth() * 0.9f,
 			GetFrameHeight() * 0.9f
-		} //ScoreBoards
+		}, //ScoreBoards
+		{
+			GetFrameWidth() * (17.0f / 32.0f),
+			GetFrameHeight() * (5.0f / 6.0f),
+		GetFrameWidth() * (18.0f / 32.0f),
+		GetFrameHeight() * (8.0f / 9.0f)
+		}, //Item1 UI
+		{
+			GetFrameWidth() * (19.0f / 32.0f),
+			GetFrameHeight() * (5.0f / 6.0f),
+		GetFrameWidth() * (20.0f / 32.0f),
+		GetFrameHeight() * (8.0f / 9.0f)
+		} //Item2 UI
     };
     XMFLOAT4 FillLTRB[] = 
     { 
@@ -556,29 +557,29 @@ void InGameUI::Draw(UINT nFrame)
 			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * (mDriftGauge/FIXED_FLOAT_LIMIT),
 			GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
-        {
-			GetFrameWidth()* (17.0f / 32.0f),
-			GetFrameHeight() * (5.0f / 6.0f), 
-			GetFrameWidth()* (18.0f / 32.0f),
-			GetFrameHeight() * (8.0f / 9.0f)
-        }, //Item1 UI
-        {
-			GetFrameWidth()* (19.0f / 32.0f),
-			GetFrameHeight() * (5.0f / 6.0f), 
-			GetFrameWidth()* (20.0f / 32.0f),
-			GetFrameHeight() * (8.0f / 9.0f)
-        }, //Item2 UI
 		{
 			GetFrameWidth() * 0.1f,
 			GetFrameHeight() * 0.1f,
 			GetFrameWidth() * 0.9f,
 			GetFrameHeight() * 0.9f
-		} //ScoreBoards
+		}, //ScoreBoards
+		{
+			GetFrameWidth() * (17.0f / 32.0f),
+			GetFrameHeight() * (5.0f / 6.0f),
+			GetFrameWidth() * (18.0f / 32.0f),
+			GetFrameHeight() * (8.0f / 9.0f)
+		}, //Item1 UI
+		{
+			GetFrameWidth() * (19.0f / 32.0f),
+			GetFrameHeight() * (5.0f / 6.0f),
+			GetFrameWidth() * (20.0f / 32.0f),
+			GetFrameHeight() * (8.0f / 9.0f)
+		} //Item2 UI
     };
 	
 	BeginDraw(nFrame);
 	DrawBmp(GetLTRB(), 6, 1, mBitmapAnimOpacities);
-	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt - mIsScoreBoard /*InvisibleRectCount*/, GetGradientCnt(), mIsOutlined);
+	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt - mIsScoreBoard, GetGradientCnt(), mIsOutlined);
 	DrawBmp(GetLTRB(), 0, 6, mBitmapAnimOpacities);
 	TextDraw(GetTextBlock());
 	EndDraw(nFrame);
@@ -709,9 +710,9 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 		colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f));
-	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
-	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
 	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
+	colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 1.0f));
 
     //D2D1::ColorF colorList[8] = { D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f),D2D1::ColorF(D2D1::ColorF::CadetBlue, 1.0f), D2D1::ColorF(D2D1::ColorF::Black, 1.0f), D2D1::ColorF(D2D1::ColorF::OrangeRed, 1.0f), D2D1::ColorF(D2D1::ColorF::Yellow, 1.0f), D2D1::ColorF(D2D1::ColorF::Red, 1.0f), D2D1::ColorF(D2D1::ColorF::Aqua, 1.0f) };
     D2D1::ColorF gradientColors[4] = { D2D1::ColorF(D2D1::ColorF::ForestGreen, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Yellow, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Orange, gradient_Alpha), D2D1::ColorF(D2D1::ColorF::Red, gradient_Alpha) };
@@ -719,6 +720,7 @@ void InGameUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UI
 	BuildBrush(GetColors(), 4, gradientColors);
     SetTextRect();
 	//임시 시간
+	SetInvisibleStateTextUI();
 }
 
 void InGameUI::Reset()
