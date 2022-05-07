@@ -172,6 +172,13 @@ void RoomUI::OnProcessMouseDown(WPARAM btnState, int x, int y)
     
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[19]))
         SetStateNotFail();
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]))
+    {
+        if (mIsReady)
+            mIsReady = false;
+        else
+            mIsReady = true;
+    }
 }
 
 void RoomUI::SetStateFail(int result)
@@ -215,9 +222,9 @@ int RoomUI::OnProcessMouseClick(WPARAM btnState, int x, int y)
     float dy = static_cast<float>(y);
 
     //레디 시작 버튼
-    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]) && WM_LBUTTONUP)
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]) && WM_LBUTTONDOWN)
     {
-        mIsReady = !mIsReady;
+        
         return 1;
     }
 
@@ -256,19 +263,13 @@ void RoomUI::Update(float GTime)
     mut.lock();
     const auto& playerList = mNetRef.GetPlayersInfo();
     mut.unlock();
-
-    SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
     
     if (mNetRef.IsAdmin())
         GetTextBlock()[0].strText.assign("Start");
     else
         GetTextBlock()[0].strText.assign("Ready");
 
-    if (mIsReady)
-        SetIndexReady(mNetRef.GetPlayerIndex());
-    else
-        SetIndexNotReady(mNetRef.GetPlayerIndex());
-
+    
     for (int i = 0; i < playerList.size(); ++i)
     {
         if (playerList[i].Empty)
@@ -277,6 +278,8 @@ void RoomUI::Update(float GTime)
             continue;
         }
       
+
+
 
         GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(playerList[i].Name);
 
@@ -288,9 +291,14 @@ void RoomUI::Update(float GTime)
             SetIndexReady(i);
         else
             SetIndexNotReady(i);
-
-        
     }
+    SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
+
+    
+    if (mIsReady)
+        SetIndexReady(mNetRef.GetPlayerIndex());
+    else
+        SetIndexNotReady(mNetRef.GetPlayerIndex());
 }
 
 void RoomUI::Draw(UINT nFrame)
