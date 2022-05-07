@@ -1,7 +1,10 @@
 #include "stdafx.h"
 #include "RoomUI.h"
-RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
-    pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue)
+#include "NetLib/NetModule.h"
+
+RoomUI::RoomUI(UINT nFrame, ComPtr<ID3D12Device> device,
+    ID3D12CommandQueue* pd3dCommandQueue, NetModule& netRef) 
+    : UI(nFrame, device, pd3dCommandQueue), mNetRef(netRef)
     // Text: 19, RoundRect: 12
     //Text: StartOrReady, CarSelect, MapSelect, Nickname[8], AdminOrReady[8], StartFail
     //UI: NicknameBox[8], StartBox, CarSelectBox[2], MapSelectBox[2], StartFailBox
@@ -77,7 +80,7 @@ void RoomUI::SetIndexInvisibleState(int index)
     SetIndexNotReady(index);
     SetIndexBackGroundInvisible(index);
     SetIndexCarInvisible(index);
-    mIsInvisible[index] = true;
+    //mIsInvisible[index] = true;
     
     BuildSolidBrush(GetColors());
 }
@@ -91,7 +94,7 @@ void RoomUI::SetIndexVisibleState(int index)
         mReadyOrAdmin[index] = "Admin";
     else
         mReadyOrAdmin[index] = "Ready";
-    mIsInvisible[index] = false;
+    //mIsInvisible[index] = false;
 }
 
 void RoomUI::SetIndexReadyOrAdminText()
@@ -210,7 +213,7 @@ void RoomUI::OnProcessMouseDown(WPARAM btnState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
-    for (int i = 0; i < 8; ++i)
+    /*for (int i = 0; i < 8; ++i)
     {
         if ((MouseCollisionCheck(dx, dy, GetTextBlock()[3 + static_cast<size_t>(i)]) || MouseCollisionCheck(dx, dy, GetTextBlock()[11 + static_cast<size_t>(i)])) && btnState & WM_LBUTTONDOWN)
         {
@@ -219,7 +222,7 @@ void RoomUI::OnProcessMouseDown(WPARAM btnState, int x, int y)
             else
                 SetIndexVisibleState(i);
         }
-    }
+    }*/
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[19]))
         SetStateNotFail();
 }
@@ -282,118 +285,6 @@ void RoomUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
         case 'L':
             SetIndexIsAdmin(2);
             break;
-        case VK_F1:
-            if (mIsAdmin[0])
-                break;
-            if (!mPlayerDatas[0].IsReady)
-            {
-                mPlayerDatas[0].IsReady = true;
-                SetIndexReady(0);
-            }
-            else
-            {
-                mPlayerDatas[0].IsReady = false;
-                SetIndexNotReady(0);
-            }
-            break;
-        case VK_F2:
-            if (mIsAdmin[1])
-                break;
-            if (!mPlayerDatas[1].IsReady)
-            {
-                mPlayerDatas[1].IsReady = true;
-                SetIndexReady(1);
-            }
-            else
-            {
-                mPlayerDatas[1].IsReady = false;
-                SetIndexNotReady(1);
-            }
-            break;
-        case VK_F3:
-            if (mIsAdmin[2])
-                break;
-            if (!mPlayerDatas[2].IsReady)
-            {
-                mPlayerDatas[2].IsReady = true;
-                SetIndexReady(2);
-            }
-            else
-            {
-                mPlayerDatas[2].IsReady = false;
-                SetIndexNotReady(2);
-            }
-            break;
-        case VK_F4:
-            if (mIsAdmin[3])
-                break;
-            if (!mPlayerDatas[3].IsReady)
-            {
-                mPlayerDatas[3].IsReady = true;
-                SetIndexReady(3);
-            }
-            else
-            {
-                mPlayerDatas[3].IsReady = false;
-                SetIndexNotReady(3);
-            }
-            break;
-        case VK_F5:
-            if (mIsAdmin[4])
-                break;
-            if (!mPlayerDatas[4].IsReady)
-            {
-                mPlayerDatas[4].IsReady = true;
-                SetIndexReady(4);
-            }
-            else
-            {
-                mPlayerDatas[4].IsReady = false;
-                SetIndexNotReady(4);
-            }
-            break;
-        case VK_F6:
-            if (mIsAdmin[5])
-                break;
-            if (!mPlayerDatas[5].IsReady)
-            {
-                mPlayerDatas[5].IsReady = true;
-                SetIndexReady(5);
-            }
-            else
-            {
-                mPlayerDatas[5].IsReady = false;
-                SetIndexNotReady(5);
-            }
-            break;
-        case VK_F7:
-            if (mIsAdmin[6])
-                break;
-            if (!mPlayerDatas[6].IsReady)
-            {
-                mPlayerDatas[6].IsReady = true;
-                SetIndexReady(6);
-            }
-            else
-            {
-                mPlayerDatas[6].IsReady = false;
-                SetIndexNotReady(6);
-            }
-            break;
-        case VK_F8:
-            if (mIsAdmin[7])
-                break;
-            if (!mPlayerDatas[7].IsReady)
-            {
-                mPlayerDatas[7].IsReady = true;
-                SetIndexReady(7);
-            }
-            else
-            {
-                mPlayerDatas[7].IsReady = false;
-                SetIndexNotReady(7);
-            }
-            break;
         case VK_F11:
             SetStateFail(0);
             break;
@@ -410,9 +301,7 @@ void RoomUI::Update(float GTime)
         GetTextBlock()[0].strText.assign("Ready");
 
     GetTextBlock()[1].strText.assign("Out");
-    GetTextBlock()[2].strText.assign("Map");
-
-    
+    GetTextBlock()[2].strText.assign("Map");    
 }
 
 void RoomUI::Draw(UINT nFrame)
@@ -740,28 +629,28 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
 
     SetTextRect(); 
 
-    GetTextBlock()[0].strText.assign("Ready");
+    //GetTextBlock()[0].strText.assign("Ready");
     GetTextBlock()[1].strText.assign("Out");
     GetTextBlock()[2].strText.assign("Map");
 
-    for (size_t i = 0; i < 8; ++i)
-        GetTextBlock()[i + 3].strText.assign("Nickname" + std::to_string(i + 1));
-    GetTextBlock()[11].strText.assign("Admin");
+    /*for (size_t i = 0; i < 8; ++i)
+        GetTextBlock()[i + 3].strText.assign("Nickname" + std::to_string(i + 1));*/
+    //GetTextBlock()[11].strText.assign("Admin");
     
-    for (int i = 0; i < 8; ++i)
+    /*for (int i = 0; i < 8; ++i)
     {
         mPlayerDatas[i].Nickname = "NickName" + i+49;
         mPlayerDatas[i].color = i;
         mPlayerDatas[i].IsEmpty = true;
         mPlayerDatas[i].IsReady = false;
-    }
+    }*/
     //0번이 Admin
-    SetIndexIsAdmin(0);
+    //SetIndexIsAdmin(0);
     //Fail안뜨게 설정 F9누르면 뜸
     SetStateNotFail();
     //Ready Text설정
-    for (size_t i = 1; i < 8; ++i)
-        GetTextBlock()[i + 11].strText.assign("Ready");
+    /*for (size_t i = 1; i < 8; ++i)
+        GetTextBlock()[i + 11].strText.assign("Ready");*/
     //FailText설정
     GetTextBlock()[19].strText.assign("Fail");
 }

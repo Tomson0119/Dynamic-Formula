@@ -10,10 +10,12 @@ struct PlayerData
 	PlayerData() {}
 };
 
+class NetModule;
+
 class RoomUI : public UI
 {
 public:
-	RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue *pd3dCommandQueue);
+	RoomUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue *pd3dCommandQueue, NetModule& netRef);
 	virtual ~RoomUI() = default;
 	virtual void Update(float GTime);
 	virtual void Update(float GTime, std::vector<std::string> Texts) {}
@@ -69,16 +71,12 @@ public:
 	void SetMyIndex(int clientid) { mMyIndex = clientid; }
 	//AllPlayerSet
 	void SetAllPlayerState();
+
 private:
 	float BitmapOpacities[9] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-	//For Packet
-	int mRoomID;
-	int mMapID;
-	int mMyIndex = 0;
-	std::array<PlayerData, 8> mPlayerDatas;
-	std::array<bool, 8> mIsAdmin;
-
-	std::array<bool, 8> mIsInvisible;
+	
+	NetModule& mNetRef;
+	//std::array<bool, 8> mIsInvisible;
 	
 	std::array<std::string, 8> mReadyOrAdmin;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
