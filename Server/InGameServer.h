@@ -43,7 +43,7 @@ struct GameConstant
 	const btQuaternion StartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
 
 	const std::chrono::seconds CountdownTime = 4s; // 4초 후 시작
-	const std::chrono::seconds GameRunningTime = 10s; // 30초 TEST
+	const std::chrono::seconds GameRunningTime = 30s; // 30초 TEST
 };
 
 class InGameServer
