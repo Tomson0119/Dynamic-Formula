@@ -334,8 +334,6 @@ void GameObject::Update(float elapsedTime, float updateRate)
 		InterpolateWorldTransform(elapsedTime, updateRate);
 		UpdateTransform();
 	}
-
-	//UpdateBoundingBox();
 }
 
 void GameObject::Draw(
