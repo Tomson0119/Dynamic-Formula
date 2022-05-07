@@ -206,11 +206,12 @@ void RoomUI::SetIndexIsAdmin(int index)
         {
             GetTextBlock()[i+static_cast<size_t>(11)].strText.assign("Admin");
             SetIndexColor(i + static_cast < size_t>(11), D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+            if (index == mNetRef.GetPlayerIndex())
+                mIsReady = true;
         }
         else
         {
             GetTextBlock()[i+ static_cast < size_t>(11)].strText.assign("Ready");
-            SetIndexColor(i + static_cast < size_t>(11), D2D1::ColorF(D2D1::ColorF::Beige, 0.0f));
         }
     }
     BuildSolidBrush(GetColors());
@@ -269,8 +270,6 @@ void RoomUI::Update(float GTime)
     else
         GetTextBlock()[0].strText.assign("Ready");
 
-    
-
     for (int i = 0; i < playerList.size(); ++i)
     {
         if (playerList[i].Empty)
@@ -278,6 +277,7 @@ void RoomUI::Update(float GTime)
             SetIndexInvisibleState(i);
             continue;
         }
+
         GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(playerList[i].Name);
 
         SetIndexVisibleState(i);
