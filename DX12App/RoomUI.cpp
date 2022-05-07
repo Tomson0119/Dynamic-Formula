@@ -85,14 +85,12 @@ void RoomUI::SetIndexVisibleState(int index)
 
 void RoomUI::SetIndexReady(int index)
 {
-    mIsReady = true;
     SetIndexColor(11+index, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
     BuildSolidBrush(GetColors());
 }
 
 void RoomUI::SetIndexNotReady(int index)
 {
-    mIsReady = false;
     SetIndexColor(11 + index, D2D1::ColorF(D2D1::ColorF::Beige, 0.0f));
     BuildSolidBrush(GetColors());
 }
@@ -259,7 +257,6 @@ void RoomUI::Update(float GTime)
     const auto& playerList = mNetRef.GetPlayersInfo();
     mut.unlock();
 
-
     for (int i = 0; i < playerList.size(); ++i)
     {
         if (playerList[i].Empty)
@@ -267,9 +264,7 @@ void RoomUI::Update(float GTime)
             SetIndexInvisibleState(i);
             continue;
         }
-       
-        //GetTextBlock()[11 + static_cast<size_t>(i)].strText.assign("Ready");
-        
+      
         SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
 
         GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(playerList[i].Name);
