@@ -172,6 +172,13 @@ void RoomUI::OnProcessMouseDown(WPARAM btnState, int x, int y)
     
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[19]))
         SetStateNotFail();
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]))
+    {
+        if (mIsReady)
+            mIsReady = false;
+        else
+            mIsReady = true;
+    }
 }
 
 void RoomUI::SetStateFail(int result)
@@ -215,9 +222,9 @@ int RoomUI::OnProcessMouseClick(WPARAM btnState, int x, int y)
     float dy = static_cast<float>(y);
 
     //레디 시작 버튼
-    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]) && WM_LBUTTONUP)
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]) && WM_LBUTTONDOWN)
     {
-        mIsReady = !mIsReady;
+        
         return 1;
     }
 
@@ -257,6 +264,13 @@ void RoomUI::Update(float GTime)
     const auto& playerList = mNetRef.GetPlayersInfo();
     mut.unlock();
 
+    if (mNetRef.IsAdmin())
+        GetTextBlock()[0].strText.assign("Start");
+    else
+        GetTextBlock()[0].strText.assign("Ready");
+
+    
+
     for (int i = 0; i < playerList.size(); ++i)
     {
         if (playerList[i].Empty)
@@ -264,28 +278,21 @@ void RoomUI::Update(float GTime)
             SetIndexInvisibleState(i);
             continue;
         }
-      
-        SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
-
         GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(playerList[i].Name);
 
         SetIndexVisibleState(i);
-
-        if (mNetRef.IsAdmin())
-            GetTextBlock()[0].strText.assign("Start");
-        else
-            GetTextBlock()[0].strText.assign("Ready");
 
         if (playerList[i].Ready)
             SetIndexReady(i);
         else
             SetIndexNotReady(i);
-
-        if (mIsReady)
-            SetIndexReady(mNetRef.GetPlayerIndex());
-        else
-            SetIndexNotReady(mNetRef.GetPlayerIndex());
     }
+    SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
+
+    if (mIsReady)
+        SetIndexReady(mNetRef.GetPlayerIndex());
+    else
+        SetIndexNotReady(mNetRef.GetPlayerIndex());
 }
 
 void RoomUI::Draw(UINT nFrame)
