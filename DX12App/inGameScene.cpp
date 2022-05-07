@@ -700,6 +700,13 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mRevertTime = Clock::now() + std::chrono::seconds(WAIT_TO_REVERT); // waits for 5 seconds before revert.
 		break;
 	}
+	case SC::ROOM_INSIDE_INFO:
+	{
+		OutputDebugString(L"Received room inside info packet.\n");
+		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
+		mNetPtr->InitRoomInfo(pck);
+		break;
+	}
 	default:
 		OutputDebugStringA("Invalid packet.\n");
 		return false;

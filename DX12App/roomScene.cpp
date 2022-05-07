@@ -93,9 +93,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
-		mNetPtr->InitRoomInfo(pck);
-		//mpUI->SetIndexIsAdmin(static_cast<int>(pck->admin_idx));
-		
+		mNetPtr->InitRoomInfo(pck);		
 		break;
 	}
 	case SC::UPDATE_PLAYER_INFO:

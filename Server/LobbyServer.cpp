@@ -158,6 +158,11 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 	case CLIENT_STAT::IN_GAME:
 	{
 		const int roomID = gClients[hostID]->RoomID;
+		if (roomID < 0)
+		{
+			mLoginPtr->Disconnect(hostID);
+			break;
+		}
 		if (logout == false)
 		{
 			if (roomID < 0 || gClients[hostID]->ChangeState(currentState, CLIENT_STAT::IN_ROOM) == false)
@@ -166,6 +171,7 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 				break;
 			}
 		}
+		
 		mInGameServer.RemovePlayer(roomID, hostID);
 		if (mInGameServer.IsWorldActive(roomID) == false
 			&& mRooms[roomID]->GameRunning())
@@ -182,6 +188,11 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 	case CLIENT_STAT::IN_ROOM:
 	{
 		const int roomID = gClients[hostID]->RoomID;
+		if (roomID < 0)
+		{
+			mLoginPtr->Disconnect(hostID);
+			break;
+		}
 		if (logout == false)
 		{
 			if (roomID < 0 || gClients[hostID]->ChangeState(currentState, CLIENT_STAT::LOBBY) == false)
