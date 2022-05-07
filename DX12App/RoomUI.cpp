@@ -257,6 +257,18 @@ void RoomUI::Update(float GTime)
     const auto& playerList = mNetRef.GetPlayersInfo();
     mut.unlock();
 
+    SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
+    
+    if (mNetRef.IsAdmin())
+        GetTextBlock()[0].strText.assign("Start");
+    else
+        GetTextBlock()[0].strText.assign("Ready");
+
+    if (mIsReady)
+        SetIndexReady(mNetRef.GetPlayerIndex());
+    else
+        SetIndexNotReady(mNetRef.GetPlayerIndex());
+
     for (int i = 0; i < playerList.size(); ++i)
     {
         if (playerList[i].Empty)
@@ -265,26 +277,19 @@ void RoomUI::Update(float GTime)
             continue;
         }
       
-        SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
 
         GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(playerList[i].Name);
 
         SetIndexVisibleState(i);
 
-        if (mNetRef.IsAdmin())
-            GetTextBlock()[0].strText.assign("Start");
-        else
-            GetTextBlock()[0].strText.assign("Ready");
+       
 
         if (playerList[i].Ready)
             SetIndexReady(i);
         else
             SetIndexNotReady(i);
 
-        if (mIsReady)
-            SetIndexReady(mNetRef.GetPlayerIndex());
-        else
-            SetIndexNotReady(mNetRef.GetPlayerIndex());
+        
     }
 }
 
