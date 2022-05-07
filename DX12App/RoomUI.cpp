@@ -66,21 +66,12 @@ void RoomUI::SetVectorSize(UINT nFrame)
     FontLoad(Fonts);
 }
 
-void RoomUI::SetIndexPlayerInfo(int index, char* name, uint8_t color, bool empty, bool ready)
-{
-    mPlayerDatas[index].Nickname = name;
-    mPlayerDatas[index].color = color;
-    mPlayerDatas[index].IsEmpty = empty;
-    mPlayerDatas[index].IsReady = ready;
-}
-
 void RoomUI::SetIndexInvisibleState(int index)
 {
     SetIndexNicknameInvisible(index);
     SetIndexNotReady(index);
     SetIndexBackGroundInvisible(index);
     SetIndexCarInvisible(index);
-    //mIsInvisible[index] = true;
     
     BuildSolidBrush(GetColors());
 }
@@ -90,52 +81,17 @@ void RoomUI::SetIndexVisibleState(int index)
     SetIndexNicknameVisible(index);
     SetIndexBackGroundVisible(index);
     SetIndexCar(index);
-    if (mIsAdmin[index])
-        mReadyOrAdmin[index] = "Admin";
-    else
-        mReadyOrAdmin[index] = "Ready";
-    //mIsInvisible[index] = false;
-}
-
-void RoomUI::SetIndexReadyOrAdminText()
-{
-    for(int i=0;i<8;++i)
-        GetTextBlock()[11 + i].strText.assign(mReadyOrAdmin[i]);
-}
-
-void RoomUI::SetIndexIsAdmin(int index)
-{
-    for (int i = 0; i < 8; ++i)
-    {
-        if (i == index)
-        {
-            mIsAdmin[i] = true;
-            mReadyOrAdmin[i] = "Admin";
-            SetIndexReadyOrAdminText();
-            SetIndexColor(i + 11, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
-        }
-        else
-        {
-            mIsAdmin[i] = false;
-            mReadyOrAdmin[i] = "Ready";
-            SetIndexColor(i + 11, D2D1::ColorF(D2D1::ColorF::Beige, 0.0f));
-        }
-    }
-    SetIndexReadyOrAdminText();
-    BuildSolidBrush(GetColors());
 }
 
 void RoomUI::SetIndexReady(int index)
 {
-    if(!mIsAdmin[index])
-        SetIndexColor(11+index, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+    SetIndexColor(11+index, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
     BuildSolidBrush(GetColors());
 }
 
 void RoomUI::SetIndexNotReady(int index)
 {
-    if(!mIsAdmin[index])
-        SetIndexColor(11 + index, D2D1::ColorF(D2D1::ColorF::Beige, 0.0f));
+    SetIndexColor(11 + index, D2D1::ColorF(D2D1::ColorF::Beige, 0.0f));
     BuildSolidBrush(GetColors());
 }
 
@@ -213,16 +169,7 @@ void RoomUI::OnProcessMouseDown(WPARAM btnState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
-    /*for (int i = 0; i < 8; ++i)
-    {
-        if ((MouseCollisionCheck(dx, dy, GetTextBlock()[3 + static_cast<size_t>(i)]) || MouseCollisionCheck(dx, dy, GetTextBlock()[11 + static_cast<size_t>(i)])) && btnState & WM_LBUTTONDOWN)
-        {
-            if (!mIsInvisible[i])
-                SetIndexInvisibleState(i);
-            else
-                SetIndexVisibleState(i);
-        }
-    }*/
+    
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[19]))
         SetStateNotFail();
 }
@@ -244,15 +191,22 @@ void RoomUI::SetStateNotFail()
     BuildSolidBrush(GetColors());
 }
 
-void RoomUI::SetAllPlayerState()
+void RoomUI::SetIndexIsAdmin(int index)
 {
     for (int i = 0; i < 8; ++i)
     {
-        if (mPlayerDatas[i].IsEmpty)
-            SetIndexInvisibleState(i);
+        if (i == index)
+        {
+            GetTextBlock()[i+static_cast<size_t>(11)].strText.assign("Admin");
+            SetIndexColor(i + static_cast < size_t>(11), D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+        }
         else
-            SetIndexVisibleState(i);
+        {
+            GetTextBlock()[i+ static_cast < size_t>(11)].strText.assign("Ready");
+            SetIndexColor(i + static_cast < size_t>(11), D2D1::ColorF(D2D1::ColorF::Beige, 0.0f));
+        }
     }
+    BuildSolidBrush(GetColors());
 }
 
 int RoomUI::OnProcessMouseClick(WPARAM btnState, int x, int y)
@@ -262,7 +216,9 @@ int RoomUI::OnProcessMouseClick(WPARAM btnState, int x, int y)
 
     //레디 시작 버튼
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]) && WM_LBUTTONUP)
-        return mRoomID;
+    {
+        return 1;
+    }
 
     //맵 변경 버튼
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[2]) && WM_LBUTTONUP)
@@ -295,13 +251,34 @@ void RoomUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 
 void RoomUI::Update(float GTime)
 {
-    if(mIsAdmin[mMyIndex])
-        GetTextBlock()[0].strText.assign("Start");
-    else
-        GetTextBlock()[0].strText.assign("Ready");
+    for (int i = 0; i < 8; ++i)
+    {
+        if (mNetRef.GetPlayersInfo()[i].Empty)
+        {
+            SetIndexInvisibleState(i);
+            continue;
+        }
+       
+        GetTextBlock()[11 + static_cast<size_t>(i)].strText.assign("Ready");
+        
+        SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
+        GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(mNetRef.GetPlayersInfo()[i].Name);
+        SetIndexVisibleState(i);
 
-    GetTextBlock()[1].strText.assign("Out");
-    GetTextBlock()[2].strText.assign("Map");    
+        if (mNetRef.IsAdmin())
+        {
+            GetTextBlock()[0].strText.assign("Start");
+        }
+        else
+            GetTextBlock()[0].strText.assign("Ready");
+
+       
+        if (mNetRef.IsAdmin())
+            SetIndexColor(11 + i, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+
+        if (mNetRef.GetPlayersInfo()[i].Ready)
+            SetIndexReady(i);
+    }
 }
 
 void RoomUI::Draw(UINT nFrame)
@@ -550,7 +527,6 @@ void RoomUI::CreateFontFormat()
     TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
     for(size_t i=3;i<static_cast<size_t>(GetTextCnt());++i)
         TextAlignments[i] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    //TextAlignments[19] = DWRITE_TEXT_ALIGNMENT_CENTER;
 
     SetTextAllignments(TextAlignments);
 
@@ -587,8 +563,6 @@ void RoomUI::SetTextRect()
 
 void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
 {
-    //SetFrame(static_cast<float>(nWidth), static_cast<float>(nHeight));
-
     UI::BuildObjects(ppd3dRenderTargets, nWidth, nHeight);
     CreateFontFormat();
     
@@ -629,29 +603,11 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
 
     SetTextRect(); 
 
-    //GetTextBlock()[0].strText.assign("Ready");
     GetTextBlock()[1].strText.assign("Out");
     GetTextBlock()[2].strText.assign("Map");
 
-    /*for (size_t i = 0; i < 8; ++i)
-        GetTextBlock()[i + 3].strText.assign("Nickname" + std::to_string(i + 1));*/
-    //GetTextBlock()[11].strText.assign("Admin");
-    
-    /*for (int i = 0; i < 8; ++i)
-    {
-        mPlayerDatas[i].Nickname = "NickName" + i+49;
-        mPlayerDatas[i].color = i;
-        mPlayerDatas[i].IsEmpty = true;
-        mPlayerDatas[i].IsReady = false;
-    }*/
-    //0번이 Admin
-    //SetIndexIsAdmin(0);
-    //Fail안뜨게 설정 F9누르면 뜸
     SetStateNotFail();
-    //Ready Text설정
-    /*for (size_t i = 1; i < 8; ++i)
-        GetTextBlock()[i + 11].strText.assign("Ready");*/
-    //FailText설정
+
     GetTextBlock()[19].strText.assign("Fail");
 }
 

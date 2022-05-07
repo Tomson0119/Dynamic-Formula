@@ -35,8 +35,6 @@ public:
 
 	virtual void SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue,
 		ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
-	void SetIndexPlayerInfo(int index, char* name, uint8_t color, bool empty, bool ready);
-	const std::array<PlayerData, 8>& GetPlayerDatas() const { return mPlayerDatas; }
 	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
 	void CreateFontFormat();
 	void SetStateFail(int result);
@@ -52,33 +50,20 @@ public:
 	void SetIndexBackGroundVisible(int index);
 	void SetIndexBackGroundInvisible(int index);
 	//SetIsAdmin else NotAdmin
-	void SetIndexIsAdmin(int index);
 	// VisibleState, InvisibleState
 	void SetIndexInvisibleState(int index);
 	void SetIndexVisibleState(int index);
 	//SetNickname
-	void SetPlayerNickName(int index, const char* name) { mPlayerDatas[index].Nickname = name; }
 	//Ready Visible, Invisible
 	void SetIndexReady(int index);
 	void SetIndexNotReady(int index);
 
-	void SetIndexReadyOrAdminText();
-	//RoomID
-	void SetRoomID(int roomid) { mRoomID = roomid; }
-	//MapID
-	void SetMapID(int mapid) { mMapID = mapid; }
-	//MyID
-	void SetMyIndex(int clientid) { mMyIndex = clientid; }
-	//AllPlayerSet
-	void SetAllPlayerState();
+	void SetIndexIsAdmin(int index);
 
 private:
 	float BitmapOpacities[9] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 	
 	NetModule& mNetRef;
-	//std::array<bool, 8> mIsInvisible;
-	
-	std::array<std::string, 8> mReadyOrAdmin;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
 

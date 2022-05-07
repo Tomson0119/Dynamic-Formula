@@ -69,9 +69,9 @@ void RoomScene::OnProcessMouseUp(WPARAM btnState, int x, int y)
 	}
 	else if (mpUI->OnProcessMouseClick(btnState, x, y) == 0) // 예외
 		return;
-	else // Ready
+	else if (mpUI->OnProcessMouseClick(btnState, x, y) == 1)// Ready
 	{
-		//mNetPtr->Client()->ToggleReady(mpUI->OnProcessMouseClick(btnState, x, y));
+		mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
 	}
 }
 
@@ -94,19 +94,8 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);
-
-		// 모든 플레이어 정보 초기화
-		for (int i = 0; i < 8; ++i)
-		{
-			mpUI->SetIndexPlayerInfo(i, pck->player_stats[i].name, pck->player_stats[i].color, pck->player_stats[i].empty, pck->player_stats[i].ready);
-			if (pck->player_stats[i].empty)
-				mpUI->SetIndexInvisibleState(i);
-			else
-				mpUI->SetIndexVisibleState(i);
-		}
-		mpUI->SetMyIndex(static_cast<int>(pck->player_idx));
-		mpUI->SetIndexIsAdmin(static_cast<int>(pck->admin_idx));
-		mpUI->SetMapID(static_cast<int>(pck->map_id));
+		//mpUI->SetIndexIsAdmin(static_cast<int>(pck->admin_idx));
+		
 		break;
 	}
 	case SC::UPDATE_PLAYER_INFO:
@@ -121,7 +110,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received update map info packet.\n");
 		SC::packet_update_map_info* pck = reinterpret_cast<SC::packet_update_map_info*>(packet);
 		mNetPtr->UpdateMapIndex(pck);
-		mpUI->SetMapID(static_cast<int>(pck->map_id));
+		//mpUI->SetMapID(static_cast<int>(pck->map_id));
 		break;
 	}
 	case SC::REMOVE_PLAYER:

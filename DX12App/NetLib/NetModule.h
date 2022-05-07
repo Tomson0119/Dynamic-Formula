@@ -46,6 +46,7 @@ public:
 
 	char GetPlayerIndex() const { return mPlayerIdx; }
 	char GetMapIndex() const { return mMapIdx; }
+	char GetAdminIndex() const { return mAdminIdx; }
 
 	bool IsAdmin() const { return mPlayerIdx == mAdminIdx; }
 	const PlayerList& GetPlayersInfo() const { return mPlayerList; }
@@ -55,7 +56,7 @@ public:
 
 	float GetLatency() const { return (float)mLatency / 1000.0f; }
 	float GetUpdateRate() const { return (float)mUpdateRate / 1000.0f; }
-
+	
 private:
 	void Init();
 
