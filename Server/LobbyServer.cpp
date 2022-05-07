@@ -172,7 +172,12 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 		{
 			mRooms[roomID]->RevertRoomState();
 		}
-		break;
+
+		if (logout)
+		{
+			__fallthrough;
+		}
+		else break;
 	}
 	case CLIENT_STAT::IN_ROOM:
 	{
