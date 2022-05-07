@@ -119,7 +119,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 
 		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 		mNetPtr->RemovePlayer(pck);
-		mpUI->SetIndexIsAdmin(static_cast<int>(pck->admin_idx));
+		//mpUI->SetIndexIsAdmin(static_cast<int>(pck->admin_idx));
 		mpUI->SetIndexInvisibleState(static_cast<int>(pck->player_idx));
 		break;
 	}

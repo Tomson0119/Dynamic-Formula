@@ -278,10 +278,12 @@ void RoomUI::Update(float GTime)
             GetTextBlock()[0].strText.assign("Ready");
        
         if (mNetRef.IsAdmin())
-            SetIndexColor(11 + i, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+            SetIndexColor(11 + i, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 
         if (playerList[i].Ready)
             SetIndexReady(i);
+        else
+            SetIndexNotReady(i);
     }
 }
 
