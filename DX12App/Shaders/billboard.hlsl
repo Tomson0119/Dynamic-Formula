@@ -47,7 +47,7 @@ void GSStreamOutput(point VertexIn gin[1],
             float randFloat[3] = { gRandFloat4.x, gRandFloat4.y, gRandFloat4.z };
             
             particle.Age.x = 0.0f;
-            particle.PosL = mul(float4(0, 0, 0, 1), gWorld).xyz;
+            particle.PosL = float3(0, 0, 0);
             pointStream.Append(particle);
             
             for (int i = 0; i < 3; ++i)
@@ -65,20 +65,28 @@ void GSStreamOutput(point VertexIn gin[1],
                 
                 vertex.Type = PARTICLE_TYPE_FLARE;
                 vertex.Age.x = 0.0f;
-                vertex.Age.y = 0.3f;
+                vertex.Age.y = 0.5f;
                 pointStream.Append(vertex);
+                
+                for (int j = 0; j < 2; ++j)
+                {
+                    vertex.PosL = vertex.PosL - vertex.Velocity * 0.01f;
+                    
+                    pointStream.Append(vertex);
+                }
             }
         }
         else
         {
-            particle.PosL = mul(float4(0, 0, 0, 1), gWorld).xyz;
+            particle.PosL = float3(0, 0, 0);
             pointStream.Append(particle);
         }
     }
     else if (particle.Type == PARTICLE_TYPE_FLARE && particle.Age.x <= particle.Age.y)
     {
-        particle.Velocity.y = particle.Velocity.y + (-9.8f) * gElapsedTime;
-        particle.PosL += mul(float4(particle.Velocity, 1.0f), gPlayerRotation).xyz * gElapsedTime;
+        particle.Velocity.y = particle.Velocity.y + (-10.0f) * gElapsedTime;
+        particle.Velocity.z = particle.Velocity.z + (-5.0f) * gElapsedTime;
+        particle.PosL += particle.Velocity * gElapsedTime;
         pointStream.Append(particle);
     }
 }
@@ -95,7 +103,7 @@ void GSRender(point VertexIn gin[1],
 {
     if (gin[0].Type == PARTICLE_TYPE_FLARE)
     {
-        float3 posW = gin[0].PosL;
+        float3 posW = mul(float4(gin[0].PosL, 1.0f), gWorld).xyz;
     
         float3 up = float3(0.0f, 1.0f, 0.0f);
         float3 look = gCameraPos - posW;

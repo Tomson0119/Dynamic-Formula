@@ -31,7 +31,6 @@ cbuffer GameInfoCB : register(b2)
     float4 gRandFloat4    : packoffset(c0);
     float  gCurrentTime   : packoffset(c1.x);
     float  gElapsedTime   : packoffset(c1.y);
-    matrix gPlayerRotation : packoffset(c2);
 }
 
 cbuffer MaterialCB : register(b3)

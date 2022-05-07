@@ -903,7 +903,7 @@ void InGameScene::BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 		{
 			auto obj = std::make_shared<SOParticleObject>(*mPlayer);
 
-			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), 0.01f, 100);
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), 0.02f, 100);
 			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 			obj->SetMesh(particleEmittor);
 			obj->SetLocalOffset(offset[i]);
@@ -1009,11 +1009,6 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 		Math::RandFloat(0.0f, 1.0f));
 	gameInfo.CurrentTime = timer.CurrentTime();
 	gameInfo.ElapsedTime = timer.ElapsedTime();
-
-
-	XMFLOAT4X4 rotation;
-	XMStoreFloat4x4(&rotation, XMMatrixTranspose(XMMatrixRotationQuaternion(XMLoadFloat4(&mPlayer->GetQuaternion()))));
-	gameInfo.PlayerRotation = rotation;
 
 	mGameInfoCB->CopyData(0, gameInfo);
 	

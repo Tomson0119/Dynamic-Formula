@@ -262,11 +262,6 @@ struct GameInfoConstants
 	XMFLOAT4 RandFloat4;
 	float CurrentTime;
 	float ElapsedTime;
-
-	int pad0 = 0;
-	int pad1 = 0;
-
-	XMFLOAT4X4 PlayerRotation;
 };
 
 struct InstancingInfo
