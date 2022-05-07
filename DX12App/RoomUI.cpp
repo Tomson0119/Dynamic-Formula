@@ -264,7 +264,7 @@ void RoomUI::Update(float GTime)
             continue;
         }
        
-        GetTextBlock()[11 + static_cast<size_t>(i)].strText.assign("Ready");
+        //GetTextBlock()[11 + static_cast<size_t>(i)].strText.assign("Ready");
         
         SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
         GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(playerList[i].Name);

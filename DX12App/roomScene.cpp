@@ -100,7 +100,6 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	}
 	case SC::UPDATE_PLAYER_INFO:
 	{
-		OutputDebugString(L"Received update player info packet.\n");
 		SC::packet_update_player_info* pck = reinterpret_cast<SC::packet_update_player_info*>(packet);
 		mNetPtr->UpdatePlayerInfo(pck);
 		break;
@@ -119,8 +118,6 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 
 		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 		mNetPtr->RemovePlayer(pck);
-		mpUI->SetIndexIsAdmin(static_cast<int>(pck->admin_idx));
-		mpUI->SetIndexInvisibleState(static_cast<int>(pck->player_idx));
 		break;
 	}
 	case SC::GAME_START_SUCCESS:

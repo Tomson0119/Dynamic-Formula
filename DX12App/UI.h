@@ -119,7 +119,7 @@ public:
 
    //TextBlock
    void ResizeTextBlock(UINT n) { mTextBlocks.resize(n); }
-    std::vector<TextBlock>& GetTextBlock() { return mTextBlocks; }
+   std::vector<TextBlock>& GetTextBlock() { return mTextBlocks; }
    void SetTextBlock(const std::vector<TextBlock>& TextBlocks);
 
    //Colors - no resize

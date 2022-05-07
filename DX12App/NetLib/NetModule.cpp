@@ -90,7 +90,7 @@ void NetModule::InitRoomInfo(SC::packet_room_inside_info* pck)
 			mPlayerList[i].Empty = pck->player_stats[i].empty;
 			mPlayerList[i].Color = pck->player_stats[i].color;
 			mPlayerList[i].Ready = pck->player_stats[i].ready;
-			strncpy_s(mPlayerList[i].Name, pck->player_stats->name, MAX_NAME_SIZE - 1);
+			strncpy_s(mPlayerList[i].Name, pck->player_stats[i].name, MAX_NAME_SIZE - 1);
 		}
 		mPlayerListMut.unlock();
 	}
@@ -219,8 +219,8 @@ void NetModule::Init()
 	mIOCP.RegisterDevice(mNetClient->GetTCPSocket(), 0);
 	mNetClient->RecvMsg(false);
 
-	mNetClient->BindUDPSocket(CLIENT_PORT);
-	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
+	//mNetClient->BindUDPSocket(CLIENT_PORT);
+	//mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
 	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };
 }

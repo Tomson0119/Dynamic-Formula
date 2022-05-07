@@ -218,7 +218,7 @@ void WaitRoom::SendUpdateMapInfoToAll(int ignore, bool instSend)
 	pck.type = SC::UPDATE_MAP_INFO;
 	pck.room_id = mID;
 	pck.map_id = mMapIndex;
-	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, ignore, instSend);	
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, -1, instSend);	
 }
 
 void WaitRoom::SendRoomInsideInfo(int id, bool instSend)
