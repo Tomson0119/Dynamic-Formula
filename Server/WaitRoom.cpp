@@ -128,6 +128,12 @@ void WaitRoom::RevertRoomState()
 	ROOM_STAT desired = (mPlayerCount == MAX_ROOM_CAPACITY) 
 		? ROOM_STAT::ROOM_IS_FULL : ROOM_STAT::AVAILABLE;
 	ChangeRoomState(expected, desired);
+	
+	for (int i = 0; i < mPlayers.size(); i++)
+	{
+		mPlayers[i]->Ready = false;
+	}
+	SendRoomInsideInfoToAll();
 }
 
 bool WaitRoom::ChangeRoomState(ROOM_STAT expected, const ROOM_STAT& desired)
@@ -219,6 +225,35 @@ void WaitRoom::SendUpdateMapInfoToAll(int ignore, bool instSend)
 	pck.room_id = mID;
 	pck.map_id = mMapIndex;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, -1, instSend);	
+}
+
+void WaitRoom::SendRoomInsideInfoToAll()
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[" << mID << "] Sending room inside info to all.\n";
+#endif
+	SC::packet_room_inside_info pck{};
+	pck.size = sizeof(SC::packet_room_inside_info);
+	pck.type = SC::ROOM_INSIDE_INFO;
+	pck.room_id = mID;
+	pck.map_id = mMapIndex;
+	pck.admin_idx = mAdminIndex;
+	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
+	{
+		strncpy_s(pck.player_stats[i].name, mPlayers[i]->Name, MAX_NAME_SIZE - 1);
+		pck.player_stats[i].color = mPlayers[i]->Color;
+		pck.player_stats[i].empty = mPlayers[i]->Empty;
+		pck.player_stats[i].ready = mPlayers[i]->Ready;
+
+		pck.player_idx = i;
+
+		if (mPlayers[i]->Empty == false)
+		{
+			int id = mPlayers[i]->ID;
+			gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+			gClients[id]->SendMsg();
+		}
+	}
 }
 
 void WaitRoom::SendRoomInsideInfo(int id, bool instSend)

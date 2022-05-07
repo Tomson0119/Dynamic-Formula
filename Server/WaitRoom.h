@@ -54,6 +54,7 @@ public:
 	void SendRemovePlayerInfoToAll(int target, bool instSend=true);
 	void SendUpdateMapInfoToAll(int ignore=-1, bool instSend=true);
 
+	void SendRoomInsideInfoToAll();
 	void SendRoomInsideInfo(int id, bool instSend=true);
 	void SendRoomOutsideInfo(int id, bool instSend=true);
 
