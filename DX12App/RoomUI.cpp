@@ -264,7 +264,7 @@ void RoomUI::Update(float GTime)
     mut.lock();
     const auto& playerList = mNetRef.GetPlayersInfo();
     mut.unlock();
-
+    
     if (mNetRef.IsAdmin())
         GetTextBlock()[0].strText.assign("Start");
     else
@@ -282,6 +282,8 @@ void RoomUI::Update(float GTime)
 
         SetIndexVisibleState(i);
 
+       
+
         if (playerList[i].Ready)
             SetIndexReady(i);
         else
@@ -289,6 +291,7 @@ void RoomUI::Update(float GTime)
     }
     SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
 
+    
     if (mIsReady)
         SetIndexReady(mNetRef.GetPlayerIndex());
     else

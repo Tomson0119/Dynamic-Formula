@@ -179,15 +179,14 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 		const int roomID = gClients[hostID]->RoomID;
 		if (logout == false)
 		{
-			if (roomID < 0 || gClients[hostID]->PlayerIndex < 0
-				|| gClients[hostID]->ChangeState(currentState, CLIENT_STAT::LOBBY) == false
-				|| mRooms[roomID]->RemovePlayer(hostID) == false)
+			if (roomID < 0 || gClients[hostID]->ChangeState(currentState, CLIENT_STAT::LOBBY) == false)
 			{
 				mLoginPtr->Disconnect(hostID);
 				break;
 			}
 		}
 
+		mRooms[roomID]->RemovePlayer(hostID);
 		// Packet must be sended before initializing client.
 		mRooms[roomID]->SendRemovePlayerInfoToAll(hostID);
 		SendRoomInfoToLobbyPlayers(roomID, hostID);
