@@ -216,18 +216,10 @@ int RoomUI::OnProcessMouseClick(WPARAM btnState, int x, int y)
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
 
-    auto& mut = mNetRef.GetPlayerListMutex();
-    mut.lock();
-    const auto& playerList = mNetRef.GetPlayersInfo();
-    mut.unlock();
-
     //레디 시작 버튼
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]) && WM_LBUTTONUP)
     {
-        if (!mIsReady)
-            SetIndexReady(mNetRef.GetPlayerIndex());
-        else
-            SetIndexNotReady(mNetRef.GetPlayerIndex());
+        mIsReady = !mIsReady;
         return 1;
     }
 
@@ -293,6 +285,11 @@ void RoomUI::Update(float GTime)
             SetIndexReady(i);
         else
             SetIndexNotReady(i);
+
+        if (mIsReady)
+            SetIndexReady(mNetRef.GetPlayerIndex());
+        else
+            SetIndexNotReady(mNetRef.GetPlayerIndex());
     }
 }
 
