@@ -85,12 +85,14 @@ void RoomUI::SetIndexVisibleState(int index)
 
 void RoomUI::SetIndexReady(int index)
 {
+    mIsReady = true;
     SetIndexColor(11+index, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
     BuildSolidBrush(GetColors());
 }
 
 void RoomUI::SetIndexNotReady(int index)
 {
+    mIsReady = false;
     SetIndexColor(11 + index, D2D1::ColorF(D2D1::ColorF::Beige, 0.0f));
     BuildSolidBrush(GetColors());
 }
@@ -214,9 +216,18 @@ int RoomUI::OnProcessMouseClick(WPARAM btnState, int x, int y)
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
 
+    auto& mut = mNetRef.GetPlayerListMutex();
+    mut.lock();
+    const auto& playerList = mNetRef.GetPlayersInfo();
+    mut.unlock();
+
     //레디 시작 버튼
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]) && WM_LBUTTONUP)
     {
+        if (!mIsReady)
+            SetIndexReady(mNetRef.GetPlayerIndex());
+        else
+            SetIndexNotReady(mNetRef.GetPlayerIndex());
         return 1;
     }
 
@@ -238,9 +249,9 @@ void RoomUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN:
         switch (wParam)
         {
-        case 'L':
+        /*case 'L':
             SetIndexIsAdmin(2);
-            break;
+            break;*/
         case VK_F11:
             SetStateFail(0);
             break;
@@ -256,6 +267,7 @@ void RoomUI::Update(float GTime)
     const auto& playerList = mNetRef.GetPlayersInfo();
     mut.unlock();
 
+
     for (int i = 0; i < playerList.size(); ++i)
     {
         if (playerList[i].Empty)
@@ -264,21 +276,18 @@ void RoomUI::Update(float GTime)
             continue;
         }
        
-        GetTextBlock()[11 + static_cast<size_t>(i)].strText.assign("Ready");
+        //GetTextBlock()[11 + static_cast<size_t>(i)].strText.assign("Ready");
         
         SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
+
         GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(playerList[i].Name);
+
         SetIndexVisibleState(i);
 
         if (mNetRef.IsAdmin())
-        {
             GetTextBlock()[0].strText.assign("Start");
-        }
         else
             GetTextBlock()[0].strText.assign("Ready");
-       
-        if (mNetRef.IsAdmin())
-            SetIndexColor(11 + i, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 
         if (playerList[i].Ready)
             SetIndexReady(i);
