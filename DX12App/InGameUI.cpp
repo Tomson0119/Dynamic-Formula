@@ -299,7 +299,7 @@ void InGameUI::Start321Animation(float Elapsed)
 void InGameUI::SetScoreBoard()
 {
 	SetInvisibleStateTextUI();//UI Invisible
-	//SetScoreBoardTexts();// ScoreBoard Text Input
+	SetScoreBoardTexts();// ScoreBoard Text Input
 	mBitmapAnimOpacities[6] = 1.0f;
 }
 
@@ -391,11 +391,13 @@ void InGameUI::SetScoreBoardTexts()
 	//юс╫ц set
 	for (int i = 0; i < mScoreboard.size(); ++i)
 	{
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + static_cast<size_t>(i)].strText.assign(std::to_string(i+1));
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (1 * 8) + static_cast<size_t>(i)].strText.assign("id" + std::to_string(i + 1)); //21 22 23...
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(500 * (i + 1)));// 29 30 31...
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(3*i));
-		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(2*i));
+		if (mScoreboard[i].rank == 0)
+			continue;
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].rank));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (1 * 8) + static_cast<size_t>(i)].strText.assign(mScoreboard[i].nickname); //21 22 23...
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (2 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].score));// 29 30 31...
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (3 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].lapCount));
+		GetTextBlock()[static_cast<size_t>(TEXTCOUNT)+CategoryCount + (4 * 8) + static_cast<size_t>(i)].strText.assign(std::to_string(mScoreboard[i].hitCount));
 	}
 	GetTextBlock()[GetTextCnt()-1].strText.assign("SCORE BOARD");
 
