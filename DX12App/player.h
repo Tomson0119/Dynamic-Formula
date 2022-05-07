@@ -1,8 +1,9 @@
 #pragma once
 
 #include "gameObject.h"
-#include "camera.h"
-#include "inGameScene.h"
+
+class Camera;
+class InGameScene;
 
 class Player : public GameObject
 {
@@ -44,7 +45,11 @@ public:
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
 
+	virtual void SetItemNum(int num) { }
 	virtual int GetItemNum() { return 0; }
+	virtual void SetBooster() { }
+	virtual void SetRimLight(bool rimlight) { }
+
 	virtual float GetDriftGauge() { return 0.0f; }
 
 protected:
@@ -106,6 +111,8 @@ public:
 	
 	virtual void UpdateFrontLight();
 
+	virtual void SetBooster() { mBoosterLeft = mBoosterTime; }
+	virtual void SetRimLight(bool rimlight) { mRimLightOn = rimlight; }
 public:
 	void SetSpawnTransform(SC::packet_spawn_transform* pck);
 
@@ -128,6 +135,7 @@ public:
 	WheelObject* GetWheel(int index) { return mWheel[index].get(); }
 	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
 
+	virtual void SetItemNum(int num) { mItemNum = num; }
 	virtual int GetItemNum() { return mItemNum; }
 	virtual float GetDriftGauge() { return mDriftGauge; }
 
@@ -191,7 +199,7 @@ private:
 
 	float mFovCoefficient = 1.0f;
 
-	int mItemNum = 0;
+	std::atomic_int mItemNum = 0;
 	float mDriftGauge = 0.0f;
 
 	std::atomic_bool mSpawnFlag = false;

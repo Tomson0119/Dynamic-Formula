@@ -1,13 +1,9 @@
 #include "common.h"
 #include "InGameServer.h"
 #include "LoginServer.h"
-#include "WaitRoom.h"
 #include "Client.h"
 #include "Player.h"
-#include "GameWorld.h"
 #include "RigidBody.h"
-
-InGameServer::WorldList InGameServer::msWorlds;
 
 InGameServer::InGameServer()
 	: mLoginPtr{ nullptr }
@@ -15,7 +11,7 @@ InGameServer::InGameServer()
 	mGameConstants = std::make_shared<GameConstant>();
 
 	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin", "Resource\\Models\\Car_Body_Convex_Hull.obj");
-	mMissileShape = std::make_unique<BtBoxShape>("Resource\\Missile_Data.bin");
+	mMissileShape = std::make_unique<BtMissileShape>("Resource\\Models\\Missile_Convex_Hull.obj");
 	mMapShape = std::make_unique<BtMapShape>("Resource\\MapData.tmap");
 	mCheckpointShape = std::make_unique<CheckpointShape>("Resource\\CheckPoint.tmap");
 }
@@ -134,7 +130,10 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 void InGameServer::StartMatch(int roomID)
 {
 	msWorlds[roomID]->SetActive(true);
-	msWorlds[roomID]->SendStartSignal();
+	msWorlds[roomID]->SetGameTime(
+		mGameConstants->CountdownTime,
+		mGameConstants->GameRunningTime);
+	msWorlds[roomID]->SendReadySignal();
 	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
 }
 
@@ -159,9 +158,13 @@ void InGameServer::RunPhysicsSimulation(int roomID)
 	msWorlds[roomID]->UpdatePhysicsWorld();
 
 	if (msWorlds[roomID]->IsActive())
+	{
 		AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
+	}
 	else
+	{
 		msWorlds[roomID]->FlushPhysicsWorld();
+	}
 }
 
 void InGameServer::PostPhysicsOperation(int roomID)

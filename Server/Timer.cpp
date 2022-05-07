@@ -24,7 +24,7 @@ void Timer::Tick()
 {
 	mCurr = Clock::now();
 	mElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(mCurr - mPrev);
-	mPrev = Clock::now();
+	mPrev = mCurr;
 }
 
 float Timer::GetElapsed() const
@@ -90,11 +90,16 @@ void TimerQueue::TimerThreadFunc(TimerQueue& timer)
 
 			if (ev.Type == EVENT_TYPE::PHYSICS)
 			{
-				auto now = Clock::now();			
-				std::this_thread::sleep_for(ev.StartTime - now);
-				timer.mGameServerPtr->PostPhysicsOperation(ev.WorldID);
+				auto now = Clock::now();
+				if (ev.StartTime <= now)
+				{
+					timer.mGameServerPtr->PostPhysicsOperation(ev.WorldID);
+				}
+				else
+				{
+					timer.mQueue.push(ev);
+				}
 			}
 		}
-		std::this_thread::sleep_for(10ms);
 	}
 }

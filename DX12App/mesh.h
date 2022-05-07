@@ -213,15 +213,15 @@ private:
 class ParticleMesh : public Mesh
 {
 public:
+
 	ParticleMesh(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		const XMFLOAT3& position,
 		const XMFLOAT4& color,
 		const XMFLOAT2& size,
-		const XMFLOAT3& direction,
+		const XMFLOAT3& velocity,
 		float lifeTime,
-		float speed,
 		int maxParticle);
 
 	virtual ~ParticleMesh() { }

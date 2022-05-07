@@ -187,6 +187,7 @@ void Camera::RotateY(float angle)
 
 void Camera::Update(const float elapsedTime)
 {
+	mOldView = mView;
 	UpdateViewMatrix();
 }
 
@@ -197,8 +198,6 @@ void Camera::UpdateViewMatrix()
 		mLook = Vector3::Normalize(mLook);
 		mUp = Vector3::Normalize(Vector3::Cross(mLook, mRight));
 		mRight = Vector3::Cross(mUp, mLook);
-
-		mOldView = mView;
 
 		mView(0, 0) = mRight.x; mView(0, 1) = mUp.x; mView(0, 2) = mLook.x;
 		mView(1, 0) = mRight.y; mView(1, 1) = mUp.y; mView(1, 2) = mLook.y;

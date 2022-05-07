@@ -28,10 +28,10 @@ cbuffer LightCB : register(b1)
 
 cbuffer GameInfoCB : register(b2)
 {
-    float4 gRandFloat4  : packoffset(c0);
-    float3 gPlayerPos   : packoffset(c1);
-    float  gCurrentTime : packoffset(c1.w);
-    float  gElapsedTime : packoffset(c2.x);
+    float4 gRandFloat4    : packoffset(c0);
+    float  gCurrentTime   : packoffset(c1.x);
+    float  gElapsedTime   : packoffset(c1.y);
+    matrix gPlayerRotation : packoffset(c2);
 }
 
 cbuffer MaterialCB : register(b3)
@@ -55,7 +55,8 @@ cbuffer StandardCB : register(b5)
     float gZSplit0 : packoffset(c0.x);
     float gZSplit1 : packoffset(c0.y);
     float gZSplit2 : packoffset(c0.z);
-    float gInstancingOffset : packoffset(c0.w);
+    int gInstancingOffset : packoffset(c0.w);
+    bool gParticleEnable : packoffset(c1.x);
 }
 
 struct InstancingInfo

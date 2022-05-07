@@ -38,10 +38,13 @@ void Map::Update(float elapsed, BPHandler& physics)
 void Map::Reset(BPHandler& physics)
 {
 	mTrack.RemoveRigidBody(physics);
+	mTrack.Flush();
 	for (auto& cp : mCheckpoints)
 	{
 		cp.RemoveRigidBody(physics);
+		cp.Flush();
 	}
+	mCheckpoints.clear();
 }
 
 int Map::GetMask(const btCollisionObject& obj) const

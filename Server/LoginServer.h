@@ -30,7 +30,7 @@ public:
 	static void SignalHandler(int signal);
 
 	static void NetworkThreadFunc(LoginServer& server);
-	static const int MAX_THREADS = 4;
+	static const int MAX_THREADS = 6;
 
 	IOCP& GetIOCP() { return msIOCP; }
 

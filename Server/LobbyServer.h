@@ -38,7 +38,7 @@ private:
 	std::atomic_int mRoomCount;
 	std::atomic_int mLobbyPlayerCount;
 
-	static RoomList msRooms;
+	RoomList mRooms;
 	
 	/*
 		인게임서버는 여러 개가 존재할 수 있으며, 

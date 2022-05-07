@@ -1,10 +1,7 @@
 #include "stdafx.h"
-#include "Mesh.h"
-#include "shadowMapRenderer.h"
-#include "LoginUI.h"
-#include "InGameUI.h"
-#include "NetLib/NetModule.h"
 #include "inGameScene.h"
+#include "shadowMapRenderer.h"
+#include "NetLib/NetModule.h"
 
 using namespace std;
 
@@ -12,6 +9,7 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	: Scene{ hwnd, SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"In Game Scene Entered.\n");
+
 	mMsaa4xQualityLevels = msaaQuality;
 	mMsaa4xEnable = msaaEnable;
 	mKeyMap[VK_LEFT] = false;
@@ -21,7 +19,7 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	mKeyMap[VK_LSHIFT] = false;
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
-	mKeyMap['Q'] = false;
+	mKeyMap['P'] = false;
 
 #ifdef STANDALONE
 	mGameStarted = true;
@@ -70,6 +68,9 @@ void InGameScene::BuildObjects(
 {
 	mDevice = device;
 
+	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
+	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+
 	mMainCamera = make_unique<Camera>();
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
 	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
@@ -83,10 +84,10 @@ void InGameScene::BuildObjects(
 
 	mCurrentCamera = mDirectorCamera.get();
 
-	mMainLight.Ambient = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
+	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
 	mDirectionalLight.SetInfo(
-		XMFLOAT3(0.3f, 0.3f, 0.3f),
+		XMFLOAT3(0.2f, 0.2f, 0.2f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-1.0f, 0.75f, -1.0f),
 		0.0f, 0.0f, 0.0f,
@@ -99,8 +100,7 @@ void InGameScene::BuildObjects(
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
 
-	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
-	mpUI.get()->PreDraw(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
+	BuildDriftParticleObject(cmdList);
 
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
@@ -125,7 +125,7 @@ void InGameScene::BuildRootSignature()
 	parameters[5] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);				 // Texture, SRV
 	parameters[6] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL);				 // ShadowMap
 	parameters[7] = Extension::DescriptorTable(1, &descRanges[3], D3D12_SHADER_VISIBILITY_ALL);				 // CubeMap
-	parameters[8] = Extension::Constants(4, 5, D3D12_SHADER_VISIBILITY_ALL);                                 // E.T.C - 기타 바로바로 올려야 할 필요가 있는 쉐이더 상수들
+	parameters[8] = Extension::Constants(7, 5, D3D12_SHADER_VISIBILITY_ALL);                                 // E.T.C - 기타 바로바로 올려야 할 필요가 있는 쉐이더 상수들
 	parameters[9] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_SRV, 0, D3D12_SHADER_VISIBILITY_ALL, 3); // Instancing Structured Buffer
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[5];
@@ -196,7 +196,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
 	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
-	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl");
+	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl", true);
 	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
 	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
 	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
@@ -209,7 +209,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
-	//mPipelines[Layer::Particle] = make_unique<StreamOutputPipeline>();
+	mPipelines[Layer::DriftParticle] = make_unique<StreamOutputPipeline>(2);
 
 	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.Direction);
 
@@ -223,6 +223,8 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	}
 
 	mPipelines[Layer::Default]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), defaultShader.get());
+
+	mPipelines[Layer::DriftParticle]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), nullptr);
 
 	mPipelines[Layer::Terrain]->SetWiredFrame(true);
 	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
@@ -241,9 +243,6 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::CheckPoint]->SetWiredFrame(true);
 	mPipelines[Layer::CheckPoint]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), simpleShader.get());
 
-	//mPipelines[Layer::Particle]->SetAlphaBlending();
-	//mPipelines[Layer::Particle]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), particleShader.get());
-
 	mPostProcessingPipelines[Layer::MotionBlur] = make_unique<MotionBlurPipeline>();
 	mPostProcessingPipelines[Layer::MotionBlur]->BuildPipeline(mDevice.Get(), mComputeRootSignature.Get(), motionBlurShader.get(), true);
 
@@ -257,7 +256,6 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Default, mPipelines[Layer::Default].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Color, mPipelines[Layer::Color].get());
-	//mShadowMapRenderer->AppendTargetPipeline(Layer::Terrain, mPipelines[Layer::Terrain].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Instancing, mPipelines[Layer::Instancing].get());
 	mShadowMapRenderer->AppendTargetPipeline(Layer::Transparent, mPipelines[Layer::Transparent].get());
 	mShadowMapRenderer->BuildPipeline(mDevice.Get(), mRootSignature.Get());
@@ -299,6 +297,8 @@ void InGameScene::CreateVelocityMapViews()
 		DXGI_FORMAT_R32G32B32A32_FLOAT,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, 4, mMsaa4xQualityLevels - 1);
+
+	mMsaaVelocityMap->SetName(L"MSAA Velocity Map");
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mMsaaVelocityMapRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -360,6 +360,8 @@ void InGameScene::CreateMsaaViews()
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, 4, mMsaa4xQualityLevels - 1);
 
+	mMsaaTarget->SetName(L"MSAA Target");
+
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mMsaaRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
@@ -374,26 +376,16 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 {
 	mDynamicsWorld = physics->GetDynamicsWorld();
 
-	mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
+	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
-	// 지형 스케일에는 정수를 넣는 것을 권장
-	/*auto terrain = make_shared<TerrainObject>(1024, 1024, XMFLOAT3(8.0f, 1.0f, 8.0f));
-	terrain->BuildHeightMap(L"Resources\\PlaneMap.raw");
-	terrain->BuildTerrainMesh(mDevice.Get(), cmdList, physics, 129, 129);
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\terrainTexture.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\rocky.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\road.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\heightmap.dds");
-	terrain->LoadTexture(mDevice.Get(), cmdList, L"Resources\\normalmap.dds");
-	mPipelines[Layer::Terrain]->AppendObject(terrain);*/
-	//physics->SetTerrainRigidBodies(terrain->GetTerrainRigidBodies());
-	LoadWorldMap(cmdList, physics, L"Map\\MapData.tmap");
+	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 	LoadLights(cmdList, L"Map\\Lights.tmap");
 
 #ifdef STANDALONE
 	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
 #else
+	int playerCount = 0;
 	const auto& players = mNetPtr->GetPlayersInfo();
 	for (int i = 0; const PlayerInfo& info : players)
 	{
@@ -402,13 +394,17 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
 			BuildCarObject(info.StartPosition, info.StartRotation, info.Color, isPlayer, cmdList, physics, i);
 			BuildMissileObject(cmdList, info.StartPosition, i);
+			playerCount += 1;
 		}
 		i++;
 	}
+	mpUI->SetPlayerCount(playerCount);
+
 #endif
 	float aspect = mMainCamera->GetAspect();
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
+	mMainCamera->SetPosition(mPlayer->GetPosition());
 	mCurrentCamera = mMainCamera.get();
 
 	for (const auto& [_, pso] : mPipelines)
@@ -434,9 +430,14 @@ void InGameScene::BuildCarObject(
 	Print("Rotation: ", rotation);
 
 	if (mMeshList["Car_Body.obj"].empty())
-		mMeshList["Car_Body.obj"] = carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
+	{
+		carObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Body.obj");
+		mMeshList["Car_Body.obj"] = carObj->GetMeshes();
+	}
 	else
+	{
 		carObj->CopyMeshes(mMeshList["Car_Body.obj"]);
+	}
 
 	carObj->SetDiffuse("Car_Texture", mColorMap[(int)color]);
 	for (int i = 0; i < 4; ++i)
@@ -457,18 +458,27 @@ void InGameScene::BuildCarObject(
 		if (i % 2 == 0)
 		{
 			if (mMeshList["Car_Wheel_L.obj"].empty())
-				mMeshList["Car_Wheel_L.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
+			{
+				wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_L.obj");
+				mMeshList["Car_Wheel_L.obj"] = wheelObj->GetMeshes();
+			}
 			else
+			{
 				wheelObj->CopyMeshes(mMeshList["Car_Wheel_L.obj"]);
+			}
 		}
 		else
 		{
 			if (mMeshList["Car_Wheel_R.obj"].empty())
-				mMeshList["Car_Wheel_R.obj"] = wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
+			{
+				wheelObj->LoadModel(mDevice.Get(), cmdList, L"Models\\Car_Wheel_R.obj");
+				mMeshList["Car_Wheel_R.obj"] = wheelObj->GetMeshes();
+			}
 			else
+			{
 				wheelObj->CopyMeshes(mMeshList["Car_Wheel_R.obj"]);
-		}
-		
+			}
+		}		
 		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
@@ -488,8 +498,18 @@ void InGameScene::BuildMissileObject(
 	const XMFLOAT3& position, int idx)
 {
 	mMissileObjects[idx] = std::make_shared<MissileObject>(position);
-	mMissileObjects[idx]->SetMeshes(mMeshList["Missile"]);
-	mMissileObjects[idx]->LoadTexture(mDevice.Get(), cmdList, L"Resources\\tile.dds");
+
+	if (mMeshList.find("Missile") == mMeshList.end())
+	{
+		mMissileObjects[idx]->LoadModel(mDevice.Get(), cmdList, L"Models\\Missile.obj");
+		mMeshList["Missile"] = mMissileObjects[idx]->GetMeshes();
+		mTextureList["Missile"] = mMissileObjects[idx]->GetTextures();
+	}
+	else
+	{
+		mMissileObjects[idx]->SetMeshes(mMeshList["Missile"]);
+		mMissileObjects[idx]->SetTextures(mTextureList["Missile"]);
+	}
 }
 
 void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
@@ -526,11 +546,24 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 {
 	switch (type)
 	{
+	case SC::READY_SIGNAL:
+	{
+		SC::packet_ready_signal* pck = reinterpret_cast<SC::packet_ready_signal*>(packet);
+		// TODO: Show countdown image..
+		mpUI->ShowStartAnim();
+		break;
+	}
 	case SC::START_SIGNAL:
 	{
 		SC::packet_start_signal* pck = reinterpret_cast<SC::packet_start_signal*>(packet);
 		mGameStarted = true;
-		// TODO: Start signal
+
+		OutputDebugStringA(("Delay: " + std::to_string(pck->delay_time_msec) + "\n").c_str());
+		OutputDebugStringA(("Delay: " + std::to_string(pck->running_time_sec) + "\n").c_str());
+
+		mpUI->ShowGoAnim();
+		mpUI->SetRunningTime((float)pck->running_time_sec);
+
 		break;
 	}
 	case SC::REMOVE_PLAYER:
@@ -590,6 +623,17 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
+	case SC::UI_INFO:
+	{
+		SC::packet_ui_info* pck = reinterpret_cast<SC::packet_ui_info*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if (player)
+		{
+			if (pck->gauge > 0) mpUI->SetDriftGauge(pck->gauge);
+			if (pck->speed > 0) mpUI->SetSpeed(pck->speed);
+		}
+		break;
+	}
 	case SC::INVINCIBLE_ON:
 	{
 		SC::packet_invincible_on* pck = reinterpret_cast<SC::packet_invincible_on*>(packet);
@@ -598,6 +642,17 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 			int duration = pck->duration - (int)(mNetPtr->GetLatency() * FIXED_FLOAT_LIMIT);
 			player->SetInvincibleOn(duration);
+		}
+		break;
+	}
+	case SC::ITEM_COUNT:
+	{
+		SC::packet_item_count* pck = reinterpret_cast<SC::packet_item_count*>(packet);
+		const auto& player = mPlayerObjects[pck->player_idx];
+		if(player)
+		{
+			OutputDebugStringA("Item increased.\n");
+			player->SetItemNum(pck->item_count);
 		}
 		break;
 	}
@@ -612,6 +667,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_warning_message* pck = reinterpret_cast<SC::packet_warning_message*>(packet);
 		OutputDebugStringA("Reverse drive warning!\n");
+		mpUI->ShowWarning();
 		break;
 	}
 	case SC::INGAME_INFO:
@@ -620,12 +676,33 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player.get() == mPlayer)
 		{
-			std::stringstream ss;
-			ss << "Lap count: " << (int)pck->lap_count << "\n";
-			ss << "Point: " << pck->point << "\n";
-			ss << "Rank: " << (int)pck->rank << "\n";
-			OutputDebugStringA(ss.str().c_str());
+			mpUI->SetLap(pck->lap_count);
+			mpUI->SetMyRank(pck->rank);
+			mpUI->SetMyScore(pck->point);
 		}
+		break;
+	}
+	case SC::GAME_END:
+	{
+		SC::packet_game_end* pck = reinterpret_cast<SC::packet_game_end*>(packet);
+		mpUI->GetMutex().lock();
+		for (int i = 0, idx=0; i < mPlayerObjects.size(); i++)
+		{
+			if (mPlayerObjects[i])
+			{
+				mpUI->SetScoreboardInfo(
+					idx, (int)pck->rank[i], pck->point[i],
+					(int)pck->lap_count[i], (int)pck->hit_count[i],
+					mNetPtr->GetPlayersInfo()[i].Name);
+				idx += 1;
+			}
+		}
+		mpUI->SortScoreboard();
+		mpUI->GetMutex().unlock();
+
+		mpUI->ShowScoreBoard();
+		mGameEnded = true;
+		mRevertTime = Clock::now() + std::chrono::seconds(WAIT_TO_REVERT); // waits for 5 seconds before revert.
 		break;
 	}
 	default:
@@ -676,7 +753,8 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			if (mCurrentCamera == mDirectorCamera.get())
 				mCurrentCamera = mMainCamera.get();
-			else {
+			else
+			{
 				mDirectorCamera->SetPosition(mMainCamera->GetPosition());
 				mCurrentCamera = mDirectorCamera.get();
 			}
@@ -697,38 +775,34 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mVolumetricEnable = !mVolumetricEnable;
 		}
-
-		/*if (wParam == 'U')
+		if (wParam == VK_SHIFT)
 		{
-			mVolumetricInner += 1.0f;
+			mDriftParticleEnable = false;
 		}
-		if (wParam == 'J')
-		{
-			mVolumetricInner -= 1.0f;
-		}
-		if (wParam == 'I')
-		{
-			mVolumetricOuter += 1.0f;
-		}
-		if (wParam == 'K')
-		{
-			mVolumetricOuter -= 1.0f;
-		}
-		if (wParam == 'O')
-		{
-			mVolumetricRange += 1.0f;
-		}
-		if (wParam == 'L')
-		{
-			mVolumetricRange -= 1.0f;
-		}
-
-		OutputDebugStringW((L"Inner : " + std::to_wstring(mVolumetricInner) + L"\n").c_str());
-		OutputDebugStringW((L"outer : " + std::to_wstring(mVolumetricOuter) + L"\n").c_str());
-		OutputDebugStringW((L"range : " + std::to_wstring(mVolumetricRange) + L"\n\n").c_str());*/
-
+		
 		if(wParam == VK_END)
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+		break;
+
+	case WM_KEYDOWN:
+		if (wParam == VK_SHIFT)
+		{
+			mDriftParticleEnable = true;
+		}
+		if ((wParam == 'Z' || wParam == 'X'))
+		{
+			auto item = mPlayer->GetItemNum();
+			if (item > 0)
+			{
+				mPlayer->SetItemNum(item - 1);
+
+				if (wParam == 'Z')
+				{
+					mPlayer->SetBooster();
+					mPlayer->SetRimLight(true);
+				}
+			}
+		}
 		break;
 	}
 	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
@@ -754,19 +828,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		if (GetAsyncKeyState(VK_LSHIFT) & 0x8000)
 			mDirectorCamera->Upward(-dist * elapsed);
 	}
-	
-	if (mMissileInterval < 0.0f)
-	{
-		if (GetAsyncKeyState('X') & 0x8000)
-		{
-			//mMissileInterval = 1.0f;
-			//AppendMissileObject(cmdList, physics);
-		}
-	}
-	else
-	{
-		mMissileInterval -= elapsed;
-	}
+		
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 
 #ifndef STANDALONE
@@ -791,6 +853,16 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
+	if (mGameEnded)
+	{
+		auto now = Clock::now();
+		if (now >= mRevertTime)
+		{
+			mNetPtr->Client()->RevertScene();
+			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+		}
+	}
+
 	float elapsed = timer.ElapsedTime();
 
 	if(mGameStarted)
@@ -811,19 +883,43 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
+	mCurrentCamera->Update(elapsed);
 	
 	UpdateConstants(timer);
-
-	mpUI.get()->Update(timer.TotalTime(), mPlayer);
+	cmdList->SetGraphicsRoot32BitConstants(8, 1, &mDriftParticleEnable, 4);
+	
+	mpUI.get()->Update(elapsed, mPlayer);
 }
 
 void InGameScene::UpdateLight(float elapsed)
 {
 }
 
-void InGameScene::AddParticleObject()
+void InGameScene::BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 {
-	
+	if (mPipelines[Layer::DriftParticle]->GetRenderObjects().size() == 0)
+	{
+		XMFLOAT3 offset[2] = { XMFLOAT3(-1.3f, -0.8f, -1.8f), XMFLOAT3(1.3f, -0.8f, -1.8f) };
+
+		for (int i = 0; i < 2; ++i)
+		{
+			auto obj = std::make_shared<SOParticleObject>(*mPlayer);
+
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), 0.01f, 100);
+			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
+			obj->SetMesh(particleEmittor);
+			obj->SetLocalOffset(offset[i]);
+
+			Pipeline* p = mPipelines[Layer::DriftParticle].get();
+			auto particlePipeline = dynamic_cast<StreamOutputPipeline*>(p);
+			particlePipeline->AppendObject(mDevice.Get(), obj);
+		}
+	}
+}
+
+void InGameScene::DestroyDriftParticleObject()
+{
+	mPipelines[Layer::DriftParticle]->GetRenderObjects().clear();
 }
 
 void InGameScene::UpdateLightConstants()
@@ -854,7 +950,7 @@ void InGameScene::UpdateLightConstants()
 	}
 
 	std::sort(mLights.begin(), mLights.end(),
-		[playerPos](LightBundle l1, LightBundle l2)
+		[playerPos](const LightBundle& l1, const LightBundle& l2)
 		{
 			return Vector3::Distance(l1.light.Position, playerPos) < Vector3::Distance(l2.light.Position, playerPos);
 		}
@@ -910,12 +1006,16 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 	GameInfoConstants gameInfo{};
 	gameInfo.RandFloat4 = XMFLOAT4(
 		Math::RandFloat(-1.0f, 1.0f),
-		Math::RandFloat(0.0f, 1.0f),
 		Math::RandFloat(-1.0f, 1.0f),
-		Math::RandFloat(1.0f, 5.0f));
-	gameInfo.PlayerPosition = { 0.0f,0.0f,0.0f };
+		Math::RandFloat(-1.0f, 1.0f),
+		Math::RandFloat(0.0f, 1.0f));
 	gameInfo.CurrentTime = timer.CurrentTime();
 	gameInfo.ElapsedTime = timer.ElapsedTime();
+
+
+	XMFLOAT4X4 rotation;
+	XMStoreFloat4x4(&rotation, XMMatrixTranspose(XMMatrixRotationQuaternion(XMLoadFloat4(&mPlayer->GetQuaternion()))));
+	gameInfo.PlayerRotation = rotation;
 
 	mGameInfoCB->CopyData(0, gameInfo);
 	
@@ -1059,23 +1159,26 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
 
-		if (layer == Layer::CheckPoint && !cubeMapping)
+		if (pso->GetRenderObjects().size() > 0)
 		{
-			if (mCheckPointEnable)
+			if (layer == Layer::CheckPoint && !cubeMapping)
 			{
-				pso->SetAndDraw(cmdList, true, true, cubeMapping);
+				if (mCheckPointEnable)
+				{
+					pso->SetAndDraw(cmdList, true, true, cubeMapping);
+				}
+				else
+				{
+					continue;
+				}
 			}
-			else
+			else if (cubeMapping && (layer == Layer::Color || layer== Layer::DriftParticle))
 			{
 				continue;
 			}
-		}
-		else if (cubeMapping && layer == Layer::Color)
-		{
-			continue;
-		}
-		else
-			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
+			else
+				pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
+		}			
 	}
 }
 
@@ -1091,10 +1194,10 @@ void InGameScene::UpdateMissileObject()
 		{
 		case UPDATE_FLAG::CREATE:
 		{
+			flag = true;
 			missile->SetActive(true);
 			mPipelines[Layer::Default]->AppendObject(mMissileObjects[i]);
 			missile->SetUpdateFlag(UPDATE_FLAG::NONE);
-			flag = true;
 			break;
 		}
 		case UPDATE_FLAG::REMOVE:
@@ -1142,16 +1245,17 @@ void InGameScene::UpdatePlayerObjects()
 	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
 }
 
-void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::wstring& path)
+void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::string& path)
 {
-	std::ifstream in_file{ path };
-	std::string info;
+	FILE* file = nullptr;
+	fopen_s(&file, path.c_str(), "r");
 
 	btCompoundShape* compound = new btCompoundShape();
 
-	while (std::getline(in_file, info))
+	char buf[250];
+	while (fgets(buf, 250, file))
 	{
-		std::stringstream ss(info);
+		std::stringstream ss(buf);
 
 		std::string objName;
 		ss >> objName;
@@ -1175,13 +1279,12 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 		wstring transparentObjPath;
 		transparentObjPath.assign(transparentpath.begin(), transparentpath.end());
-
 		
 		auto obj = make_shared<StaticObject>();
-
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
-			mMeshList[objName] = obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+			obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+			mMeshList[objName] = obj->GetMeshes();
 			mOOBBList[objName] = obj->GetBoundingBox();
 		}
 		else
@@ -1221,7 +1324,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			auto transparentObj = make_shared<StaticObject>();
 			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
 
-			auto& transparentMeshes = transparentObj->GetMesh();
+			auto& transparentMeshes = transparentObj->GetMeshes();
 			for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
 			{
 				if (i->get()->GetMeshShape())
@@ -1246,6 +1349,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
 
 	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+
+	fclose(file);
 }
 
 void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path)
@@ -1332,7 +1437,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 		v.Direction = direction;
 		v.Position = pos;
 		v.Range = 30.0f;
-		v.VolumetricStrength = 1.0f;
+		v.VolumetricStrength = 0.5f;
 		v.outerCosine = cos(7.0f);
 		v.innerCosine = cos(6.0f);
 		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);

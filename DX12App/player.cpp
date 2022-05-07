@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "player.h"
 #include "camera.h"
+#include "inGameScene.h"
 
 Player::Player()
 	: GameObject()
@@ -165,7 +166,8 @@ const float PhysicsPlayer::TransparentInterval = 0.3f;
 
 PhysicsPlayer::PhysicsPlayer(UINT netID) 
 	: Player(), 
-	  mNetID(netID)
+	  mNetID(netID),
+	  mItemNum(0)
 {
 	mViewPort = { 0.0f, 0.0f, (float)mCubeMapSize, (float)mCubeMapSize, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (LONG)mCubeMapSize, (LONG)mCubeMapSize };
@@ -348,10 +350,11 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 	{
-		mVehicleSteering += mSteeringIncrement * 2  * Elapsed;
+		mVehicleSteering += mSteeringIncrement * 2 * Elapsed;
 		if (mVehicleSteering > mSteeringClamp)
 			mVehicleSteering = mSteeringClamp;
 	}
+
 	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
 		accel = true;
@@ -374,10 +377,8 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	}
 	if (GetAsyncKeyState('Z') & 0x8000/*&&mItemNum>0*/)
 	{
-		#ifdef STANDALONE
 		if (mBoosterLeft == 0.0f)
 			mBoosterLeft = mBoosterTime;
-		#endif
 
 		//mItemNum-=1;
 		//ItemUsingTime Ã³¸®
@@ -404,7 +405,6 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		}
 
 		float DriftLimit = 30.0f / 180.0f;
-
 		float AngleLimit = 50.0f / 180.0f;
 
 		auto camLook = mCamera->GetLook();
@@ -468,6 +468,49 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		mVehicle->setSteeringValue(mVehicleSteering, wheelIndex);
 	}
 #endif
+
+#ifndef STANDALONE
+	if (mBoosterLeft > 0)
+	{
+		mBoosterLeft -= Elapsed;
+	}
+	else if(mBoosterLeft < 0)
+	{
+		mBoosterLeft = 0.0f;
+		mRimLightOn = false;
+	}
+
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	{
+		mVehicleSteering -= mSteeringIncrement * 2 * Elapsed;
+		if (mVehicleSteering < -mSteeringClamp)
+			mVehicleSteering = -mSteeringClamp;
+	}
+	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	{
+		mVehicleSteering += mSteeringIncrement * 2 * Elapsed;
+		if (mVehicleSteering > mSteeringClamp)
+			mVehicleSteering = mSteeringClamp;
+	}
+	
+	if (mVehicleSteering > 0)
+	{
+		mVehicleSteering -= mSteeringIncrement * Elapsed;
+		if (mVehicleSteering < 0)
+		{
+			mVehicleSteering = 0;
+		}
+	}
+
+	else if (mVehicleSteering < 0)
+	{
+		mVehicleSteering += mSteeringIncrement * Elapsed;
+		if (mVehicleSteering > 0)
+		{
+			mVehicleSteering = 0;
+		}
+	}
+#endif
 }
 
 void PhysicsPlayer::Update(float elapsedTime, float updateRate)
@@ -485,6 +528,7 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 	}
 
 	GameObject::Update(elapsedTime, updateRate);
+	OutputDebugStringA(("Progress: " + std::to_string(mProgress/updateRate) + "\n").c_str());
 	
 	for (int i = 0; i < 4; ++i)
 		mWheel[i]->SetTransparent(mTransparentOn);
@@ -498,6 +542,7 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 		}
 		else
 		{
+			mWheel[i]->Update(elapsedTime, updateRate);
 			if(i < 2) mWheel[i]->SetSteeringAngle(mVehicleSteering);
 		}
 	}
@@ -751,7 +796,10 @@ void PhysicsPlayer::BuildCameras()
 
 void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
 {
-	mProgress = 0;
+	mProgressMut.lock();
+	mProgress = 0.0f;
+	mProgressMut.unlock();
+
 	mPrevOrigin = mCorrectionOrigin;
 	mPrevQuat = mCorrectionQuat;
 

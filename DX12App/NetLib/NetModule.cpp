@@ -28,7 +28,7 @@ bool NetModule::Connect(const char* ip, short port)
 {
 	if (mNetClient->Connect(ip, port))
 	{
-		Init();		
+		Init();	
 		return true;
 	}
 	return false;
@@ -57,6 +57,7 @@ void NetModule::NetworkFunc(NetModule& net)
 			if (over_ex == nullptr)
 			{
 				net.mLoop = false;
+				net.mNetClient->Disconnect();
 				continue;
 			}
 			if (info.success == FALSE)
@@ -163,7 +164,10 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
 	case OP::SEND:
 	{
 		if (bytes != over->WSABuffer.len)
-			PostDisconnect();
+		{
+			// NEED TEST
+			// PostDisconnect();
+		}
 		delete over;
 		break;
 	}
@@ -197,9 +201,9 @@ void NetModule::SetLatency(uint64_t sendTime)
 
 void NetModule::SetUpdateRate()
 {
-	auto duration = Clock::now().time_since_epoch();
-	mUpdateRate = std::chrono::duration_cast<std::chrono::milliseconds>(duration - mTimeStamp).count();
-	mTimeStamp = duration;
+	auto now = Clock::now();
+	mUpdateRate = std::chrono::duration_cast<std::chrono::milliseconds>(now - mTimeStamp).count();
+	mTimeStamp = now;
 }
 
 void NetModule::Init()
@@ -207,6 +211,7 @@ void NetModule::Init()
 	mIOCP.RegisterDevice(mNetClient->GetTCPSocket(), 0);
 	mNetClient->RecvMsg(false);
 
+	mNetClient->BindUDPSocket(CLIENT_PORT);
 	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
 	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };

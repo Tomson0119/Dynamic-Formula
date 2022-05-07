@@ -55,9 +55,6 @@
     <ClCompile Include="bulletWrap.cpp">
       <Filter>소스 파일\Helper</Filter>
     </ClCompile>
-    <ClCompile Include="DDSTextureLoader12.cpp">
-      <Filter>소스 파일\Helper</Filter>
-    </ClCompile>
     <ClCompile Include="dxException.cpp">
       <Filter>소스 파일\Helper</Filter>
     </ClCompile>
@@ -87,6 +84,9 @@
     </ClCompile>
     <ClCompile Include="UI.cpp">
       <Filter>소스 파일\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader12.cpp">
+      <Filter>소스 파일\Helper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
