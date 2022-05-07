@@ -251,9 +251,14 @@ void RoomUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 
 void RoomUI::Update(float GTime)
 {
-    for (int i = 0; i < 8; ++i)
+    auto& mut = mNetRef.GetPlayerListMutex();
+    mut.lock();
+    const auto& playerList = mNetRef.GetPlayersInfo();
+    mut.unlock();
+
+    for (int i = 0; i < playerList.size(); ++i)
     {
-        if (mNetRef.GetPlayersInfo()[i].Empty)
+        if (playerList[i].Empty)
         {
             SetIndexInvisibleState(i);
             continue;
@@ -262,7 +267,7 @@ void RoomUI::Update(float GTime)
         GetTextBlock()[11 + static_cast<size_t>(i)].strText.assign("Ready");
         
         SetIndexIsAdmin(static_cast<int>(mNetRef.GetAdminIndex()));
-        GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(mNetRef.GetPlayersInfo()[i].Name);
+        GetTextBlock()[3 + static_cast<size_t>(i)].strText.assign(playerList[i].Name);
         SetIndexVisibleState(i);
 
         if (mNetRef.IsAdmin())
@@ -271,12 +276,11 @@ void RoomUI::Update(float GTime)
         }
         else
             GetTextBlock()[0].strText.assign("Ready");
-
        
         if (mNetRef.IsAdmin())
             SetIndexColor(11 + i, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
 
-        if (mNetRef.GetPlayersInfo()[i].Ready)
+        if (playerList[i].Ready)
             SetIndexReady(i);
     }
 }

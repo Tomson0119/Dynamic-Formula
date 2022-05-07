@@ -84,6 +84,7 @@ void NetModule::InitRoomInfo(SC::packet_room_inside_info* pck)
 		mAdminIdx = pck->admin_idx;
 		mMapIdx = pck->map_id;
 		mPlayerIdx = pck->player_idx;
+		mPlayerListMut.lock();
 		for (int i = 0; i < mPlayerList.size(); i++)
 		{
 			mPlayerList[i].Empty = pck->player_stats[i].empty;
@@ -91,6 +92,7 @@ void NetModule::InitRoomInfo(SC::packet_room_inside_info* pck)
 			mPlayerList[i].Ready = pck->player_stats[i].ready;
 			strncpy_s(mPlayerList[i].Name, pck->player_stats->name, MAX_NAME_SIZE - 1);
 		}
+		mPlayerListMut.unlock();
 	}
 }
 
@@ -99,7 +101,9 @@ void NetModule::RemovePlayer(SC::packet_remove_player* pck)
 	if (mRoomID == pck->room_id)
 	{
 		mAdminIdx = pck->admin_idx;
+		mPlayerListMut.lock();
 		mPlayerList[pck->player_idx].Empty = true;
+		mPlayerListMut.unlock();
 	}
 }
 
@@ -117,11 +121,13 @@ void NetModule::UpdatePlayerInfo(SC::packet_update_player_info* pck)
 	{
 		mAdminIdx = pck->admin_idx;
 
+		mPlayerListMut.lock();
 		PlayerInfo& info = mPlayerList[pck->player_idx];
 		info.Empty = pck->player_info.empty;
 		info.Color = pck->player_info.color;
 		info.Ready = pck->player_info.ready;
 		strncpy_s(info.Name, pck->player_info.name, MAX_NAME_SIZE - 1);
+		mPlayerListMut.unlock();
 	}
 }
 
@@ -129,6 +135,7 @@ void NetModule::InitPlayerTransform(SC::packet_game_start_success* pck)
 {
 	if (mRoomID == pck->room_id)
 	{
+		mPlayerListMut.lock();
 		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 		{
 			auto& pos = mPlayerList[i].StartPosition;
@@ -142,6 +149,7 @@ void NetModule::InitPlayerTransform(SC::packet_game_start_success* pck)
 			quat.z = pck->rz[i] / FIXED_FLOAT_LIMIT;
 			quat.w = pck->rw[i] / FIXED_FLOAT_LIMIT;
 		}
+		mPlayerListMut.unlock();
 	}
 }
 

@@ -51,6 +51,8 @@ public:
 	bool IsAdmin() const { return mPlayerIdx == mAdminIdx; }
 	const PlayerList& GetPlayersInfo() const { return mPlayerList; }
 
+	std::mutex& GetPlayerListMutex() { return mPlayerListMut; }
+
 	void SetLatency(uint64_t sendTime);
 	void SetUpdateRate();
 
@@ -69,6 +71,7 @@ private:
 	std::atomic_char mMapIdx;
 
 	PlayerList mPlayerList;
+	std::mutex mPlayerListMut;
 
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;
