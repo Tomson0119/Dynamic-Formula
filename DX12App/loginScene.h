@@ -36,8 +36,7 @@ public:
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 	
 	virtual UI* GetUI() const override { return mpUI.get(); }
-	void KeyInputFunc();
-	
+
 private:
 	std::string mID;
 	std::string mPWD;

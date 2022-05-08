@@ -7,11 +7,13 @@
 #include "LoginUI.h"
 
 #include "NetLib/NetModule.h"
+#include "queryWindow.h"
 
 D3DFramework::D3DFramework()
 	: mViewPort{ }, mScissorRect{ }, mFenceValues{ }
 {
 	mNetwork = std::make_unique<NetModule>();
+	mQueryWin = std::make_unique<QueryWindow>();
 }
 
 D3DFramework::~D3DFramework()
@@ -35,6 +37,11 @@ bool D3DFramework::InitFramework()
 	if (!InitBulletPhysics())
 		return false;
 
+	if (!mQueryWin->InitWindow(L"Query IP Address", L"Server IP Address", 600, 200))
+		return false;
+
+	mQueryWin->Run();
+	mNetwork->SetServerIP(mQueryWin->GetAnswer());
 	return true;
 }
 

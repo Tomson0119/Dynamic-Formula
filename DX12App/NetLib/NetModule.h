@@ -58,6 +58,9 @@ public:
 
 	float GetLatency() const { return (float)mLatency / 1000.0f; }
 	float GetUpdateRate() const { return (float)mUpdateRate / 1000.0f; }
+
+	void SetServerIP(const std::string& ip) { mServerIPAddress = ip; }
+	const std::string& GetServerIP() const { return mServerIPAddress; }
 	
 private:
 	void Init();
@@ -82,4 +85,6 @@ private:
 
 	IOCP mIOCP;
 	Scene* mScenePtr;
+
+	std::string mServerIPAddress;
 };

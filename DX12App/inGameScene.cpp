@@ -1434,7 +1434,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 			XMFLOAT3(0.6f, 0.6f, 0.6f),
 			pos,
 			direction,
-			0.0f, 20.0f, 10.0f,
+			10.0f, 20.0f, 10.0f,
 			0.0f, SPOT_LIGHT);;
 
 		bundle.light = l;
