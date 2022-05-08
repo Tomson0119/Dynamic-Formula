@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BaseWin.h"
+#include "window.h"
 
-class QueryWindow : public BaseWin<QueryWindow>
+class QueryWindow : public Window<QueryWindow>
 {
 public:
 	QueryWindow();
@@ -16,7 +16,6 @@ public:
 
 public:
 	virtual LRESULT OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	virtual PCWSTR ClassName() const { return L"Query Window"; }
 
 private:
 	std::wstring mWinCaption;

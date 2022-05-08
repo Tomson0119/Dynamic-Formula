@@ -17,13 +17,15 @@ bool QueryWindow::InitWindow(const std::wstring& winCap, const std::wstring& lab
 	mWidth = width;
 	mHeight = height;
 
-	if (!BaseWin::InitWindow(winCap.c_str(), width, height))
+	if (!Window::Init(width, height, winCap.c_str(), L"Query Window"))
 		return false;
 	return true;
 }
 
 void QueryWindow::Run()
 {
+	ShowWindow();
+
 	MSG msg{};
 
 	while (msg.message != WM_QUIT)
@@ -46,16 +48,16 @@ LRESULT QueryWindow::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 		mTextBox = CreateWindow(L"EDIT", L"", WS_BORDER | WS_CHILD | WS_VISIBLE,
-			60, 120, 400, 30, m_hwnd, 0, 0, 0);
+			60, 120, 400, 30, mHwnd, 0, 0, 0);
 		CreateWindow(L"BUTTON", L"Done", WS_VISIBLE | WS_CHILD | WS_BORDER,
-			480, 120, 70, 30, m_hwnd, (HMENU)1, 0, 0);
+			480, 120, 70, 30, mHwnd, (HMENU)1, 0, 0);
 		break;
 	case WM_PAINT:	
-		hdc = BeginPaint(m_hwnd, &ps);
+		hdc = BeginPaint(mHwnd, &ps);
 		font = CreateFont(30, 0, 0, 0, FW_BOLD, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, NULL);
 		oldfont = (HFONT)SelectObject(hdc, font);
 		TextOut(hdc, mWidth/2 - 100, mHeight/3, mLabel.c_str(), (int)mLabel.size());
-		EndPaint(m_hwnd, &ps);
+		EndPaint(mHwnd, &ps);
 		break;
 
 	case WM_COMMAND:
@@ -65,7 +67,7 @@ LRESULT QueryWindow::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			int len = GetWindowTextA(mTextBox, (LPSTR)mAnswer.c_str(), (int)mAnswer.size());
 			if (len != 0)
 			{
-				PostMessage(m_hwnd, WM_CLOSE, NULL, NULL);
+				PostMessage(mHwnd, WM_CLOSE, NULL, NULL);
 			}
 		}
 		break;
@@ -75,7 +77,7 @@ LRESULT QueryWindow::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	default:
-		return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
+		return DefWindowProc(mHwnd, uMsg, wParam, lParam);
 	}
 	return 0;
 }

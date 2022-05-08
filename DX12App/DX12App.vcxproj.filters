@@ -141,9 +141,6 @@
     <ClInclude Include="bulletWrap.h">
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="basewin.h">
-      <Filter>헤더 파일\Helper</Filter>
-    </ClInclude>
     <ClInclude Include="d3dExtension.h">
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
@@ -194,6 +191,9 @@
     </ClInclude>
     <ClInclude Include="queryWindow.h">
       <Filter>헤더 파일\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="window.h">
+      <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

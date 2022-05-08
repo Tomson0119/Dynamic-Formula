@@ -28,7 +28,7 @@ D3DFramework::~D3DFramework()
 
 bool D3DFramework::InitFramework()
 {
-	if(!InitWindow(mWndCaption.c_str(), gFrameWidth, gFrameHeight))
+	if(!Init(gFrameWidth, gFrameHeight, L"Dynamic Formula", L"Main Window"))
 		return false;
 
 	if (!InitDirect3D())
@@ -37,16 +37,20 @@ bool D3DFramework::InitFramework()
 	if (!InitBulletPhysics())
 		return false;
 
+#ifndef STANDALONE
 	if (!mQueryWin->InitWindow(L"Query IP Address", L"Server IP Address", 600, 200))
 		return false;
 
 	mQueryWin->Run();
 	mNetwork->SetServerIP(mQueryWin->GetAnswer());
+#endif
 	return true;
 }
 
 void D3DFramework::Run()
 {
+	ShowWindow();
+
 	MSG msg{};
 
 	mTimer.Reset();
@@ -203,7 +207,7 @@ void D3DFramework::CreateSwapChain()
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.BufferCount = mSwapChainBufferCount;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapChainDesc.OutputWindow = m_hwnd;
+	swapChainDesc.OutputWindow = mHwnd;
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.SampleDesc.Quality = 0;
 	swapChainDesc.Windowed = true;
@@ -217,7 +221,7 @@ void D3DFramework::CreateSwapChain()
 	mCurrBackBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
 
 	// Alt-Enter 단축키 사용을 금지한다.
-	ThrowIfFailed(mDxgiFactory->MakeWindowAssociation(m_hwnd, DXGI_MWA_NO_ALT_ENTER));
+	ThrowIfFailed(mDxgiFactory->MakeWindowAssociation(mHwnd, DXGI_MWA_NO_ALT_ENTER));
 }
 
 void D3DFramework::CreateRtvDsvDescriptorHeaps()
@@ -446,7 +450,7 @@ LRESULT D3DFramework::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	default:
-		return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
+		return DefWindowProc(mHwnd, uMsg, wParam, lParam);
 	}
 	return 0;
 }
@@ -467,7 +471,7 @@ void D3DFramework::UpdateFrameStates()
 			L"    FPS : " + std::to_wstring(fps) +
 			L"   mspf : " + std::to_wstring(mspf);
 
-		SetWindowText(m_hwnd, new_caption.c_str());
+		SetWindowText(mHwnd, new_caption.c_str());
 
 		frameCount = 0;
 		elapsed += 1.0f;

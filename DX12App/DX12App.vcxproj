@@ -151,7 +151,6 @@
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="basewin.h" />
     <ClInclude Include="bulletWrap.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="constantBuffer.h" />
@@ -185,6 +184,7 @@
     <ClInclude Include="texture.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="vertex.h" />
+    <ClInclude Include="window.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\skybox.hlsl">

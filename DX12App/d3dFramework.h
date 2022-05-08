@@ -1,5 +1,5 @@
 #pragma once
-#include "basewin.h"
+#include "window.h"
 #include "gameTimer.h"
 #include "dxException.h"
 #include "stdafx.h"
@@ -12,7 +12,7 @@ class NetClient;
 class NetModule;
 class QueryWindow;
 
-class D3DFramework : public BaseWin<D3DFramework>
+class D3DFramework : public Window<D3DFramework>
 {
 public:
 	D3DFramework();
@@ -54,7 +54,6 @@ protected:
 
 public:
 	// BaseWin 오버라이딩 함수
-	virtual PCWSTR ClassName() const { return L"Main Window"; }
 	virtual LRESULT OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 protected:

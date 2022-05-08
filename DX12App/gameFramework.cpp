@@ -111,19 +111,19 @@ void GameFramework::InitScene(SCENE_STAT state)
 	switch (state)
 	{
 	case SCENE_STAT::LOGIN:
-		mScenes.push(std::make_unique<LoginScene>(m_hwnd, mNetwork.get()));
+		mScenes.push(std::make_unique<LoginScene>(mHwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::LOBBY:
-		mScenes.push(std::make_unique<LobbyScene>(m_hwnd, mNetwork.get()));
+		mScenes.push(std::make_unique<LobbyScene>(mHwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::ROOM:
-		mScenes.push(std::make_unique<RoomScene>(m_hwnd, mNetwork.get()));
+		mScenes.push(std::make_unique<RoomScene>(mHwnd, mNetwork.get()));
 		break;
 
 	case SCENE_STAT::IN_GAME:
-		mScenes.push(std::make_unique<InGameScene>(m_hwnd, mNetwork.get(), mMsaa4xEnable, mMsaa4xQualityLevels));
+		mScenes.push(std::make_unique<InGameScene>(mHwnd, mNetwork.get(), mMsaa4xEnable, mMsaa4xQualityLevels));
 		break;
 
 	default:
