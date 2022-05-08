@@ -391,8 +391,8 @@ void Player::ToggleKeyValue(uint8_t key, bool pressed)
 	{
 		if (pressed && IsItemAvailable())
 		{
-			//if (UseItem(key)) mItemCount -= 1;
-			UseItem(key);
+			// for test
+			if (UseItem(key) && mItemCount > 0) mItemCount -= 1;
 		}
 	}
 	else if (key == 'P' && pressed)
