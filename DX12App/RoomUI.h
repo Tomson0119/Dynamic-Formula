@@ -59,6 +59,8 @@ public:
 	void SetIndexNotReady(int index);
 
 	void SetIndexIsAdmin(int index);
+	//Start->ReadyOff
+	void SetMyReadyOff() { mIsReady = false; }
 
 private:
 	float BitmapOpacities[9] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
