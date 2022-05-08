@@ -111,4 +111,5 @@ private:
 
 	//TEST
 	Clock::time_point mSentTime;
+	std::atomic_bool mManualFinish;
 };

@@ -17,6 +17,7 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	mKeyMap[VK_UP] = false;
 	mKeyMap[VK_DOWN] = false;
 	mKeyMap[VK_LSHIFT] = false;
+	mKeyMap[VK_F10] = false;
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
 	mKeyMap['P'] = false;

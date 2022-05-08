@@ -14,7 +14,8 @@ GameWorld::GameWorld(std::shared_ptr<GameConstant> constantPtr)
 	  mGameStarted{ false },
 	  mActive{ false },
 	  mPlayerCount{ 0 }, 
-	  mPhysicsOverlapped{ OP::PHYSICS }
+	  mPhysicsOverlapped{ OP::PHYSICS },
+	  mManualFinish{ false }
 {
 	mPrevRanks.resize(mPlayerList.size(), 1);
 	mCurrRanks.resize(mPlayerList.size(), 1);
@@ -182,6 +183,11 @@ void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 	case 'X': // missile.
 	case 'P':
 		mPlayerList[idx]->ToggleKeyValue(key, pressed);
+		break;
+
+	case VK_F10:
+		if (pressed == false)
+			mManualFinish = true;
 		break;
 
 	default:
@@ -536,7 +542,7 @@ void GameWorld::CheckRunningTime()
 {
 	auto now = Clock::now();
 
-	if (now >= mFinishTime)
+	if (now >= mFinishTime || mManualFinish) // TEST for manual finish
 	{
 		SetActive(false);
 		SendGameEndPacket();
