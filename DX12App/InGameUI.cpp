@@ -581,7 +581,8 @@ void InGameUI::Draw(UINT nFrame)
 	
 	BeginDraw(nFrame);
 	DrawBmp(GetLTRB(), 6, 1, mBitmapAnimOpacities);
-	RectDraw(RectLTRB, FillLTRB, MAXRECT - mItemCnt - mIsScoreBoard, GetGradientCnt(), mIsOutlined);
+	RectDraw(RectLTRB, FillLTRB, 1, mItemCnt, GetGradientCnt(), mIsOutlined);
+	RectDraw(RectLTRB, FillLTRB, 0, mIsScoreBoard, GetGradientCnt(), mIsOutlined);
 	DrawBmp(GetLTRB(), 0, 6, mBitmapAnimOpacities);
 	TextDraw(GetTextBlock());
 	EndDraw(nFrame);

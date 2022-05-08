@@ -8,7 +8,7 @@ LoginUI::LoginUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     //Text : 7, UI ; 9
 {
     SetTextCnt(7);
-    SetRoundRectCnt(9);
+    SetRectCnt(9);
     SetBitmapCnt(1);
     SetUICnt();
 
@@ -24,7 +24,7 @@ void LoginUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12Comman
 
     UI::Initialize(device, pd3dCommandQueue);
     SetTextCnt(7);
-    SetRoundRectCnt(9);
+    SetRectCnt(9);
     SetBitmapCnt(1);
     SetUICnt();
 
@@ -335,7 +335,7 @@ void LoginUI::Draw(UINT nFrame)
 
     BeginDraw(nFrame);
     DrawBmp(LTRB,0 , 1, aOpacities);
-    RectDraw(RectLTRB, FillLTRB, 0, 0, IsOutlined);
+    RectDraw(RectLTRB, FillLTRB, 0, GetRectCnt(), 0, IsOutlined);
     TextDraw(GetTextBlock());
     EndDraw(nFrame);
 }

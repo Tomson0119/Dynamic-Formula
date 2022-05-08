@@ -54,7 +54,7 @@ public:
     void DrawBmp(XMFLOAT4 RectLTRB[], UINT StartNum, UINT BmpNum, const float aOpacities[]);
     void DrawBmp(const std::vector<XMFLOAT4>& RectLTRB, UINT StartNum, UINT BmpNum, const float aOpacities[]);
     void TextDraw(const std::vector<TextBlock> &mTextBlocks);
-    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT InvisibleRectCnt, UINT GradientCnt, bool IsOutlined[]);
+    void RectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT StartCnt, UINT DrawNum, UINT GradientCnt, bool IsOutlined[]);
     void RoundedRectDraw(XMFLOAT4 RectLTRB[], XMFLOAT4 FillLTRB[], UINT GradientCnt, bool IsOutlined[]);
     void EndDraw(UINT nFrame);
     void Flush();
