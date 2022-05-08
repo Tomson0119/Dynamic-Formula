@@ -8,10 +8,9 @@
 
 class UI;
 class InGameUI;
-
 class NetClient;
-
 class NetModule;
+class QueryWindow;
 
 class D3DFramework : public BaseWin<D3DFramework>
 {
@@ -107,8 +106,7 @@ protected:
 	
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
-
 	std::shared_ptr<BulletWrapper> mBulletPhysics;
-
 	std::unique_ptr<NetModule> mNetwork;
+	std::unique_ptr<QueryWindow> mQueryWin;
 };
