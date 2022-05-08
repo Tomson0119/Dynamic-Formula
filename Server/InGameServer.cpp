@@ -74,7 +74,8 @@ void InGameServer::PrepareToStartGame(int roomID)
 		msWorlds[roomID]->SetPlayerTransform(i,
 			mGameConstants->StartPosition + offset,
 			mGameConstants->StartRotation);
-		msWorlds[roomID]->CreateRigidbodies(i, 500.0f, *mBtCarShape, 1.0f, *mMissileShape);
+
+		msWorlds[roomID]->CreateRigidbodies(i, 750.0f, *mBtCarShape, 1.0f, *mMissileShape);
 	}
 	msWorlds[roomID]->InitMapRigidBody(*mMapShape.get(), *mCheckpointShape.get());
 	msWorlds[roomID]->SendGameStartSuccess();

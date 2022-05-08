@@ -21,10 +21,10 @@ struct GameConstant
 	const float FrontWheelDriftFriction = 1.5f;
 	const float	RearWheelDriftFriction = 0.0f;
 	const float WheelDefaultFriction = 5.0f;
-	const float MinSpeedForDrift = 100.0f;
+	const float MinSpeedForDrift = 50.0f;
 
-	const float DefaultMaxSpeed = 270.0f;
-	const float BoostedMaxSpeed = 320.0f;
+	const float DefaultMaxSpeed = 200.0f;
+	const float BoostedMaxSpeed = 250.0f;
 
 	const float DefaultBreakingForce = 10.0f;
 
@@ -43,7 +43,7 @@ struct GameConstant
 	const btQuaternion StartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
 
 	const std::chrono::seconds CountdownTime = 4s; // 4초 후 시작
-	const std::chrono::seconds GameRunningTime = 30s; // 30초 TEST
+	const std::chrono::seconds GameRunningTime = 300s; // 30초 TEST
 };
 
 class InGameServer

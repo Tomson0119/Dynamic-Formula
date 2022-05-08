@@ -312,7 +312,7 @@ void Player::UpdateBooster(float elapsed)
 void Player::UpdateSteering(float elapsed)
 {
 	auto& comp = mVehicleRigidBody.GetComponent();
-	float scale = (1 - (comp.CurrentSpeed / mConstantPtr->BoostedMaxSpeed)) * 2.0f;
+	float scale = (1 - (comp.CurrentSpeed / (mConstantPtr->BoostedMaxSpeed + 50.0f))) * 2.0f;
 
 	if (comp.VehicleSteering > 0)
 	{
