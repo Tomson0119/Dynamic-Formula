@@ -244,11 +244,13 @@ void WaitRoom::SendRoomInsideInfoToAll()
 		pck.player_stats[i].color = mPlayers[i]->Color;
 		pck.player_stats[i].empty = mPlayers[i]->Empty;
 		pck.player_stats[i].ready = mPlayers[i]->Ready;
+	}
 
-		pck.player_idx = i;
-
+	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
+	{
 		if (mPlayers[i]->Empty == false)
 		{
+			pck.player_idx = i;
 			int id = mPlayers[i]->ID;
 			gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 			gClients[id]->SendMsg();
