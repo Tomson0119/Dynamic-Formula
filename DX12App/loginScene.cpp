@@ -44,12 +44,16 @@ void LoginScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 		{
 			OutputDebugStringA("Login button");
 		#ifndef STADNALONE
+			mID.assign(Texts[0]);
+			mPWD.assign(Texts[1]);
 			mNetPtr->Client()->RequestLogin(mID, mPWD);
 		#endif
 		}
 		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Sign-up Button
 		{
 		#ifndef STADNALONE
+			mID.assign(Texts[0]);
+			mPWD.assign(Texts[1]);
 			mNetPtr->Client()->RequestRegister(mID, mPWD);
 		#endif
 		}
@@ -167,6 +171,8 @@ bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		else if (pck->result == static_cast<char>(LOGIN_STAT::INVALID_IDPWD))
 		{
 			// INVALID ID OR PASSWOD;
+			mpUI->SetFailMessage(3); // 3 == Invalid ID or Password
+			mpUI->SetFailBox(1);
 		}
 		break;
 	}
@@ -178,14 +184,20 @@ bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if(pck->result == static_cast<char>(REGI_STAT::ACCEPTED))
 		{
 			//
+			mpUI->SetFailMessage(2);
+			mpUI->SetFailBox(1);
 		}
 		else if (pck->result == static_cast<char>(REGI_STAT::ALREADY_EXIST))
 		{
 			//
+			mpUI->SetFailMessage(1);
+			mpUI->SetFailBox(1);
 		}
 		else if (pck->result == static_cast<char>(REGI_STAT::INVALID_IDPWD))
 		{
 			//
+			mpUI->SetFailMessage(3);
+			mpUI->SetFailBox(1);
 		}
 		break;
 	}

@@ -25,15 +25,15 @@ public:
 
 	void CreateFontFormat();
 	bool MouseCollisionCheck(float x, float y, const TextBlock& TB);
-	void SetLoginFail(bool TF) { mIsLoginFail = TF; }
+	void SetFailBox(bool TF) { mIsLoginFail = TF; }
 	void SetSignupBool(bool TF) { mIsSignup = TF; }
-
+	void SetFailMessage(int ResultCode);
 
 	//void SetLoginOrSignup(std::string msg) { GetTextBlock()[1].strText = LoginOrSignup = msg; }
 	//void SetLoginOrSignupReverse(std::string msg) { GetTextBlock()[5].strText = LoginOrSignupReverse = msg; }
 private:
 	bool mIsSignup = false;
-	bool mIsLoginFail = true;
+	bool mIsLoginFail = false;
 
 	std::vector<D2D1::ColorF> mColors;
 

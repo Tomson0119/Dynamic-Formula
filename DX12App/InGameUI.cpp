@@ -451,9 +451,9 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
-		case 'I':
+		/*case 'I':
 			mMyScore += 100;
-			break;
+			break;*/
 		//case 'L':
 		//	if (!mIsStartAnim)
 		//	{
@@ -471,40 +471,40 @@ void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		//		SetVisibleStateTextUI();
 		//	}
 		//	break;
-		case 'Y':
-			if (!mIsScoreBoard)
-			{
-				SetInvisibleStateTextUI();
-				mIsScoreBoard = true;
-			}
-			else
-			{
-				SetVisibleStateTextUI();
-				mIsScoreBoard = false;
-				mItemCnt = 0;
-			}
-			break;
-		case 'U':
-			if (!mIsGoAnim)
-			{
-				mIsGoAnim = true;
-				mIsStartUI[3] = true;
-			}
-			else
-			{
-				mGoAnimTime = 0.0f;
-				mIsGoAnim = false;
-			}
-			break;
-		case 'L':
-			mMyLap += 1;
-			break;
-		case 'O': // warning
-			if (!mIsWarning)
-				mIsWarning = true;
-			else
-				mIsWarning = false;
-			break;
+		//case 'Y':
+		//	if (!mIsScoreBoard)
+		//	{
+		//		SetInvisibleStateTextUI();
+		//		mIsScoreBoard = true;
+		//	}
+		//	else
+		//	{
+		//		SetVisibleStateTextUI();
+		//		mIsScoreBoard = false;
+		//		mItemCnt = 0;
+		//	}
+		//	break;
+		//case 'U':
+		//	if (!mIsGoAnim)
+		//	{
+		//		mIsGoAnim = true;
+		//		mIsStartUI[3] = true;
+		//	}
+		//	else
+		//	{
+		//		mGoAnimTime = 0.0f;
+		//		mIsGoAnim = false;
+		//	}
+		//	break;
+		//case 'L':
+		//	mMyLap += 1;
+		//	break;
+		//case 'O': // warning
+		//	if (!mIsWarning)
+		//		mIsWarning = true;
+		//	else
+		//		mIsWarning = false;
+		//	break;
 		}
 	}
 }

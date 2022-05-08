@@ -84,49 +84,19 @@ int LoginUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
     {
         GetColors()[12].a = 0.0f;
         GetColors()[6].a = 0.0f;
-        SetLoginFail(false);
+        SetFailBox(false);
         BuildSolidBrush(GetColors());
     }
 
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[1])) //Log-in
     {
         GetColors()[1].a = 0.5f;
-        //if (buttonState & MK_LBUTTON)
-        //{
-        //    
-        //    if (!IsSignup)
-        //    {
-        //        // 로그인 실패하면?
-        //        IsLoginFail = true;
-        //        UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
-        //        return 1;
-        //    }
-        //    else
-        //    {
-        //        //회원가입 실패하면?
-        //        IsLoginFail = true;
-        //        UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
-        //        return 2;
-        //    }
-        //}
         BuildSolidBrush(GetColors());
+        return 1;
     }
 
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[5])) // Sign-up
     {
-        //MouseUp일 때 실행되도록 변경해야 함.
-        if (!mIsSignup)
-        {
-            //SetLoginOrSignup("Signup");
-            //SetLoginOrSignupReverse("Login");
-        }
-        else
-        {
-            //SetLoginOrSignup("Login");
-            //SetLoginOrSignupReverse("Signup");
-        }
-        SetSignupBool(!mIsSignup);
-        BuildSolidBrush(GetColors());
         return 2;
     }
     /*else 
@@ -143,40 +113,7 @@ void LoginUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
     
-    //if (/*IsLoginFail &&*/ MouseCollisionCheck(dx, dy, mTextBlocks[6]))
-    //{
-    //    GetColors()[6].a = 0.5f;
-    //    GetColors()[12].a = 0.5f;
-
-    //    UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
-    //}
     
-    if (MouseCollisionCheck(dx, dy, GetTextBlock()[1])) //Log-in
-    {
-        if (buttonState & MK_LBUTTON)
-        {
-            // 로그인 실패하면?
-            //IsLoginFail = true;
-            //return 1;
-            ;
-        }
-        //UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
-    }
-    else GetColors()[1].a = 1.0f;
-
-    /*if (MouseCollisionCheck(dx, dy, mTextBlocks[5]) && buttonState)
-        exit(0);*/
-
-    if (MouseCollisionCheck(dx, dy, GetTextBlock()[5]))  // Sign-up
-    {
-        // UI에서 MouseDown됐을 때 반환 값을 주도록 처리
-        // 그 반환 값을 통해서 Netptr처리.
-        // 여기서 반환 값 줘야 함
-        //새로운 UI처리
-        ;
-    }
-    BuildSolidBrush(GetColors());
-    //return 0;
 }
 
 void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
@@ -187,10 +124,6 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[1])) // Login
     {
         GetColors()[1].a = 0.5f; // Log-in
-       /* if (buttonState & MK_LBUTTON)
-        {
-            IsLoginFail = true;
-        }*/
     }
     else GetColors()[1].a = 1.0f;
 
@@ -226,47 +159,16 @@ void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
         GetTextBlock()[3].strText.clear();
         GetTextBlock()[3].strText.assign(Texts[1].begin(), Texts[1].end());
     }
-
-    /*if (IsLoginFail)
+    if (mIsLoginFail)
     {
-        GetColors()[6].a = 0.9f;
-        GetColors()[12].a = 0.9f;
-        UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
-    }*/
-   /* else
-    {
-        GetColors()[6].a = 0.0f;
-        GetColors()[12].a = 0.0f;
-        UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
-    }*/
-    /*if (IsSignup)
-    {
-        mTextBlocks[1].strText.clear();
-        mTextBlocks[4].strText.clear();
-        mTextBlocks[6].strText.clear();
-
-        for (auto wc : std::string{ "Log-in" })
-            mTextBlocks[4].strText.push_back(wc);
-        for (auto wc : std::string{ "Sign-Up" })
-            mTextBlocks[1].strText.push_back(wc);
-        for (auto wc : std::string{ "Sign-Up Fail" })
-            mTextBlocks[6].strText.push_back(wc);
-        UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
+        SetIndexColor(12, D2D1::ColorF(D2D1::ColorF::Black, 1.0f));
+        SetIndexColor(6, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
     }
     else
     {
-        mTextBlocks[1].strText.clear();
-        mTextBlocks[4].strText.clear();
-        mTextBlocks[6].strText.clear();
-
-        for (auto wc : std::string{ "Log-in" })
-            mTextBlocks[1].strText.push_back(wc);
-        for (auto wc : std::string{ "Sign-Up" })
-            mTextBlocks[4].strText.push_back(wc);
-        for (auto wc : std::string{ "Login Fail" })
-            mTextBlocks[6].strText.push_back(wc);
-        UI::BuildSolidBrush(UICnt + 1, GetTextCnt(), GetColors());
-    }*/
+        SetIndexColor(12, D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
+        SetIndexColor(6, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
+    }
 }
 
 void LoginUI::ChangeTextAlignment(UINT uNum, UINT uState)
@@ -475,6 +377,22 @@ void LoginUI::CreateFontFormat()
     UI::CreateFontFormat(GetFontSize(), GetFonts(), GetTextAlignment());
 }
 
+void LoginUI::SetFailMessage(int ResultCode)
+{
+    switch (ResultCode) {
+    case 1://Already Exist
+        GetTextBlock()[6].strText.assign("Already Exist");
+        break;
+    case 2: // Register Success
+        GetTextBlock()[6].strText.assign("Register Success");
+        break;
+    case 3: // Invalid ID Or PWD
+        GetTextBlock()[6].strText.assign("Invalid ID or Password");
+            break;
+    }
+}
+
+
 void LoginUI::SetTextRect()
 {//Text: GameName, Login, ID, Password, Exit, sign, LoginFail 
  // SignID, SignPWD
@@ -495,14 +413,14 @@ void LoginUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
 
     std::vector < D2D1::ColorF > colorList;
     /*Text*/
-    //Text - BigBackGround, SmallBackGround Title logo, Login, ID, PWD, Exit, Sign-up, LoginFail
+    //Text - SmallBackGround Title logo, Login, ID, PWD, Exit, Sign-up, LoginFail
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Tomato, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.5f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.5f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.0f));
     /*UI*/
     //UI - CenterBigBox, LoginBox, IDBox, PWDBox, ExitBox, Login Fail, Sigu-up Fail, Sign-up IDBox, Sign-up PWDBox
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
@@ -510,7 +428,7 @@ void LoginUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Coral, 0.4f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Coral, 0.4f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 0.9f));
-    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 1.0f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
@@ -519,17 +437,11 @@ void LoginUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     BuildSolidBrush(GetColors());
 
     SetTextRect();
-    for (auto wc : std::string{ "Dynamic Fomula" })
-        GetTextBlock()[0].strText.push_back(wc);
-    for (auto wc : std::string{ "Login" })
-        GetTextBlock()[1].strText.push_back(wc);
-    for (auto wc : std::string{ "EXT" })
-        GetTextBlock()[4].strText.push_back(wc);
-    for (auto wc : std::string{"Signup"})
-        GetTextBlock()[5].strText.push_back(wc);
-    
-    for (auto wc : std::string{ "Login-FAIL" })
-        GetTextBlock()[6].strText.push_back(wc);
+    GetTextBlock()[0].strText.assign("Dynamic Fomula");
+    GetTextBlock()[1].strText.assign("Login");
+    GetTextBlock()[4].strText.assign("EXT");
+    GetTextBlock()[5].strText.assign("Signup");
+    GetTextBlock()[6].strText.assign("Login-FAIL");
 }
 
 void LoginUI::Reset()
