@@ -27,6 +27,7 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		const GameTimer& timer,
 		const std::shared_ptr<BulletWrapper>& physics) override;
+
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
 	virtual void OnProcessMouseDown(WPARAM btnState, int x, int y) override;
 	virtual void OnProcessMouseUp(WPARAM btnState, int x, int y) override;
