@@ -346,11 +346,17 @@ void Player::UpdateEngineForce()
 
 	bool handled = false;
 	comp.EngineForce = 0.0f;
+	comp.BreakingForce = 0.0f;
 
 	if (comp.BoosterTimeLeft > 0.0f && comp.MaxSpeed > comp.CurrentSpeed)
 	{
 		comp.EngineForce = mConstantPtr->BoosterEngineForce;
 		return;
+	}
+
+	if (mKeyMap[VK_LCONTROL])
+	{
+		comp.BreakingForce += mConstantPtr->DefaultBreakingForce;
 	}
 
 	if (mKeyMap[VK_UP])
@@ -379,7 +385,7 @@ void Player::UpdateEngineForce()
 	}
 
 	if (!handled)
-		comp.BreakingForce = mConstantPtr->DefaultBreakingForce;
+		comp.BreakingForce += mConstantPtr->DefaultBreakingForce;
 }
 
 

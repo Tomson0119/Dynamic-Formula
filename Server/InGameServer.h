@@ -26,7 +26,7 @@ struct GameConstant
 	const float DefaultMaxSpeed = 200.0f;
 	const float BoostedMaxSpeed = 250.0f;
 
-	const float DefaultBreakingForce = 10.0f;
+	const float DefaultBreakingForce = 30.0f;
 
 	const float MissileSpeed = 50.0f;
 	const btVector3 MissileOffset = { 0.0f, 0.5f, 0.0f };
