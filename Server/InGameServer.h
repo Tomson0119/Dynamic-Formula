@@ -12,8 +12,8 @@ struct GameConstant
 {
 	const float MaxBoosterTime = 5.0f;
 
-	const float MaxEngineForce = 1000.f;
-	const float BoosterEngineForce = 3000.f;
+	const float MaxEngineForce = 3000.f;
+	const float BoosterEngineForce = 7000.f;
 
 	const float SteeringIncrement = 5.0f;
 	const float SteeringClamp = 0.15f;
