@@ -594,7 +594,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (player)
 		{
 			if (player.get() == mPlayer) mNetPtr->SetUpdateRate();
-			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
+			player->SetCorrectionTransform(pck, 0); // test
 		}
 		break;
 	}
