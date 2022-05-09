@@ -604,10 +604,14 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 		mPrevOrigin = mPosition;
 		mPrevQuat = mQuaternion;
 	}
-	mProgress += elapsed;
 	float progress = std::min(1.0f, mProgress / updateRate);
+	mProgress += elapsed;
 	mProgressMut.unlock();
-	
+
+	/*OutputDebugStringA(("progress : " + std::to_string(progress) + "\n").c_str());
+	OutputDebugStringA(("mProgress : " + std::to_string(mProgress) + "\n").c_str());
+	OutputDebugStringA(("update rate : " + std::to_string(updateRate) + "\n\n").c_str());*/
+
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
 	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
 
@@ -617,6 +621,9 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 
 	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
 	mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
+
+	//mPosition = correctOrigin;
+	//mQuaternion = correctQuat;
 }
 
 void GameObject::SetPosition(float x, float y, float z)
