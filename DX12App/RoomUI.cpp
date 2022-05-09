@@ -35,6 +35,7 @@ void RoomUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12Command
         LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
 
     BuildObjects(ppd3dRenderTargets, width, height);
+    SetMyReadyOff();
 }
 
 void RoomUI::SetVectorSize(UINT nFrame)

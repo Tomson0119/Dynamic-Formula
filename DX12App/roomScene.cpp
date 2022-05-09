@@ -127,7 +127,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 			mNetPtr->InitPlayerTransform(pck);
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
-			mpUI->SetMyReadyOff();
+			//mpUI->SetMyReadyOff();
 		}
 		break;
 	}
