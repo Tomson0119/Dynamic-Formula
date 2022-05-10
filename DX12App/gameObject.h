@@ -171,7 +171,7 @@ public:
 
 	void SetRimLight(bool rimlight) { mRimLightOn = rimlight; }
 
-	const UPDATE_FLAG& GetUpdateFlag() const { return mUpdateFlag; }
+	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
 
 	// test
 	const XMFLOAT4& GetMeshDiffuse(const std::string& name);

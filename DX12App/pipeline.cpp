@@ -555,7 +555,7 @@ void StreamOutputPipeline::BuildCBV(ID3D12Device* device)
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = mCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
-	for (int i = 0; i < mObjectMaxCount; ++i)
+	for (UINT i = 0; i < mObjectMaxCount; ++i)
 	{
 		device->CreateConstantBufferView(&cbvDesc, cpuHandle);
 		
@@ -573,7 +573,7 @@ void StreamOutputPipeline::BuildSRV(ID3D12Device* device)
 
 	gpuHandle.ptr += mObjectMaxCount * gCbvSrvUavDescriptorSize;
 
-	for (int i = 0; i < mObjectMaxCount; ++i)
+	for (UINT i = 0; i < mObjectMaxCount; ++i)
 	{
 		mShaderResourceGPUHandles.push_back(gpuHandle);
 
