@@ -7,6 +7,7 @@
 #include "InGameServer.h"
 #include "RigidBody.h"
 #include "ObjectMask.h"
+#include "Compressor.h"
 
 GameWorld::GameWorld(std::shared_ptr<GameConstant> constantPtr)
 	: mID{ -1 }, 
@@ -286,10 +287,7 @@ void GameWorld::PushVehicleTransformPacketToAll(int target)
 	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
 	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
 
-	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
-	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
-	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
-	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
+	pck.quaternion = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.w());
 
 	pck.linear_vel[0] = (int)(lvel.x() * FIXED_FLOAT_LIMIT);
 	pck.linear_vel[1] = (int)(lvel.y() * FIXED_FLOAT_LIMIT);

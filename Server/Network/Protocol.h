@@ -44,6 +44,14 @@ struct packet_header
 	char type;
 };
 
+struct quat3
+{
+	uint8_t max_idx : 2;
+	short elem1;
+	short elem2;
+	short elem3;
+};
+
 namespace CS
 {
 	const char LOGIN		= 1;
@@ -112,7 +120,7 @@ namespace CS
 
 namespace SC
 {
-	struct PlayerInfo
+	struct player_info
 	{
 		char name[MAX_NAME_SIZE];
 		uint8_t color : 4;
@@ -175,7 +183,7 @@ namespace SC
 		uint8_t admin_idx : 3;
 		uint8_t player_idx : 3;
 		uint8_t map_id : 1;
-		PlayerInfo player_stats[MAX_ROOM_CAPACITY];
+		player_info player_stats[MAX_ROOM_CAPACITY];
 	};
 
 	struct packet_room_outside_info : packet_header
@@ -191,7 +199,7 @@ namespace SC
 	{
 		uint8_t admin_idx : 3;
 		uint8_t player_idx : 3;
-		PlayerInfo player_info;
+		player_info player_info;
 	};
 
 	struct packet_update_map_info : packet_header
@@ -238,9 +246,9 @@ namespace SC
 
 	struct packet_player_transform : packet_header
 	{
-		uint8_t player_idx;
+		uint8_t player_idx : 3;
+		quat3 quaternion;
 		int position[3];
-		int quaternion[4];
 		int linear_vel[3];
 		int angular_vel[3];
 	};

@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BufferQueue.h" />
+    <ClInclude Include="Compressor.h" />
     <ClInclude Include="EndPoint.h" />
     <ClInclude Include="IOCP.h" />
     <ClInclude Include="MemoryPool.h" />

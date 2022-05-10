@@ -259,7 +259,7 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityY = 40.0f;
 
 		mCamera->SetOffset(0.0f, 1.6f, -7.5f);
-		mCamera->SetTimeLag(0.0f);
+		mCamera->SetTimeLag(0.2f);
 		break;
 
 	case CameraMode::TOP_DOWN_CAMERA:
@@ -811,11 +811,12 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 		pck->linear_vel[2],
 		latency);
 
+	auto quat = Compressor::DecodeQuat(pck->quaternion);
 	mCorrectionQuat.SetValue(
-		pck->quaternion[0],
-		pck->quaternion[1],
-		pck->quaternion[2],
-		pck->quaternion[3]);
+		(int)(quat[0] * FIXED_FLOAT_LIMIT),
+		(int)(quat[1] * FIXED_FLOAT_LIMIT),
+		(int)(quat[2] * FIXED_FLOAT_LIMIT), 
+		(int)(quat[3] * FIXED_FLOAT_LIMIT));
 
 	mCorrectionQuat.Extrapolate(
 		pck->angular_vel[0],
