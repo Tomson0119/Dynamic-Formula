@@ -2,10 +2,7 @@
 #include "NetClient.h"
 
 NetClient::NetClient()
-	: mTCPSendOverlapped{},
-	  mUDPRecvOverlapped{},
-	  mTCPRecvOverlapped{},
-	  mIsConnected{ false },
+	: mIsConnected{ false },
 	  mServerEp{}
 {
 	mTCPSocket.Init(SocketType::TCP);
@@ -28,11 +25,6 @@ bool NetClient::Connect(const char* ip, short port)
 
 void NetClient::Disconnect()
 {
-	if (mTCPSendOverlapped)
-	{
-		delete mTCPSendOverlapped;
-		mTCPSendOverlapped = nullptr;
-	}
 	if (mIsConnected)
 	{
 		OutputDebugStringA("Disconnecting...\n");
@@ -48,47 +40,30 @@ void NetClient::BindUDPSocket(short port)
 	RecvMsg(true);
 }
 
-void NetClient::PushPacket(std::byte* pck, int bytes)
+void NetClient::PushPacket(std::byte* pck, int bytes, bool udp)
 {
 	if (mIsConnected == false) return;
-	if (mTCPSendOverlapped == nullptr)
-		mTCPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
-	else
-		mTCPSendOverlapped->PushMsg(pck, bytes);
+	if (udp) mUDPSocket.PushPacket(pck, bytes);
+	else mTCPSocket.PushPacket(pck, bytes);
 }
 
-void NetClient::SendMsg(std::byte* pck, int bytes)
+void NetClient::SendMsg(std::byte* pck, int bytes, bool udp)
 {
-	PushPacket(pck, bytes);
-	SendMsg();
+	PushPacket(pck, bytes, udp);
+	SendMsg(udp);
 }
 
-void NetClient::SendMsg()
+void NetClient::SendMsg(bool udp)
 {
 	if (mIsConnected == false) return;
-	if (mTCPSendOverlapped)
-	{
-		if (mTCPSocket.Send(mTCPSendOverlapped) < 0)
-		{
-			//delete mTCPSendOverlapped;
-		}
-		mTCPSendOverlapped = nullptr;
-	}
+	if (udp) mUDPSocket.SendTo(mServerEp);
+	else mTCPSocket.Send();
 }
 
 void NetClient::RecvMsg(bool udp)
 {
-	if (udp == false)
-	{
-		mTCPRecvOverlapped.Reset(OP::RECV);
-		mTCPSocket.Recv(&mTCPRecvOverlapped);
-	}
-	else
-	{
-		mUDPRecvOverlapped.NetBuffer.Clear(); // always clear buffer for udp.
-		mUDPRecvOverlapped.Reset(OP::RECV);		
-		mUDPSocket.RecvFrom(&mUDPRecvOverlapped, mServerEp);
-	}
+	if (udp) mUDPSocket.RecvFrom(mServerEp);
+	else mTCPSocket.Recv();
 }
 
 void NetClient::RequestLogin(const std::string& name, const std::string& pwd)

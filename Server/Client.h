@@ -21,7 +21,7 @@ public:
 	void PushPacket(std::byte* pck, int bytes, bool udp=false);
 
 	void SendMsg(bool udp=false);
-	void RecvMsg();
+	void RecvMsg(bool udp=false);
 
 public:
 	void SetLatency(uint64_t sendTime);
@@ -50,13 +50,8 @@ public:
 	std::atomic_char PlayerIndex;
 
 private:
-	WSAOVERLAPPEDEX mTCPRecvOverlapped;
-
-	WSAOVERLAPPEDEX* mTCPSendOverlapped;
-	WSAOVERLAPPEDEX* mUDPSendOverlapped;
-
 	std::atomic<CLIENT_STAT> mState;
-
+	
 	std::atomic_bool mIsConnected;
 	std::atomic_uint64_t mLatency;
 

@@ -12,10 +12,10 @@ public:
 
 	void BindUDPSocket(short port);
 
-	void PushPacket(std::byte* pck, int bytes);
-	void SendMsg(std::byte* pck, int bytes);
+	void PushPacket(std::byte* pck, int bytes, bool udp=false);
+	void SendMsg(std::byte* pck, int bytes, bool udp=false);
 	
-	void SendMsg();
+	void SendMsg(bool udp=false);
 	void RecvMsg(bool udp=false);
 	
 public:
@@ -43,11 +43,6 @@ private:
 	Socket mUDPSocket;
 
 	EndPoint mServerEp;
-
-	WSAOVERLAPPEDEX* mTCPSendOverlapped;
-
-	WSAOVERLAPPEDEX mTCPRecvOverlapped;
-	WSAOVERLAPPEDEX mUDPRecvOverlapped;
 
 	std::atomic_bool mIsConnected;
 };

@@ -6,9 +6,6 @@
 Client::Client(int id, Socket* udpSck)
 	: ID(id), mUDPSocketPtr{ udpSck },
 	  mHostEp{},
-	  mTCPRecvOverlapped{},
-	  mTCPSendOverlapped{},
-	  mUDPSendOverlapped{},
 	  mState{ CLIENT_STAT::EMPTY },
 	  RoomID(-1), PlayerIndex(-1),
 	  mIsConnected{ false },
@@ -24,7 +21,7 @@ Client::~Client()
 
 void Client::Disconnect()
 {	
-	if (mTCPSendOverlapped)
+	/*if (mTCPSendOverlapped)
 	{
 		delete mTCPSendOverlapped;
 		mTCPSendOverlapped = nullptr;
@@ -33,7 +30,7 @@ void Client::Disconnect()
 	{
 		delete mUDPSendOverlapped;
 		mUDPSendOverlapped = nullptr;
-	}
+	}*/
 
 	mState = CLIENT_STAT::EMPTY;
 	mTCPSocket.Close();
@@ -53,47 +50,21 @@ void Client::AssignAcceptedID(int id, SOCKET sck, sockaddr_in* addr)
 void Client::PushPacket(std::byte* pck, int bytes, bool udp)
 {
 	if (mIsConnected == false) return;
-	if (udp == false)
-	{
-		if (mTCPSendOverlapped == nullptr)
-			mTCPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
-		else
-			mTCPSendOverlapped->PushMsg(pck, bytes);
-	}
-	else
-	{
-		if (mUDPSendOverlapped == nullptr)
-			mUDPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
-		else
-			mUDPSendOverlapped->PushMsg(pck, bytes);
-	}
+	if (udp) mUDPSocketPtr->PushPacket(pck, bytes);
+	else mTCPSocket.PushPacket(pck, bytes);
 }
 
 void Client::SendMsg(bool udp)
 {
 	if (mIsConnected == false) return;
-	if (udp == false && mTCPSendOverlapped)
-	{
-		if (mTCPSocket.Send(mTCPSendOverlapped) < 0)
-		{
-			//delete mTCPSendOverlapped;
-		}
-		mTCPSendOverlapped = nullptr;
-	}
-	else if (udp == true && mUDPSendOverlapped)
-	{
-		if (mUDPSocketPtr->SendTo(mUDPSendOverlapped, mHostEp) < 0)
-		{
-			// delete mUDPSendOverlapped;
-		}
-		mUDPSendOverlapped = nullptr;
-	}
+	if (udp) mUDPSocketPtr->SendTo(mHostEp);
+	else mTCPSocket.Send();
 }
 
-void Client::RecvMsg()
+void Client::RecvMsg(bool udp)
 {	
-	mTCPRecvOverlapped.Reset(OP::RECV);
-	mTCPSocket.Recv(&mTCPRecvOverlapped);	
+	if (udp) mUDPSocketPtr->RecvFrom(mHostEp);
+	else mTCPSocket.Recv();
 }
 
 void Client::SetLatency(uint64_t sendTime)
