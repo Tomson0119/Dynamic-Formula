@@ -13,7 +13,7 @@ const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
 const int MaxBufferSize = 1024;
 
-const float FIXED_FLOAT_LIMIT = 10000.0f;
+const float FIXED_FLOAT_LIMIT = 32767.0f;
 
 enum class LOGIN_STAT : char
 {	
@@ -172,10 +172,9 @@ namespace SC
 
 	struct packet_room_inside_info : packet_header
 	{
-		int room_id;
-		uint8_t admin_idx : 4;
-		uint8_t player_idx : 4;
-		uint8_t map_id;
+		uint8_t admin_idx : 3;
+		uint8_t player_idx : 3;
+		uint8_t map_id : 1;
 		PlayerInfo player_stats[MAX_ROOM_CAPACITY];
 	};
 
@@ -190,33 +189,28 @@ namespace SC
 
 	struct packet_update_player_info : packet_header
 	{
-		int room_id;
-		uint8_t admin_idx : 4;
-		uint8_t player_idx : 4;
+		uint8_t admin_idx : 3;
+		uint8_t player_idx : 3;
 		PlayerInfo player_info;
 	};
 
 	struct packet_update_map_info : packet_header
 	{
-		int room_id;
 		uint8_t map_id;
 	};
 
 	struct packet_remove_player : packet_header
 	{
-		int room_id;
-		uint8_t admin_idx : 4;
-		uint8_t player_idx : 4;
+		uint8_t admin_idx : 3;
+		uint8_t player_idx : 3;
 	};
 
 	struct packet_game_start_fail : packet_header
 	{
-		int room_id;
 	};
 
 	struct packet_game_start_success : packet_header
 	{
-		int room_id;
 		int px[MAX_ROOM_CAPACITY];
 		int py[MAX_ROOM_CAPACITY];
 		int pz[MAX_ROOM_CAPACITY];
@@ -288,9 +282,9 @@ namespace SC
 
 	struct packet_ingame_info : packet_header
 	{
-		uint8_t player_idx;
+		uint8_t player_idx : 3;
+		uint8_t rank : 4;
 		uint8_t lap_count;
-		uint8_t rank;
 		int point;
 	};
 
@@ -304,8 +298,8 @@ namespace SC
 
 	struct packet_item_count : packet_header 
 	{
-		uint8_t player_idx;
-		uint8_t item_count;
+		uint8_t player_idx : 3;
+		uint8_t item_count : 2;
 	};
 }
 #pragma pack(pop)

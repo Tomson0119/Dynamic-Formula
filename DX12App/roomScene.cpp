@@ -122,23 +122,17 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		OutputDebugString(L"Received game start packet.\n");
 
-		SC::packet_game_start_success* pck = reinterpret_cast<SC::packet_game_start_success*>(packet);
-		if (pck->room_id == mNetPtr->GetRoomID())
-		{
-			mNetPtr->InitPlayerTransform(pck);
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
-			//mpUI->SetMyReadyOff();
-		}
+		SC::packet_game_start_success* pck = reinterpret_cast<SC::packet_game_start_success*>(packet);		
+		mNetPtr->InitPlayerTransform(pck);
+		SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		//mpUI->SetMyReadyOff();
 		break;
 	}
 	case SC::GAME_START_FAIL:
 	{		
 		SC::packet_game_start_fail* pck = reinterpret_cast<SC::packet_game_start_fail*>(packet);
-		if (pck->room_id == mNetPtr->GetRoomID())
-		{
-			OutputDebugStringA("Not everyone is ready.\n");
-			//mpUI->SetStateFail(0); // please multithread error!!!!!!!!!
-		}
+		OutputDebugStringA("Not everyone is ready.\n");
+		//mpUI->SetStateFail(0); // please multithread error!!!!!!!!!
 		break;
 	}
 	case SC::FORCE_LOGOUT:
