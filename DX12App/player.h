@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gameObject.h"
+#include "atomicInt.h"
 
 class Camera;
 class InGameScene;

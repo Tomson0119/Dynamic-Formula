@@ -4,6 +4,7 @@
 #include "constantBuffer.h"
 #include "camera.h"
 #include "texture.h"
+#include "atomicInt.h"
 
 class InGameScene;
 class Pipeline;
