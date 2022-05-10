@@ -212,9 +212,7 @@ void PhysicsPlayer::SetSpawnTransform(SC::packet_spawn_transform* pck)
 {
 	mSpawnFlag = true;
 	mSpawnPosition.SetValue(pck->position[0], pck->position[1], pck->position[2]);
-	mSpawnRotation.SetValue(
-		pck->quaternion[0], pck->quaternion[1],
-		pck->quaternion[2], pck->quaternion[3]);
+	mSpawnRotation.SetValue(pck->quaternion[0], pck->quaternion[1], pck->quaternion[2], pck->quaternion[3]);
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
