@@ -606,11 +606,14 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 	}
 	float progress = std::min(1.0f, mProgress / updateRate);
 	mProgress += elapsed;
+
+	OutputDebugStringA(("timeSinceTick: " + std::to_string(mProgress) + "\n").c_str());
+	OutputDebugStringA(("delta: " + std::to_string(progress) + "\n").c_str());
+	OutputDebugStringA(("update rate: " + std::to_string(updateRate) + "\n").c_str());
+
 	mProgressMut.unlock();
 
-	/*OutputDebugStringA(("progress : " + std::to_string(progress) + "\n").c_str());
-	OutputDebugStringA(("mProgress : " + std::to_string(mProgress) + "\n").c_str());
-	OutputDebugStringA(("update rate : " + std::to_string(updateRate) + "\n\n").c_str());*/
+
 
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
 	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();

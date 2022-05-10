@@ -395,7 +395,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
 			BuildCarObject(info.StartPosition, info.StartRotation, info.Color, isPlayer, cmdList, physics, i);
-			BuildMissileObject(cmdList, info.StartPosition, i);
+			//BuildMissileObject(cmdList, info.StartPosition, i);
 			playerCount += 1;
 		}
 		i++;
