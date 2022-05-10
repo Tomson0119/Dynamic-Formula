@@ -205,7 +205,6 @@ void GameWorld::SendGameStartSuccess()
 	SC::packet_game_start_success info_pck{};
 	info_pck.size = sizeof(SC::packet_game_start_success);
 	info_pck.type = SC::GAME_START_SUCCESS;
-	info_pck.room_id = mID;
 
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
@@ -250,18 +249,18 @@ void GameWorld::SendStartSignal(uint64_t latency)
 
 void GameWorld::BroadcastAllTransform()
 {
+	for (int target = 0; target < mPlayerList.size(); target++)
+	{
+		if (mPlayerList[target]->Empty == false)
+		{
+			PushVehicleTransformPacketToAll(target);
+			PushMissileTransformPacketToAll(target);
+		}
+	}
 	for (int receiver = 0; receiver < mPlayerList.size(); receiver++)
 	{
 		if (mPlayerList[receiver]->Empty) continue;
 
-		for (int target = 0; target < mPlayerList.size(); target++)
-		{
-			if (mPlayerList[target]->Empty == false)
-			{
-				PushVehicleTransformPacket(target, receiver);
-				PushMissileTransformPacket(target, receiver);
-			}
-		}
 		PushUiInfoPacket(receiver);
 
 		int id = mPlayerList[receiver]->ID;
@@ -270,7 +269,7 @@ void GameWorld::BroadcastAllTransform()
 	}
 }
 
-void GameWorld::PushVehicleTransformPacket(int target, int receiver)
+void GameWorld::PushVehicleTransformPacketToAll(int target)
 {
 	SC::packet_player_transform pck{};
 	pck.size = sizeof(SC::packet_player_transform);
@@ -300,12 +299,10 @@ void GameWorld::PushVehicleTransformPacket(int target, int receiver)
 	pck.angular_vel[1] = (int)(avel.y() * FIXED_FLOAT_LIMIT);
 	pck.angular_vel[2] = (int)(avel.z() * FIXED_FLOAT_LIMIT);
 
-	int hostID = mPlayerList[receiver]->ID;
-	if (hostID < 0) return;
-	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, true, -1, false);
 }
 
-void GameWorld::PushMissileTransformPacket(int target, int receiver)
+void GameWorld::PushMissileTransformPacketToAll(int target)
 {
 	if (mPlayerList[target]->CheckMissileExist() == false) return;
 
@@ -332,9 +329,7 @@ void GameWorld::PushMissileTransformPacket(int target, int receiver)
 	pck.linear_vel[1] = (int)(lvel.y() * FIXED_FLOAT_LIMIT);
 	pck.linear_vel[2] = (int)(lvel.z() * FIXED_FLOAT_LIMIT);
 
-	int hostID = mPlayerList[receiver]->ID;
-	if (hostID < 0) return;
-	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, true, -1, false);
 }
 
 void GameWorld::PushUiInfoPacket(int target)
@@ -503,14 +498,14 @@ WSAOVERLAPPEDEX* GameWorld::GetPhysicsOverlapped()
 	return &mPhysicsOverlapped;
 }
 
-void GameWorld::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instSend)
+void GameWorld::SendToAllPlayer(std::byte* pck, int size, bool udp, int ignore, bool instSend)
 {
 	for (const auto& player : mPlayerList)
 	{
 		if (player->Empty == false && player->ID != ignore)
 		{
-			gClients[player->ID]->PushPacket(pck, size);
-			if (instSend) gClients[player->ID]->SendMsg();
+			gClients[player->ID]->PushPacket(pck, size, udp);
+			if (instSend) gClients[player->ID]->SendMsg(udp);
 		}
 	}
 }

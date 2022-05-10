@@ -73,8 +73,8 @@ public:
 
 private:
 	void BroadcastAllTransform();
-	void PushVehicleTransformPacket(int target, int receiver);
-	void PushMissileTransformPacket(int target, int receiver);
+	void PushVehicleTransformPacketToAll(int target);
+	void PushMissileTransformPacketToAll(int target);
 	void PushUiInfoPacket(int target);
 
 	void SendMissileRemovePacket(int target);
@@ -85,7 +85,7 @@ private:
 	void SendGameEndPacket();
 	void SendItemCountPacket(int target, bool instSend=true);
 
-	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
+	void SendToAllPlayer(std::byte* pck, int size, bool udp=false, int ignore=-1, bool instSend=true);
 
 private:
 	int mID;
