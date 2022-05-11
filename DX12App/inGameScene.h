@@ -57,7 +57,6 @@ public:
 	void SetComputeCBV(ID3D12GraphicsCommandList* cmdList);
 
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0, bool cubeMapping=false);
-	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex = 0, bool cubeMapping = false);
 
 	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed);
 
