@@ -8,4 +8,4 @@
 #include "../../Server/Network/BufferQueue.h"
 #include "../../Server/Network/EndPoint.h"
 
-//#define STANDALONE
+#define STANDALONE
