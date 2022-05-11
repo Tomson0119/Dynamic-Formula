@@ -7,7 +7,7 @@ LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
 {
     SetTextCnt(7);
     SetRectCnt(18);
-    SetBitmapCnt(3);
+    SetBitmapCnt(4);
     //SetGradientCnt(12);
     SetUICnt();
 
@@ -24,7 +24,7 @@ void LobbyUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12Comman
     UI::Initialize(device, pd3dCommandQueue);
     SetTextCnt(7);
     SetRectCnt(18);
-    SetBitmapCnt(3);
+    SetBitmapCnt(4);
     SetUICnt();
 
     SetVectorSize(nFrame);
@@ -49,7 +49,9 @@ void LobbyUI::SetVectorSize(UINT nFrame)
     std::vector<std::wstring> BitmapFileNames;
     BitmapFileNames.push_back(L"Resources\\SampleImg.jpg");
     BitmapFileNames.push_back(L"Resources\\YellowBackGroundFlag.jpeg");
-    BitmapFileNames.push_back(L"Resources\\LeftRightArrow.jpeg");
+    BitmapFileNames.push_back(L"Resources\\LeftArrow.png");
+    BitmapFileNames.push_back(L"Resources\\RightArrow.png");
+
 
     SetBitmapFileNames(BitmapFileNames);
     //mvd2dLinearGradientBrush.resize(TextCnt);
@@ -76,9 +78,9 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]))
-        GetColors()[0].a = 0.1f;
+        SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::DarkGray, 0.3f));
     else
-        GetColors()[0].a = 0.9f;
+        SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::DarkGray, 0.9f));
     for (int i = 1; i < static_cast<int>(GetTextCnt()); ++i)
     {// 12, 34, 56, 78, 910, 1112
         if (MouseCollisionCheck(dx, dy, GetTextBlock()[i]))
@@ -97,7 +99,7 @@ void LobbyUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
     float dy = static_cast<float>(y);
     for (int i = 1; i < static_cast<int>(GetTextCnt()); ++i)
     {
-        if (MouseCollisionCheck(dx, dy, GetTextBlock()[i]))
+        if (MouseCollisionCheck(dx, dy, GetTextBlock()[i]) && buttonState==WM_LBUTTONDOWN)
         {
            
             //GetColors()[(i+1)/2].a = 0.1f;
@@ -343,16 +345,22 @@ void LobbyUI::Draw(UINT nFrame)
         {
              GetFrameWidth() * 0.44f,
            GetFrameHeight() * 0.76f,
+            GetFrameWidth() * 0.50f,
+            GetFrameHeight() * 0.82f
+        },
+        {
+             GetFrameWidth() * 0.52f,
+           GetFrameHeight() * 0.76f,
             GetFrameWidth() * 0.58f,
             GetFrameHeight() * 0.82f
         }
     };
     bool IsOutlined[18] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false };
-    float aOpacities[3] = { 0.5f, 1.0f, 0.5f };
+    float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
     BeginDraw(nFrame);
     DrawBmp(LTRB, 0, 2, aOpacities);
     RectDraw(RectLTRB, FillLTRB, 0, GetRectCnt(), 0, IsOutlined);
-    DrawBmp(LTRB, 2, 1, aOpacities);
+    DrawBmp(LTRB, 2, 2, aOpacities);
     TextDraw(GetTextBlock());
     EndDraw(nFrame);
 }
@@ -412,7 +420,7 @@ void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     std::vector<D2D1::ColorF> colorList;
     /*Text*/
     // MakeRoom, RoomNum[6]
-    colorList.push_back(D2D1::ColorF::DarkGray); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::DarkGray, 0.9f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 

@@ -52,11 +52,33 @@ void LobbyScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 
 void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 {
-	if (buttonState)
+	if (mpUI->OnProcessMouseClick(buttonState, x, y) == 1) // Click MakeRoom
 	{
-		//LoginCheck
-		//if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
-			//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+
+	}
+	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Click Room1
+	{
+
+	}
+	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 3) // Click Room2
+	{
+
+	}
+	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 4) // Click Room3
+	{
+
+	}
+	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 5) // Click Room4
+	{
+
+	}
+	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 6) // Click Room5
+	{
+
+	}
+	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 7) // Click Room6
+	{
+
 	}
 }
 
