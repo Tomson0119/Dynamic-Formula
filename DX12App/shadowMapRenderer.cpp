@@ -343,6 +343,10 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, InGameScen
 		cmdList->OMSetRenderTargets(0, nullptr, false, &mDsvCPUDescriptorHandles[i]);
 
 		scene->UpdateCameraConstant(i + 1, mDepthCamera[i].get());
+
+		Camera* cam[1] = { mDepthCamera[i].get() };
+		scene->UpdateInstancingPipelines(cam, 1);
+
 		scene->SetGraphicsCBV(cmdList, i + 1);
 		RenderPipelines(cmdList, i);
 

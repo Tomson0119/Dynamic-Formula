@@ -1013,9 +1013,23 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 	gameInfo.ElapsedTime = timer.ElapsedTime();
 
 	mGameInfoCB->CopyData(0, gameInfo);
-	
-	for (const auto& [_, pso] : mPipelines)
-		pso->UpdateConstants();
+
+	Camera* cam[1] = { mMainCamera.get() };
+
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if (layer != Layer::Transparent && layer != Layer::Instancing)
+			pso->UpdateConstants(cam, 1);
+	}
+}
+
+void InGameScene::UpdateInstancingPipelines(Camera** cam, int count)
+{
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if (layer == Layer::Transparent || layer == Layer::Instancing)
+			pso->UpdateConstants(cam, count);
+	}
 }
 
 void InGameScene::UpdateDynamicsWorld()
@@ -1084,6 +1098,9 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	D3D12_CPU_DESCRIPTOR_HANDLE pd3dAllRtvCPUHandles[2] = { mMsaaRtvHandle, mMsaaVelocityMapRtvHandle };
 
 	cmdList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &depthStencilView);
+
+	Camera* cam[1] = { mMainCamera.get() };
+	UpdateInstancingPipelines(cam, 1);
 
 	cmdList->SetGraphicsRootSignature(mRootSignature.Get());
 	RenderPipelines(cmdList, 0);

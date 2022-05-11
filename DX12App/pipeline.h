@@ -70,7 +70,7 @@ public:
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
 
-	virtual void UpdateConstants();
+	virtual void UpdateConstants(Camera** camera, int count, bool culling = false);
 
 	std::vector<std::shared_ptr<GameObject>>& GetRenderObjects() { return mRenderObjects; }
 
@@ -177,7 +177,7 @@ public:
 	virtual ~InstancingPipeline();
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false);
 	virtual void BuildConstantBuffer(ID3D12Device* device);
-	virtual void UpdateConstants();
+	virtual void UpdateConstants(Camera** camera, int count, bool culling = false);
 
 	std::map<std::string, int> mInstancingCount;
 private:

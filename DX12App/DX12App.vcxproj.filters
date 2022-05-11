@@ -283,14 +283,14 @@
     <Filter Include="소스 파일\Network">
       <UniqueIdentifier>{38174295-aa00-4c5f-aae1-f85b9f991b04}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Scene">
-      <UniqueIdentifier>{4b2bfcd9-a4e8-4977-a81b-e497ae05c17a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\UI">
       <UniqueIdentifier>{3adba92b-f655-434a-9aef-1c23542bb625}</UniqueIdentifier>
     </Filter>
     <Filter Include="헤더 파일\UI">
       <UniqueIdentifier>{a8446fa9-d8d9-4088-a59e-16c09c676368}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Scene">
+      <UniqueIdentifier>{4b2bfcd9-a4e8-4977-a81b-e497ae05c17a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -298,7 +298,7 @@ void Pipeline::Update(float elapsed, float updateRate, Camera* camera)
 		obj->Update(elapsed, updateRate);
 }
 
-void Pipeline::UpdateConstants()
+void Pipeline::UpdateConstants(Camera** camera, int count, bool culling)
 {
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++) {
@@ -619,12 +619,12 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 	if (mRenderObjects.size() <= 0) return;
 
 	UINT matOffset = 0;
-	UINT instancingOffset = 0;
+	float instancingOffset = 0;
 
 	cmdList->SetGraphicsRootShaderResourceView(9, mObjectSB->GetGPUVirtualAddress(0));
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
-		if (mRenderObjects[i]->GetMeshCount() > 0)
+		if (mRenderObjects[i]->GetMeshCount() > 0 && mInstancingCount[mRenderObjects[i]->GetName()] > 0)
 		{
 			cmdList->SetGraphicsRoot32BitConstants(8, 1, &instancingOffset, 3);
 
@@ -654,16 +654,78 @@ void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
 	}
 }
 
-void InstancingPipeline::UpdateConstants()
+void InstancingPipeline::UpdateConstants(Camera** camera, int count, bool culling)
 {
 	UINT matOffset = 0;
-	for (int i = 0; i < mRenderObjects.size(); i++)
+	for (auto& [_, count] : mInstancingCount)
 	{
-		mObjectSB->CopyData(i, mRenderObjects[i]->GetInstancingInfo());
-		if (mRenderObjects[i]->GetMeshCount() > 0)
+		count = 0;
+	}
+	if (culling)
+	{
+		std::map<int, bool> collidedIndex;
+		for (int i = 0; i < mRenderObjects.size(); i++)
 		{
-			mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
-			matOffset += mRenderObjects[i]->GetMeshCount();
+			XMMATRIX world = XMLoadFloat4x4(&mRenderObjects[i]->GetWorld());
+			XMMATRIX invWorld = XMMatrixInverse(&XMMatrixDeterminant(world), world);
+
+			bool collided = false;
+			for (int j = 0; j < count; ++j)
+			{
+				XMMATRIX invView = XMLoadFloat4x4(&camera[j]->GetInverseView());
+				XMMATRIX viewToLocal = XMMatrixMultiply(invView, invWorld);
+				auto viewFrustum = camera[j]->GetViewFrustum();
+
+				BoundingFrustum localFrustum;
+				viewFrustum.Transform(localFrustum, viewToLocal);
+				if (localFrustum.Contains(mRenderObjects[i]->GetBoundingBox()) != DirectX::DISJOINT)
+				{
+					collided = true;
+					break;
+				}
+			}
+
+			if (collided)
+			{
+				collidedIndex[i] = true;
+				mInstancingCount[mRenderObjects[i]->GetName()]++;
+			}
+			else
+			{
+				collidedIndex[i] = false;
+			}
+		}
+
+		int currentIndex = 0;
+		for (int i = 0; i < mRenderObjects.size(); ++i)
+		{
+			if (collidedIndex[i])
+			{
+				mObjectSB->CopyData(currentIndex, mRenderObjects[i]->GetInstancingInfo());
+				if (mRenderObjects[i]->GetMeshCount() > 0)
+				{
+					mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
+					matOffset += mRenderObjects[i]->GetMeshCount();
+				}
+				currentIndex++;
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < mRenderObjects.size(); i++)
+		{
+			mInstancingCount[mRenderObjects[i]->GetName()]++;
+		}
+
+		for (int i = 0; i < mRenderObjects.size(); i++)
+		{
+			mObjectSB->CopyData(i, mRenderObjects[i]->GetInstancingInfo());
+			if (mRenderObjects[i]->GetMeshCount() > 0)
+			{
+				mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
+				matOffset += mRenderObjects[i]->GetMeshCount();
+			}
 		}
 	}
 }
