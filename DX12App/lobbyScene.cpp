@@ -50,35 +50,73 @@ void LobbyScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 	mpUI->OnProcessMouseMove(btnState, x, y);
 }
 
-void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
-	if (mpUI->OnProcessMouseClick(buttonState, x, y) == 1) // Click MakeRoom
+	if (buttonState & MK_LBUTTON)
 	{
+		if (mpUI->OnProcessMouseClick(buttonState, x, y) == 1) // Click MakeRoom
+		{
+			OutputDebugStringA("MakeRoom Button Down\n");
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Click Room1
+		{
 
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 3) // Click Room2
+		{
+
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 4) // Click Room3
+		{
+
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 5) // Click Room4
+		{
+
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 6) // Click Room5
+		{
+
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 7) // Click Room6
+		{
+
+		}
 	}
-	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Click Room1
-	{
+}
 
-	}
-	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 3) // Click Room2
+void LobbyScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
+{
+	if (buttonState & MK_LBUTTON)
 	{
+		if (mpUI->OnProcessMouseClick(buttonState, x, y) == 1) // Click MakeRoom
+		{
+			OutputDebugStringA("MakeRoom Button Down");
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Click Room1
+		{
 
-	}
-	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 4) // Click Room3
-	{
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 3) // Click Room2
+		{
 
-	}
-	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 5) // Click Room4
-	{
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 4) // Click Room3
+		{
 
-	}
-	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 6) // Click Room5
-	{
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 5) // Click Room4
+		{
 
-	}
-	else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 7) // Click Room6
-	{
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 6) // Click Room5
+		{
 
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 7) // Click Room6
+		{
+
+		}
 	}
 }
 
