@@ -883,7 +883,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
-	mCurrentCamera->Update(elapsed);
+	mMainCamera->Update(elapsed);
+	mDirectorCamera->Update(elapsed);
 	
 	UpdateConstants(timer);
 	cmdList->SetGraphicsRoot32BitConstants(8, 1, &mDriftParticleEnable, 4);
