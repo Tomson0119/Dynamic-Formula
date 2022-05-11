@@ -211,12 +211,6 @@ void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFram
 	Draw(cmdList);
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool drawWiredFrame, bool setPipeline, bool msaaOff)
-{
-	PreparePipeline(cmdList, drawWiredFrame, setPipeline, msaaOff);
-	Draw(cmdList, viewFrustum, objectOOBB);
-}
-
 void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 {
 	UINT matOffset = 0;
@@ -245,23 +239,6 @@ void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 				NULL, isSO);
 
 		}
-	}
-}
-
-void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
-{
-	UINT matOffset = 0;
-	for (int i = 0; i < mRenderObjects.size(); i++)
-	{
-		mRenderObjects[i]->Draw(
-			cmdList,
-			mRootParamMatIndex,
-			mRootParamCBVIndex,
-			mRootParamSRVIndex,
-			mMaterialCB->GetGPUVirtualAddress(matOffset),
-			mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
-
-		matOffset += mRenderObjects[i]->GetMeshCount();
 	}
 }
 
@@ -658,34 +635,6 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 				mRootParamSRVIndex,
 				mMaterialCB->GetGPUVirtualAddress(matOffset),
 				mMaterialCB->GetByteSize(), mInstancingCount[mRenderObjects[i]->GetName()], isSO);
-
-			matOffset += mRenderObjects[i]->GetMeshCount();
-			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];
-		}
-	}
-}
-
-void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
-{
-	if (mRenderObjects.size() <= 0) return;
-
-	UINT matOffset = 0;
-	UINT instancingOffset = 0;
-
-	cmdList->SetGraphicsRootShaderResourceView(mRootParamSBIndex, mObjectSB->GetGPUVirtualAddress(0));
-	for (int i = 0; i < mRenderObjects.size(); i++)
-	{
-		if (mRenderObjects[i]->GetMeshCount() > 0)
-		{
-			cmdList->SetGraphicsRoot32BitConstants(8, 1, &instancingOffset, 3);
-			
-			mRenderObjects[i]->DrawInstanced(
-				cmdList,
-				mRootParamMatIndex,
-				mRootParamSBIndex,
-				mRootParamSRVIndex,
-				mMaterialCB->GetGPUVirtualAddress(matOffset),
-				mMaterialCB->GetByteSize(), viewFrustum, objectOOBB, isSO);
 
 			matOffset += mRenderObjects[i]->GetMeshCount();
 			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];

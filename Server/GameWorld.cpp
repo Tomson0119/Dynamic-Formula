@@ -174,6 +174,7 @@ void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 
 	switch (static_cast<int>(key))
 	{
+	case VK_LCONTROL:
 	case VK_UP:
 	case VK_DOWN:
 	case VK_LEFT:

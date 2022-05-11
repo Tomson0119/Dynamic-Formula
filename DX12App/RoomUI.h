@@ -64,7 +64,7 @@ public:
 
 private:
 	float BitmapOpacities[9] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-	bool mIsReady = false;
+	std::atomic_bool mIsReady = false;
 	NetModule& mNetRef;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

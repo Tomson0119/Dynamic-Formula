@@ -127,7 +127,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 			mNetPtr->InitPlayerTransform(pck);
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
-			mpUI->SetMyReadyOff();
+			//mpUI->SetMyReadyOff();
 		}
 		break;
 	}
@@ -137,7 +137,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (pck->room_id == mNetPtr->GetRoomID())
 		{
 			OutputDebugStringA("Not everyone is ready.\n");
-			mpUI->SetStateFail(0);
+			//mpUI->SetStateFail(0); // please multithread error!!!!!!!!!
 		}
 		break;
 	}

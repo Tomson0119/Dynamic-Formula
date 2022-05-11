@@ -389,67 +389,6 @@ void GameObject::DrawInstanced(ID3D12GraphicsCommandList* cmdList,
 	}
 }
 
-
-void GameObject::DrawInstanced(ID3D12GraphicsCommandList* cmdList, 
-	UINT rootMatIndex, UINT rootSBIndex, UINT rootSrvIndex,
-	UINT64 matGPUAddress, UINT64 byteOffset, const BoundingFrustum& viewFrustum,
-	bool objectOOBB, int InstanceCount, bool isSO)
-{
-	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
-	for (int i = 0; i < mMeshes.size(); i++)
-	{
-		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
-
-		int srvIndex = mMeshes[i]->GetSrvIndex();
-
-		if (srvIndex >= 0)
-		{
-			srvGpuHandle = mSrvGPUAddress;
-			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
-			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
-		}
-		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
-
-		if (objectOOBB && viewFrustum.Intersects(mOOBB))
-			mMeshes[i]->DrawInstanced(cmdList, InstanceCount, isSO);
-		else if (!objectOOBB)
-			mMeshes[i]->DrawInstanced(cmdList, viewFrustum, InstanceCount, isSO);
-
-		matGPUAddress += byteOffset;
-	}
-}
-
-void GameObject::Draw(
-	ID3D12GraphicsCommandList* cmdList, 
-	UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex,
-	UINT64 matGPUAddress, UINT64 byteOffset, const BoundingFrustum& viewFrustum, bool objectOOBB, bool isSO)
-{
-	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
-	
-	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
-	for (int i = 0; i < mMeshes.size(); i++)
-	{
-		mMeshes[i]->PrepareBufferViews(cmdList, isSO);
-
-		int srvIndex = mMeshes[i]->GetSrvIndex();
-
-		if (srvIndex >= 0)
-		{
-			srvGpuHandle = mSrvGPUAddress;
-			srvGpuHandle.ptr += srvIndex * gCbvSrvUavDescriptorSize;
-			cmdList->SetGraphicsRootDescriptorTable(rootSrvIndex, srvGpuHandle);
-		}
-		cmdList->SetGraphicsRootConstantBufferView(rootMatIndex, matGPUAddress);
-
-		if (objectOOBB && viewFrustum.Intersects(mOOBB))
-			mMeshes[i]->Draw(cmdList, isSO);
-		else if(!objectOOBB)
-			mMeshes[i]->Draw(cmdList, viewFrustum, isSO);
-
-		matGPUAddress += byteOffset;
-	}
-}
-
 void GameObject::UpdateTransform()
 {
 	mWorld = Matrix4x4::CalulateWorldTransform(mPosition, mQuaternion, mScaling);
@@ -604,10 +543,14 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 		mPrevOrigin = mPosition;
 		mPrevQuat = mQuaternion;
 	}
-	mProgress += elapsed;
 	float progress = std::min(1.0f, mProgress / updateRate);
+	mProgress += elapsed;
 	mProgressMut.unlock();
-	
+
+	/*OutputDebugStringA(("progress : " + std::to_string(progress) + "\n").c_str());
+	OutputDebugStringA(("mProgress : " + std::to_string(mProgress) + "\n").c_str());
+	OutputDebugStringA(("update rate : " + std::to_string(updateRate) + "\n\n").c_str());*/
+
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
 	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
 
@@ -617,6 +560,9 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 
 	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
 	mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
+
+	//mPosition = correctOrigin;
+	//mQuaternion = correctQuat;
 }
 
 void GameObject::SetPosition(float x, float y, float z)

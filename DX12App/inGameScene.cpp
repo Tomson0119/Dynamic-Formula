@@ -18,6 +18,7 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	mKeyMap[VK_DOWN] = false;
 	mKeyMap[VK_LSHIFT] = false;
 	mKeyMap[VK_F10] = false;
+	mKeyMap[VK_LCONTROL] = false;
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
 	mKeyMap['P'] = false;
@@ -593,7 +594,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (player)
 		{
 			if (player.get() == mPlayer) mNetPtr->SetUpdateRate();
-			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
+			player->SetCorrectionTransform(pck, 0); // test
 		}
 		break;
 	}
@@ -1161,32 +1162,13 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 					continue;
 				}
 			}
-			else if (cubeMapping && (layer == Layer::Color || layer== Layer::DriftParticle))
+			else if (cubeMapping && (layer == Layer::Color || layer == Layer::DriftParticle || layer == Layer::CheckPoint))
 			{
 				continue;
 			}
 			else
 				pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
 		}			
-	}
-}
-
-void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, Camera* camera, int cameraCBIndex, bool cubeMapping)
-{
-	SetGraphicsCBV(cmdList, cameraCBIndex);
-	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
-
-	for (const auto& [layer, pso] : mPipelines)
-	{
-		if (layer == Layer::Color)
-			continue;
-
-		if (layer != Layer::Terrain && layer != Layer::SkyBox)
-			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), true, (bool)mLODSet, true, cubeMapping);
-		else if(layer != Layer::SkyBox)
-			pso->SetAndDraw(cmdList, camera->GetWorldFrustum(), false, (bool)mLODSet, true, cubeMapping);
-		else
-			pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
 	}
 }
 
@@ -1395,7 +1377,7 @@ void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::
 		mPipelines[Layer::CheckPoint]->AppendObject(obj);
 	}
 
-	/*auto objects = mPipelines[Layer::Instancing]->GetRenderObjects();
+	auto objects = mPipelines[Layer::Instancing]->GetRenderObjects();
 	for (int i = 0; i < objects.size(); ++i)
 	{
 		auto obj = make_shared<StaticObject>();
@@ -1410,7 +1392,7 @@ void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::
 		obj->SetQuaternion(oobb.Orientation);
 
 		mPipelines[Layer::CheckPoint]->AppendObject(obj);
-	}*/
+	}
 }
 
 void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path)

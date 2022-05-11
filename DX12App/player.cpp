@@ -261,7 +261,7 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityY = 40.0f;
 
 		mCamera->SetOffset(0.0f, 1.6f, -7.5f);
-		mCamera->SetTimeLag(0.1f);
+		mCamera->SetTimeLag(0.0f);
 		break;
 
 	case CameraMode::TOP_DOWN_CAMERA:
@@ -404,18 +404,18 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 0.0f;
 		}
 
-		float DriftLimit = 30.0f / 180.0f;
-		float AngleLimit = 50.0f / 180.0f;
+		float DriftLimit = 30.0f / 180.0f * (float)Math::PI;
+		float AngleLimit = 50.0f / 180.0f * (float)Math::PI;
 
-		auto camLook = mCamera->GetLook();
-		camLook.y = 0.0f;
-		camLook = Vector3::Normalize(camLook);
+		auto linearVelocity = mBtRigidBody->getLinearVelocity();
+		linearVelocity.setY(0.0f);
+		linearVelocity = linearVelocity.normalize();
 
-		auto playerLook = mLook;
-		playerLook.y = 0.0f;
-		playerLook = Vector3::Normalize(playerLook);
+		auto forward = mVehicle->getForwardVector();
+		forward.setY(0.0f);
+		forward = forward.normalize();
 
-		float angle = acos(Vector3::Dot(camLook, playerLook) / (Vector3::Length(camLook) * Vector3::Length(playerLook)));
+		float angle = acos(linearVelocity.dot(forward));
 
 		if (DriftLimit < angle && mDriftGauge < 1.0f)
 		{
@@ -629,7 +629,7 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 
 	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", physics);
 
-	mBtRigidBody = physics->CreateRigidBody(500.0f, btCarTransform, mBtCollisionShape);
+	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, mBtCollisionShape);
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld);
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 	mBtRigidBody = mVehicle->getRigidBody();
