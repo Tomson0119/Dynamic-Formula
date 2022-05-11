@@ -1028,7 +1028,7 @@ void InGameScene::UpdateInstancingPipelines(Camera** cam, int count)
 	for (const auto& [layer, pso] : mPipelines)
 	{
 		if (layer == Layer::Transparent || layer == Layer::Instancing)
-			pso->UpdateConstants(cam, count);
+			pso->UpdateConstants(cam, count, true);
 	}
 }
 

@@ -619,9 +619,17 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 	if (mRenderObjects.size() <= 0) return;
 
 	UINT matOffset = 0;
-	float instancingOffset = 0;
+	UINT instancingOffset = 0;
 
 	cmdList->SetGraphicsRootShaderResourceView(9, mObjectSB->GetGPUVirtualAddress(0));
+
+	int instance = 0;
+	for (auto [_, count] : mInstancingCount)
+	{
+		if (count > 0) instance += count;
+	}
+
+	OutputDebugStringA(std::string("Drawing Object Count : " + std::to_string(instance) + "\n\n").c_str());
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
 		if (mRenderObjects[i]->GetMeshCount() > 0 && mInstancingCount[mRenderObjects[i]->GetName()] > 0)
@@ -638,8 +646,10 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
 
 			matOffset += mRenderObjects[i]->GetMeshCount();
 			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];
+			OutputDebugStringA(std::string(mRenderObjects[i]->GetName() + "'s instancingOffset : " + std::to_string(instancingOffset) + "\n").c_str());
 		}
 	}
+	OutputDebugStringA("\n");
 }
 
 void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
@@ -710,6 +720,16 @@ void InstancingPipeline::UpdateConstants(Camera** camera, int count, bool cullin
 				currentIndex++;
 			}
 		}
+		OutputDebugStringA(std::string("CurrentIndex : " + std::to_string(currentIndex) + "\n").c_str());
+
+		int instance = 0;
+		for (auto [_, count] : mInstancingCount)
+		{
+			if(count > 0) instance += count;
+		}
+
+		if (instance != currentIndex)
+			OutputDebugStringA(std::string("Instancing Error!\nInstance : " + std::to_string(instance) + "\ncurrentIndex : " + std::to_string(currentIndex) + "\n\n").c_str());
 	}
 	else
 	{
