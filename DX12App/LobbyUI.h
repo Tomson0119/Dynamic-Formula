@@ -28,6 +28,7 @@ public:
 	void UpdateRoomNumsText();
 private:
 	std::array<int, 6> mRoomNums;
+	float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
 	//std::vector<std::string>  RoomNum;
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;

@@ -80,9 +80,8 @@ int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
     RECT rc = MakeRect(GetTextBlock()[0].d2dLayoutRect.left, GetTextBlock()[0].d2dLayoutRect.top,
         GetTextBlock()[0].d2dLayoutRect.right, GetTextBlock()[0].d2dLayoutRect.bottom);
     if (MouseCollisionCheck(dx, dy, rc)
-        &&  WM_LBUTTONUP)
+        && buttonState & WM_LBUTTONDOWN)
     {
-
         return 1;
     }
     /*rc = MakeRect(GetTextBlock()[1].d2dLayoutRect.left, GetTextBlock()[1].d2dLayoutRect.top,
@@ -119,6 +118,18 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         }
         else SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
     }
+    rc = MakeRect(GetFrameWidth() * 0.44f, GetFrameHeight() * 0.76f, GetFrameWidth() * 0.50f, GetFrameHeight() * 0.82f);
+    if (MouseCollisionCheck(dx, dy, rc)) // LeftArrow
+        aOpacities[2] = 0.2f;
+    else
+        aOpacities[2] = 0.7f;
+
+    rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.76f, GetFrameWidth() * 0.58f, GetFrameHeight() * 0.82f);
+    if (MouseCollisionCheck(dx, dy, rc)) // RightArrow
+        aOpacities[3] = 0.2f;
+    else
+        aOpacities[3] = 0.7f;
+
     BuildSolidBrush(GetColors());
 }
 
@@ -385,7 +396,6 @@ void LobbyUI::Draw(UINT nFrame)
         }
     };
     bool IsOutlined[18] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false };
-    float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
     BeginDraw(nFrame);
     DrawBmp(LTRB, 0, 2, aOpacities);
     RectDraw(RectLTRB, FillLTRB, 0, GetRectCnt(), 0, IsOutlined);
@@ -439,18 +449,6 @@ void LobbyUI::SetTextRect()
     GetTextBlock()[4].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.425f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.48f);
     GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.66f);
     GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.66f);
-    /*
-    GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.40f);
-    GetTextBlock()[8].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.40f);
-    GetTextBlock()[9].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.41f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.58f);
-    GetTextBlock()[10].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.41f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.58f);
-    GetTextBlock()[11].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.59f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.76f);
-    GetTextBlock()[12].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.59f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.76f);
-
-    GetTextBlock()[13].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.044f,  GetFrameHeight() * 0.076f, GetFrameWidth() * 0.05f, GetFrameHeight() * 0.082f);
-    GetTextBlock()[14].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.052f, GetFrameHeight() * 0.076f, GetFrameWidth() * 0.058f, GetFrameHeight() * 0.082f);*/
-
-
 }
 
 void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)

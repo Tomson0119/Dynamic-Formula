@@ -57,6 +57,9 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 		if (mpUI->OnProcessMouseClick(buttonState, x, y) == 1) // Click MakeRoom
 		{
 			OutputDebugStringA("MakeRoom Button Down\n");
+#ifndef STANDALONE
+			mNetPtr->Client()->RequestNewRoom();
+#endif
 		}
 		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 2) // Click Room1
 		{
