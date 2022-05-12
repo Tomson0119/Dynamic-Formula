@@ -1330,7 +1330,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		{
 			auto transparentObj = make_shared<StaticObject>();
 			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
-
+			
 			auto& transparentMeshes = transparentObj->GetMeshes();
 			for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
 			{
@@ -1346,6 +1346,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			transparentObj->SetName(objName);
 
 			transparentObj->Update(0, 0);
+			transparentObj->UpdateInverseWorld();
+			
 			mPipelines[Layer::Transparent]->AppendObject(transparentObj);
 			static_cast<InstancingPipeline*>(mPipelines[Layer::Transparent].get())->mInstancingCount[objName]++;
 		}

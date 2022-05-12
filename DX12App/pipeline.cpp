@@ -558,8 +558,6 @@ void StreamOutputPipeline::BuildSRV(ID3D12Device* device)
 	}
 }
 
-
-
 /////////////////////////////////////////////////////////////////////////
 //
 ComputePipeline::ComputePipeline()
@@ -709,19 +707,8 @@ void InstancingPipeline::UpdateConstants(Camera* camera, DrawType type, bool cul
 					matOffset += mRenderObjects[i]->GetMeshCount();
 				}
 				currentIndex++;
-				//OutputDebugStringA(std::string(std::to_string(currentIndex) + ": " + mRenderObjects[i]->GetName() + "'s Instancing Position : " + std::to_string(mRenderObjects[i]->GetPosition().x) + ", " + std::to_string(mRenderObjects[i]->GetPosition().y) + ", " + std::to_string(mRenderObjects[i]->GetPosition().z) + "\n").c_str());
 			}
 		}
-		//OutputDebugStringA("\n\n");
-
-	   /*int instance = 0;
-		for (auto [_, count] : mInstancingCount)
-		{
-			if(count > 0) instance += count;
-		}*/
-
-		//if (instance != currentIndex)
-			//OutputDebugStringA(std::string("Instancing Error!\nInstance : " + std::to_string(instance) + "\ncurrentIndex : " + std::to_string(currentIndex) + "\n\n").c_str());
 	}
 	else
 	{
