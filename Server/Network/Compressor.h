@@ -13,6 +13,11 @@ struct packet
 class Compressor
 {
 public:
+	static vec3 EncodePos(float x, float y, float z)
+	{
+		
+	}
+
 	static quat3 EncodeQuat(float x, float y, float z, float w)
 	{
 		float values[4] = { x,y,z,w };
@@ -38,27 +43,27 @@ public:
 		switch (compQuat.max_idx)
 		{
 		case 0: // x is largest.
-			compQuat.elem1 = (short)(y * sign * FIXED_FLOAT_LIMIT);
-			compQuat.elem2 = (short)(z * sign * FIXED_FLOAT_LIMIT);
-			compQuat.elem3 = (short)(w * sign * FIXED_FLOAT_LIMIT);
+			compQuat.elem1 = (short)(y * sign * QUAT_FLOAT_PRECISION);
+			compQuat.elem2 = (short)(z * sign * QUAT_FLOAT_PRECISION);
+			compQuat.elem3 = (short)(w * sign * QUAT_FLOAT_PRECISION);
 			break;
 
 		case 1: // y is largest.
-			compQuat.elem1 = (short)(x * sign * FIXED_FLOAT_LIMIT);
-			compQuat.elem2 = (short)(z * sign * FIXED_FLOAT_LIMIT);
-			compQuat.elem3 = (short)(w * sign * FIXED_FLOAT_LIMIT);
+			compQuat.elem1 = (short)(x * sign * QUAT_FLOAT_PRECISION);
+			compQuat.elem2 = (short)(z * sign * QUAT_FLOAT_PRECISION);
+			compQuat.elem3 = (short)(w * sign * QUAT_FLOAT_PRECISION);
 			break;
 
 		case 2: // z is largest.
-			compQuat.elem1 = (short)(x * sign * FIXED_FLOAT_LIMIT);
-			compQuat.elem2 = (short)(y * sign * FIXED_FLOAT_LIMIT);
-			compQuat.elem3 = (short)(w * sign * FIXED_FLOAT_LIMIT);
+			compQuat.elem1 = (short)(x * sign * QUAT_FLOAT_PRECISION);
+			compQuat.elem2 = (short)(y * sign * QUAT_FLOAT_PRECISION);
+			compQuat.elem3 = (short)(w * sign * QUAT_FLOAT_PRECISION);
 			break;
 
 		case 3: // w is largest.
-			compQuat.elem1 = (short)(x * sign * FIXED_FLOAT_LIMIT);
-			compQuat.elem2 = (short)(y * sign * FIXED_FLOAT_LIMIT);
-			compQuat.elem3 = (short)(z * sign * FIXED_FLOAT_LIMIT);
+			compQuat.elem1 = (short)(x * sign * QUAT_FLOAT_PRECISION);
+			compQuat.elem2 = (short)(y * sign * QUAT_FLOAT_PRECISION);
+			compQuat.elem3 = (short)(z * sign * QUAT_FLOAT_PRECISION);
 			break;
 		}
 		return compQuat;
@@ -66,9 +71,9 @@ public:
 
 	static std::array<float, 4> DecodeQuat(const quat3& compQuat)
 	{
-		float a = (float)compQuat.elem1 / FIXED_FLOAT_LIMIT;
-		float b = (float)compQuat.elem2 / FIXED_FLOAT_LIMIT;
-		float c = (float)compQuat.elem3 / FIXED_FLOAT_LIMIT;
+		float a = (float)compQuat.elem1 / QUAT_FLOAT_PRECISION;
+		float b = (float)compQuat.elem2 / QUAT_FLOAT_PRECISION;
+		float c = (float)compQuat.elem3 / QUAT_FLOAT_PRECISION;
 		float d = sqrt(1.0f - (a * a + b * b + c * c));
 
 		switch (compQuat.max_idx)

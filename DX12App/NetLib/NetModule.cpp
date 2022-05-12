@@ -127,13 +127,15 @@ void NetModule::InitPlayerTransform(SC::packet_game_start_success* pck)
 		auto& pos = mPlayerList[i].StartPosition;
 		auto& quat = mPlayerList[i].StartRotation;
 
-		pos.x = pck->px[i] / FIXED_FLOAT_LIMIT;
-		pos.y = pck->py[i] / FIXED_FLOAT_LIMIT;
-		pos.z = pck->pz[i] / FIXED_FLOAT_LIMIT;
-		quat.x = pck->rx[i] / FIXED_FLOAT_LIMIT;
-		quat.y = pck->ry[i] / FIXED_FLOAT_LIMIT;
-		quat.z = pck->rz[i] / FIXED_FLOAT_LIMIT;
-		quat.w = pck->rw[i] / FIXED_FLOAT_LIMIT;
+		pos.x = pck->positions[i].x / POS_FLOAT_PRECISION;
+		pos.y = pck->positions[i].y / POS_FLOAT_PRECISION;
+		pos.z = pck->positions[i].z / POS_FLOAT_PRECISION;
+
+		auto elems = Compressor::DecodeQuat(pck->quaternions[i]);
+		quat.x = elems[0];
+		quat.y = elems[1];
+		quat.z = elems[2];
+		quat.w = elems[3];
 	}
 	mPlayerListMut.unlock();
 }

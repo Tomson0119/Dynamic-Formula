@@ -22,9 +22,8 @@ public:
 	bool IsZero();
 
 	void SetValue(int x_, int y_, int z_);
-	// Set values from btVector3
+	void SetValue(const vec3& vec);
 	void SetValue(const btVector3& vec);
-	// Set values from XMFLOAT3
 	void SetValue(const XMFLOAT3& xmf3);
 
 	void Extrapolate(int dx, int dy, int dz, float dt);
@@ -54,6 +53,7 @@ public:
 	AtomicInt4& operator=(const XMFLOAT4& other);
 
 	void SetValue(int x_, int y_, int z_, int w_);
+	void SetValue(const quat3& quat);
 	void SetValue(const btQuaternion& quat);
 	void SetValue(const XMFLOAT4& quat);
 

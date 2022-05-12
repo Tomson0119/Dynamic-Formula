@@ -40,28 +40,33 @@ void AtomicInt3::SetValue(int x_, int y_, int z_)
 	mValue = Int3{ x_, y_, z_ };
 }
 
+void AtomicInt3::SetValue(const vec3& vec)
+{
+	SetValue(vec.x, (int)vec.y, vec.z);
+}
+
 void AtomicInt3::SetValue(const btVector3& vec)
 {
 	SetValue(
-		(int)(vec.x() * FIXED_FLOAT_LIMIT),
-		(int)(vec.y() * FIXED_FLOAT_LIMIT),
-		(int)(vec.z() * FIXED_FLOAT_LIMIT));
+		(int)(vec.x() * POS_FLOAT_PRECISION),
+		(int)(vec.y() * POS_FLOAT_PRECISION),
+		(int)(vec.z() * POS_FLOAT_PRECISION));
 }
 
 void AtomicInt3::SetValue(const XMFLOAT3& xmf3)
 {
 	SetValue(
-		(int)(xmf3.x * FIXED_FLOAT_LIMIT),
-		(int)(xmf3.y * FIXED_FLOAT_LIMIT),
-		(int)(xmf3.z * FIXED_FLOAT_LIMIT));
+		(int)(xmf3.x * POS_FLOAT_PRECISION),
+		(int)(xmf3.y * POS_FLOAT_PRECISION),
+		(int)(xmf3.z * POS_FLOAT_PRECISION));
 }
 
 void AtomicInt3::Extrapolate(int dx, int dy, int dz, float dt)
 {
 	XMFLOAT3& val = GetXMFloat3();
-	val.x += dx / FIXED_FLOAT_LIMIT * dt;
-	val.y += dy / FIXED_FLOAT_LIMIT * dt;
-	val.z += dz / FIXED_FLOAT_LIMIT * dt;
+	val.x += dx / POS_FLOAT_PRECISION * dt;
+	val.y += dy / POS_FLOAT_PRECISION * dt;
+	val.z += dz / POS_FLOAT_PRECISION * dt;
 	SetValue(val);
 }
 
@@ -70,9 +75,9 @@ btVector3 AtomicInt3::GetBtVector3() const
 	Int3 val = mValue;
 
 	return btVector3{
-		val.x / FIXED_FLOAT_LIMIT,
-		val.y / FIXED_FLOAT_LIMIT,
-		val.z / FIXED_FLOAT_LIMIT };
+		val.x / POS_FLOAT_PRECISION,
+		val.y / POS_FLOAT_PRECISION,
+		val.z / POS_FLOAT_PRECISION };
 }
 
 XMFLOAT3 AtomicInt3::GetXMFloat3() const
@@ -80,14 +85,14 @@ XMFLOAT3 AtomicInt3::GetXMFloat3() const
 	Int3 val = mValue;
 
 	return XMFLOAT3{
-		val.x / FIXED_FLOAT_LIMIT,
-		val.y / FIXED_FLOAT_LIMIT,
-		val.z / FIXED_FLOAT_LIMIT };
+		val.x / POS_FLOAT_PRECISION,
+		val.y / POS_FLOAT_PRECISION,
+		val.z / POS_FLOAT_PRECISION };
 }
 
 
 AtomicInt4::AtomicInt4()
-	: mValue{ Int4{ 0, 0, 0, (int)FIXED_FLOAT_LIMIT } }
+	: mValue{ Int4{ 0, 0, 0, (int)QUAT_FLOAT_PRECISION } }
 {
 }
 
@@ -113,30 +118,40 @@ void AtomicInt4::SetValue(int x_, int y_, int z_, int w_)
 	mValue = Int4{ x_, y_, z_, w_ };
 }
 
+void AtomicInt4::SetValue(const quat3& quat)
+{
+	auto elems = Compressor::DecodeQuat(quat);
+	SetValue(
+		(int)(elems[0] * QUAT_FLOAT_PRECISION),
+		(int)(elems[1] * QUAT_FLOAT_PRECISION),
+		(int)(elems[2] * QUAT_FLOAT_PRECISION),
+		(int)(elems[3] * QUAT_FLOAT_PRECISION));
+}
+
 void AtomicInt4::SetValue(const btQuaternion& quat)
 {
 	SetValue(
-		(int)(quat.x() * FIXED_FLOAT_LIMIT),
-		(int)(quat.y() * FIXED_FLOAT_LIMIT),
-		(int)(quat.z() * FIXED_FLOAT_LIMIT),
-		(int)(quat.w() * FIXED_FLOAT_LIMIT));
+		(int)(quat.x() * QUAT_FLOAT_PRECISION),
+		(int)(quat.y() * QUAT_FLOAT_PRECISION),
+		(int)(quat.z() * QUAT_FLOAT_PRECISION),
+		(int)(quat.w() * QUAT_FLOAT_PRECISION));
 }
 
 void AtomicInt4::SetValue(const XMFLOAT4& quat)
 {
 	SetValue(
-		(int)(quat.x * FIXED_FLOAT_LIMIT),
-		(int)(quat.y * FIXED_FLOAT_LIMIT),
-		(int)(quat.z * FIXED_FLOAT_LIMIT),
-		(int)(quat.w * FIXED_FLOAT_LIMIT));
+		(int)(quat.x * QUAT_FLOAT_PRECISION),
+		(int)(quat.y * QUAT_FLOAT_PRECISION),
+		(int)(quat.z * QUAT_FLOAT_PRECISION),
+		(int)(quat.w * QUAT_FLOAT_PRECISION));
 }
 
 void AtomicInt4::Extrapolate(int dx, int dy, int dz, float dt)
 {
 	XMFLOAT3 vec = {
-		dx / FIXED_FLOAT_LIMIT * dt,
-		dy / FIXED_FLOAT_LIMIT * dt,
-		dz / FIXED_FLOAT_LIMIT * dt };
+		dx / QUAT_FLOAT_PRECISION * dt,
+		dy / QUAT_FLOAT_PRECISION * dt,
+		dz / QUAT_FLOAT_PRECISION * dt };
 
 	XMVECTOR a = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&vec));
 
@@ -158,10 +173,10 @@ btQuaternion AtomicInt4::GetBtQuaternion() const
 	Int4 val = mValue;
 
 	return btQuaternion{
-		val.x / FIXED_FLOAT_LIMIT,
-		val.y / FIXED_FLOAT_LIMIT,
-		val.z / FIXED_FLOAT_LIMIT,
-		val.w / FIXED_FLOAT_LIMIT };
+		val.x / QUAT_FLOAT_PRECISION,
+		val.y / QUAT_FLOAT_PRECISION,
+		val.z / QUAT_FLOAT_PRECISION,
+		val.w / QUAT_FLOAT_PRECISION };
 }
 
 XMFLOAT4 AtomicInt4::GetXMFloat4() const
@@ -169,8 +184,8 @@ XMFLOAT4 AtomicInt4::GetXMFloat4() const
 	Int4 val = mValue;
 
 	return XMFLOAT4{
-		val.x / FIXED_FLOAT_LIMIT,
-		val.y / FIXED_FLOAT_LIMIT,
-		val.z / FIXED_FLOAT_LIMIT,
-		val.w / FIXED_FLOAT_LIMIT };
+		val.x / QUAT_FLOAT_PRECISION,
+		val.y / QUAT_FLOAT_PRECISION,
+		val.z / QUAT_FLOAT_PRECISION,
+		val.w / QUAT_FLOAT_PRECISION };
 }

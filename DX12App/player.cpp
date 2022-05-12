@@ -211,8 +211,8 @@ PhysicsPlayer::~PhysicsPlayer()
 void PhysicsPlayer::SetSpawnTransform(SC::packet_spawn_transform* pck)
 {
 	mSpawnFlag = true;
-	mSpawnPosition.SetValue(pck->position[0], pck->position[1], pck->position[2]);
-	mSpawnRotation.SetValue(pck->quaternion[0], pck->quaternion[1], pck->quaternion[2], pck->quaternion[3]);
+	mSpawnPosition.SetValue(pck->position);
+	mSpawnRotation.SetValue(pck->quaternion);
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
@@ -579,7 +579,7 @@ void PhysicsPlayer::UpdateInvincibleState(float elapsed)
 	{
 		mInvincibleOnFlag = false;
 		mInvincible = true;
-		mInvincibleDuration = (float)mInvincibleInterval / FIXED_FLOAT_LIMIT;
+		mInvincibleDuration = (float)mInvincibleInterval / 10.0f;
 	}
 
 	if (mInvincible)
@@ -800,10 +800,7 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 	mPrevOrigin = mCorrectionOrigin;
 	mPrevQuat = mCorrectionQuat;
 
-	mCorrectionOrigin.SetValue(
-		pck->position[0],
-		pck->position[1], 
-		pck->position[2]);
+	mCorrectionOrigin.SetValue(pck->position);
 
 	mCorrectionOrigin.Extrapolate(
 		pck->linear_vel[0],
@@ -811,18 +808,7 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 		pck->linear_vel[2],
 		latency);
 
-	auto quat = Compressor::DecodeQuat(pck->quaternion);
-	mCorrectionQuat.SetValue(
-		(int)(quat[0] * FIXED_FLOAT_LIMIT),
-		(int)(quat[1] * FIXED_FLOAT_LIMIT),
-		(int)(quat[2] * FIXED_FLOAT_LIMIT), 
-		(int)(quat[3] * FIXED_FLOAT_LIMIT));
-
-	mCorrectionQuat.Extrapolate(
-		pck->angular_vel[0],
-		pck->angular_vel[1],
-		pck->angular_vel[2],
-		latency);
+	mCorrectionQuat.SetValue(pck->quaternion);
 	
 	mLinearVelocity.SetValue(pck->linear_vel[0], pck->linear_vel[1], pck->linear_vel[2]);
 }

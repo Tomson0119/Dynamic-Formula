@@ -93,6 +93,7 @@ void GameWorld::UpdatePhysicsWorld()
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
 	{
+		std::cout << "Sending.\n";
 		BroadcastAllTransform();
 		mUpdateTick = 0;
 	}
@@ -212,14 +213,11 @@ void GameWorld::SendGameStartSuccess()
 		const btVector3& pos = mPlayerList[i]->GetVehicleRigidBody().GetPosition();
 		const btQuaternion& quat = mPlayerList[i]->GetVehicleRigidBody().GetRotation();
 
-		info_pck.px[i] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
-		info_pck.py[i] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
-		info_pck.pz[i] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+		info_pck.positions[i].x = (int)(pos.x() * POS_FLOAT_PRECISION);
+		info_pck.positions[i].y = (short)(pos.y() * POS_FLOAT_PRECISION);
+		info_pck.positions[i].z = (int)(pos.z() * POS_FLOAT_PRECISION);
 
-		info_pck.rx[i] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
-		info_pck.ry[i] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
-		info_pck.rz[i] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
-		info_pck.rw[i] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
+		info_pck.quaternions[i] = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.w());
 	}
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&info_pck), info_pck.size);
 }
@@ -260,13 +258,14 @@ void GameWorld::BroadcastAllTransform()
 	}
 	for (int receiver = 0; receiver < mPlayerList.size(); receiver++)
 	{
-		if (mPlayerList[receiver]->Empty) continue;
+		if (mPlayerList[receiver]->Empty == false)
+		{
+			PushUiInfoPacket(receiver);
 
-		PushUiInfoPacket(receiver);
-
-		int id = mPlayerList[receiver]->ID;
-		if (id < 0) continue;
-		gClients[id]->SendMsg(true);
+			int id = mPlayerList[receiver]->ID;
+			if (id < 0) continue;
+			gClients[id]->SendMsg(true);
+		}
 	}
 }
 
@@ -283,19 +282,15 @@ void GameWorld::PushVehicleTransformPacketToAll(int target)
 	const btVector3& lvel = vehicle.GetLinearVelocity();
 	const btVector3& avel = vehicle.GetAngularVelocity();
 
-	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
-	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
-	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+	pck.position.x = (int)(pos.x() * POS_FLOAT_PRECISION);
+	pck.position.y = (short)(pos.y() * POS_FLOAT_PRECISION);
+	pck.position.z = (int)(pos.z() * POS_FLOAT_PRECISION);
 
 	pck.quaternion = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.w());
 
-	pck.linear_vel[0] = (int)(lvel.x() * FIXED_FLOAT_LIMIT);
-	pck.linear_vel[1] = (int)(lvel.y() * FIXED_FLOAT_LIMIT);
-	pck.linear_vel[2] = (int)(lvel.z() * FIXED_FLOAT_LIMIT);
-
-	pck.angular_vel[0] = (int)(avel.x() * FIXED_FLOAT_LIMIT);
-	pck.angular_vel[1] = (int)(avel.y() * FIXED_FLOAT_LIMIT);
-	pck.angular_vel[2] = (int)(avel.z() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[0] = (int)(lvel.x() * QUAT_FLOAT_PRECISION);
+	pck.linear_vel[1] = (int)(lvel.y() * QUAT_FLOAT_PRECISION);
+	pck.linear_vel[2] = (int)(lvel.z() * QUAT_FLOAT_PRECISION);
 
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, true, -1, false);
 }
@@ -314,18 +309,15 @@ void GameWorld::PushMissileTransformPacketToAll(int target)
 	const btQuaternion& quat = missile.GetRotation();
 	const btVector3& lvel = missile.GetLinearVelocity();
 
-	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
-	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
-	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+	pck.position.x = (int)(pos.x() * POS_FLOAT_PRECISION);
+	pck.position.y = (short)(pos.y() * POS_FLOAT_PRECISION);
+	pck.position.z = (int)(pos.z() * POS_FLOAT_PRECISION);
 
-	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
-	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
-	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
-	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
+	pck.quaternion = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.w());
 
-	pck.linear_vel[0] = (int)(lvel.x() * FIXED_FLOAT_LIMIT);
-	pck.linear_vel[1] = (int)(lvel.y() * FIXED_FLOAT_LIMIT);
-	pck.linear_vel[2] = (int)(lvel.z() * FIXED_FLOAT_LIMIT);
+	pck.linear_vel[0] = (int)(lvel.x() * QUAT_FLOAT_PRECISION);
+	pck.linear_vel[1] = (int)(lvel.y() * QUAT_FLOAT_PRECISION);
+	pck.linear_vel[2] = (int)(lvel.z() * QUAT_FLOAT_PRECISION);
 
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, true, -1, false);
 }
@@ -335,8 +327,8 @@ void GameWorld::PushUiInfoPacket(int target)
 	SC::packet_ui_info pck{};
 	pck.size = sizeof(SC::packet_ui_info);;
 	pck.type = SC::UI_INFO;
-	pck.gauge = (int)(mPlayerList[target]->GetDriftGauge() * FIXED_FLOAT_LIMIT);
-	pck.speed = (int)(mPlayerList[target]->GetCurrentSpeed() * FIXED_FLOAT_LIMIT);
+	pck.gauge = (int)(mPlayerList[target]->GetDriftGauge() * 100.0f);
+	pck.speed = (int)(round(mPlayerList[target]->GetCurrentSpeed()));
 
 	int hostID = mPlayerList[target]->ID;
 	if (hostID < 0) return;
@@ -364,7 +356,7 @@ void GameWorld::SendInvincibleOnPacket(int target)
 	pck.size = sizeof(SC::packet_invincible_on);
 	pck.type = SC::INVINCIBLE_ON;
 	pck.player_idx = target;
-	pck.duration = (int)(mConstantPtr->InvincibleDuration * FIXED_FLOAT_LIMIT);
+	pck.duration = (int)(mConstantPtr->InvincibleDuration * 10.0f);
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -382,14 +374,11 @@ void GameWorld::SendSpawnPacket(int target)
 	const btVector3& pos = vehicle.GetPosition();
 	const btQuaternion& quat = vehicle.GetRotation();
 
-	pck.position[0] = (int)(pos.x() * FIXED_FLOAT_LIMIT);
-	pck.position[1] = (int)(pos.y() * FIXED_FLOAT_LIMIT);
-	pck.position[2] = (int)(pos.z() * FIXED_FLOAT_LIMIT);
+	pck.position.x = (int)(pos.x() * POS_FLOAT_PRECISION);
+	pck.position.y = (short)(pos.y() * POS_FLOAT_PRECISION);
+	pck.position.z = (int)(pos.z() * POS_FLOAT_PRECISION);
 
-	pck.quaternion[0] = (int)(quat.x() * FIXED_FLOAT_LIMIT);
-	pck.quaternion[1] = (int)(quat.y() * FIXED_FLOAT_LIMIT);
-	pck.quaternion[2] = (int)(quat.z() * FIXED_FLOAT_LIMIT);
-	pck.quaternion[3] = (int)(quat.w() * FIXED_FLOAT_LIMIT);
+	pck.quaternion = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.z());
 
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }

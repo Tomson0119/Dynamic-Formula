@@ -552,46 +552,46 @@ void GameObject::SortMeshes()
 
 void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
 {
-	auto rigid = mBtRigidBody;
-	if (rigid == nullptr) return;
+	//auto rigid = mBtRigidBody;
+	//if (rigid == nullptr) return;
 
-	if (mPrevOrigin.IsZero())
-	{
-		auto motionState = rigid->getMotionState();
+	//if (mPrevOrigin.IsZero())
+	//{
+	//	auto motionState = rigid->getMotionState();
 
-		btTransform transform{};
-		motionState->getWorldTransform(transform);
+	//	btTransform transform{};
+	//	motionState->getWorldTransform(transform);
 
-		// Get current state of position/rotation.
-		auto& currentOrigin = transform.getOrigin();
-		auto& currentQuat = transform.getRotation();
+	//	// Get current state of position/rotation.
+	//	auto& currentOrigin = transform.getOrigin();
+	//	auto& currentQuat = transform.getRotation();
 
-		mPrevOrigin.SetValue(currentOrigin);
-		mPrevQuat.SetValue(currentQuat);
-	}
+	//	mPrevOrigin.SetValue(currentOrigin);
+	//	mPrevQuat.SetValue(currentQuat);
+	//}
 
-	const btVector3& prevOrigin = mPrevOrigin.GetBtVector3();
-	const btQuaternion& prevQuat = mPrevQuat.GetBtQuaternion();
+	//const btVector3& prevOrigin = mPrevOrigin.GetBtVector3();
+	//const btQuaternion& prevQuat = mPrevQuat.GetBtQuaternion();
 
-	// Get correction state of extrapolated server postion/rotation.
-	const btVector3& correctOrigin = mCorrectionOrigin.GetBtVector3();
-	const btQuaternion& correctQuat = mCorrectionQuat.GetBtQuaternion();
+	//// Get correction state of extrapolated server postion/rotation.
+	//const btVector3& correctOrigin = mCorrectionOrigin.GetBtVector3();
+	//const btQuaternion& correctQuat = mCorrectionQuat.GetBtQuaternion();
 
-	if (BulletMath::IsZero(correctQuat) || updateRate <= 0.0f) return;
+	//if (BulletMath::IsZero(correctQuat) || updateRate <= 0.0f) return;
 
-	float progress = mProgress / FIXED_FLOAT_LIMIT;
-	progress = std::min(1.0f, progress + elapsed / updateRate);
-	mProgress = (int)(progress * FIXED_FLOAT_LIMIT);
+	//float progress = mProgress / FIXED_FLOAT_LIMIT;
+	//progress = std::min(1.0f, progress + elapsed / updateRate);
+	//mProgress = (int)(progress * FIXED_FLOAT_LIMIT);
 
-	btVector3 nextOrigin = prevOrigin.lerp(correctOrigin, progress);
-	btQuaternion nextQuat = prevQuat.slerp(correctQuat, progress);
+	//btVector3 nextOrigin = prevOrigin.lerp(correctOrigin, progress);
+	//btQuaternion nextQuat = prevQuat.slerp(correctQuat, progress);
 
-	btTransform nextTransform{};
-	nextTransform.setOrigin(nextOrigin);
-	nextTransform.setRotation(nextQuat);
+	//btTransform nextTransform{};
+	//nextTransform.setOrigin(nextOrigin);
+	//nextTransform.setRotation(nextQuat);
 
-	// manually set rigidbody tranform.
-	rigid->setWorldTransform(nextTransform);
+	//// manually set rigidbody tranform.
+	//rigid->setWorldTransform(nextTransform);
 }
 
 void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
@@ -607,13 +607,11 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 	float progress = std::min(1.0f, mProgress / updateRate);
 	mProgress += elapsed;
 
-	OutputDebugStringA(("timeSinceTick: " + std::to_string(mProgress) + "\n").c_str());
-	OutputDebugStringA(("delta: " + std::to_string(progress) + "\n").c_str());
-	OutputDebugStringA(("update rate: " + std::to_string(updateRate) + "\n").c_str());
+	//OutputDebugStringA(("timeSinceTick: " + std::to_string(mProgress) + "\n").c_str());
+	//OutputDebugStringA(("delta: " + std::to_string(progress) + "\n").c_str());
+	//OutputDebugStringA(("update rate: " + std::to_string(updateRate) + "\n").c_str());
 
 	mProgressMut.unlock();
-
-
 
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
 	const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
@@ -993,10 +991,7 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 	mPrevOrigin = mCorrectionOrigin;
 	mPrevQuat = mCorrectionQuat;
 
-	mCorrectionOrigin.SetValue(
-		pck->position[0],
-		pck->position[1],
-		pck->position[2]);
+	mCorrectionOrigin.SetValue(pck->position);
 
 	mCorrectionOrigin.Extrapolate(
 		pck->linear_vel[0],
@@ -1004,11 +999,7 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 		pck->linear_vel[2],
 		latency);
 
-	mCorrectionQuat.SetValue(
-		pck->quaternion[0],
-		pck->quaternion[1],
-		pck->quaternion[2],
-		pck->quaternion[3]);
+	mCorrectionQuat.SetValue(pck->quaternion);
 }
 
 void MissileObject::SetActive(bool state)

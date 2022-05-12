@@ -368,7 +368,7 @@ void InGameUI::TextUpdateMyRank()
 
 void InGameUI::TextUpdateSpeed()
 {
-	GetTextBlock()[4].strText.assign(std::to_string((int)(mCurrentSpeed / FIXED_FLOAT_LIMIT)));
+	GetTextBlock()[4].strText.assign(std::to_string(mCurrentSpeed));
 	for (auto& str : std::string("km/h"))
 		GetTextBlock()[5].strText.push_back(str);
 }
@@ -496,7 +496,7 @@ void InGameUI::Draw(UINT nFrame)
         {
 			GetFrameWidth()* (3.0f / 16.0f),
 			GetFrameHeight() * (5.0f / 6.0f), 
-			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * (mDriftGauge/FIXED_FLOAT_LIMIT),
+			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * (mDriftGauge/100.0f),
 			GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
 		{
