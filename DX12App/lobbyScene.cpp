@@ -41,6 +41,7 @@ void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		}
 	}
+	mpUI->OnProcessKeyInput(msg, wParam, lParam);
 }
 
 void LobbyScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
@@ -50,14 +51,38 @@ void LobbyScene::OnProcessMouseMove(WPARAM btnState, int x, int y)
 	mpUI->OnProcessMouseMove(btnState, x, y);
 }
 
-void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
+void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 {
-	if (buttonState)
+	if (buttonState & MK_LBUTTON)
 	{
-		//LoginCheck
-		//if (mpUI.get()->OnProcessMouseDown(hwnd, buttonState, x, y))
-			//SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		int ret = mpUI->OnProcessMouseClick(buttonState, x, y);
+		if (ret == 0) // Click MakeRoom
+		{
+			OutputDebugStringA("MakeRoom Button Down\n");
+#ifndef STANDALONE
+			mNetPtr->Client()->RequestNewRoom();
+#endif
+		}
+		else if (ret == 0) // Nothing
+		{
+			return;
+		}
+		else // return RoomNum
+		{
+			OutputDebugStringA("Room Enter Button Down");
+			OutputDebugStringA(std::to_string(ret).c_str());
+			OutputDebugStringA("\n");
+#ifndef STANDALONE
+			mNetPtr->Client()->RequestEnterRoom(ret);
+#endif
+		}
 	}
+	mpUI->OnProcessMouseDown(buttonState, x, y);
+}
+
+void LobbyScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
+{
+
 }
 
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
@@ -92,9 +117,13 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		switch (pck->reason)
 		{
 		case static_cast<char>(ROOM_STAT::GAME_STARTED):
+			mpUI->UpdateDenyBoxText("Already Started");
+			mpUI->SetDenyBox();
 			break;
 
 		case static_cast<char>(ROOM_STAT::MAX_ROOM_REACHED):
+			mpUI->UpdateDenyBoxText("Max Room State");
+			mpUI->SetDenyBox();
 			break;
 
 		case static_cast<char>(ROOM_STAT::ROOM_IS_CLOSED):
@@ -102,6 +131,8 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			break;
 
 		case static_cast<char>(ROOM_STAT::ROOM_IS_FULL):
+			mpUI->UpdateDenyBoxText("Room Is Full");
+			mpUI->SetDenyBox();
 			break;
 		}
 		break;
@@ -130,7 +161,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 
 			// ¹æ »ý¼º
 			// 
-			//mpUI->setRoomActive(pck->room_id);
+			//mpUI->SetRoomActive(pck->room_id);
 		}
 		else
 		{

@@ -34,7 +34,7 @@ PixelOut PS(VertexOut pin)
     
     PixelOut pout;
     
-    pout.f4Color = float4(0.3f, 0.3f, 0.3f, 1.0f);
+    pout.f4Color = float4(0.0f, 1.0f, 0.0f, 1.0f);
     
     pout.f4Direction = float4(0.0f, 0.0f, 0.0f, 0.0f);
     pout.f4Direction.z = PosV.z;

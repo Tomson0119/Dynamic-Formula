@@ -402,18 +402,18 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 			if (mVehicle) mVehicle->getWheelInfo(i).m_frictionSlip = 0.0f;
 		}
 
-		float DriftLimit = 30.0f / 180.0f;
-		float AngleLimit = 50.0f / 180.0f;
+		float DriftLimit = 30.0f / 180.0f * (float)Math::PI;
+		float AngleLimit = 50.0f / 180.0f * (float)Math::PI;
 
-		auto camLook = mCamera->GetLook();
-		camLook.y = 0.0f;
-		camLook = Vector3::Normalize(camLook);
+		auto linearVelocity = mBtRigidBody->getLinearVelocity();
+		linearVelocity.setY(0.0f);
+		linearVelocity = linearVelocity.normalize();
 
-		auto playerLook = mLook;
-		playerLook.y = 0.0f;
-		playerLook = Vector3::Normalize(playerLook);
+		auto forward = mVehicle->getForwardVector();
+		forward.setY(0.0f);
+		forward = forward.normalize();
 
-		float angle = acos(Vector3::Dot(camLook, playerLook) / (Vector3::Length(camLook) * Vector3::Length(playerLook)));
+		float angle = acos(linearVelocity.dot(forward));
 
 		if (DriftLimit < angle && mDriftGauge < 1.0f)
 		{
