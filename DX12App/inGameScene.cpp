@@ -1322,6 +1322,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		obj->SetName(objName);
 
 		obj->Update(0, 0);
+		obj->UpdateInverseWorld();
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
 

@@ -677,10 +677,10 @@ void InstancingPipeline::UpdateConstants(Camera* camera, DrawType type, bool cul
 		std::map<int, bool> collidedIndex;
 		XMMATRIX invView = XMLoadFloat4x4(&camera->GetInverseView());
 		auto viewFrustum = camera->GetViewFrustum();
+		
 		for (int i = 0; i < mRenderObjects.size(); i++)
 		{
-			XMMATRIX world = XMLoadFloat4x4(&mRenderObjects[i]->GetWorld());
-			XMMATRIX invWorld = XMMatrixInverse(&XMMatrixDeterminant(world), world);
+			XMMATRIX invWorld = XMLoadFloat4x4(&mRenderObjects[i]->GetInverseWorld());
 
 			XMMATRIX viewToLocal = XMMatrixMultiply(invView, invWorld);
 
