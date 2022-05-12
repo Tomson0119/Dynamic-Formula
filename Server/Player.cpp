@@ -72,6 +72,7 @@ void Player::CreateMissileRigidBody(btScalar mass, BtCompoundShape& shape)
 void Player::StopVehicle()
 {
 	mVehicleRigidBody.SetLinearVelocity(btVector3{ 0.0f,0.0f,0.0f });
+	mVehicleRigidBody.SetAngularVelocity(btVector3{ 0.0f,0.0f,0.0f });
 }
 
 void Player::ChangeVehicleMaskGroup(int maskGroup, BPHandler& physics)
