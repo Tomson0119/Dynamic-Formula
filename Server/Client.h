@@ -34,6 +34,9 @@ public:
 	void SetHostEp(const EndPoint& ep) { mHostEp = ep; }
 	const EndPoint& GetHostEp() const { return mHostEp; }
 
+	void SetPageNum(int n) { mLobbyPageNum = n; }
+	int GetPageNum() const { return mLobbyPageNum; }
+
 public:
 	void SendLoginResult(LOGIN_STAT result, bool instSend=true);
 	void SendRegisterResult(REGI_STAT result, bool instSend=true);
@@ -51,6 +54,7 @@ public:
 
 private:
 	std::atomic<CLIENT_STAT> mState;
+	std::atomic_int mLobbyPageNum;
 	
 	std::atomic_bool mIsConnected;
 	std::atomic_uint64_t mLatency;

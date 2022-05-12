@@ -30,6 +30,16 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	Client* client = gClients[id].get();
 	switch (type)
 	{
+	case CS::INQUIRE_ROOM:
+	{
+	#ifdef DEBUG_PACKET_TRANSFER
+		std::cout << "[" << id << "] Received inquire room packet\n";
+	#endif
+		CS::packet_inquire_room* pck = reinterpret_cast<CS::packet_inquire_room*>(packet);
+		gClients[id]->SetPageNum(pck->page_num);
+		SendExistingRoomList(id);
+		break;
+	}
 	case CS::OPEN_ROOM:
 	{
 	#ifdef DEBUG_PACKET_TRANSFER
@@ -216,7 +226,7 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 		if (logout == false)
 		{
 			IncreasePlayerCount();
-			SendExistingRoomList(hostID);
+			//SendExistingRoomList(hostID);
 		}
 		break;
 	}
@@ -256,10 +266,19 @@ void LobbyServer::PressStartOrReady(int roomID, int hostID)
 
 void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, int ignore, bool instSend)
 {
+	int pageNumOfRoomId = FindPageNumOfRoom(roomID);
+	if (pageNumOfRoomId < 0)
+	{
+		std::cout << "Couldn't find page num.\n";
+		return;
+	}
+
 	int lobbyPlayers = mLobbyPlayerCount;
 	for (int i = 0; i < MAX_PLAYER_SIZE && lobbyPlayers > 0; i++)
 	{
-		if (gClients[i]->GetCurrentState() == CLIENT_STAT::LOBBY && i != ignore)
+		if (gClients[i]->GetCurrentState() == CLIENT_STAT::LOBBY 
+			&& gClients[i]->GetPageNum() == pageNumOfRoomId
+			&& i != ignore)
 		{
 			mRooms[roomID]->SendRoomOutsideInfo(i);
 			lobbyPlayers -= 1;
@@ -269,14 +288,36 @@ void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, int ignore, bool instSe
 
 void LobbyServer::SendExistingRoomList(int id)
 {
-	int rooms = mRoomCount;
-	for (int i = 0; i < MAX_ROOM_SIZE && rooms > 0; i++)
+	if (gClients[id]->GetCurrentState() != CLIENT_STAT::LOBBY
+		|| gClients[id]->GetPageNum() < 0)
+		return;
+
+	int startCnt = gClients[id]->GetPageNum() * ROOM_NUM_PER_PAGE;
+	int endCnt = startCnt + ROOM_NUM_PER_PAGE;
+	int totalCnt = mRoomCount;
+	int cnt = 0;
+
+	for (int i = 0; i < MAX_ROOM_SIZE && cnt < totalCnt; i++)
 	{
 		if (mRooms[i]->Closed() == false)
 		{
-			mRooms[i]->SendRoomOutsideInfo(id, false);
-			rooms -= 1;
+			if(startCnt <= cnt && cnt < endCnt)
+				mRooms[i]->SendRoomOutsideInfo(id, false);
+			cnt += 1;
 		}
 	}
 	gClients[id]->SendMsg();
+}
+
+int LobbyServer::FindPageNumOfRoom(int roomId)
+{
+	int totalCnt = mRoomCount;
+	int cnt = 0;
+	for (int i = 0; i < MAX_ROOM_SIZE && cnt < totalCnt; i++)
+	{
+		if (mRooms[i]->Closed()) continue;
+		if (roomId == i) return cnt;
+		cnt += 1;
+	}
+	return -1;
 }

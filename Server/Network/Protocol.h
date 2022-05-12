@@ -67,9 +67,9 @@ namespace CS
 {
 	const char LOGIN		= 1;
 	const char REGISTER		= 2;
-	const char OPEN_ROOM	= 3;
-	const char ENTER_ROOM	= 4;
-	const char ROOM_LIST	= 5;
+	const char INQUIRE_ROOM = 3;
+	const char OPEN_ROOM	= 4;
+	const char ENTER_ROOM	= 5;
 	const char REVERT_SCENE = 6;
 	const char SWITCH_MAP   = 7;
 	const char PRESS_READY  = 8;
@@ -89,18 +89,18 @@ namespace CS
 		char pwd[MAX_PWD_SIZE];
 	};
 
+	struct packet_inquire_room : packet_header
+	{
+		int page_num;
+	};
+
 	struct packet_open_room : packet_header { };
 
 	struct packet_enter_room : packet_header
 	{
 		int room_id;
 		//uint64_t send_time;
-	};
-
-	struct packet_inquire_room : packet_header
-	{
-		int page_num;
-	};
+	};	
 
 	struct packet_revert_scene : packet_header { };
 

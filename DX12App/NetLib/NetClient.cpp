@@ -159,6 +159,18 @@ void NetClient::RequestEnterRoom(int roomID)
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
+void NetClient::InquireRoomList(int pageNum)
+{
+#ifdef _DEBUG
+	OutputDebugStringA(("Inquiring room list (page num: " + std::to_string(pageNum) + ")\n").c_str());
+#endif
+	CS::packet_inquire_room pck{};
+	pck.size = sizeof(CS::packet_inquire_room);
+	pck.type = CS::INQUIRE_ROOM;
+	pck.page_num = pageNum;
+	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
 void NetClient::RevertScene()
 {
 #ifdef _DEBUG

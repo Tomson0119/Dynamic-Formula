@@ -23,6 +23,7 @@ public:
 	void RequestRegister(const std::string& name, const std::string& pwd);
 	void RequestNewRoom();
 	void RequestEnterRoom(int roomID);
+	void InquireRoomList(int pageNum);
 
 	void RevertScene();
 	void SwitchMap(int roomID);

@@ -8,6 +8,7 @@ Client::Client(int id, Socket* udpSck)
 	  RoomID{ -1 }, 
 	  PlayerIndex{ -1 },
 	  mState{ CLIENT_STAT::EMPTY },
+	  mLobbyPageNum{ 0 },
 	  mIsConnected{ false },
 	  mLatency{ 0 },
 	  mUDPSocketPtr{ udpSck },

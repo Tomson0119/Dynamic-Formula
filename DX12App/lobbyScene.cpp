@@ -3,7 +3,8 @@
 #include "NetLib/NetModule.h"
 
 LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::White, netPtr }
+	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::White, netPtr },
+	  mPageNum{ 0 }
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
 }
@@ -62,10 +63,6 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 #ifndef STANDALONE
 			mNetPtr->Client()->RequestNewRoom();
 #endif
-		}
-		else if (ret == 0) // Nothing
-		{
-			return;
 		}
 		else // return RoomNum
 		{
@@ -149,26 +146,23 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room outside info packet.\n");
 		
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
-		// TODO: need to lock container
 		if(pck->room_closed == false) 
 		{
+			mRoomListMut.lock();
 			mRoomList[pck->room_id] = Room{ 
 					  pck->room_id, 
 					  pck->player_count, 
 					  pck->map_id, 
-					  pck->game_started, 
-					  pck->room_closed };
-
-			// 规 积己
-			// 
-			//mpUI->SetRoomActive(pck->room_id);
+					  pck->game_started };
+			mRoomListMut.unlock();
 		}
 		else
 		{
+			mRoomListMut.lock();
 			mRoomList.erase(pck->room_id);
-
-			// 规 力芭
+			mRoomListMut.unlock();
 		}
+		
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
 	#endif
