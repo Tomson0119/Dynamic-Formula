@@ -11,9 +11,13 @@ const int MAX_PLAYER_SIZE = 100;
 const int MAX_ROOM_CAPACITY = 8;
 const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
+const int ROOM_NUM_PER_PAGE = 6;
+
+
 const int MaxBufferSize = 1024;
 
-const float FIXED_FLOAT_LIMIT = 32767.0f;
+const float POS_FLOAT_PRECISION = 512.0f;
+const float QUAT_FLOAT_PRECISION = 32767.0f;
 
 enum class LOGIN_STAT : char
 {	
@@ -44,6 +48,13 @@ struct packet_header
 	char type;
 };
 
+struct vec3
+{
+	int x;
+	int z;
+	unsigned short y : 10;
+};
+
 struct quat3
 {
 	uint8_t max_idx : 2;
@@ -58,12 +69,13 @@ namespace CS
 	const char REGISTER		= 2;
 	const char OPEN_ROOM	= 3;
 	const char ENTER_ROOM	= 4;
-	const char REVERT_SCENE = 5;
-	const char SWITCH_MAP   = 6;
-	const char PRESS_READY  = 7;
-	const char LOAD_DONE	= 8;
-	const char KEY_INPUT	= 9;
-	const char TRANSFER_TIME = 10;
+	const char ROOM_LIST	= 5;
+	const char REVERT_SCENE = 6;
+	const char SWITCH_MAP   = 7;
+	const char PRESS_READY  = 8;
+	const char LOAD_DONE	= 9;
+	const char KEY_INPUT	= 10;
+	const char TRANSFER_TIME = 11;
 
 	struct packet_login : packet_header
 	{
@@ -83,6 +95,11 @@ namespace CS
 	{
 		int room_id;
 		//uint64_t send_time;
+	};
+
+	struct packet_inquire_room : packet_header
+	{
+		int page_num;
 	};
 
 	struct packet_revert_scene : packet_header { };
@@ -219,13 +236,8 @@ namespace SC
 
 	struct packet_game_start_success : packet_header
 	{
-		int px[MAX_ROOM_CAPACITY];
-		int py[MAX_ROOM_CAPACITY];
-		int pz[MAX_ROOM_CAPACITY];
-		int rx[MAX_ROOM_CAPACITY];
-		int ry[MAX_ROOM_CAPACITY];
-		int rz[MAX_ROOM_CAPACITY];
-		int rw[MAX_ROOM_CAPACITY];
+		vec3 positions[MAX_ROOM_CAPACITY];
+		quat3 quaternions[MAX_ROOM_CAPACITY];
 	};
 
 	struct packet_ready_signal : packet_header
@@ -247,17 +259,16 @@ namespace SC
 	struct packet_player_transform : packet_header
 	{
 		uint8_t player_idx : 3;
+		vec3 position;
 		quat3 quaternion;
-		int position[3];
 		int linear_vel[3];
-		int angular_vel[3];
 	};
 
 	struct packet_missile_transform : packet_header
 	{
-		uint8_t missile_idx;
-		int position[3];
-		int quaternion[4];
+		uint8_t missile_idx : 3;
+		vec3 position;
+		quat3 quaternion;
 		int linear_vel[3];
 	};
 
@@ -282,8 +293,8 @@ namespace SC
 	struct packet_spawn_transform : packet_header
 	{
 		uint8_t player_idx;
-		int position[3];
-		int quaternion[4];
+		vec3 position;
+		quat3 quaternion;
 	};
 
 	struct packet_warning_message : packet_header { };
