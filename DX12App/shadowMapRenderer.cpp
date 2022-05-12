@@ -344,8 +344,7 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, InGameScen
 
 		scene->UpdateCameraConstant(i + 1, mDepthCamera[i].get());
 
-		Camera* cam[1] = { mDepthCamera[i].get() };
-		scene->UpdateInstancingPipelines(cam, 1);
+		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i));
 
 		scene->SetGraphicsCBV(cmdList, i + 1);
 		RenderPipelines(cmdList, i);
@@ -366,20 +365,20 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int 
 			cmdList->SetPipelineState(mTerrainPSO.Get());
 
 			//pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false, false);
-			pso->SetAndDraw(cmdList, false, false);
+			pso->SetAndDraw(cmdList, false, false, false, DrawType((int)DrawType::Shadow_First + idx));
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
 		else if (layer == Layer::Instancing || layer == Layer::Transparent)
 		{
 			cmdList->SetPipelineState(mInstancingPSO.Get());
 
-			pso->SetAndDraw(cmdList, false, false);
+			pso->SetAndDraw(cmdList, false, false, false, DrawType((int)DrawType::Shadow_First + idx));
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
 		else
 		{
 			//pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), true, false, false);
-			pso->SetAndDraw(cmdList, false, false);
+			pso->SetAndDraw(cmdList, false, false, false, DrawType((int)DrawType::Shadow_First + idx));
 		}
 	}
 }

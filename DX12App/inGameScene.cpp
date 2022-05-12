@@ -1015,21 +1015,19 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 
 	mGameInfoCB->CopyData(0, gameInfo);
 
-	Camera* cam[1] = { mMainCamera.get() };
-
 	for (const auto& [layer, pso] : mPipelines)
 	{
 		if (layer != Layer::Transparent && layer != Layer::Instancing)
-			pso->UpdateConstants(cam, 1);
+			pso->UpdateConstants(mMainCamera.get(), DrawType::Common);
 	}
 }
 
-void InGameScene::UpdateInstancingPipelines(Camera** cam, int count)
+void InGameScene::UpdateInstancingPipelines(Camera* cam, DrawType type, bool culling)
 {
 	for (const auto& [layer, pso] : mPipelines)
 	{
 		if (layer == Layer::Transparent || layer == Layer::Instancing)
-			pso->UpdateConstants(cam, count, true);
+			pso->UpdateConstants(cam, type, culling);
 	}
 }
 
@@ -1100,8 +1098,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 
 	cmdList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &depthStencilView);
 
-	Camera* cam[1] = { mMainCamera.get() };
-	UpdateInstancingPipelines(cam, 1);
+	UpdateInstancingPipelines(mMainCamera.get(), DrawType::Instancing);
 
 	cmdList->SetGraphicsRootSignature(mRootSignature.Get());
 	RenderPipelines(cmdList, 0);
@@ -1166,6 +1163,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 		else if (layer != Layer::SkyBox)
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
+		DrawType type = cubeMapping ? DrawType::CubeMapping : DrawType::Instancing;
 
 		if (pso->GetRenderObjects().size() > 0)
 		{
@@ -1185,7 +1183,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 				continue;
 			}
 			else
-				pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
+				pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping, type);
 		}			
 	}
 }

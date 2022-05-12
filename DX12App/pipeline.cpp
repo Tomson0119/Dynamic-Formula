@@ -205,13 +205,13 @@ void Pipeline::PreparePipeline(ID3D12GraphicsCommandList* cmdList, bool drawWire
 	}
 }
 
-void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline, bool msaaOff)
+void Pipeline::SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame, bool setPipeline, bool msaaOff, DrawType type)
 {	
 	PreparePipeline(cmdList, drawWiredFrame, setPipeline, msaaOff);
-	Draw(cmdList);
+	Draw(cmdList, false, type);
 }
 
-void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
+void Pipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO, DrawType type)
 {
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++)
@@ -298,7 +298,7 @@ void Pipeline::Update(float elapsed, float updateRate, Camera* camera)
 		obj->Update(elapsed, updateRate);
 }
 
-void Pipeline::UpdateConstants(Camera** camera, int count, bool culling)
+void Pipeline::UpdateConstants(Camera* camera, DrawType type, bool culling)
 {
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++) {
@@ -410,7 +410,7 @@ void StreamOutputPipeline::SetAndDraw(
 	ID3D12GraphicsCommandList* cmdList, 
 	bool drawWiredFrame, 
 	bool setPipeline,
-	bool msaaOff)
+	bool msaaOff, DrawType type)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
@@ -614,14 +614,14 @@ InstancingPipeline::~InstancingPipeline()
 
 }
 
-void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO)
+void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO, DrawType type)
 {
 	if (mRenderObjects.size() <= 0) return;
 
 	UINT matOffset = 0;
 	UINT instancingOffset = 0;
 
-	cmdList->SetGraphicsRootShaderResourceView(9, mObjectSB->GetGPUVirtualAddress(0));
+	cmdList->SetGraphicsRootShaderResourceView(9, mInstancingSB[(int)type]->GetGPUVirtualAddress(0));
 
 	int instance = 0;
 	for (auto [_, count] : mInstancingCount)
@@ -656,7 +656,8 @@ void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
 {
 	if (mRenderObjects.size() > 0)
 	{
-		mObjectSB = std::make_unique<StructuredBuffer<InstancingInfo>>(device, (UINT)mRenderObjects.size());
+		for(int i = 0; i < 5; ++i)
+			mInstancingSB[i] = std::make_unique<StructuredBuffer<InstancingInfo>>(device, (UINT)mRenderObjects.size());
 
 		UINT matCount = 0;
 		for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
@@ -664,7 +665,7 @@ void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
 	}
 }
 
-void InstancingPipeline::UpdateConstants(Camera** camera, int count, bool culling)
+void InstancingPipeline::UpdateConstants(Camera* camera, DrawType type, bool culling)
 {
 	UINT matOffset = 0;
 	for (auto& [_, count] : mInstancingCount)
@@ -679,23 +680,13 @@ void InstancingPipeline::UpdateConstants(Camera** camera, int count, bool cullin
 			XMMATRIX world = XMLoadFloat4x4(&mRenderObjects[i]->GetWorld());
 			XMMATRIX invWorld = XMMatrixInverse(&XMMatrixDeterminant(world), world);
 
-			bool collided = false;
-			for (int j = 0; j < count; ++j)
-			{
-				XMMATRIX invView = XMLoadFloat4x4(&camera[j]->GetInverseView());
-				XMMATRIX viewToLocal = XMMatrixMultiply(invView, invWorld);
-				auto viewFrustum = camera[j]->GetViewFrustum();
+			XMMATRIX invView = XMLoadFloat4x4(&camera->GetInverseView());
+			XMMATRIX viewToLocal = XMMatrixMultiply(invView, invWorld);
+			auto viewFrustum = camera->GetViewFrustum();
 
-				BoundingFrustum localFrustum;
-				viewFrustum.Transform(localFrustum, viewToLocal);
-				if (localFrustum.Contains(mRenderObjects[i]->GetBoundingBox()) != DirectX::DISJOINT)
-				{
-					collided = true;
-					break;
-				}
-			}
-
-			if (collided)
+			BoundingFrustum localFrustum;
+			viewFrustum.Transform(localFrustum, viewToLocal);
+			if (localFrustum.Contains(mRenderObjects[i]->GetBoundingBox()) != DirectX::DISJOINT)
 			{
 				collidedIndex[i] = true;
 				mInstancingCount[mRenderObjects[i]->GetName()]++;
@@ -711,16 +702,17 @@ void InstancingPipeline::UpdateConstants(Camera** camera, int count, bool cullin
 		{
 			if (collidedIndex[i])
 			{
-				mObjectSB->CopyData(currentIndex, mRenderObjects[i]->GetInstancingInfo());
+				mInstancingSB[(int)type]->CopyData(currentIndex, mRenderObjects[i]->GetInstancingInfo());
 				if (mRenderObjects[i]->GetMeshCount() > 0)
 				{
 					mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
 					matOffset += mRenderObjects[i]->GetMeshCount();
 				}
 				currentIndex++;
+				OutputDebugStringA(std::string(std::to_string(currentIndex) + ": " + mRenderObjects[i]->GetName() + "'s Instancing Position : " + std::to_string(mRenderObjects[i]->GetPosition().x) + ", " + std::to_string(mRenderObjects[i]->GetPosition().y) + ", " + std::to_string(mRenderObjects[i]->GetPosition().z) + "\n").c_str());
 			}
 		}
-		OutputDebugStringA(std::string("CurrentIndex : " + std::to_string(currentIndex) + "\n").c_str());
+		OutputDebugStringA("\n\n");
 
 		int instance = 0;
 		for (auto [_, count] : mInstancingCount)
@@ -740,7 +732,7 @@ void InstancingPipeline::UpdateConstants(Camera** camera, int count, bool cullin
 
 		for (int i = 0; i < mRenderObjects.size(); i++)
 		{
-			mObjectSB->CopyData(i, mRenderObjects[i]->GetInstancingInfo());
+			mInstancingSB[(int)type]->CopyData(i, mRenderObjects[i]->GetInstancingInfo());
 			if (mRenderObjects[i]->GetMeshCount() > 0)
 			{
 				mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);

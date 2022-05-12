@@ -50,7 +50,7 @@ public:
 	void UpdateCameraConstant(int idx, Camera* camera);
 	void UpdateVolumetricConstant();
 	void UpdateConstants(const GameTimer& timer);
-	void UpdateInstancingPipelines(Camera** cam, int count);
+	void UpdateInstancingPipelines(Camera* cam, DrawType type, bool culling = true);
 	void UpdateDynamicsWorld();
 
 	void SetGraphicsCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);

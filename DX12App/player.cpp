@@ -847,8 +847,7 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 
 	scene->UpdateCameraConstant(cubemapIndex + 4, mCameras[cubemapIndex].get());
 
-	Camera* cam[1] = { mCameras[cubemapIndex].get() };
-	scene->UpdateInstancingPipelines(cam, 1);
+	scene->UpdateInstancingPipelines(mCameras[cubemapIndex].get(), DrawType::CubeMapping);
 	scene->RenderPipelines(cmdList, cubemapIndex + 4, true);
 
 	// resource barrier
