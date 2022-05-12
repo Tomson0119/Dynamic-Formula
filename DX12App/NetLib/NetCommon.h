@@ -9,4 +9,4 @@
 #include "../../Server/Network/EndPoint.h"
 #include "../../Server/Network/Compressor.h"
 
-#define STANDALONE
+//#define STANDALONE
