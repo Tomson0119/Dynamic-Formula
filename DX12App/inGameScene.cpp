@@ -1098,7 +1098,13 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 
 	cmdList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &depthStencilView);
 
+#ifdef FRUSTUM_CULLING
 	UpdateInstancingPipelines(mMainCamera.get(), DrawType::Instancing);
+#endif
+
+#ifndef FRUSTUM_CULLING
+	UpdateInstancingPipelines(mMainCamera.get(), DrawType::Instancing, false);
+#endif
 
 	cmdList->SetGraphicsRootSignature(mRootSignature.Get());
 	RenderPipelines(cmdList, 0);

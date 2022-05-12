@@ -848,7 +848,15 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 
 	scene->UpdateCameraConstant(cubemapIndex + 4, mCameras[cubemapIndex].get());
 
+
+#ifdef FRUSTUM_CULLING
 	scene->UpdateInstancingPipelines(mCameras[cubemapIndex].get(), DrawType::CubeMapping);
+#endif
+
+#ifndef FRUSTUM_CULLING
+	scene->UpdateInstancingPipelines(mCameras[cubemapIndex].get(), DrawType::CubeMapping, false);
+#endif
+	
 	scene->RenderPipelines(cmdList, cubemapIndex + 4, true);
 
 	// resource barrier

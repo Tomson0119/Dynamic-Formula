@@ -1,5 +1,7 @@
 #pragma once
 
+//#define FRUSTUM_CULLING
+
 #include "pipeline.h"
 #include "player.h"
 
