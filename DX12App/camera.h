@@ -18,6 +18,8 @@ public:
 	void SetPosition(float x, float y, float z);
 	void SetPosition(const XMFLOAT3& pos);
 
+	void SetRotation(const XMFLOAT4& quat);
+
 	void SetOffset(float x, float y, float z) { mOffset = { x,y,z }; }
 	void SetOffset(const XMFLOAT3& offset) { mOffset = offset; }
 

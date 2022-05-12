@@ -407,6 +407,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
 	mMainCamera->SetPosition(mPlayer->GetPosition());
+	mMainCamera->SetRotation(mPlayer->GetQuaternion());
 	mCurrentCamera = mMainCamera.get();
 
 	for (const auto& [_, pso] : mPipelines)
@@ -428,8 +429,6 @@ void InGameScene::BuildCarObject(
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
 	carObj->SetQuaternion(rotation);
-	Print("Position: ", position);
-	Print("Rotation: ", rotation);
 
 	if (mMeshList["Car_Body.obj"].empty())
 	{
@@ -546,7 +545,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::READY_SIGNAL:
 	{
 		SC::packet_ready_signal* pck = reinterpret_cast<SC::packet_ready_signal*>(packet);
-		// TODO: Show countdown image..
 		mpUI->ShowStartAnim();
 		break;
 	}
@@ -554,13 +552,8 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_start_signal* pck = reinterpret_cast<SC::packet_start_signal*>(packet);
 		mGameStarted = true;
-
-		OutputDebugStringA(("Delay: " + std::to_string(pck->delay_time_msec) + "\n").c_str());
-		OutputDebugStringA(("Delay: " + std::to_string(pck->running_time_sec) + "\n").c_str());
-
 		mpUI->ShowGoAnim();
 		mpUI->SetRunningTime((float)pck->running_time_sec);
-
 		break;
 	}
 	case SC::REMOVE_PLAYER:
@@ -605,6 +598,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		
 		if (missile)
 		{
+			OutputDebugStringA("Missile launched.\n");
 			if (missile->IsActive() == false)
 			{
 				const XMFLOAT3& pos = mPlayerObjects[pck->missile_idx]->GetPosition();
@@ -615,6 +609,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			}
 			else
 			{
+				OutputDebugStringA("Getting transform of missile.\n");
 				missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
 			}
 		}
@@ -637,7 +632,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player)
 		{
-			int duration = pck->duration - (int)(mNetPtr->GetLatency() * FIXED_FLOAT_LIMIT);
+			int duration = pck->duration;
 			player->SetInvincibleOn(duration);
 		}
 		break;
@@ -783,9 +778,9 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mDriftParticleEnable = false;
 		}
-		
-		if(wParam == VK_END)
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+		if (wParam == 'I')
+		{
+		}
 		break;
 
 	case WM_KEYDOWN:
