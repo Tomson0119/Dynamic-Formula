@@ -97,6 +97,23 @@ int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
     return 0;
 }
 
+void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index)
+{
+    RECT rc = MakeRect(left, top, right, bottom);
+    if (MouseCollisionCheck(dx, dy, rc))
+    {
+        SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
+        SetIndexColor(10+index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
+        SetIndexColor(16+index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
+    }
+    else
+    {
+        SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+        SetIndexColor(10 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
+        SetIndexColor(16 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
+    }
+}
+
 void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
@@ -108,16 +125,16 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     else
         SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::DarkGray, 0.9f));
 
-    for (int i = 1; i < static_cast<int>(GetTextCnt()); ++i)
-    {// 12, 34, 56, 78, 910, 1112
-        rc = MakeRect(GetTextBlock()[i].d2dLayoutRect.left, GetTextBlock()[i].d2dLayoutRect.top,
-            GetTextBlock()[i].d2dLayoutRect.right, GetTextBlock()[i].d2dLayoutRect.bottom);
-        if (MouseCollisionCheck(dx, dy, rc))
-        {
-            SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
-        }
-        else SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-    }
+    // 1, 2, 3, 4, 5, 6
+    RoomMouseCheck(dx, dy, GetFrameWidth() * 0.25f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.40f, 1);
+    RoomMouseCheck(dx, dy, GetFrameWidth() * 0.52f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.40f, 2);
+    RoomMouseCheck(dx, dy, GetFrameWidth() * 0.25f, GetFrameHeight() * 0.41f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.58f, 3);
+    RoomMouseCheck(dx, dy, GetFrameWidth() * 0.52f, GetFrameHeight() * 0.41f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.58f, 4);
+    RoomMouseCheck(dx, dy, GetFrameWidth() * 0.25f, GetFrameHeight() * 0.59f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.76f, 5);
+    RoomMouseCheck(dx, dy, GetFrameWidth() * 0.52f, GetFrameHeight() * 0.59f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.76f, 6);
+
+    
+
     rc = MakeRect(GetFrameWidth() * 0.44f, GetFrameHeight() * 0.76f, GetFrameWidth() * 0.50f, GetFrameHeight() * 0.82f);
     if (MouseCollisionCheck(dx, dy, rc)) // LeftArrow
         aOpacities[2] = 0.2f;
@@ -484,7 +501,7 @@ void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
-    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); //22
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::LightGray, 0.3f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::LightGray, 0.3f)); 
     SetColors(colorList);

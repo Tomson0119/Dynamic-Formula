@@ -23,13 +23,15 @@ public:
 		ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
 	void CreateFontFormat();
 	bool MouseCollisionCheck(float x, float y, const RECT& rc);
+	void RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index);
 	RECT MakeRect(float left, float top, float right, float bottom);
 	void SetRoomNums(int num, int index) { mRoomNums[index] = num; }
 	void UpdateRoomNumsText();
 private:
 	std::array<int, 6> mRoomNums;
 	float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
-	//std::vector<std::string>  RoomNum;
+	//For Packet
+	std::array<int, 6>  RoomNum;
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
