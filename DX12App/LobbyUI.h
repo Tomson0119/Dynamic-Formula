@@ -16,22 +16,32 @@ public:
 	virtual void Reset() override;
 	virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
 		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height) override;
+	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) override;
 	virtual int OnProcessMouseClick(WPARAM buttonState, int x, int y) override;
 	virtual void SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue,
 		ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;
 	void CreateFontFormat();
+	
+	//For Packet
 	bool MouseCollisionCheck(float x, float y, const RECT& rc);
 	void RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index);
 	RECT MakeRect(float left, float top, float right, float bottom);
-	void SetRoomNums(int num, int index) { mRoomNums[index] = num; }
-	void UpdateRoomNumsText();
+	void UpdateRoomNums();
+	void SetRoomNums(int RoomID) { mRoomNums.push_back(RoomID); }
+	//const std::vector<int>& GetRoomNums() const { return mRoomNums; }
+	//void SetRoomNums(int num, int index) { mRoomNums[index] = num; }
+	void UpdateDenyBoxText(const std::string& Msg);
+	void SetDenyBox() { mIsDenyBox = true; }
 private:
-	std::array<int, 6> mRoomNums;
 	float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
 	//For Packet
-	std::array<int, 6>  RoomNum;
+	std::vector<int> mRoomNums;
+	int mPageNum = 0;
+	
+	std::string mDenyMessage;
+	std::atomic_bool mIsDenyBox = false;
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
