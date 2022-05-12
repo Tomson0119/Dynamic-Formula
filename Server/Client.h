@@ -45,7 +45,7 @@ public:
 	
 public:
 	int ID;
-	std::string Name;	
+	std::string Name;
 	std::atomic_int RoomID;
 	std::atomic_char PlayerIndex;
 
@@ -57,5 +57,12 @@ private:
 
 	Socket mTCPSocket;
 	Socket* mUDPSocketPtr;
+
+	WSAOVERLAPPEDEX* mTCPSendOverlapped;
+	WSAOVERLAPPEDEX mTCPRecvOverlapped;
+
+	WSAOVERLAPPEDEX* mUDPSendOverlapped;
+	WSAOVERLAPPEDEX mUDPRecvOverlapped;
+
 	EndPoint mHostEp;
 };

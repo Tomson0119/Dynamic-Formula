@@ -3,7 +3,11 @@
 
 NetClient::NetClient()
 	: mIsConnected{ false },
-	  mServerEp{}
+	  mServerEp{},
+	  mTCPSendOverlapped{ nullptr },
+	  mTCPRecvOverlapped{ OP::RECV },
+	  mUDPSendOverlapped{ nullptr },
+	  mUDPRecvOverlapped{ OP::RECV }
 {
 	mTCPSocket.Init(SocketType::TCP);
 	mTCPSocket.SetNagleOption(1);
@@ -25,6 +29,16 @@ bool NetClient::Connect(const char* ip, short port)
 
 void NetClient::Disconnect()
 {
+	if (mTCPSendOverlapped)
+	{
+		delete mTCPSendOverlapped;
+		mTCPSendOverlapped = nullptr;
+	}
+	if (mUDPSendOverlapped)
+	{
+		delete mUDPSendOverlapped;
+		mUDPSendOverlapped = nullptr;
+	}
 	if (mIsConnected)
 	{
 		OutputDebugStringA("Disconnecting...\n");
@@ -43,8 +57,20 @@ void NetClient::BindUDPSocket(short port)
 void NetClient::PushPacket(std::byte* pck, int bytes, bool udp)
 {
 	if (mIsConnected == false) return;
-	if (udp) mUDPSocket.PushPacket(pck, bytes);
-	else mTCPSocket.PushPacket(pck, bytes);
+	if (udp)
+	{
+		if (mUDPSendOverlapped == nullptr)
+			mUDPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
+		else
+			mUDPSendOverlapped->PushMsg(pck, bytes);
+	}
+	else
+	{
+		if (mTCPSendOverlapped == nullptr)
+			mTCPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
+		else
+			mTCPSendOverlapped->PushMsg(pck, bytes);
+	}
 }
 
 void NetClient::SendMsg(std::byte* pck, int bytes, bool udp)
@@ -56,14 +82,31 @@ void NetClient::SendMsg(std::byte* pck, int bytes, bool udp)
 void NetClient::SendMsg(bool udp)
 {
 	if (mIsConnected == false) return;
-	if (udp) mUDPSocket.SendTo(mServerEp);
-	else mTCPSocket.Send();
+	if (udp && mUDPSendOverlapped)
+	{
+		mUDPSocket.SendTo(*mUDPSendOverlapped, mServerEp);
+		mUDPSendOverlapped = nullptr;
+	}
+	else if (udp == false && mTCPSendOverlapped)
+	{
+		mTCPSocket.Send(*mTCPSendOverlapped);
+		mTCPSendOverlapped = nullptr;
+	}
 }
 
 void NetClient::RecvMsg(bool udp)
 {
-	if (udp) mUDPSocket.RecvFrom(mServerEp);
-	else mTCPSocket.Recv();
+	if (udp)
+	{
+		mUDPRecvOverlapped.NetBuffer.Clear();
+		mUDPRecvOverlapped.Reset(OP::RECV);
+		mUDPSocket.RecvFrom(mUDPRecvOverlapped, mServerEp);
+	}
+	else
+	{
+		mTCPRecvOverlapped.Reset(OP::RECV);
+		mTCPSocket.Recv(mTCPRecvOverlapped);
+	}
 }
 
 void NetClient::RequestLogin(const std::string& name, const std::string& pwd)

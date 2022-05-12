@@ -9,9 +9,7 @@ WSAInit gWSAInstance;
 
 Socket::Socket()
 	: mSckHandle{},
-	  mSckType{},
-	  mRecvOverlapped{ OP::RECV },
-	  mSendOverlapped{ nullptr }
+	  mSckType{}
 {
 	if (!gWSAInstance.Init())
 		throw NetException("WSAData Initialize failed");
@@ -19,26 +17,18 @@ Socket::Socket()
 
 Socket::Socket(SOCKET sck)
 	: mSckHandle{ sck },
-	  mSckType{},
-	  mRecvOverlapped{ OP::RECV },
-	  mSendOverlapped{ nullptr }
+	  mSckType{}
 {
 }
 
 Socket::~Socket()
 {
-	if (mSendOverlapped)
-	{
-		delete mSendOverlapped;
-		mSendOverlapped = nullptr;
-	}
 	Close();
 }
 
 void Socket::Close()
 {
-	if (mSckHandle)
-		closesocket(mSckHandle);
+	if (mSckHandle) closesocket(mSckHandle);
 }
 
 void Socket::SetNagleOption(char val)
@@ -102,53 +92,28 @@ bool Socket::Connect(const EndPoint& ep)
 	return true;
 }
 
-void Socket::PushPacket(std::byte* pck, int bytes)
+int Socket::Send(WSAOVERLAPPEDEX& over)
 {
-	if (mSendOverlapped == nullptr)
-	{
-		mSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
-	}
-	else
-	{
-		mSendOverlapped->PushMsg(pck, bytes);
-	}
-}
-
-int Socket::Send()
-{
-	if (mSckType != SocketType::TCP || mSendOverlapped == nullptr)
-		return -1;
-
 	DWORD bytes = 0;
 
 	if (WSASend(mSckHandle,
-		&mSendOverlapped->WSABuffer, 1, &bytes, 0,
-		&mSendOverlapped->Overlapped, NULL) != 0)
+		&over.WSABuffer, 1, &bytes, 0,
+		&over.Overlapped, NULL) != 0)
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
-		{
-			delete mSendOverlapped;
-			mSendOverlapped = nullptr;
 			return -1;
-		}
 	}
-	mSendOverlapped = nullptr;
 	return (int)bytes;
 }
 
-int Socket::Recv()
+int Socket::Recv(WSAOVERLAPPEDEX& over)
 {
-	if (mSckType != SocketType::TCP)
-		return -1;
-
-	mRecvOverlapped.Reset(OP::RECV);
-
 	DWORD flag = 0;
 	DWORD bytes = 0;
 
 	if (WSARecv(mSckHandle,
-		&mRecvOverlapped.WSABuffer, 1, &bytes, &flag,
-		&mRecvOverlapped.Overlapped, NULL) != 0)
+		&over.WSABuffer, 1, &bytes, &flag,
+		&over.Overlapped, NULL) != 0)
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
 			return -1;
@@ -156,46 +121,32 @@ int Socket::Recv()
 	return (int)bytes;
 }
 
-int Socket::SendTo(const EndPoint& hostEp)
+int Socket::SendTo(WSAOVERLAPPEDEX& over, const EndPoint& hostEp)
 {
-	if (mSckType != SocketType::UDP || mSendOverlapped == nullptr)
-		return -1;
-
 	DWORD bytes = 0;
 
 	if (WSASendTo(mSckHandle,
-		&mSendOverlapped->WSABuffer, 1, &bytes, 0,
+		&over.WSABuffer, 1, &bytes, 0,
 		reinterpret_cast<const sockaddr*>(&hostEp.mAddress), sizeof(hostEp.mAddress),
-		&mSendOverlapped->Overlapped, NULL) != 0)
+		&over.Overlapped, NULL) != 0)
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
-		{
-			delete mSendOverlapped;
-			mSendOverlapped = nullptr;
 			return -1;
-		}
 	}
-	mSendOverlapped = nullptr;
 	return (int)bytes;
 }
 
-int Socket::RecvFrom(EndPoint& hostEp)
+int Socket::RecvFrom(WSAOVERLAPPEDEX& over, EndPoint& hostEp)
 {
-	if (mSckType != SocketType::UDP)
-		return -1;
-
-	mRecvOverlapped.NetBuffer.Clear();
-	mRecvOverlapped.Reset(OP::RECV);
-
 	DWORD flag = 0;
 	DWORD bytes = 0;
 
 	int ip_len = sizeof(hostEp.mAddress);
 
 	if (WSARecvFrom(mSckHandle,
-		&mRecvOverlapped.WSABuffer, 1, &bytes, &flag,
+		&over.WSABuffer, 1, &bytes, &flag,
 		reinterpret_cast<sockaddr*>(&hostEp.mAddress), &ip_len,
-		&mRecvOverlapped.Overlapped, NULL) != 0)
+		&over.Overlapped, NULL) != 0)
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
 			return -1;

@@ -42,6 +42,12 @@ private:
 	Socket mTCPSocket;
 	Socket mUDPSocket;
 
+	WSAOVERLAPPEDEX* mTCPSendOverlapped;
+	WSAOVERLAPPEDEX mTCPRecvOverlapped;
+	
+	WSAOVERLAPPEDEX* mUDPSendOverlapped;
+	WSAOVERLAPPEDEX mUDPRecvOverlapped;
+
 	EndPoint mServerEp;
 
 	std::atomic_bool mIsConnected;
