@@ -629,7 +629,7 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO, Dra
 		if (count > 0) instance += count;
 	}
 
-	OutputDebugStringA(std::string("Drawing Object Count : " + std::to_string(instance) + "\n\n").c_str());
+	//OutputDebugStringA(std::string("Drawing Object Count : " + std::to_string(instance) + "\n\n").c_str());
 	for (int i = 0; i < mRenderObjects.size(); i++)
 	{
 		if (mRenderObjects[i]->GetMeshCount() > 0 && mInstancingCount[mRenderObjects[i]->GetName()] > 0)
@@ -646,10 +646,10 @@ void InstancingPipeline::Draw(ID3D12GraphicsCommandList* cmdList, bool isSO, Dra
 
 			matOffset += mRenderObjects[i]->GetMeshCount();
 			instancingOffset += mInstancingCount[mRenderObjects[i]->GetName()];
-			OutputDebugStringA(std::string(mRenderObjects[i]->GetName() + "'s instancingOffset : " + std::to_string(instancingOffset) + "\n").c_str());
+			//OutputDebugStringA(std::string(mRenderObjects[i]->GetName() + "'s instancingOffset : " + std::to_string(instancingOffset) + "\n").c_str());
 		}
 	}
-	OutputDebugStringA("\n");
+	//OutputDebugStringA("\n");
 }
 
 void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
@@ -675,14 +675,14 @@ void InstancingPipeline::UpdateConstants(Camera* camera, DrawType type, bool cul
 	if (culling)
 	{
 		std::map<int, bool> collidedIndex;
+		XMMATRIX invView = XMLoadFloat4x4(&camera->GetInverseView());
+		auto viewFrustum = camera->GetViewFrustum();
 		for (int i = 0; i < mRenderObjects.size(); i++)
 		{
 			XMMATRIX world = XMLoadFloat4x4(&mRenderObjects[i]->GetWorld());
 			XMMATRIX invWorld = XMMatrixInverse(&XMMatrixDeterminant(world), world);
 
-			XMMATRIX invView = XMLoadFloat4x4(&camera->GetInverseView());
 			XMMATRIX viewToLocal = XMMatrixMultiply(invView, invWorld);
-			auto viewFrustum = camera->GetViewFrustum();
 
 			BoundingFrustum localFrustum;
 			viewFrustum.Transform(localFrustum, viewToLocal);
@@ -709,23 +709,23 @@ void InstancingPipeline::UpdateConstants(Camera* camera, DrawType type, bool cul
 					matOffset += mRenderObjects[i]->GetMeshCount();
 				}
 				currentIndex++;
-				OutputDebugStringA(std::string(std::to_string(currentIndex) + ": " + mRenderObjects[i]->GetName() + "'s Instancing Position : " + std::to_string(mRenderObjects[i]->GetPosition().x) + ", " + std::to_string(mRenderObjects[i]->GetPosition().y) + ", " + std::to_string(mRenderObjects[i]->GetPosition().z) + "\n").c_str());
+				//OutputDebugStringA(std::string(std::to_string(currentIndex) + ": " + mRenderObjects[i]->GetName() + "'s Instancing Position : " + std::to_string(mRenderObjects[i]->GetPosition().x) + ", " + std::to_string(mRenderObjects[i]->GetPosition().y) + ", " + std::to_string(mRenderObjects[i]->GetPosition().z) + "\n").c_str());
 			}
 		}
-		OutputDebugStringA("\n\n");
+		//OutputDebugStringA("\n\n");
 
-		int instance = 0;
+	   /*int instance = 0;
 		for (auto [_, count] : mInstancingCount)
 		{
 			if(count > 0) instance += count;
-		}
+		}*/
 
-		if (instance != currentIndex)
-			OutputDebugStringA(std::string("Instancing Error!\nInstance : " + std::to_string(instance) + "\ncurrentIndex : " + std::to_string(currentIndex) + "\n\n").c_str());
+		//if (instance != currentIndex)
+			//OutputDebugStringA(std::string("Instancing Error!\nInstance : " + std::to_string(instance) + "\ncurrentIndex : " + std::to_string(currentIndex) + "\n\n").c_str());
 	}
 	else
 	{
-		for (int i = 0; i < mRenderObjects.size(); i++)
+		for (int i = 0; i < mRenderObjects.size(); i++) 
 		{
 			mInstancingCount[mRenderObjects[i]->GetName()]++;
 		}
