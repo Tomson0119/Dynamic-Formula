@@ -181,11 +181,12 @@ PhysicsPlayer::PhysicsPlayer(UINT netID)
 		camera->SetLens(0.5f * Math::PI, 1.0f, 0.1f, 100.0f);
 	}
 
+	XMFLOAT3 lightColor = { 1.0f, 1.0f, 0.8f };
 	for (int i = 0; i < 2; ++i)
 	{
 		// Falloff는 전부 미터 단위임에 주의할 것
 		mFrontLight[i].light.SetInfo(
-			XMFLOAT3(0.6f, 0.6f, 0.6f),
+			lightColor,
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
 			XMFLOAT3(-0.3f, 0.0f, -1.0f),
 			0.0f, 100.0f, 100.0f,
@@ -193,7 +194,7 @@ PhysicsPlayer::PhysicsPlayer(UINT netID)
 
 		mFrontLight[i].light.pad0 = 1;
 
-		mFrontLight[i].volumetric.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		mFrontLight[i].volumetric.Color = lightColor;
 		mFrontLight[i].volumetric.Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
 		mFrontLight[i].volumetric.innerCosine = cos(6.0f);
 		mFrontLight[i].volumetric.outerCosine = cos(7.0f);
