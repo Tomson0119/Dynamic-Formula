@@ -28,19 +28,18 @@ public:
 	bool MouseCollisionCheck(float x, float y, const RECT& rc);
 	void RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index);
 	RECT MakeRect(float left, float top, float right, float bottom);
-	void UpdateRoomNums();
-	void SetRoomNums(int RoomID) { mRoomNums.push_back(RoomID); }
-	//const std::vector<int>& GetRoomNums() const { return mRoomNums; }
-	//void SetRoomNums(int num, int index) { mRoomNums[index] = num; }
-	void UpdateDenyBoxText(const std::string& Msg);
+	void UpdateDenyBoxText();
+	void SetDenyTextCode(int code) { mDenyMessageCode = code; }
 	void SetDenyBox() { mIsDenyBox = true; }
+	void SetIndexRoomNums(int index, int RoomID) { mRoomNums[index] = RoomID; }
+	void UpdateRoomIDTexts();
+	void RoomEmptyProcess();
 private:
 	float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
 	//For Packet
-	std::vector<int> mRoomNums;
-	int mPageNum = 0;
-	
-	std::string mDenyMessage;
+	// º¸·ù
+	std::atomic_int mRoomNums[6];
+	std::atomic_char mDenyMessageCode;
 	std::atomic_bool mIsDenyBox = false;
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;

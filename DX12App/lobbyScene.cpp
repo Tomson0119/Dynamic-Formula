@@ -114,12 +114,12 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		switch (pck->reason)
 		{
 		case static_cast<char>(ROOM_STAT::GAME_STARTED):
-			mpUI->UpdateDenyBoxText("Already Started");
+			mpUI->SetDenyTextCode(1);
 			mpUI->SetDenyBox();
 			break;
 
 		case static_cast<char>(ROOM_STAT::MAX_ROOM_REACHED):
-			mpUI->UpdateDenyBoxText("Max Room State");
+			mpUI->SetDenyTextCode(2);
 			mpUI->SetDenyBox();
 			break;
 
@@ -128,7 +128,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			break;
 
 		case static_cast<char>(ROOM_STAT::ROOM_IS_FULL):
-			mpUI->UpdateDenyBoxText("Room Is Full");
+			mpUI->SetDenyTextCode(3);
 			mpUI->SetDenyBox();
 			break;
 		}

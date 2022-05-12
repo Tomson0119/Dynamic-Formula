@@ -75,6 +75,19 @@ RECT LobbyUI::MakeRect(float left, float top, float right, float bottom)
     return RECT(static_cast<LONG>(left), static_cast<LONG>(top), static_cast<LONG>(right), static_cast<LONG>(bottom));
 }
 
+void LobbyUI::RoomEmptyProcess()
+{
+    for (int i = 1; i < 7; ++i) 
+    {
+        if (GetTextBlock()[i].strText.empty())
+        {
+            SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
+            SetIndexColor(11 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
+            SetIndexColor(17 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
+        }
+    }
+}
+
 int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
@@ -85,27 +98,27 @@ int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
         return 0;
     
     rc = MakeRect(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.40f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN)
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[1].strText.empty())
         return mRoomNums[0];
     
     rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.40f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN)
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[2].strText.empty())
         return mRoomNums[1];
     
     rc = MakeRect(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.41f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.58f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN)
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[3].strText.empty())
         return mRoomNums[2];
     
     rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.41f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.58f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN)
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[4].strText.empty())
         return mRoomNums[3];
     
     rc = MakeRect(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.59f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.76f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN)
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[5].strText.empty())
         return mRoomNums[4];
 
     rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.59f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.76f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN)
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[6].strText.empty())
         return mRoomNums[5];
     
     return -1;
@@ -114,13 +127,13 @@ int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
 void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index)
 {
     RECT rc = MakeRect(left, top, right, bottom);
-    if (MouseCollisionCheck(dx, dy, rc) /*&& !GetTextBlock()[index].strText.empty()*/)
+    if (MouseCollisionCheck(dx, dy, rc) && !GetTextBlock()[index].strText.empty())
     {
         SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
         SetIndexColor(11+index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
         SetIndexColor(17+index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
     }
-    else
+    else if(!MouseCollisionCheck(dx, dy, rc) && !GetTextBlock()[index].strText.empty())
     {
         SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
         SetIndexColor(11 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
@@ -183,11 +196,41 @@ void LobbyUI::Update(float GTime)
     {
         SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
         SetIndexColor(24, D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
+        UpdateDenyBoxText();
     }
     else
     {
         SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
         SetIndexColor(24, D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
+    }
+    UpdateRoomIDTexts();
+}
+
+void LobbyUI::UpdateRoomIDTexts()
+{
+    for (int i = 0; i < 6; ++i)
+    {
+        if (mRoomNums[i] > 0)
+            GetTextBlock()[i + 1].strText.assign(std::to_string(mRoomNums[i]));
+        else
+            GetTextBlock()[i + 1].strText.clear();
+    }
+    RoomEmptyProcess();
+}
+
+void LobbyUI::UpdateDenyBoxText()
+{
+    switch (mDenyMessageCode)
+    {
+    case 1:
+        GetTextBlock()[7].strText.assign("Already Started");
+        break;
+    case 2:
+        GetTextBlock()[7].strText.assign("Max Room State");
+        break;
+    case 3:
+        GetTextBlock()[7].strText.assign("Room Is Full");
+        break;
     }
 }
 
@@ -549,32 +592,16 @@ void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
 
     BuildSolidBrush(GetColors());
 
-    //for (int i = 0; i < 6; ++i)
-        //mRoomNums[i] = i+1;
-
     SetTextRect();
 
     GetTextBlock()[0].strText.assign("Make Room");
-    //for(int i=0;i<6;++i)
-        //GetTextBlock()[i+1].strText.assign(std::to_string(mRoomNums[i]));
+
+    //for (int i = 1; i < 5; ++i)
+        //SetIndexRoomNums(i-1, i);
+
 }
 
-void LobbyUI::UpdateRoomNums()
-{
-    for (int i = 0; i < 6; ++i)
-    {
-        if (mRoomNums[i] > 0)
-            GetTextBlock()[i + 1].strText.assign(std::to_string(mRoomNums[i]));
-        else
-            GetTextBlock()[i + 1].strText.clear();
-    }
-}
 
-void LobbyUI::UpdateDenyBoxText(const std::string& Msg)
-{
-    mDenyMessage = Msg;
-    GetTextBlock()[7].strText.assign(mDenyMessage);
-}
 
 void LobbyUI::Reset()
 {
