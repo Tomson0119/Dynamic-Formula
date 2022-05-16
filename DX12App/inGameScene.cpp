@@ -1432,7 +1432,7 @@ void InGameScene::WriteOOBBList()
 
 	for (const auto& [name, oobb] : mOOBBList)
 	{
-		out_file << name << " " << oobb.Center.x << " " << oobb.Center.y << " " << oobb.Center.z << " " << oobb.Extents.x << " " << oobb.Extents.y << " " << oobb.Extents.z << "\n";
+		out_file << name << " " << mMeshList[name].size() << " " << oobb.Center.x << " " << oobb.Center.y << " " << oobb.Center.z << " " << oobb.Extents.x << " " << oobb.Extents.y << " " << oobb.Extents.z << "\n";
 	}
 }
 
