@@ -14,7 +14,7 @@ ComPtr<ID3DBlob> Shader::CompileShader(
 {
 	UINT compileFlags = 0;
 #ifdef _DEBUG
-	compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+	//compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
 	ComPtr<ID3DBlob> codeBlob;

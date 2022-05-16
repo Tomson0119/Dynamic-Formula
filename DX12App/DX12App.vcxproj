@@ -190,7 +190,7 @@
     <None Include="Shaders\skybox.hlsl">
       <FileType>Document</FileType>
     </None>
-    <None Include="Shaders\lighting.hlsl">
+    <None Include="Shaders\lighting.hlsli">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
@@ -215,7 +215,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\common.hlsl">
+    <None Include="Shaders\common.hlsli">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
