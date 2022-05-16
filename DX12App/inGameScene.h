@@ -1,6 +1,6 @@
 #pragma once
 
-//#define FRUSTUM_CULLING
+#define FRUSTUM_CULLING
 
 #include "pipeline.h"
 #include "player.h"
@@ -105,6 +105,7 @@ private:
 
 	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::string& path);
 	void LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
+	void WriteOOBBList();
 	void LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }

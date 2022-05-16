@@ -383,6 +383,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 	LoadLights(cmdList, L"Map\\Lights.tmap");
+	WriteOOBBList();
 
 #ifdef STANDALONE
 	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
@@ -1417,6 +1418,18 @@ void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::
 		obj->SetQuaternion(oobb.Orientation);
 
 		mPipelines[Layer::CheckPoint]->AppendObject(obj);
+	}
+}
+
+
+void InGameScene::WriteOOBBList()
+{
+	const std::string& path = "Map\\OOBBList.txt";
+	std::ofstream out_file{ path };
+
+	for (const auto& [name, oobb] : mOOBBList)
+	{
+		out_file << name << " " << oobb.Center.x << " " << oobb.Center.y << " " << oobb.Center.z << " " << oobb.Extents.x << " " << oobb.Extents.y << " " << oobb.Extents.z << "\n";
 	}
 }
 
