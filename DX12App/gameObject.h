@@ -110,6 +110,8 @@ public:
 
 	void SetObjPath(std::wstring objPath) { mObjPath = objPath; }
 
+	void SetPreLoadedMeshCount(int count) { mPreLoadedMeshCount = count; }
+	
 public:
 	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) { }	
 	virtual void BuildDsvRtvView(ID3D12Device* device) { }
@@ -173,6 +175,8 @@ public:
 
 	const std::wstring& GetObjPath() { return mObjPath; }
 
+	const int& GetPreLoadedMeshCount() { return mPreLoadedMeshCount; }
+
 protected:
 	XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
 	XMFLOAT3 mRight = { 1.0f, 0.0f, 0.0f };
@@ -226,6 +230,8 @@ protected:
 
 	std::string mName;
 	std::wstring mObjPath;
+
+	int mPreLoadedMeshCount = 0;
 };
 
 

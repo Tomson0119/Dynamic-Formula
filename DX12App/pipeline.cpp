@@ -93,7 +93,13 @@ void Pipeline::BuildConstantBuffer(ID3D12Device* device)
 		mObjectCB = std::make_unique<ConstantBuffer<ObjectConstants>>(device, (UINT)mRenderObjects.size());
 
 		UINT matCount = 0;
-		for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
+		for (const auto& obj : mRenderObjects)
+		{
+			if(obj->GetPreLoadedMeshCount() > 0)
+				matCount += obj->GetPreLoadedMeshCount();
+			else
+				matCount += obj->GetMeshCount();
+		}
 		mMaterialCB = std::make_unique<ConstantBuffer<MaterialConstants>>(device, matCount);
 	}
 }
@@ -658,7 +664,7 @@ void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
 			mInstancingSB[i] = std::make_unique<StructuredBuffer<InstancingInfo>>(device, (UINT)mRenderObjects.size());
 
 		UINT matCount = 0;
-		for (const auto& obj : mRenderObjects) matCount += obj->GetMeshCount();
+		for (const auto& obj : mRenderObjects) matCount += obj->GetPreLoadedMeshCount();
 		mMaterialCB = std::make_unique<ConstantBuffer<MaterialConstants>>(device, matCount);
 	}
 }
@@ -729,15 +735,18 @@ void InstancingPipeline::UpdateConstants(ID3D12Device* device, ID3D12GraphicsCom
 		}
 
 		int currentIndex = 0;
+		std::map<std::string, bool> alreadyLoaded;
+		
 		for (int i = 0; i < mRenderObjects.size(); ++i)
 		{
 			if (collidedIndex[i])
 			{
 				mInstancingSB[(int)type]->CopyData(currentIndex, mRenderObjects[i]->GetInstancingInfo());
-				if (mRenderObjects[i]->GetMeshCount() > 0)
+				if (!alreadyLoaded[mRenderObjects[i]->GetName()])
 				{
+					alreadyLoaded[mRenderObjects[i]->GetName()] = true;
 					mRenderObjects[i]->UpdateMatConstants(mMaterialCB.get(), matOffset);
-					matOffset += mRenderObjects[i]->GetMeshCount();
+					matOffset += mRenderObjects[i]->GetPreLoadedMeshCount();
 				}
 				currentIndex++;
 			}

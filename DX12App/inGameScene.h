@@ -141,6 +141,7 @@ private:
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	ComPtr<ID3D12RootSignature> mComputeRootSignature;
 
+	std::map<std::string, int> mMeshCountList;
 	std::map<std::string, std::vector<std::shared_ptr<Mesh>>> mMeshList;
 	std::map<std::string, std::vector<std::shared_ptr<Texture>>> mTextureList;
 

@@ -96,6 +96,7 @@ void InGameScene::BuildObjects(
 		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
 
+	LoadOOBBList(L"Map\\OOBBList.txt");
 	BuildRootSignature();
 	BuildComputeRootSignature();
 	BuildShadersAndPSOs(cmdList);
@@ -384,7 +385,6 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList)
 	LoadWorldMap(cmdList, "Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 	LoadLights(cmdList, L"Map\\Lights.tmap");
-	LoadOOBBList(L"Map\\OOBBList.txt");
 
 #ifdef STANDALONE
 	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, 0);
@@ -1331,6 +1331,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::st
 
 		obj->Update(0, 0);
 		obj->UpdateInverseWorld();
+
+		obj->SetPreLoadedMeshCount(mMeshCountList[objName]);
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
 
@@ -1356,6 +1358,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::st
 
 			transparentObj->Update(0, 0);
 			transparentObj->UpdateInverseWorld();
+			transparentObj->SetPreLoadedMeshCount(mMeshCountList[objName + "_Transparent"]);
 			
 			mPipelines[Layer::Transparent]->AppendObject(transparentObj);
 			static_cast<InstancingPipeline*>(mPipelines[Layer::Transparent].get())->mInstancingCount[objName]++;
@@ -1447,6 +1450,11 @@ void InGameScene::LoadOOBBList(const std::wstring& path)
 
 		std::string name;
 		ss >> name;
+
+		int meshCount;
+		ss >> meshCount;
+
+		mMeshCountList[name] = meshCount;
 
 		XMFLOAT3 center;
 		ss >> center.x >> center.y >> center.z;
