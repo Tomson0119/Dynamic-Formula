@@ -1296,7 +1296,11 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		auto obj = make_shared<StaticObject>();
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
+#ifdef STANDALONE
 			obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+#else
+			obj->LoadModel(mDevice.Get(), cmdList, objPath, false);
+#endif
 			mMeshList[objName] = obj->GetMeshes();
 			mOOBBList[objName] = obj->GetBoundingBox();
 		}
@@ -1336,7 +1340,13 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		if (_access(transparentpath.c_str(), 0) != -1)
 		{
 			auto transparentObj = make_shared<StaticObject>();
+			
+#ifdef STANDALONE
 			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
+#else
+			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, false);
+#endif
+			
 			mMeshList[objName + "_Transparent"] = transparentObj->GetMeshes();
 			mOOBBList[objName + "_Transparent"] = transparentObj->GetBoundingBox();
 			
