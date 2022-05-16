@@ -1337,6 +1337,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		{
 			auto transparentObj = make_shared<StaticObject>();
 			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
+			mMeshList[objName + "_Transparent"] = transparentObj->GetMeshes();
+			mOOBBList[objName + "_Transparent"] = transparentObj->GetBoundingBox();
 			
 			auto& transparentMeshes = transparentObj->GetMeshes();
 			for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
@@ -1350,7 +1352,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			transparentObj->SetQuaternion(quaternion);
 			transparentObj->SetPosition(pos);
 			transparentObj->Scale(scale);
-			transparentObj->SetName(objName);
+			transparentObj->SetName(objName + "_Transparent");
 
 			transparentObj->Update(0, 0);
 			transparentObj->UpdateInverseWorld();
@@ -1429,7 +1431,7 @@ void InGameScene::WriteOOBBList()
 
 	for (const auto& [name, oobb] : mOOBBList)
 	{
-		out_file << name << " " << oobb.Center.x << " " << oobb.Center.y << " " << oobb.Center.z << " " << oobb.Extents.x << " " << oobb.Extents.y << " " << oobb.Extents.z << "\n";
+		out_file << name << " " << mMeshList[name].size() << " " << oobb.Center.x << " " << oobb.Center.y << " " << oobb.Center.z << " " << oobb.Extents.x << " " << oobb.Extents.y << " " << oobb.Extents.z << "\n";
 	}
 }
 
