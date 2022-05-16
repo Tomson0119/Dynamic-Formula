@@ -195,7 +195,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
 	auto instancingShader = make_unique<DefaultShader>(L"Shaders\\Instancing.hlsl");
 	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
-	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
+	//auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
 	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
 	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
 	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl", true);
@@ -205,7 +205,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
 
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
-	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
+	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
@@ -228,9 +228,9 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 
 	mPipelines[Layer::DriftParticle]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), nullptr);
 
-	mPipelines[Layer::Terrain]->SetWiredFrame(true);
-	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
-	mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
+	//mPipelines[Layer::Terrain]->SetWiredFrame(true);
+	//mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
+	//mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
 
 	mPipelines[Layer::Color]->SetAlphaBlending();
 	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());

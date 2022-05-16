@@ -197,68 +197,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\billboard.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\blur.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\color.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\common.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\cubemap.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\default.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\lighting.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\motionBlur.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\normalmap.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\shadow.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\shadowDebug.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\shadowTerrain.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\skybox.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\terrain.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\Instancing.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\shadowInstancing.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\simple.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\thresholdDownSample.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\bloomMerge.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="Shaders\volumetricScattering.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="소스 파일">
       <UniqueIdentifier>{99ac7eb6-e3c4-4cc5-8285-2e92dd0adb6f}</UniqueIdentifier>
     </Filter>
@@ -292,5 +230,67 @@
     <Filter Include="소스 파일\Scene">
       <UniqueIdentifier>{4b2bfcd9-a4e8-4977-a81b-e497ae05c17a}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\volumetricScattering.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\billboard.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\bloomMerge.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\blur.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\color.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\common.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\cubemap.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\default.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Instancing.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\lighting.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\motionBlur.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\normalmap.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\shadow.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\shadowDebug.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\shadowInstancing.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\shadowTerrain.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\simple.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\skybox.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\terrain.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\thresholdDownSample.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
