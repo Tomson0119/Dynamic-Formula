@@ -34,9 +34,6 @@ bool D3DFramework::InitFramework()
 	if (!InitDirect3D())
 		return false;
 
-	if (!InitBulletPhysics())
-		return false;
-
 #ifndef STANDALONE
 	if (!mQueryWin->InitWindow(L"Query IP Address", L"Server IP Address", 600, 200))
 		return false;
@@ -93,13 +90,6 @@ bool D3DFramework::InitDirect3D()
 
 	//ChangeFullScreenState();
 	OnResize();
-
-	return true;
-}
-
-bool D3DFramework::InitBulletPhysics()
-{
-	mBulletPhysics = std::make_shared<BulletWrapper>(-10.f);
 
 	return true;
 }

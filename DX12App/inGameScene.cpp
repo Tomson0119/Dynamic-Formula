@@ -65,10 +65,11 @@ void InGameScene::BuildObjects(
 	ID3D12GraphicsCommandList* cmdList, 
 	ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, 
-	float Width, float Height, float aspect,
-	const shared_ptr<BulletWrapper>& physics)
+	float Width, float Height, float aspect)
 {
 	mDevice = device;
+
+	mBulletPhysics = std::make_shared<BulletWrapper>(-10.f);
 
 	mpUI = std::make_unique<InGameUI>(nFrame, mDevice, cmdQueue);
 	mpUI.get()->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
@@ -98,7 +99,7 @@ void InGameScene::BuildObjects(
 	BuildRootSignature();
 	BuildComputeRootSignature();
 	BuildShadersAndPSOs(cmdList);
-	BuildGameObjects(cmdList, physics);
+	BuildGameObjects(cmdList);
 	BuildConstantBuffers();
 	BuildDescriptorHeap();
 
@@ -374,19 +375,19 @@ void InGameScene::CreateMsaaViews()
 	mMsaaRtvHandle = rtvHandle;
 }
 
-void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
+void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList)
 {
-	mDynamicsWorld = physics->GetDynamicsWorld();
+	mDynamicsWorld = mBulletPhysics->GetDynamicsWorld();
 
 	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
-	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
+	LoadWorldMap(cmdList, "Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 	LoadLights(cmdList, L"Map\\Lights.tmap");
-	WriteOOBBList();
+	LoadOOBBList(L"Map\\OOBBList.txt");
 
 #ifdef STANDALONE
-	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
+	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, 0);
 #else
 	int playerCount = 0;
 	const auto& players = mNetPtr->GetPlayersInfo();
@@ -422,8 +423,7 @@ void InGameScene::BuildCarObject(
 	const XMFLOAT4& rotation,
 	char color,
 	bool isPlayer,
-	ID3D12GraphicsCommandList* cmdList, 
-	const std::shared_ptr<BulletWrapper>& physics,
+	ID3D12GraphicsCommandList* cmdList,
 	UINT netID)
 {
 	auto carObj = make_shared<PhysicsPlayer>(netID);
@@ -487,7 +487,7 @@ void InGameScene::BuildCarObject(
 	}
 
 #ifdef STANDALONE
-	carObj->BuildRigidBody(physics);
+	carObj->BuildRigidBody(mBulletPhysics);
 #endif
 	carObj->BuildDsvRtvView(mDevice.Get());
 
@@ -813,7 +813,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	mpUI->OnProcessKeyInput(uMsg, wParam, lParam);
 }
 
-void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed)
+void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, float elapsed)
 {
 	if (mHwnd != GetFocus()) return;
 
@@ -856,7 +856,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 #endif
 }
 
-void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
+void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer)
 {
 	if (mGameEnded)
 	{
@@ -871,11 +871,11 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	float elapsed = timer.ElapsedTime();
 
 	if(mGameStarted)
-		physics->StepSimulation(elapsed);
+		mBulletPhysics->StepSimulation(elapsed);
 
 	UpdatePlayerObjects();
 	UpdateMissileObject();
-	OnPreciseKeyInput(cmdList, physics, elapsed);
+	OnPreciseKeyInput(cmdList, elapsed);
 
 	UpdateLight(elapsed);
 
@@ -887,7 +887,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	mMainCamera->Update(elapsed);
 	mDirectorCamera->Update(elapsed);
 	
-	UpdateConstants(timer);
+	UpdateConstants(cmdList, timer);
 	cmdList->SetGraphicsRoot32BitConstants(8, 1, &mDriftParticleEnable, 4);
 	
 	mpUI.get()->Update(elapsed, mPlayer);
@@ -999,7 +999,7 @@ void InGameScene::UpdateVolumetricConstant()
 	mVolumetricCB->CopyData(0, volumeConst);
 }
 
-void InGameScene::UpdateConstants(const GameTimer& timer)
+void InGameScene::UpdateConstants(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer)
 {
 	UpdateCameraConstant(0, mCurrentCamera);
 	UpdateLightConstants();
@@ -1019,16 +1019,16 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 	for (const auto& [layer, pso] : mPipelines)
 	{
 		if (layer != Layer::Transparent && layer != Layer::Instancing)
-			pso->UpdateConstants(mMainCamera.get(), DrawType::Common);
+			pso->UpdateConstants(mDevice.Get(), cmdList, mMainCamera.get(), DrawType::Common, mMeshList, mBulletPhysics);
 	}
 }
 
-void InGameScene::UpdateInstancingPipelines(Camera* cam, DrawType type, bool culling)
+void InGameScene::UpdateInstancingPipelines(ID3D12GraphicsCommandList* cmdList, Camera* cam, DrawType type, bool culling)
 {
 	for (const auto& [layer, pso] : mPipelines)
 	{
 		if (layer == Layer::Transparent || layer == Layer::Instancing)
-			pso->UpdateConstants(cam, type, culling);
+			pso->UpdateConstants(mDevice.Get(), cmdList, cam, type, mMeshList, mBulletPhysics, culling);
 	}
 }
 
@@ -1100,7 +1100,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	cmdList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &depthStencilView);
 
 #ifdef FRUSTUM_CULLING
-	UpdateInstancingPipelines(mMainCamera.get(), DrawType::Instancing);
+	UpdateInstancingPipelines(cmdList, mMainCamera.get(), DrawType::Instancing);
 #endif
 
 #ifndef FRUSTUM_CULLING
@@ -1258,7 +1258,7 @@ void InGameScene::UpdatePlayerObjects()
 	if (removed_flag) mPipelines[Layer::Color]->ResetPipeline(mDevice.Get());
 }
 
-void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::string& path)
+void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::string& path)
 {
 	FILE* file = nullptr;
 	fopen_s(&file, path.c_str(), "r");
@@ -1294,21 +1294,22 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		transparentObjPath.assign(transparentpath.begin(), transparentpath.end());
 		
 		auto obj = make_shared<StaticObject>();
+		obj->SetObjPath(objPath);
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
-			obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
-			mMeshList[objName] = obj->GetMeshes();
+			//obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+			//mMeshList[objName] = obj->GetMeshes();
 			mOOBBList[objName] = obj->GetBoundingBox();
 		}
 		else
 			obj->SetBoudingBox(mOOBBList[objName]);
 
-		btTransform btLocalTransform;
+		/*btTransform btLocalTransform;
 		btLocalTransform.setIdentity();
 		btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
-		btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));
+		btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));*/
 
-		auto& meshes = mMeshList[objName];
+		/*auto& meshes = mMeshList[objName];
 		for (auto i = meshes.begin(); i < meshes.end(); ++i)
 		{
 			if (i->get()->GetMeshShape())
@@ -1316,13 +1317,13 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 				i->get()->GetMeshShape()->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
 				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
-		}
+		}*/
 		
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
 		convexObjPath.assign(tmpstr.begin(), tmpstr.end());
 
-		obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", physics);
+		//obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", physics);
 		obj->SetQuaternion(quaternion);
 		obj->SetPosition(pos);
 		obj->Scale(scale);
@@ -1336,21 +1337,22 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		if (_access(transparentpath.c_str(), 0) != -1)
 		{
 			auto transparentObj = make_shared<StaticObject>();
-			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
+			transparentObj->SetObjPath(transparentObjPath);
+			//transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
 			
-			auto& transparentMeshes = transparentObj->GetMeshes();
+			/*auto& transparentMeshes = transparentObj->GetMeshes();
 			for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
 			{
 				if (i->get()->GetMeshShape())
 				{
 					compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 				}
-			}
+			}*/
 
 			transparentObj->SetQuaternion(quaternion);
 			transparentObj->SetPosition(pos);
 			transparentObj->Scale(scale);
-			transparentObj->SetName(objName);
+			transparentObj->SetName(objName + "_Transparent");
 
 			transparentObj->Update(0, 0);
 			transparentObj->UpdateInverseWorld();
@@ -1360,11 +1362,12 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		}
 	}
 
-	btTransform btObjectTransform;
+	/*btTransform btObjectTransform;
 	btObjectTransform.setIdentity();
+
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
 
-	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);*/
 
 	fclose(file);
 }
@@ -1430,6 +1433,28 @@ void InGameScene::WriteOOBBList()
 	for (const auto& [name, oobb] : mOOBBList)
 	{
 		out_file << name << " " << oobb.Center.x << " " << oobb.Center.y << " " << oobb.Center.z << " " << oobb.Extents.x << " " << oobb.Extents.y << " " << oobb.Extents.z << "\n";
+	}
+}
+
+void InGameScene::LoadOOBBList(const std::wstring& path)
+{
+	std::ifstream in_file{ path };
+	std::string info;
+
+	while (std::getline(in_file, info))
+	{
+		std::stringstream ss(info);
+
+		std::string name;
+		ss >> name;
+
+		XMFLOAT3 center;
+		ss >> center.x >> center.y >> center.z;
+
+		XMFLOAT3 extents;
+		ss >> extents.x >> extents.y >> extents.z;
+
+		mOOBBList[name] = BoundingOrientedBox(center, extents, XMFLOAT4());
 	}
 }
 

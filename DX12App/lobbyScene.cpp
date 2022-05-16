@@ -9,8 +9,7 @@ LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
 }
 
 void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
-	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
-	const std::shared_ptr<BulletWrapper>& physics)
+	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect)
 {
 	mDevice = device;
 	mpUI = std::make_unique<LobbyUI>(nFrame, mDevice, cmdQueue);
@@ -60,7 +59,7 @@ void LobbyScene::OnProcessMouseDown(HWND hwnd, WPARAM buttonState, int x, int y)
 	}
 }
 
-void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
+void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer)
 {
 	mpUI->Update(timer.TotalTime());
 }

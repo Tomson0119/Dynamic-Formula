@@ -850,7 +850,7 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 
 
 #ifdef FRUSTUM_CULLING
-	scene->UpdateInstancingPipelines(mCameras[cubemapIndex].get(), DrawType::CubeMapping);
+	scene->UpdateInstancingPipelines(cmdList, mCameras[cubemapIndex].get(), DrawType::CubeMapping);
 #endif
 
 #ifndef FRUSTUM_CULLING

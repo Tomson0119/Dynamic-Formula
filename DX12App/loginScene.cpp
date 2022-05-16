@@ -17,8 +17,7 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 }
 
 void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
-	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
-	const std::shared_ptr<BulletWrapper>& physics)
+	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect)
 {	
 	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
@@ -123,7 +122,7 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
+void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer)
 {
 	if (Texts[0].empty())
 	{

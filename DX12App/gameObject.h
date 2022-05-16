@@ -108,6 +108,8 @@ public:
 
 	void SetRigidBody(btRigidBody* rigidbody) { mBtRigidBody = rigidbody; }
 
+	void SetObjPath(std::wstring objPath) { mObjPath = objPath; }
+
 public:
 	virtual void PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex) { }	
 	virtual void BuildDsvRtvView(ID3D12Device* device) { }
@@ -141,6 +143,7 @@ public:
 	const XMFLOAT3& GetLook() const { return mLook; }
 	const XMFLOAT3& GetUp() const { return mUp; }
 	const XMFLOAT4& GetQuaternion() const { return mQuaternion; }
+	const XMFLOAT3& GetScale() const { return mScaling; }
 
 	const XMFLOAT4X4& GetWorld() const { return mWorld; }
 	const XMFLOAT4X4& GetInverseWorld() const { return mInvWorld; }
@@ -167,6 +170,8 @@ public:
 
 	// test
 	const XMFLOAT4& GetMeshDiffuse(const std::string& name);
+
+	const std::wstring& GetObjPath() { return mObjPath; }
 
 protected:
 	XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
@@ -220,6 +225,7 @@ protected:
 	bool mTransparentOn = false;
 
 	std::string mName;
+	std::wstring mObjPath;
 };
 
 

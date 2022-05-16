@@ -28,7 +28,6 @@ public:
 
 private:
 	bool InitDirect3D();
-	bool InitBulletPhysics();
 
 	void CreateD3DDevice();
 	void CreateCommandObjects();
@@ -105,7 +104,6 @@ protected:
 	
 protected:
 	std::wstring mWndCaption = L"D3D12 App";
-	std::shared_ptr<BulletWrapper> mBulletPhysics;
 	std::unique_ptr<NetModule> mNetwork;
 	std::unique_ptr<QueryWindow> mQueryWin;
 };

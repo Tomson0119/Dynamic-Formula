@@ -80,7 +80,7 @@ public:
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false, DrawType type = DrawType::Common);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false, DrawType type = DrawType::Common);
 
-	virtual void UpdateConstants(Camera* camera, DrawType type, bool culling = false);
+	virtual void UpdateConstants(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Camera* camera, DrawType type, std::map<std::string, std::vector<std::shared_ptr<Mesh>>>& meshList, const std::shared_ptr<BulletWrapper>& physics, bool culling = false);
 
 	std::vector<std::shared_ptr<GameObject>>& GetRenderObjects() { return mRenderObjects; }
 
@@ -187,7 +187,7 @@ public:
 	virtual ~InstancingPipeline();
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false, DrawType type = DrawType::Common);
 	virtual void BuildConstantBuffer(ID3D12Device* device);
-	virtual void UpdateConstants(Camera* camera, DrawType type, bool culling = false);
+	virtual void UpdateConstants(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Camera* camera, DrawType type, std::map<std::string, std::vector<std::shared_ptr<Mesh>>>& meshList, const std::shared_ptr<BulletWrapper>& physics, bool culling = false);
 
 	std::map<std::string, int> mInstancingCount;
 private:

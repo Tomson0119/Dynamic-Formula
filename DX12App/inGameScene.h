@@ -30,13 +30,12 @@ public:
 		ID3D12Resource** backBuffer,
 		float Width,
 		float Height,
-		float aspect,
-		const std::shared_ptr<BulletWrapper>& physics) override;
+		float aspect) override;
+
 	
 	virtual void Update(
 		ID3D12GraphicsCommandList* cmdList, 
-		const GameTimer& timer,
-		const std::shared_ptr<BulletWrapper>& physics) override;
+		const GameTimer& timer) override;
 	
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame) override;
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
@@ -51,8 +50,8 @@ public:
 	void UpdateLightConstants();
 	void UpdateCameraConstant(int idx, Camera* camera);
 	void UpdateVolumetricConstant();
-	void UpdateConstants(const GameTimer& timer);
-	void UpdateInstancingPipelines(Camera* cam, DrawType type, bool culling = true);
+	void UpdateConstants(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer);
+	void UpdateInstancingPipelines(ID3D12GraphicsCommandList* cmdList, Camera* cam, DrawType type, bool culling = true);
 	void UpdateDynamicsWorld();
 
 	void SetGraphicsCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
@@ -61,7 +60,7 @@ public:
 
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0, bool cubeMapping=false);
 
-	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed);
+	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, float elapsed);
 
 public:
 	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) override;
@@ -76,7 +75,7 @@ public:
 private:
 	void BuildRootSignature();
 	void BuildComputeRootSignature();
-	void BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics);
+	void BuildGameObjects(ID3D12GraphicsCommandList* cmdList);
 	void BuildConstantBuffers();
 	void BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList);
 	void BuildDescriptorHeap();
@@ -87,7 +86,6 @@ private:
 		char color,
 		bool isPlayer,
 		ID3D12GraphicsCommandList* cmdList, 
-		const std::shared_ptr<BulletWrapper>& dynamicsWorld, 
 		UINT netID);
 
 	void BuildMissileObject( 
@@ -103,9 +101,10 @@ private:
 	void UpdateMissileObject();
 	void UpdatePlayerObjects();
 
-	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::string& path);
+	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::string& path);
 	void LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 	void WriteOOBBList();
+	void LoadOOBBList(const std::wstring& path);
 	void LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
@@ -213,4 +212,5 @@ private:
 	Clock::time_point mRevertTime;
 
 	std::unique_ptr<InGameUI> mpUI;
+	std::shared_ptr<BulletWrapper> mBulletPhysics;
 };

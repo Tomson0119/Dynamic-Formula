@@ -132,7 +132,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 	}
 
 	//mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), GetAspect(), mBulletPhysics);
-	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), static_cast<float>(gFrameWidth), static_cast<float>(gFrameHeight), GetAspect(), mBulletPhysics);
+	mScenes.top()->BuildObjects(mD3dDevice, mCommandList.Get(), mCommandQueue.Get(), mSwapChainBufferCount, mSwapChainBuffers->GetAddressOf(), static_cast<float>(gFrameWidth), static_cast<float>(gFrameHeight), GetAspect());
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdList[] = { mCommandList.Get() };
@@ -175,7 +175,7 @@ void GameFramework::CheckAndChangeScene()
 void GameFramework::Update()
 {
 	D3DFramework::UpdateFrameStates();
-	mScenes.top()->Update(mCommandList.Get(), mTimer, mBulletPhysics);
+	mScenes.top()->Update(mCommandList.Get(), mTimer);
 }
 
 void GameFramework::Draw()

@@ -9,8 +9,7 @@ RoomScene::RoomScene(HWND hwnd, NetModule* netPtr)
 }
 
 void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
-	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
-	const std::shared_ptr<BulletWrapper>& physics)
+	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect)
 {
 	mDevice = device;
 	mpUI = std::make_unique<RoomUI>(nFrame, mDevice, cmdQueue, *mNetPtr);
@@ -75,7 +74,7 @@ void RoomScene::OnProcessMouseUp(WPARAM btnState, int x, int y)
 	}
 }
 
-void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
+void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer)
 {
 	mpUI->Update(timer.TotalTime());
 }

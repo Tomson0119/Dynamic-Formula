@@ -298,7 +298,7 @@ void Pipeline::Update(float elapsed, float updateRate, Camera* camera)
 		obj->Update(elapsed, updateRate);
 }
 
-void Pipeline::UpdateConstants(Camera* camera, DrawType type, bool culling)
+void Pipeline::UpdateConstants(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Camera* camera, DrawType type, std::map<std::string, std::vector<std::shared_ptr<Mesh>>>& meshList, const std::shared_ptr<BulletWrapper>& physics, bool culling)
 {
 	UINT matOffset = 0;
 	for (int i = 0; i < mRenderObjects.size(); i++) {
@@ -663,7 +663,7 @@ void InstancingPipeline::BuildConstantBuffer(ID3D12Device* device)
 	}
 }
 
-void InstancingPipeline::UpdateConstants(Camera* camera, DrawType type, bool culling)
+void InstancingPipeline::UpdateConstants(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, Camera* camera, DrawType type, std::map<std::string, std::vector<std::shared_ptr<Mesh>>>& meshList, const std::shared_ptr<BulletWrapper>& physics, bool culling)
 {
 	UINT matOffset = 0;
 	for (auto& [_, count] : mInstancingCount)
@@ -675,6 +675,10 @@ void InstancingPipeline::UpdateConstants(Camera* camera, DrawType type, bool cul
 		std::map<int, bool> collidedIndex;
 		XMMATRIX invView = XMLoadFloat4x4(&camera->GetInverseView());
 		auto viewFrustum = camera->GetViewFrustum();
+
+		btTransform btObjectTransform;
+		btObjectTransform.setIdentity();
+		btObjectTransform.setOrigin(btVector3(0, 0, 0));
 		
 		for (int i = 0; i < mRenderObjects.size(); i++)
 		{
@@ -687,7 +691,36 @@ void InstancingPipeline::UpdateConstants(Camera* camera, DrawType type, bool cul
 			if (localFrustum.Contains(mRenderObjects[i]->GetBoundingBox()) != DirectX::DISJOINT)
 			{
 				collidedIndex[i] = true;
-				mInstancingCount[mRenderObjects[i]->GetName()]++;
+				auto objName = mRenderObjects[i]->GetName();
+				mInstancingCount[objName]++;
+
+				if (meshList[objName].empty())
+				{
+					mRenderObjects[i]->LoadModel(device, cmdList, mRenderObjects[i]->GetObjPath(), true);
+					meshList[objName] = mRenderObjects[i]->GetMeshes();
+
+					auto scale = mRenderObjects[i]->GetScale();
+					auto pos = mRenderObjects[i]->GetPosition();
+					auto quaternion = mRenderObjects[i]->GetQuaternion();
+					
+					btTransform btLocalTransform;
+					btLocalTransform.setIdentity();
+					btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+					btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));
+
+					btCompoundShape* compound = new btCompoundShape();
+					auto& meshes = meshList[objName];
+					for (auto j = meshes.begin(); j < meshes.end(); ++j)
+					{
+						if (j->get()->GetMeshShape())
+						{
+							j->get()->GetMeshShape()->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+							compound->addChildShape(btLocalTransform, j->get()->GetMeshShape().get());
+							
+							physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+						}
+					}
+				}
 			}
 			else
 			{
