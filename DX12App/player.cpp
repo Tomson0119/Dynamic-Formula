@@ -801,16 +801,18 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 	mPrevQuat = mCorrectionQuat;
 
 	mCorrectionOrigin.SetValue(pck->position);
-
 	mCorrectionOrigin.Extrapolate(
-		pck->linear_vel[0],
-		pck->linear_vel[1],
-		pck->linear_vel[2],
+		pck->linear_vel[0] / POS_FLOAT_PRECISION,
+		pck->linear_vel[1] / POS_FLOAT_PRECISION,
+		pck->linear_vel[2] / POS_FLOAT_PRECISION,
 		latency);
 
-	mCorrectionQuat.SetValue(pck->quaternion);
-	
-	mLinearVelocity.SetValue(pck->linear_vel[0], pck->linear_vel[1], pck->linear_vel[2]);
+	mCorrectionQuat.SetValue(pck->quaternion);	
+
+	mLinearVelocity.SetValue(
+		pck->linear_vel[0] / POS_FLOAT_PRECISION, 
+		pck->linear_vel[1] / POS_FLOAT_PRECISION,
+		pck->linear_vel[2] / POS_FLOAT_PRECISION);
 }
 
 void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex)

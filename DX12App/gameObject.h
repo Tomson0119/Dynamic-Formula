@@ -4,7 +4,7 @@
 #include "constantBuffer.h"
 #include "camera.h"
 #include "texture.h"
-#include "atomicInt.h"
+#include "atomicFloat.h"
 
 class InGameScene;
 class Pipeline;
@@ -143,7 +143,7 @@ public:
 
 	const XMFLOAT4X4& GetWorld() const { return mWorld; }
 
-	const AtomicInt3& GetLinearVelocity() { return mLinearVelocity; }
+	const AtomicFloat3& GetLinearVelocity() { return mLinearVelocity; }
 
 	//UINT GetSRVIndex() const { return mSrvIndex; }
 	UINT GetMeshCount() const { return (UINT)mMeshes.size(); }
@@ -182,12 +182,12 @@ protected:
 	std::mutex mProgressMut; // TEST
 	float mProgress = 0.0f;
 
-	AtomicInt3 mPrevOrigin;
-	AtomicInt4 mPrevQuat;
+	AtomicFloat3 mPrevOrigin;
+	AtomicFloat4 mPrevQuat;
 
-	AtomicInt3 mCorrectionOrigin{};
-	AtomicInt4 mCorrectionQuat{};
-	AtomicInt3 mLinearVelocity{};
+	AtomicFloat3 mCorrectionOrigin{};
+	AtomicFloat4 mCorrectionQuat{};
+	AtomicFloat3 mLinearVelocity{};
 	// Members for interpolation.
 
 	std::atomic<UPDATE_FLAG> mUpdateFlag;

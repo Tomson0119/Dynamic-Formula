@@ -538,18 +538,8 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 	if (updateRate <= 0.0f) return;
 
 	mProgressMut.lock();
-	if (mProgress == 0.0f)
-	{
-		mPrevOrigin = mPosition;
-		mPrevQuat = mQuaternion;
-	}
 	float progress = std::min(1.0f, mProgress / updateRate);
 	mProgress += elapsed;
-
-	//OutputDebugStringA(("timeSinceTick: " + std::to_string(mProgress) + "\n").c_str());
-	//OutputDebugStringA(("delta: " + std::to_string(progress) + "\n").c_str());
-	//OutputDebugStringA(("update rate: " + std::to_string(updateRate) + "\n").c_str());
-
 	mProgressMut.unlock();
 
 	const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
@@ -561,9 +551,6 @@ void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 
 	mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
 	mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
-
-	//mPosition = correctOrigin;
-	//mQuaternion = correctQuat;
 }
 
 void GameObject::SetPosition(float x, float y, float z)
@@ -928,17 +915,15 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 {
 	mProgress = 0;
 	mPrevOrigin = mCorrectionOrigin;
-	mPrevQuat = mCorrectionQuat;
 
-	mCorrectionOrigin.SetValue(pck->position);
+	mCorrectionOrigin.SetValue(
+		pck->pos_x / POS_FLOAT_PRECISION,
+		pck->pos_z / POS_FLOAT_PRECISION);
 
 	mCorrectionOrigin.Extrapolate(
-		pck->linear_vel[0],
-		pck->linear_vel[1],
-		pck->linear_vel[2],
+		pck->linear_vel_x / POS_FLOAT_PRECISION,
+		pck->linear_vel_z / POS_FLOAT_PRECISION,
 		latency);
-
-	mCorrectionQuat.SetValue(pck->quaternion);
 }
 
 void MissileObject::SetActive(bool state)
