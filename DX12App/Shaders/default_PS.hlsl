@@ -27,27 +27,6 @@ struct PixelOut
     float4 f4Direction : SV_TARGET1;
 };
 
-VertexOut VS(VertexIn vin)
-{
-	VertexOut vout;
-	
-    float4 posW = mul(float4(vin.PosL, 1.0f), gWorld);
-    vout.PosW = posW.xyz;
-    vout.PosH = mul(posW, gViewProj);
-
-    vout.oldPosWVP = mul(mul(float4(vin.PosL, 1.0f), gOldWorld), gOldViewProj);
-    vout.newPosWVP = vout.PosH;
-
-    float4x4 tWorld = transpose(gWorld);
-    vout.NormalW = mul((float3x3)tWorld, vin.NormalL);
-    vout.TangentW = mul((float3x3)tWorld, vin.TangentL);
-    
-    float4 texC = mul(float4(vin.TexCoord, 0.0f, 1.0f), gTexTransform);
-    vout.TexCoord = texC.xy;
-	
-	return vout;
-}
-
 PixelOut PS(VertexOut pin)
 {
     PixelOut pout;

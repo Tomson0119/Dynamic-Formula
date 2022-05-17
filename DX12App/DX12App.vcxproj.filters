@@ -235,37 +235,13 @@
     <FxCompile Include="Shaders\volumetricScattering.hlsl">
       <Filter>리소스 파일</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\billboard.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\bloomMerge.hlsl">
       <Filter>리소스 파일</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\blur.hlsl">
       <Filter>리소스 파일</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\color.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\common.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\cubemap.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\default.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Instancing.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\lighting.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\motionBlur.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\normalmap.hlsl">
       <Filter>리소스 파일</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\shadow.hlsl">
@@ -277,20 +253,67 @@
     <FxCompile Include="Shaders\shadowInstancing.hlsl">
       <Filter>리소스 파일</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\shadowTerrain.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\simple.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\skybox.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\terrain.hlsl">
-      <Filter>리소스 파일</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\thresholdDownSample.hlsl">
       <Filter>리소스 파일</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\billboard_VSStreamOutput.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\billboard_GSRender.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\billboard_GSStreamOutput.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\billboard_PSRender.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\billboard_VSRender.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Instancing_PS.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Instancing_VS.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\default_PS.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\default_VS.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\simple_PS.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\simple_VS.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\skybox_PS.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\skybox_VS.hlsl">
+      <Filter>리소스 파일</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\terrain.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\shadowTerrain.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\normalmap.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\lighting.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\common.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="Shaders\cubemap.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>

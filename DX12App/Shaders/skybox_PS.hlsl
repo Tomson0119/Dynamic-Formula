@@ -23,21 +23,6 @@ struct PixelOut
     float4 f4Direction : SV_TARGET1;
 };
 
-VertexOut VS(VertexIn vin)
-{
-	VertexOut vout;
-	
-    vout.PosW = mul(float4(vin.PosL, 1.0f), gWorld).xyz;
-    vout.PosW.xyz += gCameraPos;
-  
-    vout.PosH = mul(float4(vout.PosW, 1.0f), gViewProj);
-    
-    vout.NormalW = mul(vin.NormalL, (float3x3) gWorld);
-    vout.TexCoord = vin.TexCoord;
-	
-	return vout;
-}
-
 PixelOut PS(VertexOut pin, uint primID : SV_PrimitiveID)
 {
     PixelOut pout;

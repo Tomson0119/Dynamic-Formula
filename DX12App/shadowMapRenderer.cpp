@@ -39,7 +39,7 @@ ShadowMapRenderer::~ShadowMapRenderer()
 void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader)
 {
 	auto shadowMapShader = std::make_unique<ShadowShader>(L"Shaders\\shadow.hlsl");
-	auto shadowMapTerrainShader = std::make_unique<ShadowTerrainShader>(L"Shaders\\shadowTerrain.hlsl");
+	//auto shadowMapTerrainShader = std::make_unique<ShadowTerrainShader>(L"Shaders\\shadowTerrain.hlsl");
 	auto shadowMapInstancingShader = std::make_unique<ShadowShader>(L"Shaders\\shadowInstancing.hlsl");
 
 	mRasterizerDesc.DepthBias = 20000;
@@ -136,7 +136,7 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 	ThrowIfFailed(device->CreateGraphicsPipelineState(
 		&psoDesc, IID_PPV_ARGS(&mInstancingPSO)));
 	
-	auto TerrainLayout = shadowMapTerrainShader->GetInputLayout();
+	/*auto TerrainLayout = shadowMapTerrainShader->GetInputLayout();
 
 	psoDesc.InputLayout = {
 		TerrainLayout.data(),
@@ -171,7 +171,7 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
 	ThrowIfFailed(device->CreateGraphicsPipelineState(
-		&psoDesc, IID_PPV_ARGS(&mTerrainPSO)));
+		&psoDesc, IID_PPV_ARGS(&mTerrainPSO)));*/
 }
 
 void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)

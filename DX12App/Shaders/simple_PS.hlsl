@@ -17,17 +17,6 @@ struct PixelOut
     float4 f4Direction : SV_TARGET1;
 };
 
-VertexOut VS(VertexIn vin)
-{
-    VertexOut vout;
-	
-    float4 posW = mul(float4(vin.PosL, 1.0f), gWorld);
-    vout.PosW = posW.xyz;
-    vout.PosH = mul(posW, gViewProj);
-    
-    return vout;
-}
-
 PixelOut PS(VertexOut pin)
 {
     float4 PosV = mul(float4(pin.PosW, 1.0f), gView);
