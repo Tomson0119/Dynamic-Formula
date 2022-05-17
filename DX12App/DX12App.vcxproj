@@ -19,9 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="atomicInt.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="atomicFloat.cpp" />
     <ClCompile Include="bulletWrap.cpp" />
     <ClCompile Include="camera.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
@@ -154,7 +152,7 @@
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="atomicInt.h" />
+    <ClInclude Include="atomicFloat.h" />
     <ClInclude Include="bulletWrap.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="constantBuffer.h" />
