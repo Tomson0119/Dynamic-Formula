@@ -410,29 +410,36 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 		auto linearVelocity = mBtRigidBody->getLinearVelocity();
 		linearVelocity.setY(0.0f);
-		linearVelocity = linearVelocity.normalize();
-
-		auto forward = mVehicle->getForwardVector();
-		forward.setY(0.0f);
-		forward = forward.normalize();
-
-		float angle = acos(linearVelocity.dot(forward));
-
-		if (DriftLimit < angle && mDriftGauge < 1.0f)
+		if (!linearVelocity.fuzzyZero())
 		{
-			mDriftGauge += Elapsed / 2.0f;
-		}
+			linearVelocity = linearVelocity.normalize();
 
-		if (AngleLimit < angle && mDriftGauge < 1.0f)
-		{
-			mBtRigidBody->setAngularVelocity(btVector3(0, 0, 0));
-		}
+			auto forward = mVehicle->getForwardVector();
+			forward.setY(0.0f);
 
-		if (mDriftGauge > 1.0f)
-		{
-			mDriftGauge = 0.0f;
-			if (mItemNum < 2)
-				mItemNum++;
+			if (!forward.fuzzyZero())
+			{
+				forward = forward.normalize();
+
+				float angle = acos(linearVelocity.dot(forward));
+
+				if (DriftLimit < angle && mDriftGauge < 1.0f)
+				{
+					mDriftGauge += Elapsed / 2.0f;
+				}
+
+				if (AngleLimit < angle && mDriftGauge < 1.0f)
+				{
+					mBtRigidBody->setAngularVelocity(btVector3(0, 0, 0));
+				}
+
+				if (mDriftGauge > 1.0f)
+				{
+					mDriftGauge = 0.0f;
+					if (mItemNum < 2)
+						mItemNum++;
+				}
+			}
 		}
 	}
 	else
