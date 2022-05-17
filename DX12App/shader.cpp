@@ -33,11 +33,16 @@ ComPtr<ID3DBlob> Shader::CompileShader(
 	return codeBlob;
 }
 
-ComPtr<ID3DBlob> Shader::ReadCSOShader(const std::wstring filename)
+ComPtr<ID3DBlob> Shader::ReadCSOShader(const std::wstring& filename)
 {
-	ComPtr<ID3DBlob> codeBlob;
-	D3DReadFileToBlob(filename.c_str(), &codeBlob);
-	return codeBlob;
+	if (!filename.empty())
+	{
+		ComPtr<ID3DBlob> codeBlob;
+		HRESULT hr = D3DReadFileToBlob(filename.c_str(), &codeBlob);
+		return codeBlob;
+	}
+	else
+		return NULL;
 }
 
 
@@ -47,6 +52,15 @@ DefaultShader::DefaultShader(const std::wstring& path)
 	: Shader()
 {
 	Compile(path);
+	BuildInputLayout();
+}
+
+DefaultShader::DefaultShader(const std::wstring& vsPath, const std::wstring& psPath)
+	: Shader()
+{
+	VS = ReadCSOShader(vsPath);
+	PS = ReadCSOShader(psPath);
+
 	BuildInputLayout();
 }
 
@@ -117,6 +131,16 @@ BillboardShader::BillboardShader(const std::wstring& path, bool soActive)
 	: Shader(), mSOActive(soActive)
 {
 	Compile(path);
+	BuildInputLayout();
+}
+
+BillboardShader::BillboardShader(const std::wstring& vspath, const std::wstring& gspath, const std::wstring& pspath, bool soActive)
+	: Shader(), mSOActive(soActive)
+{
+	VS = ReadCSOShader(vspath);
+	GS = ReadCSOShader(gspath);
+	PS = ReadCSOShader(pspath);
+
 	BuildInputLayout();
 }
 
@@ -191,6 +215,14 @@ void CubeMapShader::BuildInputLayout()
 ComputeShader::ComputeShader(const std::wstring& path)
 {
 	Compile(path);
+}
+
+ComputeShader::ComputeShader(const std::wstring& path, bool readCSO)
+{
+	if (readCSO)
+		CS = ReadCSOShader(path);
+	else
+		Compile(path);
 }
 
 void ComputeShader::Compile(const std::wstring& path)

@@ -333,7 +333,7 @@ SkyboxPipeline::~SkyboxPipeline()
 
 void SkyboxPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader)
 {
-	auto skyboxShader = std::make_shared<DefaultShader>(L"Shaders\\skybox.hlsl");
+	auto skyboxShader = std::make_shared<DefaultShader>(L"Shaders\\skybox_VS.cso", L"Shaders\\skybox_PS.cso");
 		
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	auto layout = skyboxShader->GetInputLayout();
@@ -395,8 +395,8 @@ StreamOutputPipeline::~StreamOutputPipeline()
 
 void StreamOutputPipeline::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader)
 {
-	auto renderShader = std::make_unique<BillboardShader>(L"Shaders\\billboard.hlsl");
-	auto soShader = std::make_unique<BillboardShader>(L"Shaders\\billboard.hlsl", true);
+	auto renderShader = std::make_unique<BillboardShader>(L"Shaders\\billboard_VSRender.cso", L"Shaders\\billboard_GSRender.cso", L"Shaders\\billboard_PSRender.cso", true);
+	auto soShader = std::make_unique<BillboardShader>(L"Shaders\\billboard_VSStreamOutput.cso", L"Shaders\\billboard_GSStreamOutput.cso", L"", true);
 
 	SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
 	SetAlphaBlending();

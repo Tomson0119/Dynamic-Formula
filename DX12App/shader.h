@@ -24,7 +24,7 @@ public:
 		const std::string& target,
 		const D3D_SHADER_MACRO* defines = nullptr);
 	
-	ComPtr<ID3DBlob> ReadCSOShader(const std::wstring filename);
+	ComPtr<ID3DBlob> ReadCSOShader(const std::wstring& filename);
 
 protected:
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
@@ -42,6 +42,7 @@ class DefaultShader : public Shader
 {
 public:
 	DefaultShader(const std::wstring& path);
+	DefaultShader(const std::wstring& vsPath, const std::wstring& psPath);
 	virtual ~DefaultShader() { }
 
 	virtual void Compile(const std::wstring& path) override;
@@ -90,6 +91,7 @@ class BillboardShader : public Shader
 {
 public:
 	BillboardShader(const std::wstring& path, bool soActive=false);
+	BillboardShader(const std::wstring& vspath, const std::wstring& gspath, const std::wstring& pspath, bool soActive);
 	virtual ~BillboardShader() { }
 
 	virtual void Compile(const std::wstring& path) override;
@@ -117,6 +119,7 @@ class ComputeShader : public Shader
 {
 public:
 	ComputeShader(const std::wstring& path);
+	ComputeShader(const std::wstring& path, bool readCSO);
 	virtual ~ComputeShader() { }
 
 	virtual void Compile(const std::wstring& path) override;

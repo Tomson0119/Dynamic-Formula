@@ -192,18 +192,30 @@ void InGameScene::BuildComputeRootSignature()
 
 void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 {
-	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
-	auto instancingShader = make_unique<DefaultShader>(L"Shaders\\Instancing.hlsl");
-	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
+	//auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
+	//auto instancingShader = make_unique<DefaultShader>(L"Shaders\\Instancing.hlsl");
+	//auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
+	////auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
+	//auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
+	//auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
+	//auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl", true);
+	//auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
+	//auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
+	//auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
+	//auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
+	
+	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default_VS.cso", L"Shaders\\default_PS.cso");
+	auto instancingShader = make_unique<DefaultShader>(L"Shaders\\Instancing_VS.cso", L"Shaders\\Instancing_PS.cso");
+	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color_VS.cso", L"Shaders\\color_PS.cso");
+	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple_VS.cso", L"Shaders\\simple_PS.cso");
 	//auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
-	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
-	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
-	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl", true);
-	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
-	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
-	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
-	auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
-
+	//auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard_VS.cso", L"Shaders\\billboard_GS.cso", L"Shaders\\billboard_PS.cso", true);
+	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.cso", true);
+	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.cso", true);
+	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.cso", true);
+	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.cso", true);
+	auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.cso", true);
+	
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
