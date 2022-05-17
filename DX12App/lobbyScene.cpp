@@ -61,7 +61,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 		{
 			OutputDebugStringA("MakeRoom Button Down\n");
 #ifndef STANDALONE
-			mNetPtr->Client()->RequestNewRoom();
+			//mNetPtr->Client()->RequestNewRoom();
 #endif
 		}
 		else // return RoomNum
@@ -70,7 +70,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 			OutputDebugStringA(std::to_string(ret).c_str());
 			OutputDebugStringA("\n");
 #ifndef STANDALONE
-			mNetPtr->Client()->RequestEnterRoom(ret);
+			//mNetPtr->Client()->RequestEnterRoom(ret);
 #endif
 		}
 	}
@@ -79,7 +79,6 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 
 void LobbyScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
 {
-
 }
 
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)

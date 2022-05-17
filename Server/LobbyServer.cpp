@@ -301,7 +301,7 @@ void LobbyServer::SendExistingRoomList(int id)
 	{
 		if (mRooms[i]->Closed() == false)
 		{
-			if(startCnt <= cnt && cnt < endCnt)
+			if (startCnt <= cnt && cnt < endCnt)
 				mRooms[i]->SendRoomOutsideInfo(id, false);
 			cnt += 1;
 		}
