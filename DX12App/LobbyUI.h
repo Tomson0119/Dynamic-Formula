@@ -29,7 +29,7 @@ public:
 	void RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index);
 	RECT MakeRect(float left, float top, float right, float bottom);
 	void UpdateDenyBoxText();
-	void SetDenyTextCode(int code) { mDenyMessageCode = code; }
+	void SetDenyTextCode(char code) { mDenyMessageCode = code; }
 	void SetDenyBox() { mIsDenyBox = true; }
 	void SetIndexRoomNums(int index, int RoomID) { mRoomNums[index] = RoomID; }
 	void UpdateRoomIDTexts();

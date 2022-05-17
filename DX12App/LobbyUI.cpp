@@ -587,7 +587,7 @@ void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Blue, 0.3f)); //22
-    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.9f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f)); 
     SetColors(colorList);
 
     BuildSolidBrush(GetColors());
