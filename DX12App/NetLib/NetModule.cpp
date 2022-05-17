@@ -206,7 +206,7 @@ void NetModule::Init()
 	mIOCP.RegisterDevice(mNetClient->GetTCPSocket(), 0);
 	mNetClient->RecvMsg(false);
 
-	mNetClient->BindUDPSocket(CLIENT_PORT);
+	//mNetClient->BindUDPSocket(CLIENT_PORT);
 	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
 	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };

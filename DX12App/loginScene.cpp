@@ -161,7 +161,7 @@ bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		SC::packet_login_result* pck = reinterpret_cast<SC::packet_login_result*>(packet);
 		if (pck->result == static_cast<char>(LOGIN_STAT::ACCEPTED))
 		{
-			//mNetPtr->Client()->BindUDPSocket(pck->port);
+			mNetPtr->Client()->BindUDPSocket(pck->port);
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		}
 		else if (pck->result == static_cast<char>(LOGIN_STAT::INVALID_IDPWD))
