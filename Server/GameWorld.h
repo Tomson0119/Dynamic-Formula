@@ -45,8 +45,9 @@ public:
 private:
 	void CheckCountdownTime();
 	void CheckRunningTime();
-
 	void CheckCollision();
+	void CheckMissileLaunchFlag();
+
 	void UpdatePlayers(float elapsed);
 	void UpdateInvincibleState(int idx, float elapsed);
 
@@ -77,6 +78,7 @@ private:
 	void PushMissileTransformPacketToAll(int target);
 	void PushUiInfoPacket(int target);
 
+	void SendMissileLaunchPacket(int target);
 	void SendMissileRemovePacket(int target);
 	void SendInvincibleOnPacket(int target);
 	void SendSpawnPacket(int target);

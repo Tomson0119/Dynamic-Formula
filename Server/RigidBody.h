@@ -87,10 +87,14 @@ public:
 	void Deactivate() { mActive = false; }
 	bool IsActive() const { return mActive; }
 
+	void SetLaunchFlag(bool flag) { mLaunchFlag = flag; }
+	bool GetLaunchFlag() const { return mLaunchFlag; }
+
 private:
 	void SetMissileComponents();
 
 private:
+	bool mLaunchFlag;
 	bool mActive;
 	VehicleRigidBody* mVehiclePtr;
 	std::shared_ptr<GameConstant> mConstantPtr;

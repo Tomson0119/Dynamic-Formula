@@ -5,6 +5,10 @@
 #include <tuple>
 #include <array>
 
+const float POS_Y_SHIFT = 10.0f;
+const float POS_FLOAT_PRECISION = 512.0f;
+const float QUAT_FLOAT_PRECISION = 32767.0f;
+
 struct packet
 {
 	uint8_t idx : 2;
@@ -15,7 +19,19 @@ class Compressor
 public:
 	static vec3 EncodePos(float x, float y, float z)
 	{
-		
+		vec3 compPos{};
+		compPos.x = (int)(x * POS_FLOAT_PRECISION);
+		compPos.y = (unsigned short)((y + POS_Y_SHIFT) * POS_FLOAT_PRECISION);
+		compPos.z = (int)(z * POS_FLOAT_PRECISION);
+		return compPos;
+	}
+
+	static std::array<float, 3> DecodePos(const vec3& compPos)
+	{
+		float x = (float)compPos.x / POS_FLOAT_PRECISION;
+		float y = (float)compPos.y / POS_FLOAT_PRECISION - POS_Y_SHIFT;
+		float z = (float)compPos.z / POS_FLOAT_PRECISION;
+		return { x, y, z };
 	}
 
 	static quat3 EncodeQuat(float x, float y, float z, float w)

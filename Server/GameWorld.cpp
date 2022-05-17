@@ -93,7 +93,7 @@ void GameWorld::UpdatePhysicsWorld()
 	mUpdateTick += 1;
 	if (mUpdateTick == 2)
 	{
-		std::cout << "Sending.\n";
+		//std::cout << "Sending.\n";
 		BroadcastAllTransform();
 		mUpdateTick = 0;
 	}
@@ -174,7 +174,8 @@ void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 {
 	if (mGameStarted == false) return;
 
-	switch (static_cast<int>(key))
+	int k = static_cast<int>(key);
+	switch (k)
 	{
 	case VK_LCONTROL:
 	case VK_UP:
@@ -184,10 +185,11 @@ void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 	case VK_LSHIFT:
 	case 'Z': // boost
 	case 'X': // missile.
-	case 'P':
+	case 'P': // respwan
+	{
 		mPlayerList[idx]->ToggleKeyValue(key, pressed);
 		break;
-
+	}
 	case VK_F10:
 		if (pressed == false)
 			mManualFinish = true;
@@ -213,10 +215,7 @@ void GameWorld::SendGameStartSuccess()
 		const btVector3& pos = mPlayerList[i]->GetVehicleRigidBody().GetPosition();
 		const btQuaternion& quat = mPlayerList[i]->GetVehicleRigidBody().GetRotation();
 
-		info_pck.positions[i].x = (int)(pos.x() * POS_FLOAT_PRECISION);
-		info_pck.positions[i].y = (short)(pos.y() * POS_FLOAT_PRECISION);
-		info_pck.positions[i].z = (int)(pos.z() * POS_FLOAT_PRECISION);
-
+		info_pck.positions[i] = Compressor::EncodePos(pos.x(), pos.y(), pos.z());
 		info_pck.quaternions[i] = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.w());
 	}
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&info_pck), info_pck.size);
@@ -248,6 +247,8 @@ void GameWorld::SendStartSignal(uint64_t latency)
 
 void GameWorld::BroadcastAllTransform()
 {
+	CheckMissileLaunchFlag();
+
 	for (int target = 0; target < mPlayerList.size(); target++)
 	{
 		if (mPlayerList[target]->Empty == false)
@@ -282,10 +283,7 @@ void GameWorld::PushVehicleTransformPacketToAll(int target)
 	const btVector3& lvel = vehicle.GetLinearVelocity();
 	const btVector3& avel = vehicle.GetAngularVelocity();
 
-	pck.position.x = (int)(pos.x() * POS_FLOAT_PRECISION);
-	pck.position.y = (short)(pos.y() * POS_FLOAT_PRECISION);
-	pck.position.z = (int)(pos.z() * POS_FLOAT_PRECISION);
-
+	pck.position = Compressor::EncodePos(pos.x(), pos.y(), pos.z());
 	pck.quaternion = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.w());
 
 	pck.linear_vel[0] = (int)(lvel.x() * QUAT_FLOAT_PRECISION);
@@ -298,6 +296,7 @@ void GameWorld::PushVehicleTransformPacketToAll(int target)
 void GameWorld::PushMissileTransformPacketToAll(int target)
 {
 	if (mPlayerList[target]->CheckMissileExist() == false) return;
+	if (mPlayerList[target]->GetMissileLaunchFlag()) return;
 
 	SC::packet_missile_transform pck{};
 	pck.size = sizeof(SC::packet_missile_transform);
@@ -309,15 +308,11 @@ void GameWorld::PushMissileTransformPacketToAll(int target)
 	const btQuaternion& quat = missile.GetRotation();
 	const btVector3& lvel = missile.GetLinearVelocity();
 
-	pck.position.x = (int)(pos.x() * POS_FLOAT_PRECISION);
-	pck.position.y = (short)(pos.y() * POS_FLOAT_PRECISION);
-	pck.position.z = (int)(pos.z() * POS_FLOAT_PRECISION);
+	pck.pos_x = (int)(pos.x() * POS_FLOAT_PRECISION);
+	pck.pos_z = (int)(pos.z() * POS_FLOAT_PRECISION);
 
-	pck.quaternion = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.w());
-
-	pck.linear_vel[0] = (int)(lvel.x() * QUAT_FLOAT_PRECISION);
-	pck.linear_vel[1] = (int)(lvel.y() * QUAT_FLOAT_PRECISION);
-	pck.linear_vel[2] = (int)(lvel.z() * QUAT_FLOAT_PRECISION);
+	pck.linear_vel_x = (int)(lvel.x() * POS_FLOAT_PRECISION);
+	pck.linear_vel_z = (int)(lvel.z() * POS_FLOAT_PRECISION);
 
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, true, -1, false);
 }
@@ -325,7 +320,7 @@ void GameWorld::PushMissileTransformPacketToAll(int target)
 void GameWorld::PushUiInfoPacket(int target)
 {
 	SC::packet_ui_info pck{};
-	pck.size = sizeof(SC::packet_ui_info);;
+	pck.size = sizeof(SC::packet_ui_info);
 	pck.type = SC::UI_INFO;
 	pck.gauge = (int)(mPlayerList[target]->GetDriftGauge() * 100.0f);
 	pck.speed = (int)(round(mPlayerList[target]->GetCurrentSpeed()));
@@ -333,6 +328,27 @@ void GameWorld::PushUiInfoPacket(int target)
 	int hostID = mPlayerList[target]->ID;
 	if (hostID < 0) return;
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
+}
+
+void GameWorld::SendMissileLaunchPacket(int target)
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "(room id: " << mID << ") Send missile launch packet. [" << target << "]\n";
+#endif
+	SC::packet_missile_launched pck{};
+	pck.size = sizeof(SC::packet_missile_launched);
+	pck.type = SC::MISSILE_LAUNCHED;
+	pck.missile_idx = target;
+
+	// send vehicle tranform since missile is not updated.
+	const auto& vehicle = mPlayerList[target]->GetVehicleRigidBody();
+	const btVector3& pos = vehicle.GetPosition();
+	const btQuaternion& quat = vehicle.GetRotation();
+
+	pck.position = Compressor::EncodePos(pos.x(), pos.y(), pos.z());
+	pck.quaternion = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.w());
+
+	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
 void GameWorld::SendMissileRemovePacket(int target)
@@ -350,7 +366,7 @@ void GameWorld::SendMissileRemovePacket(int target)
 void GameWorld::SendInvincibleOnPacket(int target)
 {
 #ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "[room id: " << mID << "] Send invincible on packet. [" << target << "]\n";
+	std::cout << "(room id: " << mID << ") Send invincible on packet. [" << target << "]\n";
 #endif
 	SC::packet_invincible_on pck{};
 	pck.size = sizeof(SC::packet_invincible_on);
@@ -374,10 +390,7 @@ void GameWorld::SendSpawnPacket(int target)
 	const btVector3& pos = vehicle.GetPosition();
 	const btQuaternion& quat = vehicle.GetRotation();
 
-	pck.position.x = (int)(pos.x() * POS_FLOAT_PRECISION);
-	pck.position.y = (short)(pos.y() * POS_FLOAT_PRECISION);
-	pck.position.z = (int)(pos.z() * POS_FLOAT_PRECISION);
-
+	pck.position = Compressor::EncodePos(pos.x(), pos.y(), pos.z());
 	pck.quaternion = Compressor::EncodeQuat(quat.x(), quat.y(), quat.z(), quat.z());
 
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
@@ -552,6 +565,19 @@ void GameWorld::CheckCollision()
 
 		HandleCollision(*objA, *objB, *gameObjA, *gameObjB);
 		HandleCollision(*objB, *objA, *gameObjB, *gameObjA);
+	}
+}
+
+void GameWorld::CheckMissileLaunchFlag()
+{
+	for (int i = 0; i < mPlayerList.size(); i++)
+	{
+		if (mPlayerList[i]->Empty == false 
+			&& mPlayerList[i]->GetMissileLaunchFlag())
+		{
+			SendMissileLaunchPacket(i);
+			mPlayerList[i]->SetMissileLaunchFlag(false);
+		}
 	}
 }
 

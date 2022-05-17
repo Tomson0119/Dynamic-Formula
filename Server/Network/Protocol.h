@@ -13,11 +13,8 @@ const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
 const int ROOM_NUM_PER_PAGE = 6;
 
-
 const int MaxBufferSize = 1024;
 
-const float POS_FLOAT_PRECISION = 512.0f;
-const float QUAT_FLOAT_PRECISION = 32767.0f;
 
 enum class LOGIN_STAT : char
 {	
@@ -52,7 +49,7 @@ struct vec3
 {
 	int x;
 	int z;
-	unsigned short y : 10;
+	unsigned short y : 14;
 };
 
 struct quat3
@@ -161,15 +158,16 @@ namespace SC
 	const char START_SIGNAL		  = 13;
 	const char TRANSFER_TIME	  = 14;
 	const char PLAYER_TRANSFORM	  = 15;
-	const char MISSILE_TRANSFORM  = 16;
-	const char UI_INFO			  = 17;
-	const char REMOVE_MISSILE	  = 18;
-	const char INVINCIBLE_ON	  = 19;
-	const char SPAWN_TRANSFORM	  = 20;
-	const char WARNING_MESSAGE	  = 21;
-	const char INGAME_INFO		  = 22;
-	const char GAME_END			  = 23;
-	const char ITEM_COUNT		  = 24;
+	const char MISSILE_LAUNCHED	  = 16;
+	const char MISSILE_TRANSFORM  = 17;
+	const char UI_INFO			  = 18;
+	const char REMOVE_MISSILE	  = 19;
+	const char INVINCIBLE_ON	  = 20;
+	const char SPAWN_TRANSFORM	  = 21;
+	const char WARNING_MESSAGE	  = 22;
+	const char INGAME_INFO		  = 23;
+	const char GAME_END			  = 24;
+	const char ITEM_COUNT		  = 25;
 
 	struct packet_force_logout : packet_header { };
 
@@ -264,12 +262,20 @@ namespace SC
 		int linear_vel[3];
 	};
 
-	struct packet_missile_transform : packet_header
+	struct packet_missile_launched : packet_header
 	{
 		uint8_t missile_idx : 3;
 		vec3 position;
 		quat3 quaternion;
-		int linear_vel[3];
+	};
+
+	struct packet_missile_transform : packet_header
+	{
+		uint8_t missile_idx : 3;
+		int pos_x;
+		int pos_z;
+		int linear_vel_x;
+		int linear_vel_z;
 	};
 
 	struct packet_ui_info : packet_header
