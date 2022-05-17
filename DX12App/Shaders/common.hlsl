@@ -1,4 +1,4 @@
-#include "lighting.hlsli"
+#include "lighting.hlsl"
 
 Texture2D gShadowMap[3] : register(t0, space1);
 TextureCube gCubeMap : register(t0, space2);

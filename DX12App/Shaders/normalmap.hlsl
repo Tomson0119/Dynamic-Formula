@@ -1,4 +1,4 @@
-#include "common.hlsli"
+#include "common.hlsl"
 
 Texture2D gDiffuseMap : register(t0);
 Texture2D gNormalMap  : register(t1);

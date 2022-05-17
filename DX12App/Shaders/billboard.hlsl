@@ -1,4 +1,4 @@
-#include "common.hlsli"
+#include "common.hlsl"
 
 #define PARTICLE_TYPE_EMMITER 0
 #define PARTICLE_TYPE_FLARE 1

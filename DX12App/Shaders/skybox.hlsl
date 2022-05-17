@@ -1,4 +1,4 @@
-#include "common.hlsli"
+#include "common.hlsl"
 
 Texture2DArray gTexture : register(t0);
 

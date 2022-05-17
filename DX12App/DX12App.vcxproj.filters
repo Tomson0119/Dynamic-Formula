@@ -206,7 +206,7 @@
     <None Include="Shaders\color.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="Shaders\common.hlsli">
+    <None Include="Shaders\common.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="Shaders\cubemap.hlsl">
@@ -215,7 +215,7 @@
     <None Include="Shaders\default.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="Shaders\lighting.hlsli">
+    <None Include="Shaders\lighting.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="Shaders\motionBlur.hlsl">

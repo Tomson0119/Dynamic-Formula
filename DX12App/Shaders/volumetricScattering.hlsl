@@ -1,4 +1,4 @@
-#include "lighting.hlsli"
+#include "lighting.hlsl"
 
 Texture2D<float4> inputTexture : register(t0);
 Texture2D<float> depthTexture : register(t1);
