@@ -24,11 +24,19 @@ ComPtr<ID3DBlob> Shader::CompileShader(
 		entry.c_str(), target.c_str(), compileFlags, NULL,
 		&codeBlob, &errorBlob);
 
+
 	if (errorBlob)
 		OutputDebugStringA((char*)errorBlob->GetBufferPointer());
 
 	ThrowIfFailed(hr);
 
+	return codeBlob;
+}
+
+ComPtr<ID3DBlob> Shader::ReadCSOShader(const std::wstring filename)
+{
+	ComPtr<ID3DBlob> codeBlob;
+	D3DReadFileToBlob(filename.c_str(), &codeBlob);
 	return codeBlob;
 }
 
