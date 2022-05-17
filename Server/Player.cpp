@@ -389,28 +389,33 @@ void Player::UpdateEngineForce()
 		comp.BreakingForce += mConstantPtr->DefaultBreakingForce;
 }
 
-
-void Player::ToggleKeyValue(uint8_t key, bool pressed)
+bool Player::ToggleKeyValue(uint8_t key, bool pressed)
 {
-	if (mActive == false) return;
+	if (mActive == false) return false;
 
 	if ((key == 'Z' || key == 'X'))
 	{
 		if (pressed && IsItemAvailable())
 		{
 			// for test
-			if (UseItem(key) && mItemCount > 0) mItemCount -= 1;
+			if (UseItem(key))
+			{
+				if(mItemCount > 0) mItemCount -= 1;
+				return true;
+			}
 		}
 	}
 	else if (key == 'P' && pressed)
 	{
 		bool expected = false;
-		mManualRespawn.compare_exchange_strong(expected, true);
+		return mManualRespawn.compare_exchange_strong(expected, true);
 	}
 	else
 	{
 		mKeyMap[key] = pressed;
+		return true;
 	}
+	return false;
 }
 
 bool Player::IsItemAvailable()
