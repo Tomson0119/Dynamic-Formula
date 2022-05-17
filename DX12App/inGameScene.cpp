@@ -192,20 +192,32 @@ void InGameScene::BuildComputeRootSignature()
 
 void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 {
-	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
-	auto instancingShader = make_unique<DefaultShader>(L"Shaders\\Instancing.hlsl");
-	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
-	auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
-	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
-	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
-	auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl", true);
-	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
-	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
-	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
-	auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
-
+	//auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default.hlsl");
+	//auto instancingShader = make_unique<DefaultShader>(L"Shaders\\Instancing.hlsl");
+	//auto colorShader = make_unique<DefaultShader>(L"Shaders\\color.hlsl");
+	////auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
+	//auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.hlsl");
+	//auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple.hlsl");
+	//auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard.hlsl", true);
+	//auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.hlsl");
+	//auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
+	//auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
+	//auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
+	
+	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default_VS.cso", L"Shaders\\default_PS.cso");
+	auto instancingShader = make_unique<DefaultShader>(L"Shaders\\Instancing_VS.cso", L"Shaders\\Instancing_PS.cso");
+	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color_VS.cso", L"Shaders\\color_PS.cso");
+	auto simpleShader = make_unique<DefaultShader>(L"Shaders\\simple_VS.cso", L"Shaders\\simple_PS.cso");
+	//auto terrainShader = make_unique<TerrainShader>(L"Shaders\\terrain.hlsl");
+	//auto particleShader = make_unique<BillboardShader>(L"Shaders\\billboard_VS.cso", L"Shaders\\billboard_GS.cso", L"Shaders\\billboard_PS.cso", true);
+	auto motionBlurShader = make_unique<ComputeShader>(L"Shaders\\motionBlur.cso", true);
+	auto downSampleShader = make_unique<ComputeShader>(L"Shaders\\thresholdDownSample.cso", true);
+	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.cso", true);
+	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.cso", true);
+	auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.cso", true);
+	
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
-	mPipelines[Layer::Terrain] = make_unique<Pipeline>();
+	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
@@ -228,9 +240,9 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 
 	mPipelines[Layer::DriftParticle]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), nullptr);
 
-	mPipelines[Layer::Terrain]->SetWiredFrame(true);
-	mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
-	mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
+	//mPipelines[Layer::Terrain]->SetWiredFrame(true);
+	//mPipelines[Layer::Terrain]->SetTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
+	//mPipelines[Layer::Terrain]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), terrainShader.get());
 
 	mPipelines[Layer::Color]->SetAlphaBlending();
 	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());
@@ -383,6 +395,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 	LoadLights(cmdList, L"Map\\Lights.tmap");
+	//WriteOOBBList();
 
 #ifdef STANDALONE
 	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
@@ -883,7 +896,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 
 	for (const auto& [_, pso] : mPipelines)
 		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
-	mCurrentCamera->Update(elapsed);
+	mMainCamera->Update(elapsed);
+	mDirectorCamera->Update(elapsed);
 	
 	UpdateConstants(timer);
 	cmdList->SetGraphicsRoot32BitConstants(8, 1, &mDriftParticleEnable, 4);
@@ -1013,9 +1027,21 @@ void InGameScene::UpdateConstants(const GameTimer& timer)
 	gameInfo.ElapsedTime = timer.ElapsedTime();
 
 	mGameInfoCB->CopyData(0, gameInfo);
-	
-	for (const auto& [_, pso] : mPipelines)
-		pso->UpdateConstants();
+
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if (layer != Layer::Transparent && layer != Layer::Instancing)
+			pso->UpdateConstants(mMainCamera.get(), DrawType::Common);
+	}
+}
+
+void InGameScene::UpdateInstancingPipelines(Camera* cam, DrawType type, bool culling)
+{
+	for (const auto& [layer, pso] : mPipelines)
+	{
+		if (layer == Layer::Transparent || layer == Layer::Instancing)
+			pso->UpdateConstants(cam, type, culling);
+	}
 }
 
 void InGameScene::UpdateDynamicsWorld()
@@ -1085,6 +1111,14 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 
 	cmdList->OMSetRenderTargets(2, pd3dAllRtvCPUHandles, FALSE, &depthStencilView);
 
+#ifdef FRUSTUM_CULLING
+	UpdateInstancingPipelines(mMainCamera.get(), DrawType::Instancing);
+#endif
+
+#ifndef FRUSTUM_CULLING
+	UpdateInstancingPipelines(mMainCamera.get(), DrawType::Instancing, false);
+#endif
+
 	cmdList->SetGraphicsRootSignature(mRootSignature.Get());
 	RenderPipelines(cmdList, 0);
 
@@ -1148,6 +1182,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 		else if (layer != Layer::SkyBox)
 			pso->SetAndDraw(cmdList, mCurrentCamera->GetWorldFrustum(), false, (bool)mLODSet);
 		else*/
+		DrawType type = cubeMapping ? DrawType::CubeMapping : DrawType::Instancing;
 
 		if (pso->GetRenderObjects().size() > 0)
 		{
@@ -1167,7 +1202,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 				continue;
 			}
 			else
-				pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping);
+				pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping, type);
 		}			
 	}
 }
@@ -1273,7 +1308,11 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		auto obj = make_shared<StaticObject>();
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
+#ifdef STANDALONE
 			obj->LoadModel(mDevice.Get(), cmdList, objPath, true);
+#else
+			obj->LoadModel(mDevice.Get(), cmdList, objPath, false);
+#endif
 			mMeshList[objName] = obj->GetMeshes();
 			mOOBBList[objName] = obj->GetBoundingBox();
 		}
@@ -1306,14 +1345,23 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		obj->SetName(objName);
 
 		obj->Update(0, 0);
+		obj->UpdateInverseWorld();
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
 
 		if (_access(transparentpath.c_str(), 0) != -1)
 		{
 			auto transparentObj = make_shared<StaticObject>();
+			
+#ifdef STANDALONE
 			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
-
+#else
+			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, false);
+#endif
+			
+			mMeshList[objName + "_Transparent"] = transparentObj->GetMeshes();
+			mOOBBList[objName + "_Transparent"] = transparentObj->GetBoundingBox();
+			
 			auto& transparentMeshes = transparentObj->GetMeshes();
 			for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
 			{
@@ -1326,9 +1374,11 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			transparentObj->SetQuaternion(quaternion);
 			transparentObj->SetPosition(pos);
 			transparentObj->Scale(scale);
-			transparentObj->SetName(objName);
+			transparentObj->SetName(objName + "_Transparent");
 
 			transparentObj->Update(0, 0);
+			transparentObj->UpdateInverseWorld();
+			
 			mPipelines[Layer::Transparent]->AppendObject(transparentObj);
 			static_cast<InstancingPipeline*>(mPipelines[Layer::Transparent].get())->mInstancingCount[objName]++;
 		}
@@ -1392,6 +1442,18 @@ void InGameScene::LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::
 		obj->SetQuaternion(oobb.Orientation);
 
 		mPipelines[Layer::CheckPoint]->AppendObject(obj);
+	}
+}
+
+
+void InGameScene::WriteOOBBList()
+{
+	const std::string& path = "Map\\OOBBList.txt";
+	std::ofstream out_file{ path };
+
+	for (const auto& [name, oobb] : mOOBBList)
+	{
+		out_file << name << " " << mMeshList[name].size() << " " << oobb.Center.x << " " << oobb.Center.y << " " << oobb.Center.z << " " << oobb.Extents.x << " " << oobb.Extents.y << " " << oobb.Extents.z << "\n";
 	}
 }
 

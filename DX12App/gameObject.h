@@ -38,9 +38,11 @@ public:
 
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
 	void SortMeshes();
+	void UpdateInverseWorld();
 
 protected:
 	virtual void UpdateTransform();
+
 
 	void RotateDirectionVectors();
 	void SetWorldByMotionState();
@@ -141,6 +143,7 @@ public:
 	const XMFLOAT4& GetQuaternion() const { return mQuaternion; }
 
 	const XMFLOAT4X4& GetWorld() const { return mWorld; }
+	const XMFLOAT4X4& GetInverseWorld() const { return mInvWorld; }
 
 	const AtomicInt3& GetLinearVelocity() { return mLinearVelocity; }
 
@@ -175,6 +178,7 @@ protected:
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mInvWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mRotation = Matrix4x4::Identity4x4();
 
 	// Members for interpolation.

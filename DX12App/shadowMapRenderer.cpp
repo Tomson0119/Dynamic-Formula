@@ -39,7 +39,7 @@ ShadowMapRenderer::~ShadowMapRenderer()
 void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature* rootSig, Shader* shader)
 {
 	auto shadowMapShader = std::make_unique<ShadowShader>(L"Shaders\\shadow.hlsl");
-	auto shadowMapTerrainShader = std::make_unique<ShadowTerrainShader>(L"Shaders\\shadowTerrain.hlsl");
+	//auto shadowMapTerrainShader = std::make_unique<ShadowTerrainShader>(L"Shaders\\shadowTerrain.hlsl");
 	auto shadowMapInstancingShader = std::make_unique<ShadowShader>(L"Shaders\\shadowInstancing.hlsl");
 
 	mRasterizerDesc.DepthBias = 20000;
@@ -136,7 +136,7 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 	ThrowIfFailed(device->CreateGraphicsPipelineState(
 		&psoDesc, IID_PPV_ARGS(&mInstancingPSO)));
 	
-	auto TerrainLayout = shadowMapTerrainShader->GetInputLayout();
+	/*auto TerrainLayout = shadowMapTerrainShader->GetInputLayout();
 
 	psoDesc.InputLayout = {
 		TerrainLayout.data(),
@@ -171,7 +171,7 @@ void ShadowMapRenderer::BuildPipeline(ID3D12Device* device, ID3D12RootSignature*
 	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
 	ThrowIfFailed(device->CreateGraphicsPipelineState(
-		&psoDesc, IID_PPV_ARGS(&mTerrainPSO)));
+		&psoDesc, IID_PPV_ARGS(&mTerrainPSO)));*/
 }
 
 void ShadowMapRenderer::UpdateSplitFrustum(const Camera* mainCamera)
@@ -343,6 +343,16 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, InGameScen
 		cmdList->OMSetRenderTargets(0, nullptr, false, &mDsvCPUDescriptorHandles[i]);
 
 		scene->UpdateCameraConstant(i + 1, mDepthCamera[i].get());
+
+#ifdef FRUSTUM_CULLING
+		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i));
+#endif
+
+#ifndef FRUSTUM_CULLING
+		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i), false);
+#endif
+
+
 		scene->SetGraphicsCBV(cmdList, i + 1);
 		RenderPipelines(cmdList, i);
 
@@ -362,20 +372,20 @@ void ShadowMapRenderer::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int 
 			cmdList->SetPipelineState(mTerrainPSO.Get());
 
 			//pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), false, false, false);
-			pso->SetAndDraw(cmdList, false, false);
+			pso->SetAndDraw(cmdList, false, false, false, DrawType((int)DrawType::Shadow_First + idx));
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
 		else if (layer == Layer::Instancing || layer == Layer::Transparent)
 		{
 			cmdList->SetPipelineState(mInstancingPSO.Get());
 
-			pso->SetAndDraw(cmdList, false, false);
+			pso->SetAndDraw(cmdList, false, false, false, DrawType((int)DrawType::Shadow_First + idx));
 			cmdList->SetPipelineState(mPSO[0].Get());
 		}
 		else
 		{
 			//pso->SetAndDraw(cmdList, mDepthCamera[idx]->GetWorldFrustum(), true, false, false);
-			pso->SetAndDraw(cmdList, false, false);
+			pso->SetAndDraw(cmdList, false, false, false, DrawType((int)DrawType::Shadow_First + idx));
 		}
 	}
 }

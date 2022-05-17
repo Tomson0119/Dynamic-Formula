@@ -30,11 +30,3 @@ VertexOut VS(VertexIn vin, uint InstanceID : SV_InstanceID)
 	
     return vout;
 }
-
-DepthOut PS(VertexOut pin)
-{
-    DepthOut dout = (DepthOut) 0;
-    dout.Position = pin.PosH.z;
-    dout.Depth = pin.PosH.z;
-    return dout;
-}
