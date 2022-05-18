@@ -34,7 +34,7 @@ public:
 	void UpdateWorldTransform();
 	void UpdateInvincibleDuration(float elapsed);
 
-	void ToggleKeyValue(uint8_t key, bool pressed);
+	bool ToggleKeyValue(uint8_t key, bool pressed);
 	bool CheckMissileExist() const;
 
 	bool IsNextCheckpoint(int cpIndex);
@@ -88,6 +88,9 @@ public:
 	const VehicleRigidBody& GetVehicleRigidBody() const { return mVehicleRigidBody; }
 	const RigidBody& GetMissileRigidBody() const { return mMissileRigidBody; }
 	
+	void SetMissileLaunchFlag(bool flag) { mMissileRigidBody.SetLaunchFlag(flag); }
+	bool GetMissileLaunchFlag() const { return mMissileRigidBody.GetLaunchFlag(); }
+
 public:
 	std::atomic_bool Empty;
 	std::atomic_bool Ready;

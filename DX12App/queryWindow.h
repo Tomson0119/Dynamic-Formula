@@ -14,6 +14,9 @@ public:
 	void SetLabel(const std::wstring& label) { mLabel = label; }
 	std::string GetAnswer() const { return mAnswer; }
 
+private:
+	void QuitWindow();
+
 public:
 	virtual LRESULT OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 

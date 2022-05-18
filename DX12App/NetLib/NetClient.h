@@ -12,10 +12,10 @@ public:
 
 	void BindUDPSocket(short port);
 
-	void PushPacket(std::byte* pck, int bytes);
-	void SendMsg(std::byte* pck, int bytes);
+	void PushPacket(std::byte* pck, int bytes, bool udp=false);
+	void SendMsg(std::byte* pck, int bytes, bool udp=false);
 	
-	void SendMsg();
+	void SendMsg(bool udp=false);
 	void RecvMsg(bool udp=false);
 	
 public:
@@ -23,6 +23,7 @@ public:
 	void RequestRegister(const std::string& name, const std::string& pwd);
 	void RequestNewRoom();
 	void RequestEnterRoom(int roomID);
+	void InquireRoomList(int pageNum);
 
 	void RevertScene();
 	void SwitchMap(int roomID);
@@ -42,12 +43,13 @@ private:
 	Socket mTCPSocket;
 	Socket mUDPSocket;
 
-	EndPoint mServerEp;
-
 	WSAOVERLAPPEDEX* mTCPSendOverlapped;
-
 	WSAOVERLAPPEDEX mTCPRecvOverlapped;
+	
+	WSAOVERLAPPEDEX* mUDPSendOverlapped;
 	WSAOVERLAPPEDEX mUDPRecvOverlapped;
+
+	EndPoint mServerEp;
 
 	std::atomic_bool mIsConnected;
 };

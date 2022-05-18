@@ -38,6 +38,16 @@ void QueryWindow::Run()
 	}
 }
 
+void QueryWindow::QuitWindow()
+{
+	mAnswer.resize(GetWindowTextLength(mTextBox) + 1);
+	int len = GetWindowTextA(mTextBox, (LPSTR)mAnswer.c_str(), (int)mAnswer.size());
+	if (len != 0)
+	{
+		PostMessage(mHwnd, WM_CLOSE, NULL, NULL);
+	}
+}
+
 LRESULT QueryWindow::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps{};
@@ -63,12 +73,14 @@ LRESULT QueryWindow::OnProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (LOWORD(wParam) == 1)
 		{
-			mAnswer.resize(GetWindowTextLength(mTextBox) + 1);
-			int len = GetWindowTextA(mTextBox, (LPSTR)mAnswer.c_str(), (int)mAnswer.size());
-			if (len != 0)
-			{
-				PostMessage(mHwnd, WM_CLOSE, NULL, NULL);
-			}
+			QuitWindow();
+		}
+		break;
+
+	case WM_KEYUP:
+		if (wParam == VK_ESCAPE)
+		{
+			QuitWindow();
 		}
 		break;
 

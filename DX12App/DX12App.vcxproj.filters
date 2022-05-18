@@ -91,6 +91,9 @@
     <ClCompile Include="queryWindow.cpp">
       <Filter>소스 파일\Network</Filter>
     </ClCompile>
+    <ClCompile Include="atomicFloat.cpp">
+      <Filter>소스 파일\Helper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vertex.h">
@@ -193,6 +196,9 @@
       <Filter>헤더 파일\Network</Filter>
     </ClInclude>
     <ClInclude Include="window.h">
+      <Filter>헤더 파일\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="atomicFloat.h">
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
   </ItemGroup>

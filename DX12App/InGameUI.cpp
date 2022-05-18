@@ -93,7 +93,7 @@ void InGameUI::SetInvisibleStateTextUI()
 		mIsOutlined[i] = false;
 	//SetItemCount(0);
 	SetGradientCnt(0);
-	SetDriftGauge(0.0f);
+	SetDriftGauge(0);
 	SetItemCount(0);
 	BuildSolidBrush(GetColors());
 }
@@ -368,7 +368,7 @@ void InGameUI::TextUpdateMyRank()
 
 void InGameUI::TextUpdateSpeed()
 {
-	GetTextBlock()[4].strText.assign(std::to_string((int)(mCurrentSpeed / FIXED_FLOAT_LIMIT)));
+	GetTextBlock()[4].strText.assign(std::to_string(mCurrentSpeed));
 	for (auto& str : std::string("km/h"))
 		GetTextBlock()[5].strText.push_back(str);
 }
@@ -444,69 +444,9 @@ void InGameUI::TextUpdateWarning(float Elapsed)
 	SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::Red, mWarningAlpha));
 	BuildSolidBrush(GetColors());
 }
+
 void InGameUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch (msg)
-	{
-	case WM_KEYDOWN:
-		switch (wParam)
-		{
-		/*case 'I':
-			mMyScore += 100;
-			break;*/
-		//case 'L':
-		//	if (!mIsStartAnim)
-		//	{
-		//		mIsStartAnim = true;
-		//	}
-		//	else
-		//	{
-		//		mIsStartAnim = false;
-		//		mStartAnimTime = 0.0f;
-		//		for (auto &IsStartUI : mIsStartUI)
-		//			IsStartUI = false;
-		//		// Bitmap위치 원래 위치로 조정
-		//		SetBitmapPos();
-		//		//UI띄우기
-		//		SetVisibleStateTextUI();
-		//	}
-		//	break;
-		//case 'Y':
-		//	if (!mIsScoreBoard)
-		//	{
-		//		SetInvisibleStateTextUI();
-		//		mIsScoreBoard = true;
-		//	}
-		//	else
-		//	{
-		//		SetVisibleStateTextUI();
-		//		mIsScoreBoard = false;
-		//		mItemCnt = 0;
-		//	}
-		//	break;
-		//case 'U':
-		//	if (!mIsGoAnim)
-		//	{
-		//		mIsGoAnim = true;
-		//		mIsStartUI[3] = true;
-		//	}
-		//	else
-		//	{
-		//		mGoAnimTime = 0.0f;
-		//		mIsGoAnim = false;
-		//	}
-		//	break;
-		//case 'L':
-		//	mMyLap += 1;
-		//	break;
-		//case 'O': // warning
-		//	if (!mIsWarning)
-		//		mIsWarning = true;
-		//	else
-		//		mIsWarning = false;
-		//	break;
-		}
-	}
+{	
 }
 
 void InGameUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
@@ -556,7 +496,7 @@ void InGameUI::Draw(UINT nFrame)
         {
 			GetFrameWidth()* (3.0f / 16.0f),
 			GetFrameHeight() * (5.0f / 6.0f), 
-			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * (mDriftGauge/FIXED_FLOAT_LIMIT),
+			GetFrameWidth()* (3.0f / 16.0f) + (GetFrameWidth() * (1.0f / 2.0f) - GetFrameWidth() * (3.0f / 16.0f)) * (mDriftGauge/100.0f),
 			GetFrameHeight() * (8.0f / 9.0f)
         }, //DriftGauge
 		{

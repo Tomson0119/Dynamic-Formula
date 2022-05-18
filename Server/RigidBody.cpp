@@ -176,7 +176,7 @@ bool RigidBody::ChangeUpdateFlag(UPDATE_FLAG expected, UPDATE_FLAG desired)
 // MissileRigidBody
 //
 MissileRigidBody::MissileRigidBody()
-	: RigidBody(), mVehiclePtr{ nullptr }, mActive{ false }
+	: RigidBody(), mVehiclePtr{ nullptr }, mActive{ false }, mLaunchFlag{ false }
 {
 }
 
@@ -184,6 +184,8 @@ void MissileRigidBody::AppendRigidBody(BPHandler& physics)
 {
 	RigidBody::AppendRigidBody(physics);
 	if (mRigidBody) SetMissileComponents();
+	
+	SetLaunchFlag(true);
 }
 
 void MissileRigidBody::UpdateRigidBody()

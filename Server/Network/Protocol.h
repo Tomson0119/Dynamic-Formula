@@ -11,9 +11,10 @@ const int MAX_PLAYER_SIZE = 100;
 const int MAX_ROOM_CAPACITY = 8;
 const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 
+const int ROOM_NUM_PER_PAGE = 6;
+
 const int MaxBufferSize = 1024;
 
-const float FIXED_FLOAT_LIMIT = 10000.0f;
 
 enum class LOGIN_STAT : char
 {	
@@ -44,18 +45,34 @@ struct packet_header
 	char type;
 };
 
+struct vec3
+{
+	int x;
+	int z;
+	unsigned short y : 14;
+};
+
+struct quat3
+{
+	uint8_t max_idx : 2;
+	short elem1;
+	short elem2;
+	short elem3;
+};
+
 namespace CS
 {
 	const char LOGIN		= 1;
 	const char REGISTER		= 2;
-	const char OPEN_ROOM	= 3;
-	const char ENTER_ROOM	= 4;
-	const char REVERT_SCENE = 5;
-	const char SWITCH_MAP   = 6;
-	const char PRESS_READY  = 7;
-	const char LOAD_DONE	= 8;
-	const char KEY_INPUT	= 9;
-	const char TRANSFER_TIME = 10;
+	const char INQUIRE_ROOM = 3;
+	const char OPEN_ROOM	= 4;
+	const char ENTER_ROOM	= 5;
+	const char REVERT_SCENE = 6;
+	const char SWITCH_MAP   = 7;
+	const char PRESS_READY  = 8;
+	const char LOAD_DONE	= 9;
+	const char KEY_INPUT	= 10;
+	const char TRANSFER_TIME = 11;
 
 	struct packet_login : packet_header
 	{
@@ -69,13 +86,18 @@ namespace CS
 		char pwd[MAX_PWD_SIZE];
 	};
 
+	struct packet_inquire_room : packet_header
+	{
+		int page_num;
+	};
+
 	struct packet_open_room : packet_header { };
 
 	struct packet_enter_room : packet_header
 	{
 		int room_id;
 		//uint64_t send_time;
-	};
+	};	
 
 	struct packet_revert_scene : packet_header { };
 
@@ -112,7 +134,7 @@ namespace CS
 
 namespace SC
 {
-	struct PlayerInfo
+	struct player_info
 	{
 		char name[MAX_NAME_SIZE];
 		uint8_t color : 4;
@@ -136,15 +158,16 @@ namespace SC
 	const char START_SIGNAL		  = 13;
 	const char TRANSFER_TIME	  = 14;
 	const char PLAYER_TRANSFORM	  = 15;
-	const char MISSILE_TRANSFORM  = 16;
-	const char UI_INFO			  = 17;
-	const char REMOVE_MISSILE	  = 18;
-	const char INVINCIBLE_ON	  = 19;
-	const char SPAWN_TRANSFORM	  = 20;
-	const char WARNING_MESSAGE	  = 21;
-	const char INGAME_INFO		  = 22;
-	const char GAME_END			  = 23;
-	const char ITEM_COUNT		  = 24;
+	const char MISSILE_LAUNCHED	  = 16;
+	const char MISSILE_TRANSFORM  = 17;
+	const char UI_INFO			  = 18;
+	const char REMOVE_MISSILE	  = 19;
+	const char INVINCIBLE_ON	  = 20;
+	const char SPAWN_TRANSFORM	  = 21;
+	const char WARNING_MESSAGE	  = 22;
+	const char INGAME_INFO		  = 23;
+	const char GAME_END			  = 24;
+	const char ITEM_COUNT		  = 25;
 
 	struct packet_force_logout : packet_header { };
 
@@ -172,11 +195,10 @@ namespace SC
 
 	struct packet_room_inside_info : packet_header
 	{
-		int room_id;
-		uint8_t admin_idx : 4;
-		uint8_t player_idx : 4;
-		uint8_t map_id;
-		PlayerInfo player_stats[MAX_ROOM_CAPACITY];
+		uint8_t admin_idx : 3;
+		uint8_t player_idx : 3;
+		uint8_t map_id : 1;
+		player_info player_stats[MAX_ROOM_CAPACITY];
 	};
 
 	struct packet_room_outside_info : packet_header
@@ -190,40 +212,30 @@ namespace SC
 
 	struct packet_update_player_info : packet_header
 	{
-		int room_id;
-		uint8_t admin_idx : 4;
-		uint8_t player_idx : 4;
-		PlayerInfo player_info;
+		uint8_t admin_idx : 3;
+		uint8_t player_idx : 3;
+		player_info player_info;
 	};
 
 	struct packet_update_map_info : packet_header
 	{
-		int room_id;
 		uint8_t map_id;
 	};
 
 	struct packet_remove_player : packet_header
 	{
-		int room_id;
-		uint8_t admin_idx : 4;
-		uint8_t player_idx : 4;
+		uint8_t admin_idx : 3;
+		uint8_t player_idx : 3;
 	};
 
 	struct packet_game_start_fail : packet_header
 	{
-		int room_id;
 	};
 
 	struct packet_game_start_success : packet_header
 	{
-		int room_id;
-		int px[MAX_ROOM_CAPACITY];
-		int py[MAX_ROOM_CAPACITY];
-		int pz[MAX_ROOM_CAPACITY];
-		int rx[MAX_ROOM_CAPACITY];
-		int ry[MAX_ROOM_CAPACITY];
-		int rz[MAX_ROOM_CAPACITY];
-		int rw[MAX_ROOM_CAPACITY];
+		vec3 positions[MAX_ROOM_CAPACITY];
+		quat3 quaternions[MAX_ROOM_CAPACITY];
 	};
 
 	struct packet_ready_signal : packet_header
@@ -244,19 +256,26 @@ namespace SC
 
 	struct packet_player_transform : packet_header
 	{
-		uint8_t player_idx;
-		int position[3];
-		int quaternion[4];
+		uint8_t player_idx : 3;
+		vec3 position;
+		quat3 quaternion;
 		int linear_vel[3];
-		int angular_vel[3];
+	};
+
+	struct packet_missile_launched : packet_header
+	{
+		uint8_t missile_idx : 3;
+		vec3 position;
+		quat3 quaternion;
 	};
 
 	struct packet_missile_transform : packet_header
 	{
-		uint8_t missile_idx;
-		int position[3];
-		int quaternion[4];
-		int linear_vel[3];
+		uint8_t missile_idx : 3;
+		int pos_x;
+		int pos_z;
+		int linear_vel_x;
+		int linear_vel_z;
 	};
 
 	struct packet_ui_info : packet_header
@@ -280,17 +299,17 @@ namespace SC
 	struct packet_spawn_transform : packet_header
 	{
 		uint8_t player_idx;
-		int position[3];
-		int quaternion[4];
+		vec3 position;
+		quat3 quaternion;
 	};
 
 	struct packet_warning_message : packet_header { };
 
 	struct packet_ingame_info : packet_header
 	{
-		uint8_t player_idx;
+		uint8_t player_idx : 3;
+		uint8_t rank : 4;
 		uint8_t lap_count;
-		uint8_t rank;
 		int point;
 	};
 
@@ -304,8 +323,8 @@ namespace SC
 
 	struct packet_item_count : packet_header 
 	{
-		uint8_t player_idx;
-		uint8_t item_count;
+		uint8_t player_idx : 3;
+		uint8_t item_count : 2;
 	};
 }
 #pragma pack(pop)

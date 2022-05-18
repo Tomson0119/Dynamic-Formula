@@ -21,7 +21,7 @@ public:
 	void PushPacket(std::byte* pck, int bytes, bool udp=false);
 
 	void SendMsg(bool udp=false);
-	void RecvMsg();
+	void RecvMsg(bool udp=false);
 
 public:
 	void SetLatency(uint64_t sendTime);
@@ -34,6 +34,9 @@ public:
 	void SetHostEp(const EndPoint& ep) { mHostEp = ep; }
 	const EndPoint& GetHostEp() const { return mHostEp; }
 
+	void SetPageNum(int n) { mLobbyPageNum = n; }
+	int GetPageNum() const { return mLobbyPageNum; }
+
 public:
 	void SendLoginResult(LOGIN_STAT result, bool instSend=true);
 	void SendRegisterResult(REGI_STAT result, bool instSend=true);
@@ -45,22 +48,25 @@ public:
 	
 public:
 	int ID;
-	std::string Name;	
+	std::string Name;
 	std::atomic_int RoomID;
 	std::atomic_char PlayerIndex;
 
 private:
-	WSAOVERLAPPEDEX mTCPRecvOverlapped;
-
-	WSAOVERLAPPEDEX* mTCPSendOverlapped;
-	WSAOVERLAPPEDEX* mUDPSendOverlapped;
-
 	std::atomic<CLIENT_STAT> mState;
-
+	std::atomic_int mLobbyPageNum;
+	
 	std::atomic_bool mIsConnected;
 	std::atomic_uint64_t mLatency;
 
 	Socket mTCPSocket;
 	Socket* mUDPSocketPtr;
+
+	WSAOVERLAPPEDEX* mTCPSendOverlapped;
+	WSAOVERLAPPEDEX mTCPRecvOverlapped;
+
+	WSAOVERLAPPEDEX* mUDPSendOverlapped;
+	WSAOVERLAPPEDEX mUDPRecvOverlapped;
+
 	EndPoint mHostEp;
 };

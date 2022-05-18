@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="atomicFloat.cpp" />
     <ClCompile Include="bulletWrap.cpp" />
     <ClCompile Include="camera.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
@@ -151,6 +152,7 @@
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="atomicFloat.h" />
     <ClInclude Include="bulletWrap.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="constantBuffer.h" />

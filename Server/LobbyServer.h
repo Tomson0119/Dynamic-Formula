@@ -30,6 +30,9 @@ public:
 
 	InGameServer& GetInGameServer() { return mInGameServer; }
 
+private:
+	int FindPageNumOfRoom(int roomId);
+
 public:
 	void IncreasePlayerCount() { mLobbyPlayerCount.fetch_add(1); }
 	void DecreasePlayerCount() { mLobbyPlayerCount.fetch_sub(1); }

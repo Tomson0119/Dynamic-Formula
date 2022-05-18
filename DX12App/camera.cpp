@@ -23,6 +23,14 @@ void Camera::SetPosition(const XMFLOAT3& pos)
 	mViewDirty = true;
 }
 
+void Camera::SetRotation(const XMFLOAT4& quat)
+{
+	auto mat = XMMatrixRotationQuaternion(XMLoadFloat4(&quat));
+	mLook = Vector3::TransformNormal(mLook, mat);
+	mRight = Vector3::TransformNormal(mRight, mat);
+	mUp = Vector3::TransformNormal(mUp, mat);
+}
+
 void Camera::SetLook(const XMFLOAT3& look)
 {
 	mLook = look;

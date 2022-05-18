@@ -4,6 +4,7 @@
 #include "constantBuffer.h"
 #include "camera.h"
 #include "texture.h"
+#include "atomicFloat.h"
 
 class InGameScene;
 class Pipeline;
@@ -145,7 +146,7 @@ public:
 	const XMFLOAT4X4& GetWorld() const { return mWorld; }
 	const XMFLOAT4X4& GetInverseWorld() const { return mInvWorld; }
 
-	const AtomicInt3& GetLinearVelocity() { return mLinearVelocity; }
+	const AtomicFloat3& GetLinearVelocity() { return mLinearVelocity; }
 
 	//UINT GetSRVIndex() const { return mSrvIndex; }
 	UINT GetMeshCount() const { return (UINT)mMeshes.size(); }
@@ -163,7 +164,7 @@ public:
 
 	void SetRimLight(bool rimlight) { mRimLightOn = rimlight; }
 
-	const UPDATE_FLAG& GetUpdateFlag() const { return mUpdateFlag; }
+	UPDATE_FLAG GetUpdateFlag() const { return mUpdateFlag; }
 
 	// test
 	const XMFLOAT4& GetMeshDiffuse(const std::string& name);
@@ -185,12 +186,12 @@ protected:
 	std::mutex mProgressMut; // TEST
 	float mProgress = 0.0f;
 
-	AtomicInt3 mPrevOrigin;
-	AtomicInt4 mPrevQuat;
+	AtomicFloat3 mPrevOrigin;
+	AtomicFloat4 mPrevQuat;
 
-	AtomicInt3 mCorrectionOrigin{};
-	AtomicInt4 mCorrectionQuat{};
-	AtomicInt3 mLinearVelocity{};
+	AtomicFloat3 mCorrectionOrigin{};
+	AtomicFloat4 mCorrectionQuat{};
+	AtomicFloat3 mLinearVelocity{};
 	// Members for interpolation.
 
 	std::atomic<UPDATE_FLAG> mUpdateFlag;

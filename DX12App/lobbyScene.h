@@ -9,7 +9,6 @@ struct Room
 	unsigned char PlayerCount;
 	unsigned char MapID;
 	bool GameStarted;
-	bool Closed;
 };
 
 class NetModule;
@@ -46,6 +45,9 @@ public:
 	virtual UI* GetUI() const override { return mpUI.get(); }
 
 private:
-	std::unordered_map<int, Room> mRoomList;
+	std::map<int, Room> mRoomList;
+	std::mutex mRoomListMut;
+
 	std::unique_ptr<LobbyUI> mpUI;
+	std::atomic_int mPageNum;
 };

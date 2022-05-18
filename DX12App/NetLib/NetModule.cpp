@@ -79,78 +79,65 @@ void NetModule::NetworkFunc(NetModule& net)
 
 void NetModule::InitRoomInfo(SC::packet_room_inside_info* pck)
 {
-	if (mRoomID == pck->room_id)
+	mAdminIdx = pck->admin_idx;
+	mMapIdx = pck->map_id;
+	mPlayerIdx = pck->player_idx;
+	mPlayerListMut.lock();
+	for (int i = 0; i < mPlayerList.size(); i++)
 	{
-		mAdminIdx = pck->admin_idx;
-		mMapIdx = pck->map_id;
-		mPlayerIdx = pck->player_idx;
-		mPlayerListMut.lock();
-		for (int i = 0; i < mPlayerList.size(); i++)
-		{
-			mPlayerList[i].Empty = pck->player_stats[i].empty;
-			mPlayerList[i].Color = pck->player_stats[i].color;
-			mPlayerList[i].Ready = pck->player_stats[i].ready;
-			strncpy_s(mPlayerList[i].Name, pck->player_stats[i].name, MAX_NAME_SIZE - 1);
-		}
-		mPlayerListMut.unlock();
+		mPlayerList[i].Empty = pck->player_stats[i].empty;
+		mPlayerList[i].Color = pck->player_stats[i].color;
+		mPlayerList[i].Ready = pck->player_stats[i].ready;
+		strncpy_s(mPlayerList[i].Name, pck->player_stats[i].name, MAX_NAME_SIZE - 1);
 	}
+	mPlayerListMut.unlock();
 }
 
 void NetModule::RemovePlayer(SC::packet_remove_player* pck)
-{
-	if (mRoomID == pck->room_id)
-	{
-		mAdminIdx = pck->admin_idx;
-		mPlayerListMut.lock();
-		mPlayerList[pck->player_idx].Empty = true;
-		mPlayerListMut.unlock();
-	}
+{	
+	mAdminIdx = pck->admin_idx;
+	mPlayerListMut.lock();
+	mPlayerList[pck->player_idx].Empty = true;
+	mPlayerListMut.unlock();
 }
 
 void NetModule::UpdateMapIndex(SC::packet_update_map_info* pck)
 {
-	if (mRoomID == pck->room_id)
-	{
-		mMapIdx = pck->map_id;
-	}
+	mMapIdx = pck->map_id;
 }
 
 void NetModule::UpdatePlayerInfo(SC::packet_update_player_info* pck)
 {
-	if (mRoomID == pck->room_id)
-	{
-		mAdminIdx = pck->admin_idx;
+	mAdminIdx = pck->admin_idx;
 
-		mPlayerListMut.lock();
-		PlayerInfo& info = mPlayerList[pck->player_idx];
-		info.Empty = pck->player_info.empty;
-		info.Color = pck->player_info.color;
-		info.Ready = pck->player_info.ready;
-		strncpy_s(info.Name, pck->player_info.name, MAX_NAME_SIZE - 1);
-		mPlayerListMut.unlock();
-	}
+	mPlayerListMut.lock();
+	PlayerInfo& info = mPlayerList[pck->player_idx];
+	info.Empty = pck->player_info.empty;
+	info.Color = pck->player_info.color;
+	info.Ready = pck->player_info.ready;
+	strncpy_s(info.Name, pck->player_info.name, MAX_NAME_SIZE - 1);
+	mPlayerListMut.unlock();
 }
 
 void NetModule::InitPlayerTransform(SC::packet_game_start_success* pck)
 {
-	if (mRoomID == pck->room_id)
+	mPlayerListMut.lock();
+	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
-		mPlayerListMut.lock();
-		for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
-		{
-			auto& pos = mPlayerList[i].StartPosition;
-			auto& quat = mPlayerList[i].StartRotation;
+		auto& pos = mPlayerList[i].StartPosition;
+		auto& quat = mPlayerList[i].StartRotation;
 
-			pos.x = pck->px[i] / FIXED_FLOAT_LIMIT;
-			pos.y = pck->py[i] / FIXED_FLOAT_LIMIT;
-			pos.z = pck->pz[i] / FIXED_FLOAT_LIMIT;
-			quat.x = pck->rx[i] / FIXED_FLOAT_LIMIT;
-			quat.y = pck->ry[i] / FIXED_FLOAT_LIMIT;
-			quat.z = pck->rz[i] / FIXED_FLOAT_LIMIT;
-			quat.w = pck->rw[i] / FIXED_FLOAT_LIMIT;
-		}
-		mPlayerListMut.unlock();
+		pos.x = pck->positions[i].x / POS_FLOAT_PRECISION;
+		pos.y = pck->positions[i].y / POS_FLOAT_PRECISION;
+		pos.z = pck->positions[i].z / POS_FLOAT_PRECISION;
+
+		auto elems = Compressor::DecodeQuat(pck->quaternions[i]);
+		quat.x = elems[0];
+		quat.y = elems[1];
+		quat.z = elems[2];
+		quat.w = elems[3];
 	}
+	mPlayerListMut.unlock();
 }
 
 void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
@@ -219,7 +206,7 @@ void NetModule::Init()
 	mIOCP.RegisterDevice(mNetClient->GetTCPSocket(), 0);
 	mNetClient->RecvMsg(false);
 
-	mNetClient->BindUDPSocket(CLIENT_PORT);
+	//mNetClient->BindUDPSocket(CLIENT_PORT);
 	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
 	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };

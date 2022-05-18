@@ -157,7 +157,7 @@ void GameFramework::CheckAndChangeScene()
 	{
 		mScenes.top()->SetSceneChangeFlag(SCENE_CHANGE_FLAG::NONE);
 		mScenes.pop();
-		mScenes.top()->GetUI()->SetStatePop(mSwapChainBufferCount, mD3dDevice, mCommandQueue.Get(), mSwapChainBuffers->GetAddressOf(), static_cast<float>(gFrameWidth), static_cast<float>(gFrameHeight));
+		mScenes.top()->GetUI()->SetStatePop(mSwapChainBufferCount, mD3dDevice, mCommandQueue.Get(), mSwapChainBuffers->GetAddressOf(), gFrameWidth, gFrameHeight);
 		mNetwork->SetInterface(mScenes.top().get());
 		break;
 	}

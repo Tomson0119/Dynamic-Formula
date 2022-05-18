@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gameObject.h"
+#include "atomicFloat.h"
 
 class Camera;
 class InGameScene;
@@ -201,8 +202,8 @@ private:
 	float mDriftGauge = 0.0f;
 
 	std::atomic_bool mSpawnFlag = false;
-	AtomicInt3 mSpawnPosition;
-	AtomicInt4 mSpawnRotation;
+	AtomicFloat3 mSpawnPosition;
+	AtomicFloat4 mSpawnRotation;
 
 	std::atomic_bool mInvincibleOnFlag = false;
 	std::atomic_int mInvincibleInterval = 0;

@@ -3,7 +3,8 @@
 #include "NetLib/NetModule.h"
 
 LobbyScene::LobbyScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::White, netPtr }
+	: Scene{ hwnd, SCENE_STAT::LOBBY, (XMFLOAT4)Colors::White, netPtr },
+	  mPageNum{ 0 }
 {
 	OutputDebugStringW(L"Lobby Scene Entered.\n");
 }
@@ -60,7 +61,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 		{
 			OutputDebugStringA("MakeRoom Button Down\n");
 #ifndef STANDALONE
-			mNetPtr->Client()->RequestNewRoom();
+			//mNetPtr->Client()->RequestNewRoom();
 #endif
 		}
 		else if (ret == -1) // Nothing
@@ -73,7 +74,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 			OutputDebugStringA(std::to_string(ret).c_str());
 			OutputDebugStringA("\n");
 #ifndef STANDALONE
-			mNetPtr->Client()->RequestEnterRoom(ret);
+			//mNetPtr->Client()->RequestEnterRoom(ret);
 #endif
 		}
 	}
@@ -82,7 +83,6 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 
 void LobbyScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
 {
-
 }
 
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
@@ -150,27 +150,23 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room outside info packet.\n");
 		
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
-		// TODO: need to lock container
 		if(pck->room_closed == false) 
 		{
+			mRoomListMut.lock();
 			mRoomList[pck->room_id] = Room{ 
 					  pck->room_id, 
 					  pck->player_count, 
 					  pck->map_id, 
-					  pck->game_started, 
-					  pck->room_closed };
-
-			// 规 积己
-			// 
-			//for (int i = 0; i < 6; ++i)
-				//mpUI->SetIndexRoomNums(i, mRoomList[i]->room_id);
+					  pck->game_started };
+			mRoomListMut.unlock();
 		}
 		else
 		{
+			mRoomListMut.lock();
 			mRoomList.erase(pck->room_id);
-
-			// 规 力芭
+			mRoomListMut.unlock();
 		}
+		
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
 	#endif

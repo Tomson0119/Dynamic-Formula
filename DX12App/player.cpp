@@ -212,10 +212,8 @@ PhysicsPlayer::~PhysicsPlayer()
 void PhysicsPlayer::SetSpawnTransform(SC::packet_spawn_transform* pck)
 {
 	mSpawnFlag = true;
-	mSpawnPosition.SetValue(pck->position[0], pck->position[1], pck->position[2]);
-	mSpawnRotation.SetValue(
-		pck->quaternion[0], pck->quaternion[1],
-		pck->quaternion[2], pck->quaternion[3]);
+	mSpawnPosition.SetValue(pck->position);
+	mSpawnRotation.SetValue(pck->quaternion);
 }
 
 void PhysicsPlayer::SetMesh(const std::shared_ptr<Mesh>& bodyMesh, const std::shared_ptr<Mesh>& wheelMesh, std::shared_ptr<BulletWrapper> physics)
@@ -262,7 +260,7 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityY = 40.0f;
 
 		mCamera->SetOffset(0.0f, 1.6f, -7.5f);
-		mCamera->SetTimeLag(0.0f);
+		mCamera->SetTimeLag(0.2f);
 		break;
 
 	case CameraMode::TOP_DOWN_CAMERA:
@@ -589,7 +587,7 @@ void PhysicsPlayer::UpdateInvincibleState(float elapsed)
 	{
 		mInvincibleOnFlag = false;
 		mInvincible = true;
-		mInvincibleDuration = (float)mInvincibleInterval / FIXED_FLOAT_LIMIT;
+		mInvincibleDuration = (float)mInvincibleInterval / 10.0f;
 	}
 
 	if (mInvincible)
@@ -810,30 +808,19 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 	mPrevOrigin = mCorrectionOrigin;
 	mPrevQuat = mCorrectionQuat;
 
-	mCorrectionOrigin.SetValue(
-		pck->position[0],
-		pck->position[1], 
-		pck->position[2]);
-
+	mCorrectionOrigin.SetValue(pck->position);
 	mCorrectionOrigin.Extrapolate(
-		pck->linear_vel[0],
-		pck->linear_vel[1],
-		pck->linear_vel[2],
+		pck->linear_vel[0] / POS_FLOAT_PRECISION,
+		pck->linear_vel[1] / POS_FLOAT_PRECISION,
+		pck->linear_vel[2] / POS_FLOAT_PRECISION,
 		latency);
 
-	mCorrectionQuat.SetValue(
-		pck->quaternion[0],
-		pck->quaternion[1],
-		pck->quaternion[2],
-		pck->quaternion[3]);
+	mCorrectionQuat.SetValue(pck->quaternion);	
 
-	mCorrectionQuat.Extrapolate(
-		pck->angular_vel[0],
-		pck->angular_vel[1],
-		pck->angular_vel[2],
-		latency);
-	
-	mLinearVelocity.SetValue(pck->linear_vel[0], pck->linear_vel[1], pck->linear_vel[2]);
+	mLinearVelocity.SetValue(
+		pck->linear_vel[0] / POS_FLOAT_PRECISION, 
+		pck->linear_vel[1] / POS_FLOAT_PRECISION,
+		pck->linear_vel[2] / POS_FLOAT_PRECISION);
 }
 
 void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* scene, const UINT& cubemapIndex)

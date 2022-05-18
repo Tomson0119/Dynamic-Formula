@@ -2,11 +2,12 @@
 #include "NetClient.h"
 
 NetClient::NetClient()
-	: mTCPSendOverlapped{},
-	  mUDPRecvOverlapped{},
-	  mTCPRecvOverlapped{},
-	  mIsConnected{ false },
-	  mServerEp{}
+	: mIsConnected{ false },
+	  mServerEp{},
+	  mTCPSendOverlapped{ nullptr },
+	  mTCPRecvOverlapped{ OP::RECV },
+	  mUDPSendOverlapped{ nullptr },
+	  mUDPRecvOverlapped{ OP::RECV }
 {
 	mTCPSocket.Init(SocketType::TCP);
 	mTCPSocket.SetNagleOption(1);
@@ -33,6 +34,11 @@ void NetClient::Disconnect()
 		delete mTCPSendOverlapped;
 		mTCPSendOverlapped = nullptr;
 	}
+	if (mUDPSendOverlapped)
+	{
+		delete mUDPSendOverlapped;
+		mUDPSendOverlapped = nullptr;
+	}
 	if (mIsConnected)
 	{
 		OutputDebugStringA("Disconnecting...\n");
@@ -48,46 +54,58 @@ void NetClient::BindUDPSocket(short port)
 	RecvMsg(true);
 }
 
-void NetClient::PushPacket(std::byte* pck, int bytes)
+void NetClient::PushPacket(std::byte* pck, int bytes, bool udp)
 {
 	if (mIsConnected == false) return;
-	if (mTCPSendOverlapped == nullptr)
-		mTCPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
-	else
-		mTCPSendOverlapped->PushMsg(pck, bytes);
-}
-
-void NetClient::SendMsg(std::byte* pck, int bytes)
-{
-	PushPacket(pck, bytes);
-	SendMsg();
-}
-
-void NetClient::SendMsg()
-{
-	if (mIsConnected == false) return;
-	if (mTCPSendOverlapped)
+	if (udp)
 	{
-		if (mTCPSocket.Send(mTCPSendOverlapped) < 0)
-		{
-			//delete mTCPSendOverlapped;
-		}
+		if (mUDPSendOverlapped == nullptr)
+			mUDPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
+		else
+			mUDPSendOverlapped->PushMsg(pck, bytes);
+	}
+	else
+	{
+		if (mTCPSendOverlapped == nullptr)
+			mTCPSendOverlapped = new WSAOVERLAPPEDEX(OP::SEND, pck, bytes);
+		else
+			mTCPSendOverlapped->PushMsg(pck, bytes);
+	}
+}
+
+void NetClient::SendMsg(std::byte* pck, int bytes, bool udp)
+{
+	PushPacket(pck, bytes, udp);
+	SendMsg(udp);
+}
+
+void NetClient::SendMsg(bool udp)
+{
+	if (mIsConnected == false) return;
+	if (udp && mUDPSendOverlapped)
+	{
+		mUDPSocket.SendTo(*mUDPSendOverlapped, mServerEp);
+		mUDPSendOverlapped = nullptr;
+	}
+	else if (udp == false && mTCPSendOverlapped)
+	{
+		mTCPSocket.Send(*mTCPSendOverlapped);
 		mTCPSendOverlapped = nullptr;
 	}
 }
 
 void NetClient::RecvMsg(bool udp)
 {
-	if (udp == false)
+	if (udp)
 	{
-		mTCPRecvOverlapped.Reset(OP::RECV);
-		mTCPSocket.Recv(&mTCPRecvOverlapped);
+		mUDPRecvOverlapped.NetBuffer.Clear();
+		mUDPRecvOverlapped.Reset(OP::RECV);
+		mUDPSocket.RecvFrom(mUDPRecvOverlapped, mServerEp);
 	}
 	else
 	{
-		mUDPRecvOverlapped.NetBuffer.Clear(); // always clear buffer for udp.
-		mUDPRecvOverlapped.Reset(OP::RECV);		
-		mUDPSocket.RecvFrom(&mUDPRecvOverlapped, mServerEp);
+		mTCPRecvOverlapped.Reset(OP::RECV);
+		mTCPSocket.Recv(mTCPRecvOverlapped);
 	}
 }
 
@@ -138,6 +156,18 @@ void NetClient::RequestEnterRoom(int roomID)
 	pck.size = sizeof(CS::packet_enter_room);
 	pck.type = CS::ENTER_ROOM;
 	pck.room_id = roomID;
+	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
+}
+
+void NetClient::InquireRoomList(int pageNum)
+{
+#ifdef _DEBUG
+	OutputDebugStringA(("Inquiring room list (page num: " + std::to_string(pageNum) + ")\n").c_str());
+#endif
+	CS::packet_inquire_room pck{};
+	pck.size = sizeof(CS::packet_inquire_room);
+	pck.type = CS::INQUIRE_ROOM;
+	pck.page_num = pageNum;
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 

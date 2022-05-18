@@ -73,9 +73,6 @@ protected:
 	SCENE_STAT mSceneState;
 	XMFLOAT4 mFrameColor;
 
-	//UI 
-	//std::shared_ptr<UI> mpUI;
-
 	NetModule* mNetPtr;
 
 	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;

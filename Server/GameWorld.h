@@ -45,8 +45,9 @@ public:
 private:
 	void CheckCountdownTime();
 	void CheckRunningTime();
-
 	void CheckCollision();
+	void CheckMissileLaunchFlag();
+
 	void UpdatePlayers(float elapsed);
 	void UpdateInvincibleState(int idx, float elapsed);
 
@@ -73,10 +74,11 @@ public:
 
 private:
 	void BroadcastAllTransform();
-	void PushVehicleTransformPacket(int target, int receiver);
-	void PushMissileTransformPacket(int target, int receiver);
+	void PushVehicleTransformPacketToAll(int target);
+	void PushMissileTransformPacketToAll(int target);
 	void PushUiInfoPacket(int target);
 
+	void SendMissileLaunchPacket(int target);
 	void SendMissileRemovePacket(int target);
 	void SendInvincibleOnPacket(int target);
 	void SendSpawnPacket(int target);
@@ -85,7 +87,7 @@ private:
 	void SendGameEndPacket();
 	void SendItemCountPacket(int target, bool instSend=true);
 
-	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);
+	void SendToAllPlayer(std::byte* pck, int size, bool udp=false, int ignore=-1, bool instSend=true);
 
 private:
 	int mID;

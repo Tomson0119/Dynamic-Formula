@@ -29,11 +29,11 @@ public:
 	void AsyncAccept(WSAOVERLAPPEDEX* accpet_ex);
 	bool Connect(const EndPoint& ep);
 
-	int Send(WSAOVERLAPPEDEX* overlapped);
-	int Recv(WSAOVERLAPPEDEX* overlapped);
+	int Send(WSAOVERLAPPEDEX& over);
+	int Recv(WSAOVERLAPPEDEX& over);
 
-	int SendTo(WSAOVERLAPPEDEX* overlapped, const EndPoint& hostEp);
-	int RecvFrom(WSAOVERLAPPEDEX* overlapped, EndPoint& hostEp);
+	int SendTo(WSAOVERLAPPEDEX& over, const EndPoint& hostEp);
+	int RecvFrom(WSAOVERLAPPEDEX& over, EndPoint& hostEp);
 
 public:
 	void SetSocket(SOCKET sck) { mSckHandle = sck; }
@@ -41,4 +41,5 @@ public:
 
 private:
 	SOCKET mSckHandle;
+	SocketType mSckType;
 };

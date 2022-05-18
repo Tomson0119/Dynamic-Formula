@@ -172,7 +172,6 @@ void WaitRoom::SendGameStartFail(bool instSend)
 	SC::packet_game_start_fail pck{};
 	pck.size = sizeof(SC::packet_game_start_fail);
 	pck.type = SC::GAME_START_FAIL;
-	pck.room_id = mID;
 	
 	const int hostID = mPlayers[mAdminIndex]->ID;
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
@@ -189,7 +188,6 @@ void WaitRoom::SendUpdatePlayerInfoToAll(int target, int ignore, bool instSend)
 	SC::packet_update_player_info pck{};
 	pck.size = sizeof(SC::packet_update_player_info);
 	pck.type = SC::UPDATE_PLAYER_INFO;
-	pck.room_id = mID;
 	pck.player_idx = idx;
 	pck.admin_idx = mAdminIndex;
 	strncpy_s(pck.player_info.name, mPlayers[idx]->Name, MAX_NAME_SIZE - 1);
@@ -222,7 +220,6 @@ void WaitRoom::SendUpdateMapInfoToAll(int ignore, bool instSend)
 	SC::packet_update_map_info pck{};
 	pck.size = sizeof(SC::packet_update_map_info);
 	pck.type = SC::UPDATE_MAP_INFO;
-	pck.room_id = mID;
 	pck.map_id = mMapIndex;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, -1, instSend);	
 }
@@ -235,7 +232,6 @@ void WaitRoom::SendRoomInsideInfoToAll()
 	SC::packet_room_inside_info pck{};
 	pck.size = sizeof(SC::packet_room_inside_info);
 	pck.type = SC::ROOM_INSIDE_INFO;
-	pck.room_id = mID;
 	pck.map_id = mMapIndex;
 	pck.admin_idx = mAdminIndex;
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
@@ -266,7 +262,6 @@ void WaitRoom::SendRoomInsideInfo(int id, bool instSend)
 	SC::packet_room_inside_info pck{};
 	pck.size = sizeof(SC::packet_room_inside_info);
 	pck.type = SC::ROOM_INSIDE_INFO;
-	pck.room_id = mID;
 	pck.map_id = mMapIndex;
 	pck.player_idx = gClients[id]->PlayerIndex;
 	pck.admin_idx = mAdminIndex;

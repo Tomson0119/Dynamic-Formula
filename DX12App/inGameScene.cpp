@@ -420,6 +420,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mMainCamera.reset(mPlayer->ChangeCameraMode((int)CameraMode::THIRD_PERSON_CAMERA));
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
 	mMainCamera->SetPosition(mPlayer->GetPosition());
+	mMainCamera->SetRotation(mPlayer->GetQuaternion());
 	mCurrentCamera = mMainCamera.get();
 
 	for (const auto& [_, pso] : mPipelines)
@@ -441,8 +442,6 @@ void InGameScene::BuildCarObject(
 	auto carObj = make_shared<PhysicsPlayer>(netID);
 	carObj->SetPosition(position);
 	carObj->SetQuaternion(rotation);
-	Print("Position: ", position);
-	Print("Rotation: ", rotation);
 
 	if (mMeshList["Car_Body.obj"].empty())
 	{
@@ -559,7 +558,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::READY_SIGNAL:
 	{
 		SC::packet_ready_signal* pck = reinterpret_cast<SC::packet_ready_signal*>(packet);
-		// TODO: Show countdown image..
 		mpUI->ShowStartAnim();
 		break;
 	}
@@ -567,13 +565,8 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	{
 		SC::packet_start_signal* pck = reinterpret_cast<SC::packet_start_signal*>(packet);
 		mGameStarted = true;
-
-		OutputDebugStringA(("Delay: " + std::to_string(pck->delay_time_msec) + "\n").c_str());
-		OutputDebugStringA(("Delay: " + std::to_string(pck->running_time_sec) + "\n").c_str());
-
 		mpUI->ShowGoAnim();
 		mpUI->SetRunningTime((float)pck->running_time_sec);
-
 		break;
 	}
 	case SC::REMOVE_PLAYER:
@@ -587,6 +580,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	}
 	case SC::REMOVE_MISSILE:
 	{
+		//OutputDebugStringA("Missile remove packet.\n");
 		SC::packet_remove_missile* pck = reinterpret_cast<SC::packet_remove_missile*>(packet);
 		const auto& missile = mMissileObjects[pck->missile_idx];
 		if (missile) missile->SetUpdateFlag(UPDATE_FLAG::REMOVE);
@@ -611,25 +605,30 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
+	case SC::MISSILE_LAUNCHED:
+	{
+		SC::packet_missile_launched* pck = reinterpret_cast<SC::packet_missile_launched*>(packet);
+		auto& missile = mMissileObjects[pck->missile_idx];
+		if (missile)
+		{
+			//OutputDebugStringA("Missile launched packet.\n");
+			auto pos = Compressor::DecodePos(pck->position);
+			auto quat = Compressor::DecodeQuat(pck->quaternion);
+			missile->SetPosition(XMFLOAT3{ pos[0], pos[1], pos[2] });
+			missile->SetQuaternion(XMFLOAT4{ quat[0], quat[1], quat[2], quat[3] });
+			missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
+		}
+		break;
+	}
 	case SC::MISSILE_TRANSFORM:
 	{
 		SC::packet_missile_transform* pck = reinterpret_cast<SC::packet_missile_transform*>(packet);
 		const auto& missile = mMissileObjects[pck->missile_idx];
 		
-		if (missile)
+		if (missile && missile->IsActive())
 		{
-			if (missile->IsActive() == false)
-			{
-				const XMFLOAT3& pos = mPlayerObjects[pck->missile_idx]->GetPosition();
-				const XMFLOAT4& quat = mPlayerObjects[pck->missile_idx]->GetQuaternion();
-				missile->SetPosition(pos);
-				missile->SetQuaternion(quat);
-				missile->SetUpdateFlag(UPDATE_FLAG::CREATE);
-			}
-			else
-			{
-				missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
-			}
+			OutputDebugStringA("Missile transform packet.\n");
+			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
 		}
 		break;
 	}
@@ -650,7 +649,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player)
 		{
-			int duration = pck->duration - (int)(mNetPtr->GetLatency() * FIXED_FLOAT_LIMIT);
+			int duration = pck->duration;
 			player->SetInvincibleOn(duration);
 		}
 		break;
@@ -796,9 +795,16 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			mDriftParticleEnable = false;
 		}
-		
-		if(wParam == VK_END)
-			SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
+		if (wParam == 'I')
+		{
+			if (mPlayer)
+			{
+				auto& vel = mPlayer->GetLinearVelocity().GetXMFloat3();
+				float len = Vector3::Length(vel);
+				Print("Player vel: ", vel);
+				OutputDebugStringA(("Player vel length: " + std::to_string(len) + "\n").c_str());
+			}
+		}
 		break;
 
 	case WM_KEYDOWN:
@@ -1219,6 +1225,7 @@ void InGameScene::UpdateMissileObject()
 		{
 		case UPDATE_FLAG::CREATE:
 		{
+			OutputDebugStringA("Missile created.\n");
 			flag = true;
 			missile->SetActive(true);
 			mPipelines[Layer::Default]->AppendObject(mMissileObjects[i]);
@@ -1227,6 +1234,7 @@ void InGameScene::UpdateMissileObject()
 		}
 		case UPDATE_FLAG::REMOVE:
 		{
+			OutputDebugStringA("Missile removed.\n");
 			flag = true;
 			missile->SetActive(false);
 			missile->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Default]);
