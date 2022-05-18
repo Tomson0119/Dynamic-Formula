@@ -22,7 +22,7 @@ void LobbyServer::Init(LoginServer* ptr)
 void LobbyServer::TakeOverNewPlayer(int hostID)
 {
 	IncreasePlayerCount();
-	SendExistingRoomList(hostID);
+	SendExistingRoomList(hostID, 0);
 }
 
 bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
@@ -37,7 +37,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	#endif
 		CS::packet_inquire_room* pck = reinterpret_cast<CS::packet_inquire_room*>(packet);
 		gClients[id]->SetPageNum(pck->page_num);
-		SendExistingRoomList(id);
+		SendExistingRoomList(id, pck->page_num);
 		break;
 	}
 	case CS::OPEN_ROOM:
@@ -226,7 +226,7 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 		if (logout == false)
 		{
 			IncreasePlayerCount();
-			//SendExistingRoomList(hostID);
+			SendExistingRoomList(hostID, 0);
 		}
 		break;
 	}
@@ -286,10 +286,10 @@ void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, int ignore, bool instSe
 	}
 }
 
-void LobbyServer::SendExistingRoomList(int id)
+void LobbyServer::SendExistingRoomList(int id, int pageNum)
 {
 	if (gClients[id]->GetCurrentState() != CLIENT_STAT::LOBBY
-		|| gClients[id]->GetPageNum() < 0)
+		|| pageNum < 0)
 		return;
 
 	int startCnt = gClients[id]->GetPageNum() * ROOM_NUM_PER_PAGE;

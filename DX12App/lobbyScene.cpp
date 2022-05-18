@@ -150,22 +150,16 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room outside info packet.\n");
 		
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
-		if(pck->room_closed == false) 
+		mRoomListMut.lock();
+		for (int i = 0; i < ROOM_NUM_PER_PAGE; i++)
 		{
-			mRoomListMut.lock();
-			mRoomList[pck->room_id] = Room{ 
-					  pck->room_id, 
-					  pck->player_count, 
-					  pck->map_id, 
-					  pck->game_started };
-			mRoomListMut.unlock();
+			mRoomList[i].ID = pck->rooms[i].room_id;
+			mRoomList[i].PlayerCount = pck->rooms[i].player_count;
+			mRoomList[i].MapID = pck->rooms[i].map_id;
+			mRoomList[i].GameStarted = pck->rooms[i].game_started;
+			mRoomList[i].Closed = pck->rooms[i].room_closed;
 		}
-		else
-		{
-			mRoomListMut.lock();
-			mRoomList.erase(pck->room_id);
-			mRoomListMut.unlock();
-		}
+		mRoomListMut.unlock();
 		
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
