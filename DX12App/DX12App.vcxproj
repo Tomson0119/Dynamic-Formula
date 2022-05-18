@@ -166,6 +166,7 @@
     <ClInclude Include="heightMapImage.h" />
     <ClInclude Include="inGameScene.h" />
     <ClInclude Include="InGameUI.h" />
+    <ClInclude Include="interpolator.h" />
     <ClInclude Include="lobbyScene.h" />
     <ClInclude Include="LobbyUI.h" />
     <ClInclude Include="loginScene.h" />

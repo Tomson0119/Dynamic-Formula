@@ -201,6 +201,9 @@
     <ClInclude Include="atomicFloat.h">
       <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
+    <ClInclude Include="interpolator.h">
+      <Filter>헤더 파일\Helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\billboard.hlsl">

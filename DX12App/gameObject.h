@@ -5,6 +5,7 @@
 #include "camera.h"
 #include "texture.h"
 #include "atomicFloat.h"
+#include "interpolator.h"
 
 class InGameScene;
 class Pipeline;
@@ -188,6 +189,8 @@ protected:
 	AtomicFloat3 mCorrectionOrigin{};
 	AtomicFloat4 mCorrectionQuat{};
 	AtomicFloat3 mLinearVelocity{};
+
+	Interpolator mInterpolator;
 	// Members for interpolation.
 
 	std::atomic<UPDATE_FLAG> mUpdateFlag;
