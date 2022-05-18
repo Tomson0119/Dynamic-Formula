@@ -34,13 +34,21 @@ public:
 	void SetIndexRoomNums(int index, int RoomID) { mRoomNums[index] = RoomID; }
 	void UpdateRoomIDTexts();
 	void RoomEmptyProcess();
+
+	void SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed);
 private:
 	float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
 	//For Packet
 	// º¸·ù
-	std::atomic_int mRoomNums[6];
 	std::atomic_char mDenyMessageCode;
 	std::atomic_bool mIsDenyBox = false;
+
+	//Room Info
+	std::atomic_int mRoomNums[6];
+	std::atomic_char mPlayerCount[6];
+	std::atomic_char mMapID[6];
+	std::atomic_bool mIsGameStarted[6];
+	std::atomic_bool mIsClosed[6];
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

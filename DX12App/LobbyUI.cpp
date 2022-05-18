@@ -94,34 +94,43 @@ int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
     float dy = static_cast<float>(y);
     RECT rc = MakeRect(GetTextBlock()[0].d2dLayoutRect.left, GetTextBlock()[0].d2dLayoutRect.top,
         GetTextBlock()[0].d2dLayoutRect.right, GetTextBlock()[0].d2dLayoutRect.bottom);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN)
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN) // make room
         return 0;
     
     rc = MakeRect(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.40f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[1].strText.empty())
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[1].strText.empty()) // room 1
         return mRoomNums[0];
     
     rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.40f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[2].strText.empty())
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[2].strText.empty()) // room 2
         return mRoomNums[1];
     
     rc = MakeRect(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.41f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.58f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[3].strText.empty())
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[3].strText.empty()) // room 3
         return mRoomNums[2];
     
     rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.41f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.58f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[4].strText.empty())
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[4].strText.empty()) // room 4
         return mRoomNums[3];
     
     rc = MakeRect(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.59f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.76f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[5].strText.empty())
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[5].strText.empty()) // room 5
         return mRoomNums[4];
 
     rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.59f, GetFrameWidth() * 0.77f, GetFrameHeight() * 0.76f);
-    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[6].strText.empty())
+    if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[6].strText.empty()) // room 6
         return mRoomNums[5];
     
     return -1;
+}
+
+void LobbyUI::SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed)
+{
+    mRoomNums[index] = RoomID;
+    mPlayerCount[index] = PlayerCount;
+    mMapID[index] = MapID;
+    mIsGameStarted[index] = GameStarted;
+    mIsClosed[index] = Closed;
 }
 
 void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index)

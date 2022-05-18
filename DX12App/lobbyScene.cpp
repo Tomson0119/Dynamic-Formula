@@ -63,7 +63,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 			mNetPtr->Client()->RequestNewRoom();
 #endif
 		}
-		else if (ret == 0) // Nothing
+		else if (ret == -1) // Nothing
 		{
 			return;
 		}
@@ -142,6 +142,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);
+		
 		break;
 	}
 	case SC::ROOM_OUTSIDE_INFO:
