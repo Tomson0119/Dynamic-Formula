@@ -39,16 +39,15 @@ public:
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
 	void SortMeshes();
 	void UpdateInverseWorld();
+	void UpdateBoundingBox();
 
 protected:
 	virtual void UpdateTransform();
-
 
 	void RotateDirectionVectors();
 	void SetWorldByMotionState();
 	void ResetTransformVectors();
 
-	void UpdateBoundingBox();
 	void Animate(float elapsedTime);
 
 	void InterpolateRigidBody(float elapsed, float updateRate);
@@ -134,6 +133,8 @@ public:
 	void Scale(float scale);
 
 	void SetTransparent(bool transparent) { mTransparentOn = transparent; }
+
+	void SetOOBBOrientation(const XMFLOAT4& quaternion) { mOOBB.Orientation = quaternion; }
 
 public:
 	const XMFLOAT3& GetPosition() const { return mPosition; }

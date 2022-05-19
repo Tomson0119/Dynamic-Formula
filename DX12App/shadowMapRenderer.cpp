@@ -315,7 +315,6 @@ void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList)
 		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange[i], look, mCenter[i]);
 
 		mDepthCamera[i]->LookAt(position, mCenter[i], XMFLOAT3(0.0f, 1.0f, 0.0f));
-		
 		mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
 	}
 
@@ -345,14 +344,12 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, InGameScen
 		scene->UpdateCameraConstant(i + 1, mDepthCamera[i].get());
 
 #ifdef FRUSTUM_CULLING
-		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i));
+		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i), false);
 #endif
 
 #ifndef FRUSTUM_CULLING
 		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i), false);
 #endif
-
-
 		scene->SetGraphicsCBV(cmdList, i + 1);
 		RenderPipelines(cmdList, i);
 
