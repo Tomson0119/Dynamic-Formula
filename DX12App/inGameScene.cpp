@@ -5,7 +5,7 @@
 
 using namespace std;
 
-InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msaaQuality, MAP_TYPE mapType)
+InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msaaQuality)
 	: Scene{ hwnd, SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"In Game Scene Entered.\n");
@@ -22,8 +22,6 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
 	mKeyMap['P'] = false;
-
-	mMapType = mapType;
 
 #ifdef STANDALONE
 	mGameStarted = true;
@@ -90,16 +88,15 @@ void InGameScene::BuildObjects(
 
 	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
-	if (mMapType == MAP_TYPE::Night)
-	{
-		mDirectionalLight.SetInfo(
-			XMFLOAT3(0.2f, 0.2f, 0.2f),
-			XMFLOAT3(0.0f, 0.0f, 0.0f),
-			XMFLOAT3(-1.0f, 0.75f, -1.0f),
-			0.0f, 0.0f, 0.0f,
-			3000.0f, DIRECTIONAL_LIGHT);
-	}
-	else if (mMapType == MAP_TYPE::Day)
+#ifdef STANDALONE
+	mDirectionalLight.SetInfo(
+		XMFLOAT3(0.7f, 0.7f, 0.7f),
+		XMFLOAT3(0.0f, 0.0f, 0.0f),
+		XMFLOAT3(-1.0f, 0.75f, -1.0f),
+		0.0f, 0.0f, 0.0f,
+		3000.0f, DIRECTIONAL_LIGHT);
+#else
+	if (mNetPtr->GetMapIndex() == 0)
 	{
 		mDirectionalLight.SetInfo(
 			XMFLOAT3(0.7f, 0.7f, 0.7f),
@@ -108,6 +105,16 @@ void InGameScene::BuildObjects(
 			0.0f, 0.0f, 0.0f,
 			3000.0f, DIRECTIONAL_LIGHT);
 	}
+	else if (mNetPtr->GetMapIndex() == 1)
+	{
+		mDirectionalLight.SetInfo(
+			XMFLOAT3(0.2f, 0.2f, 0.2f),
+			XMFLOAT3(0.0f, 0.0f, 0.0f),
+			XMFLOAT3(-1.0f, 0.75f, -1.0f),
+			0.0f, 0.0f, 0.0f,
+			3000.0f, DIRECTIONAL_LIGHT);
+	}
+#endif
 
 	BuildRootSignature();
 	BuildComputeRootSignature();
@@ -232,7 +239,13 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
-	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList, mMapType);
+
+#ifdef STANDALONE
+	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
+#else
+	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList, mNetPtr->GetMapIndex());
+#endif
+	
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
@@ -406,18 +419,24 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
-	if (mMapType == MAP_TYPE::Day)
+#ifdef STANDALONE
+	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
+	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
+	LoadLights(cmdList, L"Map\\Lights.tmap");
+#else
+	if (mNetPtr->GetMapIndex() == 0)
 	{
 		LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
 		LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 		LoadLights(cmdList, L"Map\\Lights.tmap");
 	}
-	else if(mMapType == MAP_TYPE::Night)
+	else if(mNetPtr->GetMapIndex() == 1)
 	{
 		LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
 		LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 		LoadLights(cmdList, L"Map\\Lights.tmap");
 	}
+#endif
 
 #ifdef STANDALONE
 	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
@@ -554,23 +573,16 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 	if (mShadowMapRenderer)
 		mShadowMapRenderer->PreRender(cmdList, this);
 
-	if (mCubemapInterval < 0.0f)
-	{
-		mCubemapInterval = 0.001f;
-		mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
+	mPlayer->PreDraw(cmdList, this, mCubemapDrawIndex);
 
-		if (mCubemapDrawIndex < 5)
-			mCubemapDrawIndex++;
-		else
-		{
-			mPlayer->ChangeCurrentRenderTarget();
-			mCubemapDrawIndex = 0;
-		}
-	}
+	if (mCubemapDrawIndex < 5)
+		mCubemapDrawIndex++;
 	else
 	{
-		mCubemapInterval -= elapsed;
+		mPlayer->ChangeCurrentRenderTarget();
+		mCubemapDrawIndex = 0;
 	}
+
 	mPlayer->SetCubemapSrv(cmdList, 7);
 }
 

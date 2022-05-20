@@ -122,7 +122,7 @@ protected:
 class SkyboxPipeline : public Pipeline
 {
 public:
-	SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, MAP_TYPE mapType);
+	SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, char mapIndex = 0);
 	virtual ~SkyboxPipeline();
 
 	virtual void BuildPipeline(

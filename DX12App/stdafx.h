@@ -140,12 +140,6 @@ inline std::wstring AnsiToWString(const std::string& str)
 #define SPOT_LIGHT		  2
 #define DIRECTIONAL_LIGHT 3
 
-enum class MAP_TYPE
-{
-	Day,
-	Night
-};
-
 struct LightInfo
 {
 	XMFLOAT3 Diffuse = XMFLOAT3(0.0f, 0.0f, 0.0f);

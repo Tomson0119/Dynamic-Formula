@@ -123,7 +123,7 @@ void GameFramework::InitScene(SCENE_STAT state)
 		break;
 
 	case SCENE_STAT::IN_GAME:
-		mScenes.push(std::make_unique<InGameScene>(mHwnd, mNetwork.get(), mMsaa4xEnable, mMsaa4xQualityLevels, MAP_TYPE::Day));
+		mScenes.push(std::make_unique<InGameScene>(mHwnd, mNetwork.get(), mMsaa4xEnable, mMsaa4xQualityLevels));
 		break;
 
 	default:
