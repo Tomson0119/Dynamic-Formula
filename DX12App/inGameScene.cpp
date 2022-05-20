@@ -5,7 +5,7 @@
 
 using namespace std;
 
-InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msaaQuality)
+InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msaaQuality, MAP_TYPE mapType)
 	: Scene{ hwnd, SCENE_STAT::IN_GAME, (XMFLOAT4)Colors::White, netPtr }
 {
 	OutputDebugStringW(L"In Game Scene Entered.\n");
@@ -22,6 +22,8 @@ InGameScene::InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msa
 	mKeyMap['Z'] = false;
 	mKeyMap['X'] = false;
 	mKeyMap['P'] = false;
+
+	mMapType = mapType;
 
 #ifdef STANDALONE
 	mGameStarted = true;
@@ -88,12 +90,24 @@ void InGameScene::BuildObjects(
 
 	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
-	mDirectionalLight.SetInfo(
-		XMFLOAT3(0.2f, 0.2f, 0.2f),
-		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(-1.0f, 0.75f, -1.0f),
-		0.0f, 0.0f, 0.0f,
-		3000.0f, DIRECTIONAL_LIGHT);
+	if (mMapType == MAP_TYPE::Night)
+	{
+		mDirectionalLight.SetInfo(
+			XMFLOAT3(0.2f, 0.2f, 0.2f),
+			XMFLOAT3(0.0f, 0.0f, 0.0f),
+			XMFLOAT3(-1.0f, 0.75f, -1.0f),
+			0.0f, 0.0f, 0.0f,
+			3000.0f, DIRECTIONAL_LIGHT);
+	}
+	else if (mMapType == MAP_TYPE::Day)
+	{
+		mDirectionalLight.SetInfo(
+			XMFLOAT3(0.7f, 0.7f, 0.7f),
+			XMFLOAT3(0.0f, 0.0f, 0.0f),
+			XMFLOAT3(-1.0f, 0.75f, -1.0f),
+			0.0f, 0.0f, 0.0f,
+			3000.0f, DIRECTIONAL_LIGHT);
+	}
 
 	BuildRootSignature();
 	BuildComputeRootSignature();
@@ -218,7 +232,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
-	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
+	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList, mMapType);
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
@@ -392,10 +406,18 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 
 	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
-	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
-	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-	LoadLights(cmdList, L"Map\\Lights.tmap");
-	//WriteOOBBList();
+	if (mMapType == MAP_TYPE::Day)
+	{
+		LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
+		LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
+		LoadLights(cmdList, L"Map\\Lights.tmap");
+	}
+	else if(mMapType == MAP_TYPE::Night)
+	{
+		LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
+		LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
+		LoadLights(cmdList, L"Map\\Lights.tmap");
+	}
 
 #ifdef STANDALONE
 	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);

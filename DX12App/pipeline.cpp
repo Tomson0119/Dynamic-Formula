@@ -315,7 +315,7 @@ void Pipeline::UpdateConstants(Camera* camera, DrawType type, bool culling)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, MAP_TYPE mapType)
 	: Pipeline()
 {
 	auto boxMesh = std::make_shared<BoxMesh>(device, cmdList, 20.0f, 20.0f, 20.0f);
@@ -323,7 +323,13 @@ SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* 
 
 	auto skyboxObj = std::make_shared<GameObject>();
 	skyboxObj->SetMesh(boxMesh);
-	skyboxObj->LoadTexture(device, cmdList, L"Resources\\skyboxarray_night.dds", D3D12_SRV_DIMENSION_TEXTURE2DARRAY);
+
+	if(mapType == MAP_TYPE::Day)
+		skyboxObj->LoadTexture(device, cmdList, L"Resources\\skyboxarray.dds", D3D12_SRV_DIMENSION_TEXTURE2DARRAY);
+
+	else if (mapType == MAP_TYPE::Night)
+		skyboxObj->LoadTexture(device, cmdList, L"Resources\\skyboxarray_night.dds", D3D12_SRV_DIMENSION_TEXTURE2DARRAY);	
+
 	mRenderObjects.push_back(skyboxObj);
 }
 

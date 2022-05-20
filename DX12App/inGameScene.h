@@ -16,7 +16,7 @@ class PhysicsPlayer;
 class InGameScene : public Scene
 {
 public:
-	InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msaaQuality);
+	InGameScene(HWND hwnd, NetModule* netPtr, bool msaaEnable, UINT msaaQuality, MAP_TYPE mapType);
 	virtual ~InGameScene();
 
 public:
@@ -213,4 +213,6 @@ private:
 	Clock::time_point mRevertTime;
 
 	std::unique_ptr<InGameUI> mpUI;
+
+	MAP_TYPE mMapType;
 };
