@@ -181,11 +181,12 @@ PhysicsPlayer::PhysicsPlayer(UINT netID)
 		camera->SetLens(0.5f * Math::PI, 1.0f, 0.1f, 100.0f);
 	}
 
+	XMFLOAT3 lightColor = { 1.0f, 1.0f, 0.8f };
 	for (int i = 0; i < 2; ++i)
 	{
 		// Falloff는 전부 미터 단위임에 주의할 것
 		mFrontLight[i].light.SetInfo(
-			XMFLOAT3(0.6f, 0.6f, 0.6f),
+			lightColor,
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
 			XMFLOAT3(-0.3f, 0.0f, -1.0f),
 			0.0f, 100.0f, 100.0f,
@@ -193,7 +194,7 @@ PhysicsPlayer::PhysicsPlayer(UINT netID)
 
 		mFrontLight[i].light.pad0 = 1;
 
-		mFrontLight[i].volumetric.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		mFrontLight[i].volumetric.Color = lightColor;
 		mFrontLight[i].volumetric.Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
 		mFrontLight[i].volumetric.innerCosine = cos(6.0f);
 		mFrontLight[i].volumetric.outerCosine = cos(7.0f);
@@ -407,29 +408,36 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 
 		auto linearVelocity = mBtRigidBody->getLinearVelocity();
 		linearVelocity.setY(0.0f);
-		linearVelocity = linearVelocity.normalize();
-
-		auto forward = mVehicle->getForwardVector();
-		forward.setY(0.0f);
-		forward = forward.normalize();
-
-		float angle = acos(linearVelocity.dot(forward));
-
-		if (DriftLimit < angle && mDriftGauge < 1.0f)
+		if (!linearVelocity.fuzzyZero())
 		{
-			mDriftGauge += Elapsed / 2.0f;
-		}
+			linearVelocity = linearVelocity.normalize();
 
-		if (AngleLimit < angle && mDriftGauge < 1.0f)
-		{
-			mBtRigidBody->setAngularVelocity(btVector3(0, 0, 0));
-		}
+			auto forward = mVehicle->getForwardVector();
+			forward.setY(0.0f);
 
-		if (mDriftGauge > 1.0f)
-		{
-			mDriftGauge = 0.0f;
-			if (mItemNum < 2)
-				mItemNum++;
+			if (!forward.fuzzyZero())
+			{
+				forward = forward.normalize();
+
+				float angle = acos(linearVelocity.dot(forward));
+
+				if (DriftLimit < angle && mDriftGauge < 1.0f)
+				{
+					mDriftGauge += Elapsed / 2.0f;
+				}
+
+				if (AngleLimit < angle && mDriftGauge < 1.0f)
+				{
+					mBtRigidBody->setAngularVelocity(btVector3(0, 0, 0));
+				}
+
+				if (mDriftGauge > 1.0f)
+				{
+					mDriftGauge = 0.0f;
+					if (mItemNum < 2)
+						mItemNum++;
+				}
+			}
 		}
 	}
 	else
@@ -835,6 +843,16 @@ void PhysicsPlayer::PreDraw(ID3D12GraphicsCommandList* cmdList, InGameScene* sce
 	cmdList->OMSetRenderTargets(1, &mRtvCPUDescriptorHandles[cubemapIndex + (mCurrentRenderTarget * 6)], TRUE, &mDsvCPUDescriptorHandle);
 
 	scene->UpdateCameraConstant(cubemapIndex + 4, mCameras[cubemapIndex].get());
+
+
+#ifdef FRUSTUM_CULLING
+	scene->UpdateInstancingPipelines(mCameras[cubemapIndex].get(), DrawType::CubeMapping);
+#endif
+
+#ifndef FRUSTUM_CULLING
+	scene->UpdateInstancingPipelines(mCameras[cubemapIndex].get(), DrawType::CubeMapping, false);
+#endif
+	
 	scene->RenderPipelines(cmdList, cubemapIndex + 4, true);
 
 	// resource barrier

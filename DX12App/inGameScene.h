@@ -1,5 +1,7 @@
 #pragma once
 
+#define FRUSTUM_CULLING
+
 #include "pipeline.h"
 #include "player.h"
 
@@ -50,6 +52,7 @@ public:
 	void UpdateCameraConstant(int idx, Camera* camera);
 	void UpdateVolumetricConstant();
 	void UpdateConstants(const GameTimer& timer);
+	void UpdateInstancingPipelines(Camera* cam, DrawType type, bool culling = true);
 	void UpdateDynamicsWorld();
 
 	void SetGraphicsCBV(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0);
@@ -102,6 +105,7 @@ private:
 
 	void LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, const std::string& path);
 	void LoadCheckPoint(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
+	void WriteOOBBList();
 	void LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
@@ -158,7 +162,6 @@ private:
 	bool mOutside = false;
 
 	float mMissileInterval = 0.0f;
-	float mCubemapInterval = 0.0f;
 
 	UINT mCubemapDrawIndex = 0;
 

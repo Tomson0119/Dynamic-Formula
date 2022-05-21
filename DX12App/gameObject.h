@@ -40,6 +40,8 @@ public:
 
 	void UpdateMatConstants(ConstantBuffer<MaterialConstants>* matCnst, int offset);
 	void SortMeshes();
+	void UpdateInverseWorld();
+	void UpdateBoundingBox();
 
 protected:
 	virtual void UpdateTransform();
@@ -48,7 +50,6 @@ protected:
 	void SetWorldByMotionState();
 	void ResetTransformVectors();
 
-	void UpdateBoundingBox();
 	void Animate(float elapsedTime);
 
 	void InterpolateRigidBody(float elapsed, float updateRate);
@@ -135,6 +136,8 @@ public:
 
 	void SetTransparent(bool transparent) { mTransparentOn = transparent; }
 
+	void SetOOBBOrientation(const XMFLOAT4& quaternion) { mOOBB.Orientation = quaternion; }
+
 public:
 	const XMFLOAT3& GetPosition() const { return mPosition; }
 	const XMFLOAT3& GetRight() const { return mRight; }
@@ -143,6 +146,7 @@ public:
 	const XMFLOAT4& GetQuaternion() const { return mQuaternion; }
 
 	const XMFLOAT4X4& GetWorld() const { return mWorld; }
+	const XMFLOAT4X4& GetInverseWorld() const { return mInvWorld; }
 
 	const AtomicFloat3& GetLinearVelocity() { return mLinearVelocity; }
 
@@ -177,6 +181,7 @@ protected:
 
 	XMFLOAT4X4 mWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mOldWorld = Matrix4x4::Identity4x4();
+	XMFLOAT4X4 mInvWorld = Matrix4x4::Identity4x4();
 	XMFLOAT4X4 mRotation = Matrix4x4::Identity4x4();
 
 	// Members for interpolation.

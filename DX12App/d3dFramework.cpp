@@ -33,10 +33,12 @@ bool D3DFramework::InitFramework()
 
 	if (!InitDirect3D())
 		return false;
-
+	
+#ifdef STANDALONE
 	if (!InitBulletPhysics())
 		return false;
-
+#endif
+	
 #ifndef STANDALONE
 	/*if (!mQueryWin->InitWindow(L"Query IP Address", L"Server IP Address", 600, 200))
 		return false;

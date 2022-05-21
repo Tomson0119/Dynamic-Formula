@@ -409,6 +409,14 @@ void GameObject::UpdateTransform()
 	mWorld(3, 2) = mPosition.z;*/
 }
 
+void GameObject::UpdateInverseWorld()
+{
+	XMMATRIX world = XMLoadFloat4x4(&mWorld);
+	XMMATRIX invWorld = XMMatrixInverse(&XMMatrixDeterminant(world), world);
+
+	XMStoreFloat4x4(&mInvWorld, invWorld);
+}
+
 void GameObject::RotateDirectionVectors()
 {
 	XMMATRIX R = XMMatrixRotationQuaternion(XMLoadFloat4(&mQuaternion));
