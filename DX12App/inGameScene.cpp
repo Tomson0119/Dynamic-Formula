@@ -1082,7 +1082,7 @@ void InGameScene::UpdateVolumetricConstant()
 	
 	for (int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
 	{
-		volumeConst.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetView(i));
+		volumeConst.ShadowTransform[i] = Matrix4x4::Transpose(Matrix4x4::Multiply(mShadowMapRenderer->GetView(i), mShadowMapRenderer->GetProj(i)));
 		volumeConst.frstumSplit[i] = mShadowMapRenderer->GetSplit(i + 1);
 	}		
 

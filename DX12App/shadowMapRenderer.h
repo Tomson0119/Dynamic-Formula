@@ -30,6 +30,7 @@ public:
 	int GetMapCount() const { return mMapCount; }
 	float GetSplit(int idx) { return mZSplits[idx]; }
 	const XMFLOAT4X4& GetView(int idx) { return mDepthCamera[idx]->GetView(); }
+	const XMFLOAT4X4& GetProj(int idx) { return mDepthCamera[idx]->GetProj(); }
 
 	ID3D12Resource* GetShadowMap(int idx) { return mShadowMaps[idx].Get(); }
 

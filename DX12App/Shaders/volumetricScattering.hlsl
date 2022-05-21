@@ -164,7 +164,7 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
                         {
                             float attenuation = CalcShadowFactor_PCF3x3(gPCFShadow, shadowDepthMap[i], UVD);
 
-                            //attenuation *= ExponentialFog(cameraDistance - marchedDistance);
+                            attenuation *= ExponentialFog(cameraDistance - marchedDistance);
 
                             accumulation += attenuation;
                         }

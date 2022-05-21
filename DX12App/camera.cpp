@@ -265,7 +265,7 @@ void ThirdPersonCamera::Update(float elapsedTime)
 	{
 		XMFLOAT4X4 R = Matrix4x4::Identity4x4();
 		XMFLOAT3 right = mPlayer->GetRight();
-		XMFLOAT3 up = mPlayer->GetUp();
+		XMFLOAT3 up = XMFLOAT3(0, 1, 0);
 		XMFLOAT3 look = mPlayer->GetLook();
 
 		R(0, 0) = right.x;  R(0, 1) = right.y;  R(0, 2) = right.z;
