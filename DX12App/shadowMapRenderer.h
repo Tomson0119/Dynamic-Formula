@@ -18,7 +18,8 @@ public:
 	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int idx);
 
 	void AppendTargetPipeline(Layer layer, Pipeline* pso);
-	void SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
+	void SetShadowMapGraphicsSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
+	void SetShadowMapComputeSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 
 	void SetSunRange(float range) { mSunRange.push_back(range); }
 	void SetCenter(const XMFLOAT3& center) { mCenter.push_back(center); }
@@ -27,6 +28,8 @@ public:
 
 	XMFLOAT4X4 GetShadowTransform(int idx) const;
 	int GetMapCount() const { return mMapCount; }
+	float GetSplit(int idx) { return mZSplits[idx]; }
+	const XMFLOAT4X4& GetView(int idx) { return mDepthCamera[idx]->GetView(); }
 
 	ID3D12Resource* GetShadowMap(int idx) { return mShadowMaps[idx].Get(); }
 

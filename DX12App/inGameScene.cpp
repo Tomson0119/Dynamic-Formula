@@ -224,15 +224,17 @@ void InGameScene::BuildRootSignature()
 
 void InGameScene::BuildComputeRootSignature()
 {
-	D3D12_DESCRIPTOR_RANGE descRanges[2];
-	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0);
+	D3D12_DESCRIPTOR_RANGE descRanges[3];
+	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-
-	D3D12_ROOT_PARAMETER parameters[4];
+	descRanges[2] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 2);
+	
+	D3D12_ROOT_PARAMETER parameters[5];
 	parameters[0] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);    // Inputs
 	parameters[1] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);    // Output																   
 	parameters[2] = Extension::Constants(6, 0, D3D12_SHADER_VISIBILITY_ALL);					   // 32bit Constant
 	parameters[3] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_ALL);    // CameraCB
+	parameters[4] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL); //Shadow Map
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc[2];
 	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_COMPARISON_FUNC_NEVER, D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE, D3D12_SHADER_VISIBILITY_ALL);
@@ -1077,10 +1079,17 @@ void InGameScene::UpdateVolumetricConstant()
 
 	volumeConst.InvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
 	volumeConst.View = Matrix4x4::Transpose(mCurrentCamera->GetView());
-	volumeConst.ShadowTransform = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(0));
-	volumeConst.numLights = mLights.size() < MAX_LIGHTS ? mLights.size() : MAX_LIGHTS;
 	
-	for (int i = 0; i < volumeConst.numLights; ++i)
+	for (int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
+	{
+		volumeConst.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetView(i));
+		volumeConst.frstumSplit[i] = mShadowMapRenderer->GetSplit(i + 1);
+	}		
+
+	volumeConst.numLights = mLights.size() + 1 < MAX_LIGHTS ? mLights.size() + 1 : MAX_LIGHTS;
+	
+	volumeConst.Lights[0] = mDirectionalLight.volumetric;
+	for (int i = 1; i < volumeConst.numLights; ++i)
 	{
 		if (mLights[i].volumetric.Type == SPOT_LIGHT || mLights[i].volumetric.Type == DIRECTIONAL_LIGHT)
 		{
@@ -1238,10 +1247,10 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	if (mVolumetricEnable)
 	{
 		SetComputeCBV(cmdList);
+		mShadowMapRenderer->SetShadowMapComputeSRV(cmdList, 4);
 
 		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, backBuffer, 0);
 		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, depthBuffer, 1, true);
-		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, mShadowMapRenderer->GetShadowMap(0), 2);
 
 		mPostProcessingPipelines[Layer::VolumetricScattering]->Dispatch(cmdList);
 
@@ -1254,7 +1263,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex, bool cubeMapping)
 {	
 	SetGraphicsCBV(cmdList, cameraCBIndex);
-	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
+	mShadowMapRenderer->SetShadowMapGraphicsSRV(cmdList, 6);
 
 	for (const auto& [layer, pso] : mPipelines)
 	{

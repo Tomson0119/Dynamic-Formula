@@ -393,10 +393,18 @@ void ShadowMapRenderer::AppendTargetPipeline(Layer layer, Pipeline* pso)
 		mShadowTargetPSOs.insert(std::make_pair(layer, pso));
 }
 
-void ShadowMapRenderer::SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
+void ShadowMapRenderer::SetShadowMapGraphicsSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
 	auto gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuHandle);
+}
+
+void ShadowMapRenderer::SetShadowMapComputeSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+	auto gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	cmdList->SetComputeRootDescriptorTable(srvIndex, gpuHandle);
 }

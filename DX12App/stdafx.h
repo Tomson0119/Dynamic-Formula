@@ -203,11 +203,9 @@ struct VolumetricConstants
 {
 	XMFLOAT4X4 InvProj;
 	XMFLOAT4X4 View;
-	XMFLOAT4X4 ShadowTransform;
+	XMFLOAT4X4 ShadowTransform[3];
 	int numLights;
-	int pad0;
-	int pad1;
-	int pad2;
+	float frstumSplit[3];
 	VolumetricInfo Lights[MAX_LIGHTS];
 };
 

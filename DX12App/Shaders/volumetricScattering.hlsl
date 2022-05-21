@@ -2,7 +2,7 @@
 
 Texture2D<float4> inputTexture : register(t0);
 Texture2D<float> depthTexture : register(t1);
-Texture2D<float> shadowDepthMap : register(t2);
+Texture2D<float> shadowDepthMap[3] : register(t2);
 RWTexture2D<float4> outputTexture : register(u0);
 
 SamplerComparisonState gPCFShadow : register(s1);
@@ -23,9 +23,12 @@ cbuffer VolumetricCB : register(b1)
 {
     matrix gInvProj : packoffset(c0);
     matrix gView : packoffset(c4);
-    matrix gShadowTransform : packoffset(c8);
-    int gNumLights : packoffset(c12.x);
-    VolumetricInfo gLights[MAX_LIGHTS] : packoffset(c13);
+    matrix gShadowTransform[3] : packoffset(c8);
+    int gNumLights : packoffset(c20.x);
+    float gZSplit1 : packoffset(c20.y);
+    float gZSplit2 : packoffset(c20.z);
+    float gZSplit3 : packoffset(c20.w);
+    VolumetricInfo gLights[MAX_LIGHTS] : packoffset(c21);
 }
 
 float3 GetPositionVS(float2 texcoord, float depth)
@@ -135,29 +138,49 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
 
 	        // dither ray start to help with undersampling:
             P = P + V * stepSize * dither(pixel.xy);
-
+            float viewDepth = P.z;
+            
 	        // Perform ray marching to integrate light volume along view ray:
 	        [loop]
             for (uint i = 0; i < sampleCount; ++i)
             {
-                float4 posShadowMap = mul(float4(P, 1.0), gShadowTransform);
-                float3 UVD = posShadowMap.xyz / posShadowMap.w;
-
-                UVD.xy = 0.5 * UVD.xy + 0.5;
-                UVD.y = 1.0 - UVD.y;
-                
-                [branch]
-                if (IsSaturated(UVD.xy))
+                bool valid = false;
+                for (uint cascade = 0; cascade < 3; ++cascade)
                 {
-                    float attenuation = CalcShadowFactor_PCF3x3(gPCFShadow, shadowDepthMap, UVD);
+                    matrix light_space_matrix = gShadowTransform[cascade];
+                    float zSplit = cascade == 0 ? gZSplit1 : cascade == 1 ? gZSplit2 : gZSplit3;
+                    
+                    float4 posShadowMap = mul(float4(P, 1.0), light_space_matrix);
+        
+                    float3 UVD = posShadowMap.xyz / posShadowMap.w;
 
-                    attenuation *= ExponentialFog(cameraDistance - marchedDistance);
+                    UVD.xy = 0.5 * UVD.xy + 0.5;
+                    UVD.y = 1.0 - UVD.y;
 
-                    accumulation += attenuation;
+                    [branch]
+                    if (viewDepth < zSplit)
+                    {
+                        if (IsSaturated(UVD.xy))
+                        {
+                            float attenuation = CalcShadowFactor_PCF3x3(gPCFShadow, shadowDepthMap[i], UVD);
+
+                            //attenuation *= ExponentialFog(cameraDistance - marchedDistance);
+
+                            accumulation += attenuation;
+                        }
+
+                        marchedDistance += stepSize;
+                        P = P + V * stepSize;
+
+                        valid = true;
+                        break;
+                    }
                 }
 
-                marchedDistance += stepSize;
-                P = P + V * stepSize;
+                if (!valid)
+                {
+                    break;
+                }
             }
 
             accumulation /= sampleCount;
