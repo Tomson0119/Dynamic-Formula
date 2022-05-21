@@ -183,7 +183,7 @@ void InGameScene::BuildRootSignature()
 void InGameScene::BuildComputeRootSignature()
 {
 	D3D12_DESCRIPTOR_RANGE descRanges[2];
-	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
 	D3D12_ROOT_PARAMETER parameters[4];
@@ -192,8 +192,9 @@ void InGameScene::BuildComputeRootSignature()
 	parameters[2] = Extension::Constants(6, 0, D3D12_SHADER_VISIBILITY_ALL);					   // 32bit Constant
 	parameters[3] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_ALL);    // CameraCB
 
-	D3D12_STATIC_SAMPLER_DESC samplerDesc[1];
+	D3D12_STATIC_SAMPLER_DESC samplerDesc[2];
 	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_COMPARISON_FUNC_NEVER, D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE, D3D12_SHADER_VISIBILITY_ALL);
+	samplerDesc[1] = Extension::SamplerDesc(1, D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT, D3D12_TEXTURE_ADDRESS_MODE_BORDER, D3D12_COMPARISON_FUNC_LESS_EQUAL, D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK, D3D12_SHADER_VISIBILITY_ALL);
 
 	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = Extension::RootSignatureDesc(_countof(parameters), parameters,
 		_countof(samplerDesc), samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -415,11 +416,8 @@ void InGameScene::CreateMsaaViews()
 
 void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
 {
-	mDynamicsWorld = physics->GetDynamicsWorld();
-
-	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
-
 #ifdef STANDALONE
+	mDynamicsWorld = physics->GetDynamicsWorld();
 	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
 	LoadLights(cmdList, L"Map\\Lights.tmap");
@@ -1004,13 +1002,16 @@ void InGameScene::UpdateLightConstants()
 		}
 	);
 
-	for (int i = 1; i < NUM_LIGHTS; ++i)
+	for (int i = 1; i < mLights.size(); ++i)
 	{
 		mMainLight.Lights[i] = mLights[i - 1].light;
+		if(i == MAX_LIGHTS - 1)
+			break;
 	}
 
 	mMainLight.Lights[0] = mDirectionalLight;
-
+	mMainLight.numLights = mLights.size() + 1;
+	
 	mLightCB->CopyData(0, mMainLight);
 }
 
@@ -1026,19 +1027,14 @@ void InGameScene::UpdateVolumetricConstant()
 
 	volumeConst.InvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
 	volumeConst.View = Matrix4x4::Transpose(mCurrentCamera->GetView());
-
-	int j = 0;
-	for (int i = 0; i < NUM_LIGHTS;)
+	volumeConst.ShadowTransform = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(0));
+	volumeConst.numLights = mLights.size() < MAX_LIGHTS ? mLights.size() : MAX_LIGHTS;
+	
+	for (int i = 0; i < volumeConst.numLights; ++i)
 	{
-		for (; j < mLights.size(); j++)
+		if (mLights[i].volumetric.Type == SPOT_LIGHT || mLights[i].volumetric.Type == DIRECTIONAL_LIGHT)
 		{
-			if (mLights[j].volumetric.Type == SPOT_LIGHT)
-			{
-				volumeConst.Lights[i] = mLights[j].volumetric;
-				++i;
-				++j;
-				break;
-			}
+			volumeConst.Lights[i] = mLights[i].volumetric;
 		}
 	}
 
@@ -1195,6 +1191,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 
 		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, backBuffer, 0);
 		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, depthBuffer, 1, true);
+		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, mShadowMapRenderer->GetShadowMap(0), 2);
 
 		mPostProcessingPipelines[Layer::VolumetricScattering]->Dispatch(cmdList);
 

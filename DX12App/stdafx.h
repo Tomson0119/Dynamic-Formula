@@ -134,7 +134,7 @@ inline std::wstring AnsiToWString(const std::string& str)
 
 ////////////////////////////////////////////////////////////////////////////
 //
-#define NUM_LIGHTS 32
+#define MAX_LIGHTS 32
 
 #define POINT_LIGHT		  1
 #define SPOT_LIGHT		  2
@@ -192,15 +192,17 @@ struct LightConstants
 {
 	XMFLOAT4X4 ShadowTransform[3];
 	XMFLOAT4 Ambient;
-	LightInfo Lights[NUM_LIGHTS];
+	int numLights;
+	LightInfo Lights[MAX_LIGHTS];
 };
 
 struct VolumetricConstants
 {
 	XMFLOAT4X4 InvProj;
 	XMFLOAT4X4 View;
-
-	VolumetricInfo Lights[NUM_LIGHTS];
+	XMFLOAT4X4 ShadowTransform;
+	int numLights;
+	VolumetricInfo Lights[MAX_LIGHTS];
 };
 
 

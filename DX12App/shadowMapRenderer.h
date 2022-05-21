@@ -28,6 +28,8 @@ public:
 	XMFLOAT4X4 GetShadowTransform(int idx) const;
 	int GetMapCount() const { return mMapCount; }
 
+	ID3D12Resource* GetShadowMap(int idx) { return mShadowMaps[idx].Get(); }
+
 private:
 	void BuildDescriptorViews(ID3D12Device* device);
 

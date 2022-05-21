@@ -961,7 +961,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 
 	// Input Texture와 ProcessingTexture[0]를 이용해 다운 샘플링
-	float threshold = 0.5f;
+	float threshold = 0.7f;
 	cmdList->SetComputeRoot32BitConstants(2, 1, &threshold, 0);
 
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
@@ -1203,6 +1203,13 @@ void VolumetricScatteringPipeline::CreateTextures(ID3D12Device* device)
 		D3D12_RESOURCE_FLAG_NONE,
 		D3D12_RESOURCE_STATE_COMMON, nullptr);
 
+	mInputTexture[2] = std::make_unique<Texture>();
+	mInputTexture[2]->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
+	mInputTexture[2]->CreateTexture(device, 5000, 5000,
+		1, 1, DXGI_FORMAT_R24_UNORM_X8_TYPELESS,
+		D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATE_COMMON, nullptr);
+
 	mOutputTexture = std::make_unique<Texture>();
 	mOutputTexture->SetDimension(D3D12_SRV_DIMENSION_TEXTURE2D);
 	mOutputTexture->CreateTexture(device, gFrameWidth, gFrameHeight,
@@ -1215,7 +1222,7 @@ void VolumetricScatteringPipeline::BuildDescriptorHeap(ID3D12Device* device)
 {
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&Extension::DescriptorHeapDesc(
-			3,
+			4,
 			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 			D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
 		IID_PPV_ARGS(&mSrvUavDescriptorHeap)));
@@ -1238,6 +1245,9 @@ void VolumetricScatteringPipeline::BuildSRVAndUAV(ID3D12Device* device)
 
 	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 	device->CreateShaderResourceView(mInputTexture[1]->GetResource(), &srvDesc, cpuHandle);
+	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
+
+	device->CreateShaderResourceView(mInputTexture[2]->GetResource(), &srvDesc, cpuHandle);
 	cpuHandle.ptr += gCbvSrvUavDescriptorSize;
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};

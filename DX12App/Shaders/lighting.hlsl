@@ -1,4 +1,4 @@
-#define NUM_LIGHTS 32
+#define MAX_LIGHTS 32
 
 #define POINT_LIGHT       1
 #define SPOT_LIGHT        2
@@ -170,14 +170,14 @@ float3 ComputeSpotLight(Light light, Material mat, float3 pos, float3 normal, fl
     return result;
 }
 
-float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat, float3 pos, float3 normal, float3 view, float shadowFactor, bool rimLightOn)
+float4 ComputeLighting(Light lights[MAX_LIGHTS], Material mat, float3 pos, float3 normal, float3 view, float shadowFactor, bool rimLightOn, int numLights)
 {
     float3 result = 0.0f;
     
     int i = 0;
     
     [unroll]
-    for (i = 0; i < NUM_LIGHTS; ++i)
+    for (i = 0; i < numLights; ++i)
     {        
         if (lights[i].Type == DIRECTIONAL_LIGHT)
             result += shadowFactor * ComputeDirectLight(lights[i], mat, normal, view);
@@ -195,3 +195,44 @@ float4 ComputeLighting(Light lights[NUM_LIGHTS], Material mat, float3 pos, float
     return float4(result + mat.Emission, 0.0f);
 }
 
+bool IsSaturated(float value)
+{
+    return value == saturate(value);
+}
+bool IsSaturated(float2 value)
+{
+    return IsSaturated(value.x) && IsSaturated(value.y);
+}
+
+
+float CalcShadowFactor_PCF3x3(SamplerComparisonState samShadow, Texture2D<float> shadowMap, float3 uvd)
+{
+    if (uvd.z > 1.0f)
+        return 1.0;
+
+    float depth = uvd.z;
+    
+    uint width, height, mips;
+    shadowMap.GetDimensions(0, width, height, mips);
+    
+    float dx = 1.0f / (float) width;
+    float dy = 1.0f / (float) height;
+    
+    const float2 offsets[9] =
+    {
+        float2(-dx, -dy), float2(0.0f, -dy), float2(+dx, -dy),
+        float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(+dx, 0.0f),
+        float2(-dx, +dy), float2(0.0f, +dy), float2(+dx, +dy)
+    };
+    
+    float percentLit = 0.0f;
+
+	[unroll]
+    for (int i = 0; i < 9; ++i)
+    {
+        percentLit += shadowMap.SampleCmpLevelZero(samShadow,
+			uvd.xy + offsets[i], depth).r;
+    }
+    return percentLit /= 9.0f;
+
+}
