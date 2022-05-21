@@ -807,7 +807,9 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 		pck->linear_vel[2] / POS_FLOAT_PRECISION,
 		latency);
 
-	mCorrectionQuat.SetValue(pck->quaternion);	
+	mCorrectionQuat.SetValue(pck->quaternion);
+
+	mInterpolator.Enqueue(mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
 
 	mLinearVelocity.SetValue(
 		pck->linear_vel[0] / POS_FLOAT_PRECISION, 
