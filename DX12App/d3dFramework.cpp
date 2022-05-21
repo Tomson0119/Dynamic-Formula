@@ -38,11 +38,11 @@ bool D3DFramework::InitFramework()
 		return false;
 
 #ifndef STANDALONE
-	if (!mQueryWin->InitWindow(L"Query IP Address", L"Server IP Address", 600, 200))
+	/*if (!mQueryWin->InitWindow(L"Query IP Address", L"Server IP Address", 600, 200))
 		return false;
 
-	mQueryWin->Run();
-	mNetwork->SetServerIP(mQueryWin->GetAnswer());
+	mQueryWin->Run();*/
+	mNetwork->SetServerIP("127.0.0.1");
 #endif
 	return true;
 }
