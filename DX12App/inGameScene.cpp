@@ -1004,7 +1004,7 @@ void InGameScene::UpdateLightConstants()
 		}
 	);
 
-	for (int i = 1; i < mLights.size(); ++i)
+	for (int i = 1; i < mLights.size() + 1; ++i)
 	{
 		mMainLight.Lights[i] = mLights[i - 1].light;
 		if(i == MAX_LIGHTS - 1)
