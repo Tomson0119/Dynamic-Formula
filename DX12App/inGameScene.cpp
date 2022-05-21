@@ -914,9 +914,11 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 
 	float elapsed = timer.ElapsedTime();
 
+#ifdef STANDALONE
 	if(mGameStarted)
 		physics->StepSimulation(elapsed);
-
+#endif
+	
 	UpdatePlayerObjects();
 	UpdateMissileObject();
 	OnPreciseKeyInput(cmdList, physics, elapsed);
@@ -1355,6 +1357,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
 		btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));
 
+#ifdef STANDALONE
 		auto& meshes = mMeshList[objName];
 		for (auto i = meshes.begin(); i < meshes.end(); ++i)
 		{
@@ -1364,6 +1367,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
+#endif
 		
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
@@ -1392,7 +1396,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			
 			mMeshList[objName + "_Transparent"] = transparentObj->GetMeshes();
 			mOOBBList[objName + "_Transparent"] = transparentObj->GetBoundingBox();
-			
+
+#ifdef STANDALONE
 			auto& transparentMeshes = transparentObj->GetMeshes();
 			for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
 			{
@@ -1401,7 +1406,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 					compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 				}
 			}
-
+#endif
 			transparentObj->SetQuaternion(quaternion);
 			transparentObj->SetPosition(pos);
 			transparentObj->Scale(scale);
@@ -1415,12 +1420,13 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		}
 	}
 
+#ifdef STANDALONE
 	btTransform btObjectTransform;
 	btObjectTransform.setIdentity();
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
 
 	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
-
+#endif
 	fclose(file);
 }
 
