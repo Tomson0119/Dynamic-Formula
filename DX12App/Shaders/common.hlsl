@@ -23,7 +23,7 @@ cbuffer LightCB : register(b1)
 {
     matrix gShadowTransform[3] : packoffset(c0); // need as much as shadow map
     float4 gAmbient            : packoffset(c12);
-    int    gNumLights          : packoffset(c13);
+    int    gNumLights          : packoffset(c13.x);
     Light  gLights[MAX_LIGHTS] : packoffset(c14);
 }
 

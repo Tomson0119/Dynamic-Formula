@@ -193,6 +193,9 @@ struct LightConstants
 	XMFLOAT4X4 ShadowTransform[3];
 	XMFLOAT4 Ambient;
 	int numLights;
+	int pad0;
+	int pad1;
+	int pad2;
 	LightInfo Lights[MAX_LIGHTS];
 };
 
@@ -202,6 +205,9 @@ struct VolumetricConstants
 	XMFLOAT4X4 View;
 	XMFLOAT4X4 ShadowTransform;
 	int numLights;
+	int pad0;
+	int pad1;
+	int pad2;
 	VolumetricInfo Lights[MAX_LIGHTS];
 };
 

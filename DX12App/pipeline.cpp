@@ -1150,10 +1150,29 @@ VolumetricScatteringPipeline::~VolumetricScatteringPipeline()
 
 void VolumetricScatteringPipeline::SetInput(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* buffer, int idx, bool msaaOn)
 {
-	if (msaaOn)
-		ResolveRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource(), DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
+	if (idx != 2)
+	{
+		if (msaaOn)
+			ResolveRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource(), DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
+		else
+			CopyRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource());
+	}
 	else
-		CopyRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource());
+	{
+		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+			buffer, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_SOURCE));
+
+		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+			mInputTexture[idx]->GetResource(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+
+		cmdList->CopyResource(mInputTexture[idx]->GetResource(), buffer);
+
+		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+			mInputTexture[idx]->GetResource(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
+
+		cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(
+			buffer, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_GENERIC_READ));
+	}
 }
 
 void VolumetricScatteringPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)

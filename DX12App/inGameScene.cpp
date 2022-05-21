@@ -420,13 +420,13 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mDynamicsWorld = physics->GetDynamicsWorld();
 	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-	LoadLights(cmdList, L"Map\\Lights.tmap");
+	//LoadLights(cmdList, L"Map\\Lights.tmap");
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
 		LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
 		LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-		LoadLights(cmdList, L"Map\\Lights.tmap");
+		//LoadLights(cmdList, L"Map\\Lights.tmap");
 	}
 	else if(mNetPtr->GetMapIndex() == 1)
 	{
@@ -1012,7 +1012,7 @@ void InGameScene::UpdateLightConstants()
 	}
 
 	mMainLight.Lights[0] = mDirectionalLight;
-	mMainLight.numLights = mLights.size() + 1;
+	mMainLight.numLights = mLights.size() + 1 < MAX_LIGHTS ? mLights.size() + 1 : MAX_LIGHTS;
 	
 	mLightCB->CopyData(0, mMainLight);
 }

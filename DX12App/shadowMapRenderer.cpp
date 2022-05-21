@@ -344,7 +344,7 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, InGameScen
 		scene->UpdateCameraConstant(i + 1, mDepthCamera[i].get());
 
 #ifdef FRUSTUM_CULLING
-		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i));
+		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i), false);
 #endif
 
 #ifndef FRUSTUM_CULLING

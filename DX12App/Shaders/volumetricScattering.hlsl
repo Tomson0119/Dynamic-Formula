@@ -24,7 +24,7 @@ cbuffer VolumetricCB : register(b1)
     matrix gInvProj : packoffset(c0);
     matrix gView : packoffset(c4);
     matrix gShadowTransform : packoffset(c8);
-    int gNumLights : packoffset(c12);
+    int gNumLights : packoffset(c12.x);
     VolumetricInfo gLights[MAX_LIGHTS] : packoffset(c13);
 }
 
