@@ -72,7 +72,7 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     for (int i = 0; i < gNumLights; ++i)
     {
         [branch]
-        if (gLights[i].Type == SPOT_LIGHT)
+        if (gLights[i].Type == SPOT_LIGHT || gLights[i].Type == POINT_LIGHT)
         {
             const float stepSize = length(screenPos - rayEnd) / sampleCount;
     
@@ -124,8 +124,7 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
         
         else if(gLights[i].Type == DIRECTIONAL_LIGHT)
         {
-            float3 P = screenPos;
-            float3 V = float3(0.0f, 0.0f, 0.0f) - P;
+            float3 V = float3(0.0f, 0.0f, 0.0f) - screenPos;
             float cameraDistance = length(V);
             V /= cameraDistance;
 
@@ -137,7 +136,7 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
             const float stepSize = length(P - rayEnd) / sampleCount;
 
 	        // dither ray start to help with undersampling:
-            P = P + V * stepSize * dither(pixel.xy);
+            float3 P = screenPos + V * stepSize * dither(pixel.xy);
             float viewDepth = P.z;
             
 	        // Perform ray marching to integrate light volume along view ray:
