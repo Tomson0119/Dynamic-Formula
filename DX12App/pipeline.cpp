@@ -1184,7 +1184,7 @@ void VolumetricScatteringPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	cmdList->SetComputeRootDescriptorTable(0, gpuHandle);
 
-	gpuHandle.ptr += 2 * gCbvSrvUavDescriptorSize;
+	gpuHandle.ptr += 3 * gCbvSrvUavDescriptorSize;
 	cmdList->SetComputeRootDescriptorTable(1, gpuHandle);
 
 	cmdList->ResourceBarrier(1, &Extension::ResourceBarrier(

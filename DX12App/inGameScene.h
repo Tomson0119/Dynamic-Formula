@@ -204,7 +204,7 @@ private:
 	float mVolumetricRange = 20.0f;*/
 	
 	std::vector<LightBundle> mLights;
-	LightInfo mDirectionalLight;
+	LightBundle mDirectionalLight;
 
 	// Game end counter
 	static const int WAIT_TO_REVERT = 5;

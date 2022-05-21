@@ -88,31 +88,73 @@ void InGameScene::BuildObjects(
 
 	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
+	XMFLOAT3 direction = XMFLOAT3(-1.0f, 0.75f, -1.0f);
 #ifdef STANDALONE
-	mDirectionalLight.SetInfo(
+
+	mDirectionalLight.light.SetInfo(
 		XMFLOAT3(0.7f, 0.7f, 0.7f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(-1.0f, 0.75f, -1.0f),
+		direction,
 		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
+
+	VolumetricInfo v;
+
+	v.Direction = direction;
+	v.Position = { 0.0f, 0.0f, 0.0f };
+	v.Range = 0;
+	v.VolumetricStrength = 1.5f;
+	v.outerCosine = 0;
+	v.innerCosine = 0;
+	v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	v.Type = DIRECTIONAL_LIGHT;
+
+	mDirectionalLight.volumetric = v;
+	
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
-		mDirectionalLight.SetInfo(
+		mDirectionalLight.light.SetInfo(
 			XMFLOAT3(0.7f, 0.7f, 0.7f),
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
-			XMFLOAT3(-1.0f, 0.75f, -1.0f),
+			direction,
 			0.0f, 0.0f, 0.0f,
 			3000.0f, DIRECTIONAL_LIGHT);
+
+		VolumetricInfo v;
+
+		v.Direction = direction;
+		v.Position = { 0.0f, 0.0f, 0.0f };
+		v.Range = 0;
+		v.VolumetricStrength = 0.5f;
+		v.outerCosine = 0;
+		v.innerCosine = 0;
+		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		v.Type = DIRECTIONAL_LIGHT;
+
+		mDirectionalLight.volumetric = v;
 	}
 	else if (mNetPtr->GetMapIndex() == 1)
 	{
-		mDirectionalLight.SetInfo(
+		mDirectionalLight.light.SetInfo(
 			XMFLOAT3(0.2f, 0.2f, 0.2f),
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
-			XMFLOAT3(-1.0f, 0.75f, -1.0f),
+			direction,
 			0.0f, 0.0f, 0.0f,
 			3000.0f, DIRECTIONAL_LIGHT);
+		
+		VolumetricInfo v;
+
+		v.Direction = direction;
+		v.Position = { 0.0f, 0.0f, 0.0f };
+		v.Range = 0;
+		v.VolumetricStrength = 0.1f;
+		v.outerCosine = 0;
+		v.innerCosine = 0;
+		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		v.Type = DIRECTIONAL_LIGHT;
+
+		mDirectionalLight.volumetric = v;
 	}
 #endif
 
@@ -253,7 +295,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
 	mPipelines[Layer::DriftParticle] = make_unique<StreamOutputPipeline>(2);
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.Direction);
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.light.Direction);
 
 	if (mMsaa4xEnable)
 	{
@@ -972,11 +1014,13 @@ void InGameScene::DestroyDriftParticleObject()
 
 void InGameScene::UpdateLightConstants()
 {
-	for(int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
+	for (int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
 		mMainLight.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(i));
 
 	auto playerPos = mPlayer->GetPosition();
 
+
+#ifndef STANDALONE
 	for (auto i = mLights.begin(); i < mLights.end();)
 	{
 		if (i->light.pad0 == 1.0f)
@@ -984,18 +1028,22 @@ void InGameScene::UpdateLightConstants()
 		else
 			++i;
 	}
-
-	for (int i = 0; i < mPlayerObjects.size(); ++i)
-	{
-		if (mPlayerObjects[i])
+	
+	if (mNetPtr->GetMapIndex() == 1)
+	{	
+		for (int i = 0; i < mPlayerObjects.size(); ++i)
 		{
-			LightBundle* frontLights;
-			frontLights = mPlayerObjects[i]->GetLightBundle();
+			if (mPlayerObjects[i])
+			{
+				LightBundle* frontLights;
+				frontLights = mPlayerObjects[i]->GetLightBundle();
 
-			mLights.push_back(frontLights[0]);
-			mLights.push_back(frontLights[1]);
+				mLights.push_back(frontLights[0]);
+				mLights.push_back(frontLights[1]);
+			}
 		}
 	}
+#endif
 
 	std::sort(mLights.begin(), mLights.end(),
 		[playerPos](const LightBundle& l1, const LightBundle& l2)
@@ -1011,7 +1059,7 @@ void InGameScene::UpdateLightConstants()
 			break;
 	}
 
-	mMainLight.Lights[0] = mDirectionalLight;
+	mMainLight.Lights[0] = mDirectionalLight.light;
 	mMainLight.numLights = mLights.size() + 1 < MAX_LIGHTS ? mLights.size() + 1 : MAX_LIGHTS;
 	
 	mLightCB->CopyData(0, mMainLight);

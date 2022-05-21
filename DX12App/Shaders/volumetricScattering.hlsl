@@ -64,8 +64,6 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     float3 rayEnd = float3(0.0f, 0.0f, 0.0f);
 	
     const uint sampleCount = 12;
-    const float stepSize = length(screenPos - rayEnd) / sampleCount;
-    
 	// Perform ray marching to integrate light volume along view ray:
 	[loop]
     for (int i = 0; i < gNumLights; ++i)
@@ -73,6 +71,8 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
         [branch]
         if (gLights[i].Type == SPOT_LIGHT)
         {
+            const float stepSize = length(screenPos - rayEnd) / sampleCount;
+    
             float3 V = float3(0.0f, 0.0f, 0.0f) - screenPos;
             float cameraDistance = length(V);
         
@@ -90,7 +90,7 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
                 const float dist = sqrt(dist2);
                 L /= dist;
 
-                float3 viewDir = mul(float4(gLights[i].Direction, 0.0f), gView).xyz;
+                float3 viewDir = mul(float4(normalize(gLights[i].Direction), 0.0f), gView).xyz;
                 //float3 viewDir = gLights[i].Direction;
                 
                 float SpotFactor = dot(L, -normalize(viewDir));
@@ -129,11 +129,8 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
             float marchedDistance = 0;
             float3 accumulation = 0;
 
-            const float3 L = gLights[i].Direction;
-
-            float3 rayEnd = float3(0.0f, 0.0f, 0.0f);
-
-            const uint sampleCount = 16;
+            const float3 L = normalize(gLights[i].Direction);
+            
             const float stepSize = length(P - rayEnd) / sampleCount;
 
 	        // dither ray start to help with undersampling:
