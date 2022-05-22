@@ -130,13 +130,14 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
 
             float marchedDistance = 0;
             float3 accumulation = 0;
-
+            
+            float3 P = screenPos;
             const float3 L = normalize(gLights[i].Direction);
             
             const float stepSize = length(P - rayEnd) / sampleCount;
 
 	        // dither ray start to help with undersampling:
-            float3 P = screenPos + V * stepSize * dither(pixel.xy);
+            P = screenPos + V * stepSize * dither(pixel.xy);
             float viewDepth = P.z;
             
 	        // Perform ray marching to integrate light volume along view ray:

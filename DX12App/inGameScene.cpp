@@ -462,21 +462,21 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 {
 #ifdef STANDALONE
 	mDynamicsWorld = physics->GetDynamicsWorld();
-	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
-	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-	//LoadLights(cmdList, L"Map\\Lights.tmap");
+	LoadWorldMap(cmdList, physics, "Map\\MapData_night.tmap");
+	LoadCheckPoint(cmdList, L"Map\\CheckPoint_night.tmap");
+	//LoadLights(cmdList, L"Map\\Lights_day.tmap");
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
-		LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
-		LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-		//LoadLights(cmdList, L"Map\\Lights.tmap");
+		LoadWorldMap(cmdList, physics, "Map\\MapData_day.tmap");
+		LoadCheckPoint(cmdList, L"Map\\CheckPoint_day.tmap");
+		//LoadLights(cmdList, L"Map\\Lights_day.tmap");
 	}
 	else if(mNetPtr->GetMapIndex() == 1)
 	{
-		LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
-		LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-		LoadLights(cmdList, L"Map\\Lights.tmap");
+		LoadWorldMap(cmdList, physics, "Map\\MapData_night.tmap");
+		LoadCheckPoint(cmdList, L"Map\\CheckPoint_night.tmap");
+		LoadLights(cmdList, L"Map\\Lights_night.tmap");
 	}
 #endif
 
