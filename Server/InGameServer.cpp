@@ -15,7 +15,7 @@ InGameServer::InGameServer()
 	mMapShape = std::make_unique<BtMapShape>("Resource\\MapData.tmap");
 	mCheckpointShape = std::make_unique<CheckpointShape>("Resource\\CheckPoint.tmap");
 	
-	std::cout << "Transform packet size: " << sizeof(SC::packet_player_transform) << std::endl;
+	//std::cout << "Transform packet size: " << sizeof(SC::packet_player_transform) << std::endl;
 }
 
 void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)

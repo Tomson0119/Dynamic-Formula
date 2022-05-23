@@ -10,7 +10,6 @@
 #include <BufferQueue.h>
 #include <Protocol.h>
 #include <IOCP.h>
-#include <MemoryPool.h>
 
 #include <fstream>
 #include <csignal>
