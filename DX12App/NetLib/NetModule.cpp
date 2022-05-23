@@ -17,6 +17,7 @@ NetModule::NetModule()
 		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
 
 	mNetClient = std::make_unique<NetClient>();
+	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance(2, 10);
 }
 
 NetModule::~NetModule()
@@ -210,4 +211,6 @@ void NetModule::Init()
 	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
 	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };
+	ThreadIdMap::GetInstance().AssignId(mNetThread.get_id(), 0);
+	ThreadIdMap::GetInstance().AssignId(std::this_thread::get_id(), 1);
 }

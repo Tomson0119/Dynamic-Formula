@@ -3,6 +3,7 @@
 #include "InGameServer.h"
 #include "Client.h"
 #include "ThreadIdMap.h"
+#include "MemoryPool.h"
 
 std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
 IOCP LoginServer::msIOCP;
@@ -11,7 +12,7 @@ LoginServer::LoginServer(const EndPoint& ep)
 {
 	std::signal(SIGINT, SignalHandler);
 
-	for (int i = 0; i < MAX_THREADS; i++)
+	for (int i = 0; i < mDBHandlers.size(); i++)
 	{
 	#ifdef USE_DATABASE
 		if (mDBHandlers[i].ConnectToDB(L"sql_server"))
@@ -31,6 +32,11 @@ LoginServer::LoginServer(const EndPoint& ep)
 
 	mListenSck.Init(SocketType::TCP);
 	mListenSck.Bind(ep);
+
+	// Pre-allocate memory pools.
+	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance(
+		MAX_THREAD_COUNT,
+		MAX_PLAYER_SIZE / MAX_THREAD_COUNT + MAX_PLAYER_SIZE / 10);
 }
 
 LoginServer::~LoginServer()
@@ -54,10 +60,10 @@ void LoginServer::Run()
 	WSAOVERLAPPEDEX acceptEx;
 	mListenSck.AsyncAccept(&acceptEx);
 
-	for (int i = 0; i < MAX_THREADS; i++)
+	for (int i = 0; i < mThreads.size(); i++)
 	{
-		mThreads.emplace_back(NetworkThreadFunc, std::ref(*this));
-		ThreadIdMap::GetInstance().AssignId(mThreads.back().get_id(), i);		
+		mThreads[i] = std::thread{ NetworkThreadFunc, std::ref(*this) };
+		ThreadIdMap::GetInstance().AssignId(mThreads[i].get_id(), i);	
 	}
 
 	// Assign main thread id as 0
@@ -296,7 +302,7 @@ void LoginServer::SignalHandler(int signal)
 	if (signal == SIGINT)
 	{
 		std::cout << "Terminating Server..\n";
-		for(int i=0;i<MAX_THREADS;i++)
+		for (int i = 0; i < MAX_THREAD_COUNT; i++)
 			msIOCP.PostToCompletionQueue(nullptr, -1);
 	}
 }
