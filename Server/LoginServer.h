@@ -37,10 +37,9 @@ private:
 	std::unique_ptr<Socket> mUDPSck;
 
 	static IOCP msIOCP;
-	static const int MAX_THREADS = 6;
 
-	std::array<DBHandler, MAX_THREADS> mDBHandlers;
-	std::vector<std::thread> mThreads;
+	std::array<DBHandler, MAX_THREAD_COUNT> mDBHandlers;
+	std::array<std::thread, MAX_THREAD_COUNT> mThreads;
 
 	/*
 		로비서버는 분산 서버 시스템에서 여러 개가 존재할 수 있다.
