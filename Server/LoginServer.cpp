@@ -2,6 +2,7 @@
 #include "LoginServer.h"
 #include "InGameServer.h"
 #include "Client.h"
+#include "ThreadIdMap.h"
 
 std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
 IOCP LoginServer::msIOCP;
@@ -36,10 +37,9 @@ LoginServer::~LoginServer()
 {
 	for (int i = 0; i < gClients.size(); i++)
 	{
-		if (gClients[i]->ID >= 0)
+		if (gClients[i]->GetCurrentState() != CLIENT_STAT::EMPTY)
 		{
-			Logout(i);
-			gClients[i]->Disconnect();
+			Disconnect(i);
 		}
 	}
 }
@@ -57,10 +57,13 @@ void LoginServer::Run()
 	for (int i = 0; i < MAX_THREADS; i++)
 	{
 		mThreads.emplace_back(NetworkThreadFunc, std::ref(*this));
-		mThreadIDs[mThreads.back().get_id()] = i;
+		ThreadIdMap::GetInstance().AssignId(mThreads.back().get_id(), i);		
 	}
-	for (std::thread& thrd : mThreads)
-		thrd.join();
+
+	// Assign main thread id as 0
+	ThreadIdMap::GetInstance().AssignId(std::this_thread::get_id(), 0);
+
+	for (std::thread& thrd : mThreads) thrd.join();
 }
 
 void LoginServer::NetworkThreadFunc(LoginServer& server)
@@ -165,7 +168,7 @@ void LoginServer::Logout(int id)
 	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 
 #ifdef USE_DATABASE
-	int thread_id = mThreadIDs[std::this_thread::get_id()];
+	int thread_id = ThreadIdMap::GetInstance().GetId(std::this_thread::get_id());
 	mDBHandlers[thread_id].SaveUserInfo(id);
 #endif
 }
@@ -229,7 +232,7 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
 		
 	#ifdef USE_DATABASE
-		int thread_id = mThreadIDs[std::this_thread::get_id()];
+		int thread_id = ThreadIdMap::GetInstance().GetId(std::this_thread::get_id());
 		int	conn_id = mDBHandlers[thread_id].SearchIdAndPwd(pck->name, pck->pwd, id);
 	#else
 		int conn_id = (int)LOGIN_STAT::INVALID_IDPWD;
@@ -274,7 +277,7 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		}
 
 	#ifdef USE_DATABASE
-		int thread_id = mThreadIDs[std::this_thread::get_id()];
+		int thread_id = ThreadIdMap::GetInstance().GetId(std::this_thread::get_id());
 		if (mDBHandlers[thread_id].RegisterIdAndPwd(pck->name, pck->pwd))
 			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
 		else

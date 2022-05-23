@@ -28,9 +28,7 @@ public:
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
 	static void SignalHandler(int signal);
-
-	static void NetworkThreadFunc(LoginServer& server);
-	static const int MAX_THREADS = 6;
+	static void NetworkThreadFunc(LoginServer& server);	
 
 	IOCP& GetIOCP() { return msIOCP; }
 
@@ -38,11 +36,11 @@ private:
 	Socket mListenSck;
 	std::unique_ptr<Socket> mUDPSck;
 
-	std::map<std::thread::id, int> mThreadIDs;
+	static IOCP msIOCP;
+	static const int MAX_THREADS = 6;
+
 	std::array<DBHandler, MAX_THREADS> mDBHandlers;
 	std::vector<std::thread> mThreads;
-
-	static IOCP msIOCP;
 
 	/*
 		로비서버는 분산 서버 시스템에서 여러 개가 존재할 수 있다.
