@@ -91,7 +91,7 @@ void GameWorld::UpdatePhysicsWorld()
 		mMap.Update(elapsed, mPhysics);
 	}
 	mUpdateTick += 1;
-	if (mUpdateTick == 2)
+	if (mUpdateTick == 4)
 	{
 		//std::cout << "Sending.\n";
 		BroadcastAllTransform();
@@ -512,6 +512,7 @@ void GameWorld::SendToAllPlayer(std::byte* pck, int size, bool udp, int ignore, 
 
 void GameWorld::CheckCountdownTime()
 {
+	// not good.
 	auto longestLatencyMs = [this]() -> uint64_t
 	{
 		uint64_t latency = 0;
