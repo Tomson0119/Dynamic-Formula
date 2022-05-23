@@ -415,7 +415,7 @@ void InGameScene::CreateMsaaViews()
 
 void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
 {
-	mDynamicsWorld = physics->GetDynamicsWorld();
+	//mDynamicsWorld = physics->GetDynamicsWorld();
 
 	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
@@ -923,7 +923,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	float elapsed = timer.ElapsedTime();
 
 	if(mGameStarted)
-		physics->StepSimulation(elapsed);
+		//physics->StepSimulation(elapsed);
 
 	UpdatePlayerObjects();
 	UpdateMissileObject();
@@ -1317,7 +1317,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	FILE* file = nullptr;
 	fopen_s(&file, path.c_str(), "r");
 
-	btCompoundShape* compound = new btCompoundShape();
+	//btCompoundShape* compound = new btCompoundShape();
 
 	char buf[250];
 	while (fgets(buf, 250, file))
@@ -1372,7 +1372,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			if (i->get()->GetMeshShape())
 			{
 				i->get()->GetMeshShape()->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
-				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+				//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
 		
@@ -1409,7 +1409,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			{
 				if (i->get()->GetMeshShape())
 				{
-					compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+					//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 				}
 			}
 
@@ -1430,7 +1430,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	btObjectTransform.setIdentity();
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
 
-	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
 
 	fclose(file);
 }
