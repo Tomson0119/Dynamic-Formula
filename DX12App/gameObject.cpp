@@ -544,11 +544,12 @@ void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
 void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
 {
 	mInterpolator.Interpolate(elapsed, mPosition, mQuaternion);
+
 	//if (updateRate <= 0.0f) return;
 
 	//mProgressMut.lock();
-	//float progress = std::min(1.0f, mProgress / updateRate);
 	//mProgress += elapsed;
+	//float progress = mProgress / updateRate;
 	//mProgressMut.unlock();
 
 	//const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
