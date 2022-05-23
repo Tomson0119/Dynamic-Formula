@@ -92,7 +92,7 @@ void InGameScene::BuildObjects(
 #ifdef STANDALONE
 
 	mDirectionalLight.light.SetInfo(
-		XMFLOAT3(0.7f, 0.7f, 0.7f),
+		XMFLOAT3(0.2f, 0.2f, 0.2f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
 		direction,
 		0.0f, 0.0f, 0.0f,
@@ -103,7 +103,7 @@ void InGameScene::BuildObjects(
 	v.Direction = direction;
 	v.Position = { 0.0f, 0.0f, 0.0f };
 	v.Range = 0;
-	v.VolumetricStrength = 1.5f;
+	v.VolumetricStrength = 0.1f;
 	v.outerCosine = 0;
 	v.innerCosine = 0;
 	v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -286,7 +286,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 
 #ifdef STANDALONE
-	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
+	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList, 1);
 #else
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList, mNetPtr->GetMapIndex());
 #endif
@@ -464,7 +464,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mDynamicsWorld = physics->GetDynamicsWorld();
 	LoadWorldMap(cmdList, physics, "Map\\MapData_night.tmap");
 	LoadCheckPoint(cmdList, L"Map\\CheckPoint_night.tmap");
-	//LoadLights(cmdList, L"Map\\Lights_day.tmap");
+	LoadLights(cmdList, L"Map\\Lights_night.tmap");
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
@@ -1093,7 +1093,7 @@ void InGameScene::UpdateVolumetricConstant()
 	{
 		if (mLights[i].volumetric.Type == SPOT_LIGHT || mLights[i].volumetric.Type == DIRECTIONAL_LIGHT)
 		{
-			volumeConst.Lights[i] = mLights[i].volumetric;
+			volumeConst.Lights[i] = mLights[i - 1].volumetric;
 		}
 	}
 
@@ -1560,37 +1560,47 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 	{
 		std::stringstream ss(info);
 
-		XMFLOAT3 pos;
-		ss >> pos.x >> pos.y >> pos.z;
+		string type;
+		ss >> type;
 
-		XMFLOAT3 direction;
-		ss >> direction.x >> direction.y >> direction.z;
+		if (type == "S")
+		{
+			XMFLOAT3 pos;
+			ss >> pos.x >> pos.y >> pos.z;
 
-		LightBundle bundle;
-		LightInfo l;
+			XMFLOAT3 direction;
+			ss >> direction.x >> direction.y >> direction.z;
 
-		l.SetInfo(
-			XMFLOAT3(0.6f, 0.6f, 0.6f),
-			pos,
-			direction,
-			10.0f, 20.0f, 10.0f,
-			0.0f, SPOT_LIGHT);;
+			LightBundle bundle;
+			LightInfo l;
 
-		bundle.light = l;
+			l.SetInfo(
+				XMFLOAT3(0.6f, 0.6f, 0.6f),
+				pos,
+				direction,
+				10.0f, 20.0f, 10.0f,
+				0.0f, SPOT_LIGHT);;
 
-		VolumetricInfo v;
+			bundle.light = l;
 
-		v.Direction = direction;
-		v.Position = pos;
-		v.Range = 30.0f;
-		v.VolumetricStrength = 0.5f;
-		v.outerCosine = cos(7.0f);
-		v.innerCosine = cos(6.0f);
-		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
-		v.Type = SPOT_LIGHT;
-		
-		bundle.volumetric = v;
+			VolumetricInfo v;
 
-		mLights.push_back(bundle);
+			v.Direction = direction;
+			v.Position = pos;
+			v.Range = 30.0f;
+			v.VolumetricStrength = 0.5f;
+			v.outerCosine = cos(7.0f);
+			v.innerCosine = cos(6.0f);
+			v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+			v.Type = SPOT_LIGHT;
+
+			bundle.volumetric = v;
+
+			mLights.push_back(bundle);
+		}
+		else if (type == "P")
+		{
+			
+		}
 	}
 }
