@@ -1,5 +1,9 @@
 #pragma once
 #include "UI.h"
+
+
+
+
 class LobbyUI : public UI
 {
 public:
@@ -33,6 +37,7 @@ public:
 	void SetDenyBox() { mIsDenyBox = true; }
 	void SetIndexRoomNums(int index, int RoomID) { mRoomNums[index] = RoomID; }
 	void UpdateRoomIDTexts();
+	
 	void RoomEmptyProcess();
 
 	void SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed);

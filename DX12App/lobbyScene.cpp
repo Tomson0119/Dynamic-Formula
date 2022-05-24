@@ -61,12 +61,26 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 		{
 			OutputDebugStringA("MakeRoom Button Down\n");
 #ifndef STANDALONE
-			//mNetPtr->Client()->RequestNewRoom();
+			mNetPtr->Client()->RequestNewRoom();
 #endif
 		}
 		else if (ret == -1) // Nothing
 		{
 			return;
+		}
+		else if (ret == -2) // Page Pop
+		{
+			OutputDebugStringA("Page Pop Button Down\n");
+#ifndef STANDALONE
+			mNetPtr->Client()->InquireRoomList(mPageNum);
+#endif
+		}
+		else if (ret == -3) // Page Push
+		{
+			OutputDebugStringA("Page Push Button Down\n");
+#ifndef STANDALONE
+			mNetPtr->Client()->InquireRoomList(mPageNum);
+#endif
 		}
 		else // return RoomNum
 		{
@@ -74,7 +88,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 			OutputDebugStringA(std::to_string(ret).c_str());
 			OutputDebugStringA("\n");
 #ifndef STANDALONE
-			//mNetPtr->Client()->RequestEnterRoom(ret);
+			mNetPtr->Client()->RequestEnterRoom(ret);
 #endif
 		}
 	}

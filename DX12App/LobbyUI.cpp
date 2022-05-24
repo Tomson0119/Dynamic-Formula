@@ -3,10 +3,10 @@
 
 LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue)
-    //Text: 8 - MakeRoom, RoomNum[6], DenyMessage 
+    //Text: 8 - MakeRoom, RoomNum[6], DenyMessage, PlayerCount[6], GameStarted[6], MapID[6] 
     //RoundRect: 17 - BigBackground, SmallBackground, SmallWhiteBackground, MakeRoom, RoomTitle[6], RoomBox[6], DenyBox
 {
-    SetTextCnt(8);
+    SetTextCnt(26);
     SetRectCnt(17);
     SetBitmapCnt(4);
     //SetGradientCnt(12);
@@ -23,7 +23,7 @@ void LobbyUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12Comman
     Reset();
 
     UI::Initialize(device, pd3dCommandQueue);
-    SetTextCnt(8);
+    SetTextCnt(26);
     SetRectCnt(17);
     SetBitmapCnt(4);
     SetUICnt();
@@ -60,11 +60,7 @@ void LobbyUI::SetVectorSize(UINT nFrame)
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Fonts\\Blazed.ttf");
     Fonts.push_back(L"Fonts\\Xenogears.ttf");
-    Fonts.push_back(L"Fonts\\abberancy.ttf");
-    Fonts.push_back(L"Fonts\\abberancy.ttf");
-    Fonts.push_back(L"Fonts\\abberancy.ttf");
-    Fonts.push_back(L"Fonts\\abberancy.ttf");
-    Fonts.push_back(L"Fonts\\abberancy.ttf");
+    for(int i=0;i<26-2;++i)
     Fonts.push_back(L"Fonts\\abberancy.ttf");
 
     FontLoad(Fonts);
@@ -82,8 +78,8 @@ void LobbyUI::RoomEmptyProcess()
         if (GetTextBlock()[i].strText.empty())
         {
             SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
-            SetIndexColor(11 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
-            SetIndexColor(17 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
+            SetIndexColor(GetTextCnt() + 3 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
+            SetIndexColor(GetTextCnt() + 9 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
         }
     }
 }
@@ -96,6 +92,12 @@ int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
         GetTextBlock()[0].d2dLayoutRect.right, GetTextBlock()[0].d2dLayoutRect.bottom);
     if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN) // make room
         return 0;
+    rc = MakeRect(GetFrameWidth() * 0.44f, GetFrameHeight() * 0.76f, GetFrameWidth() * 0.50f, GetFrameHeight() * 0.82f);
+    if (MouseCollisionCheck(dx, dy, rc) && buttonState & WM_LBUTTONDOWN) // Left Arrow
+        return -2;
+    rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.76f, GetFrameWidth() * 0.58f, GetFrameHeight() * 0.82f);
+    if (MouseCollisionCheck(dx, dy, rc) && buttonState & WM_LBUTTONDOWN) // Right Arrow
+        return -3;
     
     rc = MakeRect(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.40f);
     if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[1].strText.empty()) // room 1
@@ -139,14 +141,14 @@ void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float ri
     if (MouseCollisionCheck(dx, dy, rc) && !GetTextBlock()[index].strText.empty())
     {
         SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
-        SetIndexColor(11+index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
-        SetIndexColor(17+index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
+        SetIndexColor(GetTextCnt() + 3 +index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
+        SetIndexColor(GetTextCnt() + 6+index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
     }
     else if(!MouseCollisionCheck(dx, dy, rc) && !GetTextBlock()[index].strText.empty())
     {
         SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-        SetIndexColor(11 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
-        SetIndexColor(17 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
+        SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
+        SetIndexColor(GetTextCnt()  + 9 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
     }
 }
 
@@ -201,16 +203,18 @@ void LobbyUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 
 void LobbyUI::Update(float GTime)
 {
+    for (int i = 0; i < 6; ++i)
+        SetRoomInfo(i, i+1, i + 1, i % 2, i % 2, i % 2);
     if (mIsDenyBox)
     {
         SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-        SetIndexColor(24, D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
+        SetIndexColor(42, D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
         UpdateDenyBoxText();
     }
     else
     {
         SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
-        SetIndexColor(24, D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
+        SetIndexColor(42, D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     }
     UpdateRoomIDTexts();
 }
@@ -509,39 +513,26 @@ void LobbyUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 void LobbyUI::CreateFontFormat()
 {
     std::vector<float>fFontSize;
+    for(int i=0;i<26;++i)
     fFontSize.push_back(GetFrameHeight() * 0.03f);
-    fFontSize.push_back(GetFrameHeight() * 0.03f);
-    fFontSize.push_back(GetFrameHeight() * 0.03f);
-    fFontSize.push_back(GetFrameHeight() * 0.03f);
-    fFontSize.push_back(GetFrameHeight() * 0.03f);
-    fFontSize.push_back(GetFrameHeight() * 0.03f);
-    fFontSize.push_back(GetFrameHeight() * 0.03f);
-    fFontSize.push_back(GetFrameHeight() * 0.03f);
+    
 
     SetFontSize(fFontSize);
 
     std::vector<std::wstring> Fonts;
     Fonts.push_back(L"Blazed");
     Fonts.push_back(L"Xenogears");
+    for(int i=0;i<26-2;++i)
     Fonts.push_back(L"abberancy");
-    Fonts.push_back(L"abberancy");
-    Fonts.push_back(L"abberancy");
-    Fonts.push_back(L"abberancy");
-    Fonts.push_back(L"abberancy");
-    Fonts.push_back(L"abberancy");
+   
 
     SetFonts(Fonts);
 
     std::vector<DWRITE_TEXT_ALIGNMENT> TextAlignments;
     TextAlignments.resize(GetTextCnt());
-    TextAlignments[0] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[1] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[2] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[3] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[4] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[5] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[6] = DWRITE_TEXT_ALIGNMENT_CENTER;
-    TextAlignments[7] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    for(int i=0;i<26;++i)
+    TextAlignments[i] = DWRITE_TEXT_ALIGNMENT_CENTER;
+    
 
     SetTextAllignments(TextAlignments);
 
@@ -549,7 +540,7 @@ void LobbyUI::CreateFontFormat()
 }
 
 void LobbyUI::SetTextRect()
-{//MakeRoom, Room1, Room2, Room3, Room4, Room5, Room6, Box[6], LeftArrowBox, RightArrowBox
+{//MakeRoom, RoomID[6], DenyMessageBox, PlayerCount[6], MapID[6], GameStarted[6]
     GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.28125f, GetFrameHeight() * 0.055f, GetFrameWidth() * 0.46875f, GetFrameHeight() * 0.11f);
     GetTextBlock()[1].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.245f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.3f);
     GetTextBlock()[2].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.245f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.3f);
@@ -558,6 +549,27 @@ void LobbyUI::SetTextRect()
     GetTextBlock()[5].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.66f);
     GetTextBlock()[6].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.66f);
     GetTextBlock()[7].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.30f, GetFrameHeight() * 0.40f, GetFrameWidth() * 0.70f, GetFrameHeight() * 0.60f);
+
+    GetTextBlock()[8].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.245f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.3f);
+    GetTextBlock()[9].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.425f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.48f);
+    GetTextBlock()[10].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.425f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.48f);
+    GetTextBlock()[11].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.66f);
+    GetTextBlock()[12].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.66f);
+    GetTextBlock()[13].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.30f, GetFrameHeight() * 0.40f, GetFrameWidth() * 0.70f, GetFrameHeight() * 0.60f);
+
+    GetTextBlock()[14].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.245f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.3f);
+    GetTextBlock()[15].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.425f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.48f);
+    GetTextBlock()[16].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.425f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.48f);
+    GetTextBlock()[17].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.66f);
+    GetTextBlock()[18].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.66f);
+    GetTextBlock()[19].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.30f, GetFrameHeight() * 0.40f, GetFrameWidth() * 0.70f, GetFrameHeight() * 0.60f);
+
+    GetTextBlock()[20].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.245f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.3f);
+    GetTextBlock()[21].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.425f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.48f);
+    GetTextBlock()[22].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.425f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.48f);
+    GetTextBlock()[23].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.27f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.48f, GetFrameHeight() * 0.66f);
+    GetTextBlock()[24].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.54f, GetFrameHeight() * 0.605f, GetFrameWidth() * 0.75f, GetFrameHeight() * 0.66f);
+    GetTextBlock()[25].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.30f, GetFrameHeight() * 0.40f, GetFrameWidth() * 0.70f, GetFrameHeight() * 0.60f);
 }
 
 void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight)
@@ -567,14 +579,36 @@ void LobbyUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
 
     std::vector<D2D1::ColorF> colorList;
     /*Text*/
-    // MakeRoom, RoomNum[6], DenyMessage
+    // MakeRoom, RoomNum[6], DenyMessage, 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::DarkGray, 0.9f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
+
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));  
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f)); 
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::White, 0.9f));
 
     /*UI*/
