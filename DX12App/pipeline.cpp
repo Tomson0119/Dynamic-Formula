@@ -315,7 +315,7 @@ void Pipeline::UpdateConstants(Camera* camera, DrawType type, bool culling)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, char mapIndex)
 	: Pipeline()
 {
 	auto boxMesh = std::make_shared<BoxMesh>(device, cmdList, 20.0f, 20.0f, 20.0f);
@@ -323,7 +323,13 @@ SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* 
 
 	auto skyboxObj = std::make_shared<GameObject>();
 	skyboxObj->SetMesh(boxMesh);
-	skyboxObj->LoadTexture(device, cmdList, L"Resources\\skyboxarray_night.dds", D3D12_SRV_DIMENSION_TEXTURE2DARRAY);
+
+	if(mapIndex == 0)
+		skyboxObj->LoadTexture(device, cmdList, L"Resources\\skyboxarray.dds", D3D12_SRV_DIMENSION_TEXTURE2DARRAY);
+
+	else if (mapIndex == 1)
+		skyboxObj->LoadTexture(device, cmdList, L"Resources\\skyboxarray_night.dds", D3D12_SRV_DIMENSION_TEXTURE2DARRAY);	
+
 	mRenderObjects.push_back(skyboxObj);
 }
 
@@ -955,7 +961,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 
 	// Input Texture와 ProcessingTexture[0]를 이용해 다운 샘플링
-	float threshold = 0.5f;
+	float threshold = 0.7f;
 	cmdList->SetComputeRoot32BitConstants(2, 1, &threshold, 0);
 
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
@@ -1148,6 +1154,7 @@ void VolumetricScatteringPipeline::SetInput(ID3D12GraphicsCommandList* cmdList, 
 		ResolveRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource(), DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
 	else
 		CopyRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource());
+	
 }
 
 void VolumetricScatteringPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)

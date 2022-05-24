@@ -162,7 +162,6 @@ private:
 	bool mOutside = false;
 
 	float mMissileInterval = 0.0f;
-	float mCubemapInterval = 0.0f;
 
 	UINT mCubemapDrawIndex = 0;
 
@@ -205,7 +204,7 @@ private:
 	float mVolumetricRange = 20.0f;*/
 	
 	std::vector<LightBundle> mLights;
-	LightInfo mDirectionalLight;
+	LightBundle mDirectionalLight;
 
 	// Game end counter
 	static const int WAIT_TO_REVERT = 5;

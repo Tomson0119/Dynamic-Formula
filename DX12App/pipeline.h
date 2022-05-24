@@ -122,7 +122,7 @@ protected:
 class SkyboxPipeline : public Pipeline
 {
 public:
-	SkyboxPipeline(ID3D12Device *device, ID3D12GraphicsCommandList* cmdList);
+	SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, char mapIndex = 0);
 	virtual ~SkyboxPipeline();
 
 	virtual void BuildPipeline(
@@ -266,7 +266,7 @@ public:
 	virtual void BuildSRVAndUAV(ID3D12Device* device);
 
 protected:
-	static const int InputCount = 2;
+	static const int InputCount = 3;
 
 	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
 

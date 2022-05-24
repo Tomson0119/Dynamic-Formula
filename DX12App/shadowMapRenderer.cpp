@@ -18,13 +18,13 @@ ShadowMapRenderer::ShadowMapRenderer(ID3D12Device* device, UINT width, UINT heig
 	mZSplits.resize(mMapCount + 1);
 
 	mZSplits[0] = mainCamera->GetNearZ();
-	mZSplits[mMapCount] = 1000;
+	mZSplits[mMapCount] = 800;
 	for (UINT i = 1; i < mMapCount; ++i)
 	{
 		float index = (i / (float)mMapCount);
 		float uniformSplit = mZSplits[0] + (mZSplits[mMapCount] - mZSplits[0]) * index;
 		float logarithmSplit = mZSplits[0] * std::powf((mZSplits[mMapCount] / mZSplits[0]), index);
-		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.3f);
+		mZSplits[i] = std::lerp(logarithmSplit, uniformSplit, 0.4f);
 		//mZSplits[i] = uniformSplit;
 		//mZSplits[i] = logarithmSplit;
 	}
@@ -315,7 +315,6 @@ void ShadowMapRenderer::UpdateDepthCamera(ID3D12GraphicsCommandList* cmdList)
 		XMFLOAT3 position = Vector3::MultiplyAdd(mSunRange[i], look, mCenter[i]);
 
 		mDepthCamera[i]->LookAt(position, mCenter[i], XMFLOAT3(0.0f, 1.0f, 0.0f));
-		
 		mDepthCamera[i]->SetOrthographicLens(mCenter[i], mSunRange[i]);
 	}
 
@@ -345,14 +344,12 @@ void ShadowMapRenderer::PreRender(ID3D12GraphicsCommandList* cmdList, InGameScen
 		scene->UpdateCameraConstant(i + 1, mDepthCamera[i].get());
 
 #ifdef FRUSTUM_CULLING
-		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i));
+		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i), false);
 #endif
 
 #ifndef FRUSTUM_CULLING
 		scene->UpdateInstancingPipelines(mDepthCamera[i].get(), DrawType((int)DrawType::Shadow_First + i), false);
 #endif
-
-
 		scene->SetGraphicsCBV(cmdList, i + 1);
 		RenderPipelines(cmdList, i);
 
@@ -396,10 +393,18 @@ void ShadowMapRenderer::AppendTargetPipeline(Layer layer, Pipeline* pso)
 		mShadowTargetPSOs.insert(std::make_pair(layer, pso));
 }
 
-void ShadowMapRenderer::SetShadowMapSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
+void ShadowMapRenderer::SetShadowMapGraphicsSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
 {
 	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
 	auto gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	cmdList->SetGraphicsRootDescriptorTable(srvIndex, gpuHandle);
+}
+
+void ShadowMapRenderer::SetShadowMapComputeSRV(ID3D12GraphicsCommandList* cmdList, UINT srvIndex)
+{
+	ID3D12DescriptorHeap* descHeaps[] = { mCbvSrvDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), descHeaps);
+	auto gpuHandle = mCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	cmdList->SetComputeRootDescriptorTable(srvIndex, gpuHandle);
 }

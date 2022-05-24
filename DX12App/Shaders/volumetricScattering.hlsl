@@ -2,7 +2,10 @@
 
 Texture2D<float4> inputTexture : register(t0);
 Texture2D<float> depthTexture : register(t1);
+Texture2D<float> shadowDepthMap[3] : register(t2);
 RWTexture2D<float4> outputTexture : register(u0);
+
+SamplerComparisonState gPCFShadow : register(s1);
 
 struct VolumetricInfo
 {
@@ -20,8 +23,12 @@ cbuffer VolumetricCB : register(b1)
 {
     matrix gInvProj : packoffset(c0);
     matrix gView : packoffset(c4);
-    
-    VolumetricInfo gLights[NUM_LIGHTS] : packoffset(c8);
+    matrix gShadowTransform[3] : packoffset(c8);
+    int gNumLights : packoffset(c20.x);
+    float gZSplit1 : packoffset(c20.y);
+    float gZSplit2 : packoffset(c20.z);
+    float gZSplit3 : packoffset(c20.w);
+    VolumetricInfo gLights[MAX_LIGHTS] : packoffset(c21);
 }
 
 float3 GetPositionVS(float2 texcoord, float depth)
@@ -60,15 +67,15 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     float3 rayEnd = float3(0.0f, 0.0f, 0.0f);
 	
     const uint sampleCount = 12;
-    const float stepSize = length(screenPos - rayEnd) / sampleCount;
-    
 	// Perform ray marching to integrate light volume along view ray:
 	[loop]
-    for (uint i = 0; i < NUM_LIGHTS; ++i)
+    for (int i = 0; i < gNumLights; ++i)
     {
         [branch]
-        if (gLights[i].Type == SPOT_LIGHT)
+        if (gLights[i].Type == SPOT_LIGHT || gLights[i].Type == POINT_LIGHT)
         {
+            const float stepSize = length(screenPos - rayEnd) / sampleCount;
+    
             float3 V = float3(0.0f, 0.0f, 0.0f) - screenPos;
             float cameraDistance = length(V);
         
@@ -86,7 +93,7 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
                 const float dist = sqrt(dist2);
                 L /= dist;
 
-                float3 viewDir = mul(float4(gLights[i].Direction, 0.0f), gView).xyz;
+                float3 viewDir = mul(float4(normalize(gLights[i].Direction), 0.0f), gView).xyz;
                 //float3 viewDir = gLights[i].Direction;
                 
                 float SpotFactor = dot(L, -normalize(viewDir));
@@ -114,6 +121,72 @@ void CS(uint3 dispatchID : SV_DispatchThreadID)
     
             result += max(0, float4(accumulation * gLights[i].Color * gLights[i].VolumetricStrength, 1));
         }
+        
+    //    else if(gLights[i].Type == DIRECTIONAL_LIGHT)
+    //    {
+    //        float3 V = float3(0.0f, 0.0f, 0.0f) - screenPos;
+    //        float cameraDistance = length(V);
+    //        V /= cameraDistance;
+
+    //        float marchedDistance = 0;
+    //        float3 accumulation = 0;
+            
+    //        float3 P = screenPos;
+    //        const float3 L = normalize(gLights[i].Direction);
+            
+    //        const float stepSize = length(P - rayEnd) / sampleCount;
+
+	   //     // dither ray start to help with undersampling:
+    //        P = screenPos + V * stepSize * dither(pixel.xy);
+    //        float viewDepth = P.z;
+            
+	   //     // Perform ray marching to integrate light volume along view ray:
+	   //     [loop]
+    //        for (uint i = 0; i < sampleCount; ++i)
+    //        {
+    //            bool valid = false;
+    //            for (uint cascade = 0; cascade < 3; ++cascade)
+    //            {
+    //                matrix light_space_matrix = gShadowTransform[cascade];
+    //                float zSplit = cascade == 0 ? gZSplit1 : cascade == 1 ? gZSplit2 : gZSplit3;
+                    
+    //                float4 posShadowMap = mul(float4(P, 1.0), light_space_matrix);
+        
+    //                float3 UVD = posShadowMap.xyz / posShadowMap.w;
+
+    //                UVD.xy = 0.5 * UVD.xy + 0.5;
+    //                UVD.y = 1.0 - UVD.y;
+
+    //                [branch]
+    //                if (viewDepth < zSplit)
+    //                {
+    //                    if (IsSaturated(UVD.xy))
+    //                    {
+    //                        float attenuation = CalcShadowFactor_PCF3x3(gPCFShadow, shadowDepthMap[i], UVD);
+
+    //                        attenuation *= ExponentialFog(cameraDistance - marchedDistance);
+
+    //                        accumulation += attenuation;
+    //                    }
+
+    //                    marchedDistance += stepSize;
+    //                    P = P + V * stepSize;
+
+    //                    valid = true;
+    //                    break;
+    //                }
+    //            }
+
+    //            if (!valid)
+    //            {
+    //                break;
+    //            }
+    //        }
+
+    //        accumulation /= sampleCount;
+            
+    //        result += max(0, float4(accumulation * gLights[i].Color * gLights[i].VolumetricStrength, 1));
+    //    }
     }
     
     outputTexture[pixel] = inputTexture[pixel] + result;
