@@ -72,6 +72,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 		{
 			OutputDebugStringA("Page Pop Button Down\n");
 #ifndef STANDALONE
+			if (mPageNum > 0) mPageNum -= 1;
 			mNetPtr->Client()->InquireRoomList(mPageNum);
 #endif
 		}
@@ -79,6 +80,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 		{
 			OutputDebugStringA("Page Push Button Down\n");
 #ifndef STANDALONE
+			mPageNum += 1;
 			mNetPtr->Client()->InquireRoomList(mPageNum);
 #endif
 		}
