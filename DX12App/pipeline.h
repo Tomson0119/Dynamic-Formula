@@ -266,7 +266,7 @@ public:
 	virtual void BuildSRVAndUAV(ID3D12Device* device);
 
 protected:
-	static const int InputCount = 2;
+	static const int InputCount = 3;
 
 	ComPtr<ID3D12DescriptorHeap> mSrvUavDescriptorHeap;
 

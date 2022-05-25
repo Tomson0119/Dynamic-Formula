@@ -88,31 +88,73 @@ void InGameScene::BuildObjects(
 
 	mMainLight.Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 
+	XMFLOAT3 direction = XMFLOAT3(-1.0f, 0.75f, -1.0f);
 #ifdef STANDALONE
-	mDirectionalLight.SetInfo(
-		XMFLOAT3(0.7f, 0.7f, 0.7f),
+
+	mDirectionalLight.light.SetInfo(
+		XMFLOAT3(0.2f, 0.2f, 0.2f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f),
-		XMFLOAT3(-1.0f, 0.75f, -1.0f),
+		direction,
 		0.0f, 0.0f, 0.0f,
 		3000.0f, DIRECTIONAL_LIGHT);
+
+	VolumetricInfo v;
+
+	v.Direction = direction;
+	v.Position = { 0.0f, 0.0f, 0.0f };
+	v.Range = 0;
+	v.VolumetricStrength = 0.1f;
+	v.outerCosine = 0;
+	v.innerCosine = 0;
+	v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	v.Type = DIRECTIONAL_LIGHT;
+
+	mDirectionalLight.volumetric = v;
+	
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
-		mDirectionalLight.SetInfo(
+		mDirectionalLight.light.SetInfo(
 			XMFLOAT3(0.7f, 0.7f, 0.7f),
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
-			XMFLOAT3(-1.0f, 0.75f, -1.0f),
+			direction,
 			0.0f, 0.0f, 0.0f,
 			3000.0f, DIRECTIONAL_LIGHT);
+
+		VolumetricInfo v;
+
+		v.Direction = direction;
+		v.Position = { 0.0f, 0.0f, 0.0f };
+		v.Range = 0;
+		v.VolumetricStrength = 0.5f;
+		v.outerCosine = 0;
+		v.innerCosine = 0;
+		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		v.Type = DIRECTIONAL_LIGHT;
+
+		mDirectionalLight.volumetric = v;
 	}
 	else if (mNetPtr->GetMapIndex() == 1)
 	{
-		mDirectionalLight.SetInfo(
+		mDirectionalLight.light.SetInfo(
 			XMFLOAT3(0.2f, 0.2f, 0.2f),
 			XMFLOAT3(0.0f, 0.0f, 0.0f),
-			XMFLOAT3(-1.0f, 0.75f, -1.0f),
+			direction,
 			0.0f, 0.0f, 0.0f,
 			3000.0f, DIRECTIONAL_LIGHT);
+		
+		VolumetricInfo v;
+
+		v.Direction = direction;
+		v.Position = { 0.0f, 0.0f, 0.0f };
+		v.Range = 0;
+		v.VolumetricStrength = 0.1f;
+		v.outerCosine = 0;
+		v.innerCosine = 0;
+		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		v.Type = DIRECTIONAL_LIGHT;
+
+		mDirectionalLight.volumetric = v;
 	}
 #endif
 
@@ -182,18 +224,21 @@ void InGameScene::BuildRootSignature()
 
 void InGameScene::BuildComputeRootSignature()
 {
-	D3D12_DESCRIPTOR_RANGE descRanges[2];
+	D3D12_DESCRIPTOR_RANGE descRanges[3];
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-
-	D3D12_ROOT_PARAMETER parameters[4];
+	descRanges[2] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 2);
+	
+	D3D12_ROOT_PARAMETER parameters[5];
 	parameters[0] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);    // Inputs
 	parameters[1] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);    // Output																   
 	parameters[2] = Extension::Constants(6, 0, D3D12_SHADER_VISIBILITY_ALL);					   // 32bit Constant
 	parameters[3] = Extension::Descriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_ALL);    // CameraCB
+	parameters[4] = Extension::DescriptorTable(1, &descRanges[2], D3D12_SHADER_VISIBILITY_ALL); //Shadow Map
 
-	D3D12_STATIC_SAMPLER_DESC samplerDesc[1];
+	D3D12_STATIC_SAMPLER_DESC samplerDesc[2];
 	samplerDesc[0] = Extension::SamplerDesc(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_COMPARISON_FUNC_NEVER, D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE, D3D12_SHADER_VISIBILITY_ALL);
+	samplerDesc[1] = Extension::SamplerDesc(1, D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT, D3D12_TEXTURE_ADDRESS_MODE_BORDER, D3D12_COMPARISON_FUNC_LESS_EQUAL, D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK, D3D12_SHADER_VISIBILITY_ALL);
 
 	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = Extension::RootSignatureDesc(_countof(parameters), parameters,
 		_countof(samplerDesc), samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -241,7 +286,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 
 #ifdef STANDALONE
-	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList);
+	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList, 1);
 #else
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList, mNetPtr->GetMapIndex());
 #endif
@@ -252,7 +297,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	mPipelines[Layer::CheckPoint] = make_unique<Pipeline>();
 	mPipelines[Layer::DriftParticle] = make_unique<StreamOutputPipeline>(2);
 
-	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.Direction);
+	mShadowMapRenderer = make_unique<ShadowMapRenderer>(mDevice.Get(), 5000, 5000, 3, mCurrentCamera, mDirectionalLight.light.Direction);
 
 	if (mMsaa4xEnable)
 	{
@@ -426,15 +471,15 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
-		LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
-		LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-		LoadLights(cmdList, L"Map\\Lights.tmap");
+		LoadWorldMap(cmdList, physics, "Map\\MapData_day.tmap");
+		LoadCheckPoint(cmdList, L"Map\\CheckPoint_day.tmap");
+		//LoadLights(cmdList, L"Map\\Lights_day.tmap");
 	}
 	else if(mNetPtr->GetMapIndex() == 1)
 	{
-		LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
-		LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-		LoadLights(cmdList, L"Map\\Lights.tmap");
+		LoadWorldMap(cmdList, physics, "Map\\MapData_night.tmap");
+		LoadCheckPoint(cmdList, L"Map\\CheckPoint_night.tmap");
+		LoadLights(cmdList, L"Map\\Lights_night.tmap");
 	}
 #endif
 
@@ -922,8 +967,11 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 
 	float elapsed = timer.ElapsedTime();
 
+#ifdef STANDALONE
 	if(mGameStarted)
-		//physics->StepSimulation(elapsed);
+		physics->StepSimulation(elapsed);
+#endif
+	//physics->StepSimulation(elapsed);
 
 	UpdatePlayerObjects();
 	UpdateMissileObject();
@@ -978,11 +1026,13 @@ void InGameScene::DestroyDriftParticleObject()
 
 void InGameScene::UpdateLightConstants()
 {
-	for(int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
+	for (int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
 		mMainLight.ShadowTransform[i] = Matrix4x4::Transpose(mShadowMapRenderer->GetShadowTransform(i));
 
 	auto playerPos = mPlayer->GetPosition();
 
+
+#ifndef STANDALONE
 	for (auto i = mLights.begin(); i < mLights.end();)
 	{
 		if (i->light.pad0 == 1.0f)
@@ -990,18 +1040,22 @@ void InGameScene::UpdateLightConstants()
 		else
 			++i;
 	}
-
-	for (int i = 0; i < mPlayerObjects.size(); ++i)
-	{
-		if (mPlayerObjects[i])
+	
+	if (mNetPtr->GetMapIndex() == 1)
+	{	
+		for (int i = 0; i < mPlayerObjects.size(); ++i)
 		{
-			LightBundle* frontLights;
-			frontLights = mPlayerObjects[i]->GetLightBundle();
+			if (mPlayerObjects[i])
+			{
+				LightBundle* frontLights;
+				frontLights = mPlayerObjects[i]->GetLightBundle();
 
-			mLights.push_back(frontLights[0]);
-			mLights.push_back(frontLights[1]);
+				mLights.push_back(frontLights[0]);
+				mLights.push_back(frontLights[1]);
+			}
 		}
 	}
+#endif
 
 	std::sort(mLights.begin(), mLights.end(),
 		[playerPos](const LightBundle& l1, const LightBundle& l2)
@@ -1010,13 +1064,16 @@ void InGameScene::UpdateLightConstants()
 		}
 	);
 
-	for (int i = 1; i < NUM_LIGHTS; ++i)
+	for (int i = 1; i < mLights.size() + 1; ++i)
 	{
 		mMainLight.Lights[i] = mLights[i - 1].light;
+		if(i == MAX_LIGHTS - 1)
+			break;
 	}
 
-	mMainLight.Lights[0] = mDirectionalLight;
-
+	mMainLight.Lights[0] = mDirectionalLight.light;
+	mMainLight.numLights = mLights.size() + 1 < MAX_LIGHTS ? mLights.size() + 1 : MAX_LIGHTS;
+	
 	mLightCB->CopyData(0, mMainLight);
 }
 
@@ -1032,19 +1089,21 @@ void InGameScene::UpdateVolumetricConstant()
 
 	volumeConst.InvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
 	volumeConst.View = Matrix4x4::Transpose(mCurrentCamera->GetView());
-
-	int j = 0;
-	for (int i = 0; i < NUM_LIGHTS;)
+	
+	for (int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
 	{
-		for (; j < mLights.size(); j++)
+		volumeConst.ShadowTransform[i] = Matrix4x4::Transpose(Matrix4x4::Multiply(mShadowMapRenderer->GetView(i), mShadowMapRenderer->GetProj(i)));
+		volumeConst.frstumSplit[i] = mShadowMapRenderer->GetSplit(i + 1);
+	}		
+
+	volumeConst.numLights = mLights.size() + 1 < MAX_LIGHTS ? mLights.size() + 1 : MAX_LIGHTS;
+	
+	volumeConst.Lights[0] = mDirectionalLight.volumetric;
+	for (int i = 1; i < volumeConst.numLights; ++i)
+	{
+		if (mLights[i].volumetric.Type == SPOT_LIGHT || mLights[i].volumetric.Type == DIRECTIONAL_LIGHT)
 		{
-			if (mLights[j].volumetric.Type == SPOT_LIGHT)
-			{
-				volumeConst.Lights[i] = mLights[j].volumetric;
-				++i;
-				++j;
-				break;
-			}
+			volumeConst.Lights[i] = mLights[i - 1].volumetric;
 		}
 	}
 
@@ -1198,6 +1257,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 	if (mVolumetricEnable)
 	{
 		SetComputeCBV(cmdList);
+		mShadowMapRenderer->SetShadowMapComputeSRV(cmdList, 4);
 
 		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, backBuffer, 0);
 		mPostProcessingPipelines[Layer::VolumetricScattering]->SetInput(cmdList, depthBuffer, 1, true);
@@ -1213,7 +1273,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex, bool cubeMapping)
 {	
 	SetGraphicsCBV(cmdList, cameraCBIndex);
-	mShadowMapRenderer->SetShadowMapSRV(cmdList, 6);
+	mShadowMapRenderer->SetShadowMapGraphicsSRV(cmdList, 6);
 
 	for (const auto& [layer, pso] : mPipelines)
 	{
@@ -1366,6 +1426,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		btLocalTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
 		btLocalTransform.setRotation(btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w));
 
+#ifdef STANDALONE
 		auto& meshes = mMeshList[objName];
 		for (auto i = meshes.begin(); i < meshes.end(); ++i)
 		{
@@ -1375,6 +1436,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 				//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
+#endif
 		
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
@@ -1403,7 +1465,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			
 			mMeshList[objName + "_Transparent"] = transparentObj->GetMeshes();
 			mOOBBList[objName + "_Transparent"] = transparentObj->GetBoundingBox();
-			
+
+#ifdef STANDALONE
 			auto& transparentMeshes = transparentObj->GetMeshes();
 			for (auto i = transparentMeshes.begin(); i < transparentMeshes.end(); ++i)
 			{
@@ -1412,7 +1475,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 					//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 				}
 			}
-
+#endif
 			transparentObj->SetQuaternion(quaternion);
 			transparentObj->SetPosition(pos);
 			transparentObj->Scale(scale);
@@ -1426,10 +1489,12 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		}
 	}
 
+#ifdef STANDALONE
 	btTransform btObjectTransform;
 	btObjectTransform.setIdentity();
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
-
+	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+#endif
 	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
 
 	fclose(file);
@@ -1508,37 +1573,47 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 	{
 		std::stringstream ss(info);
 
-		XMFLOAT3 pos;
-		ss >> pos.x >> pos.y >> pos.z;
+		string type;
+		ss >> type;
 
-		XMFLOAT3 direction;
-		ss >> direction.x >> direction.y >> direction.z;
+		if (type == "S")
+		{
+			XMFLOAT3 pos;
+			ss >> pos.x >> pos.y >> pos.z;
 
-		LightBundle bundle;
-		LightInfo l;
+			XMFLOAT3 direction;
+			ss >> direction.x >> direction.y >> direction.z;
 
-		l.SetInfo(
-			XMFLOAT3(0.6f, 0.6f, 0.6f),
-			pos,
-			direction,
-			10.0f, 20.0f, 10.0f,
-			0.0f, SPOT_LIGHT);;
+			LightBundle bundle;
+			LightInfo l;
 
-		bundle.light = l;
+			l.SetInfo(
+				XMFLOAT3(0.6f, 0.6f, 0.6f),
+				pos,
+				direction,
+				10.0f, 20.0f, 10.0f,
+				0.0f, SPOT_LIGHT);;
 
-		VolumetricInfo v;
+			bundle.light = l;
 
-		v.Direction = direction;
-		v.Position = pos;
-		v.Range = 30.0f;
-		v.VolumetricStrength = 0.5f;
-		v.outerCosine = cos(7.0f);
-		v.innerCosine = cos(6.0f);
-		v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
-		v.Type = SPOT_LIGHT;
-		
-		bundle.volumetric = v;
+			VolumetricInfo v;
 
-		mLights.push_back(bundle);
+			v.Direction = direction;
+			v.Position = pos;
+			v.Range = 30.0f;
+			v.VolumetricStrength = 0.5f;
+			v.outerCosine = cos(7.0f);
+			v.innerCosine = cos(6.0f);
+			v.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+			v.Type = SPOT_LIGHT;
+
+			bundle.volumetric = v;
+
+			mLights.push_back(bundle);
+		}
+		else if (type == "P")
+		{
+			
+		}
 	}
 }

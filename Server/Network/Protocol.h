@@ -143,6 +143,15 @@ namespace SC
 		bool ready : 1;
 	};
 
+	struct room_info
+	{
+		int room_id;
+		uint8_t player_count : 4;
+		uint8_t map_id : 1;
+		bool game_started : 1;
+		bool room_closed : 1;
+	};
+
 	const char FORCE_LOGOUT		  = 0;
 	const char LOGIN_RESULT		  = 1;
 	const char REGISTER_RESULT	  = 2;
@@ -204,11 +213,7 @@ namespace SC
 
 	struct packet_room_outside_info : packet_header
 	{
-		int room_id;
-		uint8_t player_count : 4;
-		uint8_t map_id : 1;
-		bool game_started : 1;
-		bool room_closed : 1;
+		room_info rooms[ROOM_NUM_PER_PAGE];
 	};
 
 	struct packet_update_player_info : packet_header

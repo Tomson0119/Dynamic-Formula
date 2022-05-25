@@ -9,6 +9,7 @@ struct Room
 	unsigned char PlayerCount;
 	unsigned char MapID;
 	bool GameStarted;
+	bool Closed;
 };
 
 class NetModule;
@@ -43,9 +44,10 @@ public:
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 	virtual UI* GetUI() const override { return mpUI.get(); }
+	const std::array<Room, ROOM_NUM_PER_PAGE>& GetRoomList() const { return mRoomList; }
 
 private:
-	std::map<int, Room> mRoomList;
+	std::array<Room, ROOM_NUM_PER_PAGE> mRoomList;
 	std::mutex mRoomListMut;
 
 	std::unique_ptr<LobbyUI> mpUI;

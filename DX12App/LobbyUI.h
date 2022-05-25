@@ -1,5 +1,9 @@
 #pragma once
 #include "UI.h"
+
+
+
+
 class LobbyUI : public UI
 {
 public:
@@ -29,18 +33,42 @@ public:
 	void RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index);
 	RECT MakeRect(float left, float top, float right, float bottom);
 	void UpdateDenyBoxText();
-	void SetDenyTextCode(int code) { mDenyMessageCode = code; }
+	void SetDenyTextCode(char code) { mDenyMessageCode = code; }
 	void SetDenyBox() { mIsDenyBox = true; }
 	void SetIndexRoomNums(int index, int RoomID) { mRoomNums[index] = RoomID; }
-	void UpdateRoomIDTexts();
 	void RoomEmptyProcess();
+
+	void UpdateRoomIDTexts();
+	void UpdateRoomIDTextsIndex(int index, int RoomID);
+
+	void UpdatePlayerCountTexts();
+	void UpdatePlayerCountTextsIndex(int index, int PlayerCount);
+
+	void UpdateMapIDTexts();
+	void UpdateMapIDTextsIndex(int index, int MapID);
+
+	void UpdateGameStartedTexts();
+	void UpdateGameStartedTextsIndex(int index, bool IsGameStarted);
+
+    
+	void UpdateRoomIsClosedIndex(int index, bool IsClosed) { mIsClosed[index] = IsClosed; }
+
+	void SetRoomInfoTextsIndex(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed);
+
+	void SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed);
 private:
 	float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
 	//For Packet
 	// º¸·ù
-	std::atomic_int mRoomNums[6];
 	std::atomic_char mDenyMessageCode;
 	std::atomic_bool mIsDenyBox = false;
+
+	//Room Info
+	std::atomic_int mRoomNums[6];
+	/*std::atomic_char mPlayerCount[6];
+	std::atomic_char mMapID[6];*/
+	std::atomic_bool mIsGameStarted[6] = {false, false, false, false, false, false};
+	std::atomic_bool mIsClosed[6] = {true, true, true, true, true, true};
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

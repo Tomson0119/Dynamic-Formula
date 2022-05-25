@@ -61,7 +61,25 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 		{
 			OutputDebugStringA("MakeRoom Button Down\n");
 #ifndef STANDALONE
-			//mNetPtr->Client()->RequestNewRoom();
+			mNetPtr->Client()->RequestNewRoom();
+#endif
+		}
+		else if (ret == -1) // Nothing
+		{
+			return;
+		}
+		else if (ret == -2) // Page Pop
+		{
+			OutputDebugStringA("Page Pop Button Down\n");
+#ifndef STANDALONE
+			mNetPtr->Client()->InquireRoomList(mPageNum);
+#endif
+		}
+		else if (ret == -3) // Page Push
+		{
+			OutputDebugStringA("Page Push Button Down\n");
+#ifndef STANDALONE
+			mNetPtr->Client()->InquireRoomList(mPageNum);
 #endif
 		}
 		else // return RoomNum
@@ -70,7 +88,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 			OutputDebugStringA(std::to_string(ret).c_str());
 			OutputDebugStringA("\n");
 #ifndef STANDALONE
-			//mNetPtr->Client()->RequestEnterRoom(ret);
+			mNetPtr->Client()->RequestEnterRoom(ret);
 #endif
 		}
 	}
@@ -138,6 +156,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);
+		
 		break;
 	}
 	case SC::ROOM_OUTSIDE_INFO:
@@ -145,22 +164,19 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room outside info packet.\n");
 		
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
-		if(pck->room_closed == false) 
+		mRoomListMut.lock();
+		for (int i = 0; i < ROOM_NUM_PER_PAGE; i++)
 		{
-			mRoomListMut.lock();
-			mRoomList[pck->room_id] = Room{ 
-					  pck->room_id, 
-					  pck->player_count, 
-					  pck->map_id, 
-					  pck->game_started };
-			mRoomListMut.unlock();
+			mRoomList[i].ID = pck->rooms[i].room_id;
+			mRoomList[i].PlayerCount = pck->rooms[i].player_count;
+			mRoomList[i].MapID = pck->rooms[i].map_id;
+			mRoomList[i].GameStarted = pck->rooms[i].game_started;
+			mRoomList[i].Closed = pck->rooms[i].room_closed;
 		}
-		else
-		{
-			mRoomListMut.lock();
-			mRoomList.erase(pck->room_id);
-			mRoomListMut.unlock();
-		}
+		mRoomListMut.unlock();
+		
+		for (int i = 0; i < 6; ++i)			
+			mpUI->SetRoomInfoTextsIndex(i, mRoomList[i].ID, mRoomList[i].PlayerCount, mRoomList[i].MapID, mRoomList[i].GameStarted, mRoomList[i].Closed);
 		
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);

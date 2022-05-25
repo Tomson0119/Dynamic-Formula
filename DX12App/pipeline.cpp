@@ -961,7 +961,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 
 	// Input Texture와 ProcessingTexture[0]를 이용해 다운 샘플링
-	float threshold = 0.5f;
+	float threshold = 0.7f;
 	cmdList->SetComputeRoot32BitConstants(2, 1, &threshold, 0);
 
 	auto gpuHandle = mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
@@ -1154,6 +1154,7 @@ void VolumetricScatteringPipeline::SetInput(ID3D12GraphicsCommandList* cmdList, 
 		ResolveRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource(), DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
 	else
 		CopyRTToMap(cmdList, buffer, mInputTexture[idx]->GetResource());
+	
 }
 
 void VolumetricScatteringPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
