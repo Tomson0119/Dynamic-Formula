@@ -36,9 +36,24 @@ public:
 	void SetDenyTextCode(char code) { mDenyMessageCode = code; }
 	void SetDenyBox() { mIsDenyBox = true; }
 	void SetIndexRoomNums(int index, int RoomID) { mRoomNums[index] = RoomID; }
-	void UpdateRoomIDTexts();
-	
 	void RoomEmptyProcess();
+
+	void UpdateRoomIDTexts();
+	void UpdateRoomIDTextsIndex(int index, int RoomID);
+
+	void UpdatePlayerCountTexts();
+	void UpdatePlayerCountTextsIndex(int index, int PlayerCount);
+
+	void UpdateMapIDTexts();
+	void UpdateMapIDTextsIndex(int index, int MapID);
+
+	void UpdateGameStartedTexts();
+	void UpdateGameStartedTextsIndex(int index, bool IsGameStarted);
+
+    
+	void UpdateRoomIsClosedIndex(int index, bool IsClosed) { mIsClosed[index] = IsClosed; }
+
+	void SetRoomInfoTextsIndex(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed);
 
 	void SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed);
 private:

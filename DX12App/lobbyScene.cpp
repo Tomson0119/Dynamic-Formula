@@ -175,6 +175,9 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		mRoomListMut.unlock();
 		
+		for (int i = 0; i < 6; ++i)			
+			mpUI->SetRoomInfoTextsIndex(i, mRoomList[i].ID, mRoomList[i].PlayerCount, mRoomList[i].MapID, mRoomList[i].GameStarted, mRoomList[i].Closed);
+		
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
 	#endif

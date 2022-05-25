@@ -44,6 +44,7 @@ public:
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
 	virtual UI* GetUI() const override { return mpUI.get(); }
+	const std::array<Room, ROOM_NUM_PER_PAGE>& GetRoomList() const { return mRoomList; }
 
 private:
 	std::array<Room, ROOM_NUM_PER_PAGE> mRoomList;
