@@ -969,7 +969,9 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 
 #ifdef STANDALONE
 	if(mGameStarted)
-		//physics->StepSimulation(elapsed);
+		physics->StepSimulation(elapsed);
+#endif
+	//physics->StepSimulation(elapsed);
 
 	UpdatePlayerObjects();
 	UpdateMissileObject();
@@ -1491,7 +1493,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	btTransform btObjectTransform;
 	btObjectTransform.setIdentity();
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
-
+	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+#endif
 	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
 
 	fclose(file);

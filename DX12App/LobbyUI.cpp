@@ -3,7 +3,7 @@
 
 LobbyUI::LobbyUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue*
     pd3dCommandQueue) : UI(nFrame, device, pd3dCommandQueue)
-    //Text: 8 - MakeRoom, RoomNum[6], DenyMessage, PlayerCount[6], GameStarted[6], MapID[6] 
+    //Text: 26 - MakeRoom, RoomNum[6], DenyMessage, PlayerCount[6], GameStarted[6], MapID[6] 
     //RoundRect: 17 - BigBackground, SmallBackground, SmallWhiteBackground, MakeRoom, RoomTitle[6], RoomBox[6], DenyBox
 {
     SetTextCnt(26);
@@ -73,18 +73,20 @@ RECT LobbyUI::MakeRect(float left, float top, float right, float bottom)
 
 void LobbyUI::RoomEmptyProcess()
 {
+    /*mIsClosed[0] = false;
+    */
     for (int i = 1; i < 7; ++i) 
     {
-        if (GetTextBlock()[i].strText.empty()) //mIsClosed[i] 
+        if (mIsClosed[i-1]) //mIsClosed[i] 
         {
             SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
             SetIndexColor(GetTextCnt() + 3 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
             SetIndexColor(GetTextCnt() + 9 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
         }
-        else if (mIsGameStarted[i])
+        else if (mIsGameStarted[i-1])
         {
-            SetIndexColor(GetTextCnt() + 3 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
-            SetIndexColor(GetTextCnt() + 9 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
+            SetIndexColor(GetTextCnt() + 3 + i, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
+            SetIndexColor(GetTextCnt() + 9 + i, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
         }
     }
     BuildSolidBrush(GetColors());
@@ -136,8 +138,8 @@ int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
 void LobbyUI::SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed)
 {
     mRoomNums[index] = RoomID;
-    mPlayerCount[index] = PlayerCount;
-    mMapID[index] = MapID;
+    //mPlayerCount[index] = PlayerCount;
+    //mMapID[index] = MapID;
     mIsGameStarted[index] = GameStarted;
     mIsClosed[index] = Closed;
 }
@@ -145,47 +147,41 @@ void LobbyUI::SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsi
 void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index)
 {
     RECT rc = MakeRect(left, top, right, bottom);
-    if (MouseCollisionCheck(dx, dy, rc) && !GetTextBlock()[index].strText.empty())
+    if (MouseCollisionCheck(dx, dy, rc) && !mIsClosed[index-1])
     {
-        if (!mIsGameStarted[index-1] && !mIsClosed[index-1])
+        if (!mIsGameStarted[index-1]) // ¾È ½ÃÀÛ
         {
             SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
             SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
-            SetIndexColor(GetTextCnt() + 6 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
+            SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
         }
-        else if(mIsClosed[index-1])
-        {
-            SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
-            SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
-            SetIndexColor(GetTextCnt() + 6 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
-        }
-        else
+        else 
         {
             SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
-            SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
-            SetIndexColor(GetTextCnt() + 6 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
+            SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
+            SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
         }
     }
-    else if(!MouseCollisionCheck(dx, dy, rc) && !GetTextBlock()[index].strText.empty())
+    else if(!MouseCollisionCheck(dx, dy, rc) && !mIsClosed[index-1])
     {
-        if (!mIsGameStarted[index-1] && !mIsClosed[index-1])
+        if (!mIsGameStarted[index-1] )
         {
             SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
             SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
             SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
         }
-        else if (mIsClosed[index-1])
-        {
-            SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
-            SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
-            SetIndexColor(GetTextCnt() + 6 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
-        }
         else
         {
             SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
-            SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
-            SetIndexColor(GetTextCnt() + 6 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
+            SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
+            SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
         }
+    }
+    else if (mIsClosed[index - 1])
+    {
+        SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
+        SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
+        SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
     }
 
 }
@@ -284,10 +280,10 @@ void LobbyUI::UpdateRoomIDTextsIndex(int index, int RoomID)
 
 void LobbyUI::UpdatePlayerCountTexts()
 {
-    for (int i = 0; i < 6; ++i)
+    /*for (int i = 0; i < 6; ++i)
     {
         GetTextBlock()[i + 8].strText.assign(std::to_string(mPlayerCount[i]) + " / 8");
-    }
+    }*/
 }
 
 void LobbyUI::UpdatePlayerCountTextsIndex(int index, int PlayerCount)
@@ -300,18 +296,18 @@ void LobbyUI::UpdatePlayerCountTextsIndex(int index, int PlayerCount)
 
 void LobbyUI::UpdateMapIDTexts()
 {
-    for (int i = 0; i < 6; ++i)
+    /*for (int i = 0; i < 6; ++i)
     {
         if(mMapID[i])
             GetTextBlock()[i + 14].strText.assign("day");
         else
             GetTextBlock()[i + 14].strText.assign("night");
-    }
+    }*/
 }
 
 void LobbyUI::UpdateMapIDTextsIndex(int index, int MapID)
 {
-    if (mMapID[index])
+    if (MapID)
         GetTextBlock()[index + 14].strText.assign("day");
     else
         GetTextBlock()[index + 14].strText.assign("night");
@@ -330,7 +326,7 @@ void LobbyUI::UpdateGameStartedTexts()
 
 void LobbyUI::UpdateGameStartedTextsIndex(int index, bool IsGameStarted)
 {
-    if (mIsGameStarted[index])
+    if (mIsGameStarted)
         GetTextBlock()[index + 20].strText.assign("Playing");
     else
         GetTextBlock()[index + 20].strText.assign("");

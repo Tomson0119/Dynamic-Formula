@@ -65,10 +65,10 @@ private:
 
 	//Room Info
 	std::atomic_int mRoomNums[6];
-	std::atomic_char mPlayerCount[6];
-	std::atomic_char mMapID[6];
-	std::atomic_bool mIsGameStarted[6];
-	std::atomic_bool mIsClosed[6];
+	/*std::atomic_char mPlayerCount[6];
+	std::atomic_char mMapID[6];*/
+	std::atomic_bool mIsGameStarted[6] = {false, false, false, false, false, false};
+	std::atomic_bool mIsClosed[6] = {true, true, true, true, true, true};
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
