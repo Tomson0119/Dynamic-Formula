@@ -22,7 +22,7 @@ void LobbyServer::Init(LoginServer* ptr)
 void LobbyServer::TakeOverNewPlayer(int hostID)
 {
 	IncreasePlayerCount();
-	SendExistingRoomList(hostID, 0);
+	SendExistingRoomList(hostID);
 }
 
 bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
@@ -280,33 +280,38 @@ void LobbyServer::SendRoomInfoToLobbyPlayers(int roomID, int ignore, bool instSe
 			&& gClients[i]->GetPageNum() == pageNumOfRoomId
 			&& i != ignore)
 		{
-			mRooms[roomID]->SendRoomOutsideInfo(i);
-			lobbyPlayers -= 1;
+			SendExistingRoomList(i, instSend);
 		}
 	}
 }
 
-void LobbyServer::SendExistingRoomList(int id, int pageNum)
+void LobbyServer::SendExistingRoomList(int id, bool instSend)
 {
-	if (gClients[id]->GetCurrentState() != CLIENT_STAT::LOBBY
-		|| pageNum < 0)
-		return;
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[" << id << "] Sending room outside info packet.\n";
+#endif
+	SC::packet_room_outside_info pck{};
+	pck.size = sizeof(SC::packet_room_outside_info);
+	pck.type = SC::ROOM_OUTSIDE_INFO;
 
 	int startCnt = gClients[id]->GetPageNum() * ROOM_NUM_PER_PAGE;
 	int endCnt = startCnt + ROOM_NUM_PER_PAGE;
 	int totalCnt = mRoomCount;
-	int cnt = 0;
 
-	for (int i = 0; i < MAX_ROOM_SIZE && cnt < totalCnt; i++)
+	for (int i = 0, cnt = 0, k = 0; i < MAX_ROOM_SIZE && cnt < totalCnt; i++)
 	{
-		if (mRooms[i]->Closed() == false)
+		if (startCnt <= cnt && cnt < endCnt)
 		{
-			if (startCnt <= cnt && cnt < endCnt)
-				mRooms[i]->SendRoomOutsideInfo(id, false);
-			cnt += 1;
+			pck.rooms[k].room_id = mRooms[i]->GetID();
+			pck.rooms[k].player_count = mRooms[i]->GetPlayerCount();
+			pck.rooms[k].game_started = mRooms[i]->GameRunning();
+			pck.rooms[k].map_id = mRooms[i]->GetMapIndex();
+			pck.rooms[k].room_closed = mRooms[i]->Closed();
 		}
+		cnt += 1;
 	}
-	gClients[id]->SendMsg();
+	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	if (instSend) gClients[id]->SendMsg();
 }
 
 int LobbyServer::FindPageNumOfRoom(int roomId)

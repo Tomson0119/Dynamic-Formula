@@ -56,7 +56,6 @@ public:
 
 	void SendRoomInsideInfoToAll();
 	void SendRoomInsideInfo(int id, bool instSend=true);
-	void SendRoomOutsideInfo(int id, bool instSend=true);
 
 private:
 	void SendToAllPlayer(std::byte* pck, int size, int ignore=-1, bool instSend=true);

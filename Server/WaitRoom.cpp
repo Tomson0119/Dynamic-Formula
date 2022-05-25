@@ -276,23 +276,6 @@ void WaitRoom::SendRoomInsideInfo(int id, bool instSend)
 	if(instSend) gClients[id]->SendMsg();
 }
 
-void WaitRoom::SendRoomOutsideInfo(int id, bool instSend)
-{
-#ifdef DEBUG_PACKET_TRANSFER
-	std::cout << "[" << id << "] Sending room outside info packet.\n";
-#endif
-	SC::packet_room_outside_info pck{};
-	pck.size = sizeof(SC::packet_room_outside_info);
-	pck.type = SC::ROOM_OUTSIDE_INFO;
-	pck.room_id = mID;
-	pck.player_count = mPlayerCount;
-	pck.game_started = GameRunning();
-	pck.map_id = mMapIndex;
-	pck.room_closed = Closed();
-	gClients[id]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	if (instSend) gClients[id]->SendMsg();
-}
-
 void WaitRoom::SendToAllPlayer(std::byte* pck, int size, int ignore, bool instSend)
 {
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)

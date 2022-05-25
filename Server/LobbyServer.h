@@ -26,7 +26,7 @@ public:
 	void PressStartOrReady(int roomID, int hostID);
 
 	void SendRoomInfoToLobbyPlayers(int roomID, int ignore=-1, bool instSend = true);
-	void SendExistingRoomList(int id, int pageNum);
+	void SendExistingRoomList(int id, bool instSend=true);
 
 	InGameServer& GetInGameServer() { return mInGameServer; }
 
