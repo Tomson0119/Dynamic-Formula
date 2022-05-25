@@ -252,11 +252,11 @@ void LobbyUI::Update(float GTime)
         SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
         SetIndexColor(42, D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     }
-    UpdateRoomIDTexts();
-    UpdatePlayerCountTexts();
-    UpdateMapIDTexts();
+    //UpdateRoomIDTexts();
+    //UpdatePlayerCountTexts();
+    //UpdateMapIDTexts();
     //mIsGameStarted[0] = true;
-    UpdateGameStartedTexts();
+    //UpdateGameStartedTexts();
 }
 
 void LobbyUI::UpdateRoomIDTexts()
@@ -270,9 +270,9 @@ void LobbyUI::UpdateRoomIDTexts()
     }
 }
 
-void LobbyUI::UpdateRoomIDTextsIndex(int index, int RoomID)
+void LobbyUI::UpdateRoomIDTextsIndex(int index, int RoomID, bool Closed)
 {
-    if (RoomID > 0)
+    if (!Closed)
         GetTextBlock()[index + 1].strText.assign(std::to_string(RoomID));
     else
         GetTextBlock()[index + 1].strText.clear();

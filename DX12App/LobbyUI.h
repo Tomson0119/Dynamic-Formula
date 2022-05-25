@@ -39,7 +39,7 @@ public:
 	void RoomEmptyProcess();
 
 	void UpdateRoomIDTexts();
-	void UpdateRoomIDTextsIndex(int index, int RoomID);
+	void UpdateRoomIDTextsIndex(int index, int RoomID, bool Closed);
 
 	void UpdatePlayerCountTexts();
 	void UpdatePlayerCountTextsIndex(int index, int PlayerCount);
