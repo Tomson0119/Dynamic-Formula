@@ -321,7 +321,7 @@ SkyboxPipeline::SkyboxPipeline(ID3D12Device* device, ID3D12GraphicsCommandList* 
 	auto boxMesh = std::make_shared<BoxMesh>(device, cmdList, 20.0f, 20.0f, 20.0f);
 	boxMesh->SetSrvIndex(0);
 
-	auto skyboxObj = std::make_shared<GameObject>();
+	auto skyboxObj = std::make_shared<StaticObject>();
 	skyboxObj->SetMesh(boxMesh);
 
 	if(mapIndex == 0)

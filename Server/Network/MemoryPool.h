@@ -5,23 +5,23 @@ template <typename T>
 class MemoryPool
 {
 public:
-	MemoryPool(size_t count)
-		: mBlockCount{ count },
-		  mPoolSize{ count * sizeof(T) }
-	{
-		mPool = new T[count];
-		InitBlockList();
-	}
+	MemoryPool() = default;
 	MemoryPool(const MemoryPool&) = delete;
 	MemoryPool& operator=(const MemoryPool&) = delete;
+	MemoryPool(MemoryPool&&) = delete;
+	MemoryPool& operator=(MemoryPool&&) = delete;
 
 	~MemoryPool()
 	{
 		if (mPool) delete[] mPool;
 	}
 
-	void InitBlockList()
+	void Init(size_t count)
 	{
+		mBlockCount = count;
+		mPoolSize = count * sizeof(T);
+		mPool = new T[count];
+
 		for (int i = 0; i < (int)mBlockCount; i++)
 		{
 			std::byte* ptr = reinterpret_cast<std::byte*>(mPool + i);
@@ -29,8 +29,7 @@ public:
 		}
 	}
 
-	template<typename...Args>
-	void* Alloc(Args...args)
+	void* Alloc()
 	{
 		if (mMemAddrs.empty())
 			return nullptr;
@@ -38,8 +37,6 @@ public:
 		auto ptr = mMemAddrs.front();
 		mMemAddrs.pop_front();
 
-		//int idx = (ptr - reinterpret_cast<std::byte*>(mPool)) / sizeof(T);
-		//mPool[idx].Reset(args...);
 		return reinterpret_cast<void*>(ptr);
 	}
 
@@ -64,9 +61,9 @@ public:
 	}
 
 private:
-	T* mPool;
+	T* mPool = nullptr;
 	std::list<std::byte*> mMemAddrs;
 
-	size_t mBlockCount;
-	size_t mPoolSize;
+	size_t mBlockCount = 0;
+	size_t mPoolSize = 0;
 };

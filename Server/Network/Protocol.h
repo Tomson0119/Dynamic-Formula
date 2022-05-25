@@ -14,6 +14,7 @@ const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
 const int ROOM_NUM_PER_PAGE = 6;
 
 const int MaxBufferSize = 1024;
+const int MAX_THREAD_COUNT = 6;
 
 
 enum class LOGIN_STAT : char

@@ -148,10 +148,12 @@
     <ClInclude Include="EndPoint.h" />
     <ClInclude Include="IOCP.h" />
     <ClInclude Include="MemoryPool.h" />
+    <ClInclude Include="MemoryPoolManager.h" />
     <ClInclude Include="NetException.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="Socket.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="ThreadIdMap.h" />
     <ClInclude Include="WSAInit.h" />
     <ClInclude Include="WSAOverlappedEx.h" />
   </ItemGroup>

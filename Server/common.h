@@ -10,7 +10,6 @@
 #include <BufferQueue.h>
 #include <Protocol.h>
 #include <IOCP.h>
-#include <MemoryPool.h>
 
 #include <fstream>
 #include <csignal>
@@ -30,7 +29,7 @@
 #include <crtdbg.h>
 #endif
 
-//#define USE_DATABASE
+#define USE_DATABASE
 #define DEBUG_PACKET_TRANSFER
 
 namespace Math

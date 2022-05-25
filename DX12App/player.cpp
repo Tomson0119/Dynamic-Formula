@@ -534,7 +534,8 @@ void PhysicsPlayer::Update(float elapsedTime, float updateRate)
 	}
 
 	GameObject::Update(elapsedTime, updateRate);
-	
+	if (mCamera) mCamera->Update(elapsedTime);
+
 	for (int i = 0; i < 4; ++i)
 		mWheel[i]->SetTransparent(mTransparentOn);
 
@@ -815,7 +816,9 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 		pck->linear_vel[2] / POS_FLOAT_PRECISION,
 		latency);
 
-	mCorrectionQuat.SetValue(pck->quaternion);	
+	mCorrectionQuat.SetValue(pck->quaternion);
+
+	mInterpolator.Enqueue(mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
 
 	mLinearVelocity.SetValue(
 		pck->linear_vel[0] / POS_FLOAT_PRECISION, 

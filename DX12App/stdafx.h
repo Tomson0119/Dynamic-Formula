@@ -292,6 +292,12 @@ inline void Print(const std::string& info, const XMFLOAT4& vec)
 	OutputDebugStringA(ss.str().c_str());
 }
 
+template<typename T>
+inline void Print(const std::string& info, const T& val)
+{
+	OutputDebugStringA((info + std::to_string(val) + "\n").c_str());
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 //

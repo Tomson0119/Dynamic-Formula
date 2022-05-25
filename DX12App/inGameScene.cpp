@@ -460,11 +460,14 @@ void InGameScene::CreateMsaaViews()
 
 void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics)
 {
+	//mDynamicsWorld = physics->GetDynamicsWorld();
+
+	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
+
 #ifdef STANDALONE
-	mDynamicsWorld = physics->GetDynamicsWorld();
-	LoadWorldMap(cmdList, physics, "Map\\MapData_night.tmap");
-	LoadCheckPoint(cmdList, L"Map\\CheckPoint_night.tmap");
-	LoadLights(cmdList, L"Map\\Lights_night.tmap");
+	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
+	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
+	LoadLights(cmdList, L"Map\\Lights.tmap");
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
@@ -491,7 +494,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
 			BuildCarObject(info.StartPosition, info.StartRotation, info.Color, isPlayer, cmdList, physics, i);
-			BuildMissileObject(cmdList, info.StartPosition, i);
+			//BuildMissileObject(cmdList, info.StartPosition, i);
 			playerCount += 1;
 		}
 		i++;
@@ -966,9 +969,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 
 #ifdef STANDALONE
 	if(mGameStarted)
-		physics->StepSimulation(elapsed);
-#endif
-	
+		//physics->StepSimulation(elapsed);
+
 	UpdatePlayerObjects();
 	UpdateMissileObject();
 	OnPreciseKeyInput(cmdList, physics, elapsed);
@@ -1373,7 +1375,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	FILE* file = nullptr;
 	fopen_s(&file, path.c_str(), "r");
 
-	btCompoundShape* compound = new btCompoundShape();
+	//btCompoundShape* compound = new btCompoundShape();
 
 	char buf[250];
 	while (fgets(buf, 250, file))
@@ -1429,7 +1431,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			if (i->get()->GetMeshShape())
 			{
 				i->get()->GetMeshShape()->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
-				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+				//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
 #endif
@@ -1468,7 +1470,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			{
 				if (i->get()->GetMeshShape())
 				{
-					compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+					//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 				}
 			}
 #endif
@@ -1490,8 +1492,8 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	btObjectTransform.setIdentity();
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
 
-	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
-#endif
+	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+
 	fclose(file);
 }
 

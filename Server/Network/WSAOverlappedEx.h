@@ -4,6 +4,8 @@
 #include "Socket.h"
 #include "Protocol.h"
 #include "BufferQueue.h"
+#include "ThreadIdMap.h"
+#include "MemoryPoolManager.h"
 
 enum class OP : char
 {
@@ -57,5 +59,17 @@ struct WSAOVERLAPPEDEX
 			NetBuffer.Push(data, bytes);
 			WSABuffer.len = (ULONG)NetBuffer.GetFilledBufLen();
 		}
+	}
+
+	void* operator new(size_t size)
+	{
+		auto threadId = std::this_thread::get_id();
+		int idx = ThreadIdMap::GetInstance().GetId(threadId);
+		return MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Allocate(idx);
+	}
+
+	void operator delete(void* ptr)
+	{
+		MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Deallocate(ptr);
 	}
 };
