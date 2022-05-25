@@ -174,6 +174,12 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			mRoomList[i].MapID = pck->rooms[i].map_id;
 			mRoomList[i].GameStarted = pck->rooms[i].game_started;
 			mRoomList[i].Closed = pck->rooms[i].room_closed;
+
+			OutputDebugStringA(("Room ID: " + std::to_string(mRoomList[i].ID)).c_str());
+			OutputDebugStringA(("Player count: " + std::to_string(mRoomList[i].PlayerCount)).c_str());
+			OutputDebugStringA(("Map ID: " + std::to_string(mRoomList[i].MapID)).c_str());
+			OutputDebugStringA(("Game Started: " + std::to_string(mRoomList[i].GameStarted)).c_str());
+			OutputDebugStringA(("Closed: " + std::to_string(mRoomList[i].Closed)).c_str());
 		}
 		mRoomListMut.unlock();
 		

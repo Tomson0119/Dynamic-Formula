@@ -252,11 +252,11 @@ void LobbyUI::Update(float GTime)
         SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
         SetIndexColor(42, D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     }
-    UpdateRoomIDTexts();
-    UpdatePlayerCountTexts();
-    UpdateMapIDTexts();
-    //mIsGameStarted[0] = true;
-    UpdateGameStartedTexts();
+    //UpdateRoomIDTexts();
+    //UpdatePlayerCountTexts();
+    //UpdateMapIDTexts();
+    ////mIsGameStarted[0] = true;
+    //UpdateGameStartedTexts();
 }
 
 void LobbyUI::UpdateRoomIDTexts()
