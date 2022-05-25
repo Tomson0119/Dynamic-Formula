@@ -175,11 +175,11 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 			mRoomList[i].GameStarted = pck->rooms[i].game_started;
 			mRoomList[i].Closed = pck->rooms[i].room_closed;
 
-			OutputDebugStringA(("Room ID: " + std::to_string(mRoomList[i].ID)).c_str());
-			OutputDebugStringA(("Player count: " + std::to_string(mRoomList[i].PlayerCount)).c_str());
-			OutputDebugStringA(("Map ID: " + std::to_string(mRoomList[i].MapID)).c_str());
-			OutputDebugStringA(("Game Started: " + std::to_string(mRoomList[i].GameStarted)).c_str());
-			OutputDebugStringA(("Closed: " + std::to_string(mRoomList[i].Closed)).c_str());
+			OutputDebugStringA(("Room ID: " + std::to_string(mRoomList[i].ID) + "\n").c_str());
+			OutputDebugStringA(("Player count: " + std::to_string(mRoomList[i].PlayerCount)+"\n").c_str());
+			OutputDebugStringA(("Map ID: " + std::to_string(mRoomList[i].MapID)+ "\n").c_str());
+			OutputDebugStringA(("Game Started: " + std::to_string(mRoomList[i].GameStarted)+ "\n").c_str());
+			OutputDebugStringA(("Closed: " + std::to_string(mRoomList[i].Closed)+ "\n").c_str());
 		}
 		mRoomListMut.unlock();
 		

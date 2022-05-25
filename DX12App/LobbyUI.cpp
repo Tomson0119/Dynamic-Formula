@@ -319,9 +319,9 @@ void LobbyUI::UpdateGameStartedTexts()
     }
 }
 
-void LobbyUI::UpdateGameStartedTextsIndex(int index, bool IsGameStarted)
+void LobbyUI::UpdateGameStartedTextsIndex(int index, bool isGameStarted)
 {
-    if (mIsGameStarted)
+    if (isGameStarted)
         GetTextBlock()[index + 20].strText.assign("Playing");
     else
         GetTextBlock()[index + 20].strText.assign("");
@@ -345,7 +345,7 @@ void LobbyUI::UpdateDenyBoxText()
 
 void LobbyUI::SetRoomInfoTextsIndex(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed)
 {
-    UpdateRoomIDTextsIndex(index, RoomID);
+    UpdateRoomIDTextsIndex(index, RoomID, Closed);
     UpdatePlayerCountTextsIndex(index, PlayerCount);
     UpdateMapIDTextsIndex(index, MapID);
     UpdateGameStartedTextsIndex(index, GameStarted);
