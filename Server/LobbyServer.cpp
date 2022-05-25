@@ -48,7 +48,6 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		if (TryOpenRoom(id))
 		{
 			AcceptEnterRoom(mRoomCount, id);
-			mRoomCount.fetch_add(1);
 		}
 		break;
 	}
@@ -138,6 +137,7 @@ bool LobbyServer::TryOpenRoom(int hostID)
 void LobbyServer::AcceptEnterRoom(int roomID, int hostID)
 {
 	mLobbyPlayerCount.fetch_sub(1);
+	mRoomCount.fetch_add(1);
 
 	gClients[hostID]->SendAccessRoomAccept(roomID, false);
 	mRooms[roomID]->SendRoomInsideInfo(hostID);
@@ -316,9 +316,8 @@ void LobbyServer::SendExistingRoomList(int id, bool instSend)
 
 int LobbyServer::FindPageNumOfRoom(int roomId)
 {
-	int totalCnt = mRoomCount;
 	int cnt = 0;
-	for (int i = 0; i < MAX_ROOM_SIZE && cnt < totalCnt; i++)
+	for (int i = 0; i < MAX_ROOM_SIZE; i++)
 	{
 		if (mRooms[i]->Closed()) continue;
 		if (roomId == i) return cnt;
