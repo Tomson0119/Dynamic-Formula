@@ -203,3 +203,11 @@ bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	}
 	return true;
 }
+
+void LoginScene::Reset()
+{
+	mID.clear();
+	mPWD.clear();
+	Texts.clear();
+	IsPwd = false;
+}

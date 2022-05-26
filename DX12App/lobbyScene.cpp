@@ -203,3 +203,8 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	}
 	return true;
 }
+
+void LobbyScene::Reset()
+{
+	mPageNum = 0;
+}

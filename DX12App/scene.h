@@ -53,6 +53,8 @@ public:
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) = 0;
 	virtual UI* GetUI() const = 0;
 
+	virtual void Reset() = 0;
+
 	virtual void OnResize(float aspect) { }
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) { }
 
