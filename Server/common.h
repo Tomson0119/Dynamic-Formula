@@ -17,6 +17,7 @@
 #include <numeric>
 #include <chrono>
 #include <concurrent_priority_queue.h>
+#include <concurrent_vector.h>
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"

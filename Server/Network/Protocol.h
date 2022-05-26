@@ -9,7 +9,7 @@ const int MAX_PWD_SIZE  = 20;
 
 const int MAX_PLAYER_SIZE = 100;
 const int MAX_ROOM_CAPACITY = 8;
-const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE / MAX_ROOM_CAPACITY + 1;
+const int MAX_ROOM_SIZE = MAX_PLAYER_SIZE;
 
 const int ROOM_NUM_PER_PAGE = 6;
 
@@ -149,7 +149,7 @@ namespace SC
 		uint8_t player_count : 4;
 		uint8_t map_id : 1;
 		bool game_started : 1;
-		bool room_closed : 1;
+		bool room_opened : 1;
 	};
 
 	const char FORCE_LOGOUT		  = 0;
