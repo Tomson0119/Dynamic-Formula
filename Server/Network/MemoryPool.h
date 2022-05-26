@@ -1,5 +1,5 @@
 #pragma once
-#include <deque>
+#include <concurrent_queue.h>
 
 template <typename T>
 class MemoryPool
@@ -25,7 +25,7 @@ public:
 		for (int i = 0; i < (int)mBlockCount; i++)
 		{
 			void* ptr = reinterpret_cast<void*>(mPool + i);
-			mMemAddrs.push_front(ptr);
+			mMemAddrs.push(ptr);
 		}
 	}
 
@@ -34,8 +34,8 @@ public:
 		if (mMemAddrs.empty())
 			return nullptr;
 
-		auto ptr = mMemAddrs.front();
-		mMemAddrs.pop_front();
+		void* ptr = nullptr;
+		while (mMemAddrs.try_pop(ptr) == false);
 
 		return ptr;
 	}
@@ -46,13 +46,8 @@ public:
 		{
 			auto ptr = reinterpret_cast<void*>(p);
 			p = nullptr;
-			mMemAddrs.push_front(ptr);
+			mMemAddrs.push(ptr);
 		}
-	}
-
-	void* GetMemStartAddr()
-	{
-		return mPool;
 	}
 
 	size_t GetTotalSize()
@@ -60,14 +55,9 @@ public:
 		return mPoolSize;
 	}
 
-	size_t GetAllocatedCount()
-	{
-		return mBlockCount - mMemAddrs.size();
-	}
-
 private:
 	T* mPool = nullptr;
-	std::deque<void*> mMemAddrs;
+	concurrency::concurrent_queue<void*> mMemAddrs;
 
 	size_t mBlockCount = 0;
 	size_t mPoolSize = 0;

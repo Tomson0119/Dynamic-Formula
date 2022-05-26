@@ -34,9 +34,7 @@ LoginServer::LoginServer(const EndPoint& ep)
 	mListenSck.Bind(ep);
 
 	// Pre-allocate memory pools.
-	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance(
-		MAX_THREAD_COUNT,
-		MAX_PLAYER_SIZE / MAX_THREAD_COUNT + MAX_PLAYER_SIZE / 10);
+	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance(MAX_PLAYER_SIZE * MAX_THREAD_COUNT);
 }
 
 LoginServer::~LoginServer()

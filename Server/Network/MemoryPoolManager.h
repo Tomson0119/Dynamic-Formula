@@ -7,19 +7,17 @@ template<typename T>
 class MemoryPoolManager
 {
 public:
-	static MemoryPoolManager& GetInstance(size_t poolCount = 0, size_t poolSize = 0)
+	static MemoryPoolManager& GetInstance(size_t poolSize = 0)
 	{
-		static MemoryPoolManager instance(poolCount, poolSize);
+		static MemoryPoolManager instance(poolSize);
 		return instance;
 	}
 
 private:
-	MemoryPoolManager(size_t poolCount, size_t poolSize)
-		: mMemPools{ poolCount }
+	MemoryPoolManager(size_t poolSize)
 	{
 		assert(poolSize > 0);
-		for (int i = 0; i < mMemPools.size(); i++)
-			mMemPools[i].Init(poolSize);
+		mMemPool.Init(poolSize);
 	}
 	MemoryPoolManager(const MemoryPoolManager&) = delete;
 	MemoryPoolManager& operator=(const MemoryPoolManager&) = delete;
@@ -27,28 +25,17 @@ private:
 	MemoryPoolManager& operator=(MemoryPoolManager&&) = delete;
 
 public:
-	void* Allocate(int idx)
-	{		
-		assert(0 <= idx && idx < mMemPools.size());
-		void* ptr = mMemPools[idx].Alloc();
+	void* Allocate()
+	{
+		void* ptr = mMemPool.Alloc();
 		return ptr;
 	}
 
 	void Deallocate(void* ptr)
 	{
-		for (int i = 0; i < mMemPools.size() - 1; i++)
-		{
-			void* curr = mMemPools[i].GetMemStartAddr();
-			void* next = mMemPools[i + 1].GetMemStartAddr();
-			if (curr <= ptr && ptr < next)
-			{
-				mMemPools[i].Dealloc(ptr);
-				return;
-			}
-		}
-		mMemPools.back().Dealloc(ptr);
+		mMemPool.Dealloc(ptr);
 	}
 
 private:
-	std::vector<MemoryPool<T>> mMemPools;
+	MemoryPool<T> mMemPool;
 };

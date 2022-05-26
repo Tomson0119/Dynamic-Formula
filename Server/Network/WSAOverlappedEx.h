@@ -63,9 +63,7 @@ struct WSAOVERLAPPEDEX
 
 	void* operator new(size_t size)
 	{
-		auto threadId = std::this_thread::get_id();
-		int idx = ThreadIdMap::GetInstance().GetId(threadId);
-		return MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Allocate(idx);
+		return MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Allocate();
 	}
 
 	void operator delete(void* ptr)
