@@ -1,6 +1,7 @@
 #pragma once
 #include "MemoryPool.h"
 #include <vector>
+#include <cassert>
 
 template<typename T>
 class MemoryPoolManager
@@ -30,19 +31,24 @@ public:
 	{		
 		assert(0 <= idx && idx < mMemPools.size());
 		void* ptr = mMemPools[idx].Alloc();
-		mMemIdxCache[ptr] = idx;
 		return ptr;
 	}
 
 	void Deallocate(void* ptr)
 	{
-		int idx = mMemIdxCache[ptr];
-		assert(0 <= idx && idx < mMemPools.size());
-		mMemIdxCache[ptr] = -1;
-		mMemPools[idx].Dealloc(ptr);
+		for (int i = 0; i < mMemPools.size() - 1; i++)
+		{
+			void* curr = mMemPools[i].GetMemStartAddr();
+			void* next = mMemPools[i + 1].GetMemStartAddr();
+			if (curr <= ptr && ptr < next)
+			{
+				mMemPools[i].Dealloc(ptr);
+				return;
+			}
+		}
+		mMemPools.back().Dealloc(ptr);
 	}
 
 private:
-	std::unordered_map<void*, int> mMemIdxCache;
 	std::vector<MemoryPool<T>> mMemPools;
 };

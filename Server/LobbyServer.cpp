@@ -257,7 +257,7 @@ void LobbyServer::PressStartOrReady(int roomID, int hostID)
 			SendRoomInfoToLobbyPlayers(roomID);
 
 			// Hand over this room to in game server
-			mInGameServer.PrepareToStartGame(roomID);
+			mInGameServer.PrepareToStartGame(roomID, mRooms[roomID]->GetMapIndex());
 		}
 		else mRooms[roomID]->SendGameStartFail();
 	}
