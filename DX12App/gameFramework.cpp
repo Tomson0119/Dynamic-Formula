@@ -48,6 +48,7 @@ void GameFramework::OnResize()
 		//ui->Reset();
 		mScenes.top()->OnResize(GetAspect()); 
 		ui->OnResize(mSwapChainBuffers->GetAddressOf(), mD3dDevice, mCommandQueue.Get(), mSwapChainBufferCount, gFrameWidth, gFrameHeight);
+		mScenes.top()->ProcessAfterResize();
 	}
 }
 

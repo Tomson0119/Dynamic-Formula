@@ -18,6 +18,12 @@ void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
+void LobbyScene::ProcessAfterResize()
+{
+	for (int i = 0; i < 6; ++i)
+		mpUI->SetRoomInfoTextsIndex(i, mRoomList[i].ID, mRoomList[i].PlayerCount, mRoomList[i].MapID, mRoomList[i].GameStarted, mRoomList[i].Closed);
+}
+
 void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -57,7 +63,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 	if (buttonState & MK_LBUTTON)
 	{
 		int ret = mpUI->OnProcessMouseClick(buttonState, x, y);
-		if (ret == 0) // Click MakeRoom
+		if (ret == -2) // Click MakeRoom
 		{
 			OutputDebugStringA("MakeRoom Button Down\n");
 #ifndef STANDALONE
@@ -68,7 +74,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 		{
 			return;
 		}
-		else if (ret == -2) // Page Pop
+		else if (ret == -3) // Page Pop
 		{
 			OutputDebugStringA("Page Pop Button Down\n");
 #ifndef STANDALONE
@@ -76,7 +82,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 			mNetPtr->Client()->InquireRoomList(mPageNum);
 #endif
 		}
-		else if (ret == -3) // Page Push
+		else if (ret == -4) // Page Push
 		{
 			OutputDebugStringA("Page Push Button Down\n");
 #ifndef STANDALONE
@@ -84,7 +90,7 @@ void LobbyScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 			mNetPtr->Client()->InquireRoomList(mPageNum);
 #endif
 		}
-		else // return RoomNum
+		else // return RoomNum : (RoomNum > 0)
 		{
 			OutputDebugStringA("Room Enter Button Down");
 			OutputDebugStringA(std::to_string(ret).c_str());
@@ -134,12 +140,12 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		{
 		case static_cast<char>(ROOM_STAT::GAME_STARTED):
 			mpUI->SetDenyTextCode(1);
-			mpUI->SetDenyBox();
+			mpUI->SetVisibleDenyBox();
 			break;
 
 		case static_cast<char>(ROOM_STAT::MAX_ROOM_REACHED):
 			mpUI->SetDenyTextCode(2);
-			mpUI->SetDenyBox();
+			mpUI->SetVisibleDenyBox();
 			break;
 
 		case static_cast<char>(ROOM_STAT::ROOM_IS_CLOSED):
@@ -148,7 +154,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 
 		case static_cast<char>(ROOM_STAT::ROOM_IS_FULL):
 			mpUI->SetDenyTextCode(3);
-			mpUI->SetDenyBox();
+			mpUI->SetVisibleDenyBox();
 			break;
 		}
 		break;

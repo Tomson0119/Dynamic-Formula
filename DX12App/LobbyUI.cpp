@@ -100,13 +100,13 @@ int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
     RECT rc = MakeRect(GetTextBlock()[0].d2dLayoutRect.left, GetTextBlock()[0].d2dLayoutRect.top,
         GetTextBlock()[0].d2dLayoutRect.right, GetTextBlock()[0].d2dLayoutRect.bottom);
     if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN) // make room
-        return 0;
+        return -2;
     rc = MakeRect(GetFrameWidth() * 0.44f, GetFrameHeight() * 0.76f, GetFrameWidth() * 0.50f, GetFrameHeight() * 0.82f);
     if (MouseCollisionCheck(dx, dy, rc) && buttonState & WM_LBUTTONDOWN) // Left Arrow
-        return -2;
+        return -3;
     rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.76f, GetFrameWidth() * 0.58f, GetFrameHeight() * 0.82f);
     if (MouseCollisionCheck(dx, dy, rc) && buttonState & WM_LBUTTONDOWN) // Right Arrow
-        return -3;
+        return -4;
     
     rc = MakeRect(GetFrameWidth() * 0.25f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.40f);
     if (MouseCollisionCheck(dx, dy, rc)&& buttonState & WM_LBUTTONDOWN && !GetTextBlock()[1].strText.empty()) // room 1
@@ -228,30 +228,36 @@ void LobbyUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
     float dy = static_cast<float>(y);
     RECT rc = MakeRect(GetFrameWidth() * 0.30f, GetFrameHeight() * 0.40f, GetFrameWidth() * 0.70f, GetFrameHeight() * 0.60f);
     if (mIsDenyBox)
+    {
         if (MouseCollisionCheck(dx, dy, rc))
         {
-            mIsDenyBox = false;
+            SetInvisibleDenyBox();
         }
+    }
+    else
+    {
+        SetVisibleDenyBox();
+    }
+}
+
+void LobbyUI::SetVisibleDenyBox()
+{
+    SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+    SetIndexColor(42, D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
+    UpdateDenyBoxText();
+    BuildSolidBrush(GetColors());
+}
+
+void LobbyUI::SetInvisibleDenyBox()
+{
+    SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
+    SetIndexColor(42, D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     BuildSolidBrush(GetColors());
 }
 
 void LobbyUI::Update(float GTime)
 {
     RoomEmptyProcess();
-
-    /*for (int i = 0; i < 6; ++i)
-        SetRoomInfo(i, i+1, i + 1, i % 2, i % 2, false);*/
-    if (mIsDenyBox)
-    {
-        SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-        SetIndexColor(42, D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
-        UpdateDenyBoxText();
-    }
-    else
-    {
-        SetIndexColor(7, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
-        SetIndexColor(42, D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
-    }
 }
 
 void LobbyUI::UpdateRoomIDTexts()
@@ -259,18 +265,28 @@ void LobbyUI::UpdateRoomIDTexts()
     for (int i = 0; i < 6; ++i)
     {
         if (mRoomNums[i] > 0)
+        {
             GetTextBlock()[i + 1].strText.assign(std::to_string(mRoomNums[i]));
+        }
         else
+        {
             GetTextBlock()[i + 1].strText.clear();
+        }
     }
 }
 
 void LobbyUI::UpdateRoomIDTextsIndex(int index, int RoomID, bool Closed)
 {
-    if (!Closed)
-        GetTextBlock()[index + 1].strText.assign(std::to_string(RoomID));
+    if (!mIsClosed[index])
+    {
+        mRoomNums[index] = RoomID;
+        GetTextBlock()[index + 1].strText.assign(std::to_string(RoomID + 1));
+    }
     else
+    {
+        mRoomNums[index] = -1;
         GetTextBlock()[index + 1].strText.clear();
+    }
 }
 
 void LobbyUI::UpdatePlayerCountTexts()
@@ -284,7 +300,7 @@ void LobbyUI::UpdatePlayerCountTexts()
 void LobbyUI::UpdatePlayerCountTextsIndex(int index, int PlayerCount)
 {
     if (PlayerCount > 0)
-        GetTextBlock()[index + 8].strText.assign(std::to_string(PlayerCount));
+        GetTextBlock()[index + 8].strText.assign(std::to_string(PlayerCount) + " / 8");
     else
         GetTextBlock()[index + 8].strText.clear();
 }
@@ -302,10 +318,14 @@ void LobbyUI::UpdateMapIDTexts()
 
 void LobbyUI::UpdateMapIDTextsIndex(int index, int MapID)
 {
-    if (MapID)
-        GetTextBlock()[index + 14].strText.assign("day");
+    if (!mIsClosed[index]) {
+        if (MapID)
+            GetTextBlock()[index + 14].strText.assign("day");
+        else
+            GetTextBlock()[index + 14].strText.assign("night");
+    }
     else
-        GetTextBlock()[index + 14].strText.assign("night");
+        GetTextBlock()[index + 14].strText.assign("");
 }
 
 void LobbyUI::UpdateGameStartedTexts()
@@ -345,11 +365,11 @@ void LobbyUI::UpdateDenyBoxText()
 
 void LobbyUI::SetRoomInfoTextsIndex(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed)
 {
+    UpdateRoomIsClosedIndex(index, Closed);
     UpdateRoomIDTextsIndex(index, RoomID, Closed);
     UpdatePlayerCountTextsIndex(index, PlayerCount);
     UpdateMapIDTextsIndex(index, MapID);
     UpdateGameStartedTextsIndex(index, GameStarted);
-    UpdateRoomIsClosedIndex(index, Closed);
 }
 
 void LobbyUI::Draw(UINT nFrame)

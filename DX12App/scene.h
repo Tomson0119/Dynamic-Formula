@@ -54,6 +54,7 @@ public:
 	virtual UI* GetUI() const = 0;
 
 	virtual void OnResize(float aspect) { }
+	virtual void ProcessAfterResize() {}
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) { }
 
 	virtual void OnProcessMouseDown(WPARAM btnState, int x, int y);

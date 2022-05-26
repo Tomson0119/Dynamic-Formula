@@ -34,7 +34,10 @@ public:
 	RECT MakeRect(float left, float top, float right, float bottom);
 	void UpdateDenyBoxText();
 	void SetDenyTextCode(char code) { mDenyMessageCode = code; }
-	void SetDenyBox() { mIsDenyBox = true; }
+
+	void SetVisibleDenyBox();
+	void SetInvisibleDenyBox();
+
 	void SetIndexRoomNums(int index, int RoomID) { mRoomNums[index] = RoomID; }
 	void RoomEmptyProcess();
 
@@ -64,7 +67,7 @@ private:
 	std::atomic_bool mIsDenyBox = false;
 
 	//Room Info
-	std::atomic_int mRoomNums[6];
+	std::atomic_int mRoomNums[6] = {-1, -1, -1, -1, -1, -1};
 	/*std::atomic_char mPlayerCount[6];
 	std::atomic_char mMapID[6];*/
 	std::atomic_bool mIsGameStarted[6] = {false, false, false, false, false, false};
