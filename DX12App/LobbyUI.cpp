@@ -234,10 +234,7 @@ void LobbyUI::OnProcessMouseDown(WPARAM buttonState, int x, int y)
             SetInvisibleDenyBox();
         }
     }
-    else
-    {
-        SetVisibleDenyBox();
-    }
+    
 }
 
 void LobbyUI::SetVisibleDenyBox()
