@@ -96,6 +96,13 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mNetPtr->InitRoomInfo(pck);		
 		break;
 	}
+	case SC::ROOM_OUTSIDE_INFO:
+	{
+		OutputDebugString(L"Received room outside info packet.\n");
+		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
+		mNetPtr->UpdateRoomList(pck);
+		break;
+	}
 	case SC::UPDATE_PLAYER_INFO:
 	{
 		SC::packet_update_player_info* pck = reinterpret_cast<SC::packet_update_player_info*>(packet);

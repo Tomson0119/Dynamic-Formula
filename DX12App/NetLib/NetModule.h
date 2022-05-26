@@ -17,6 +17,7 @@ class Scene;
 class NetModule
 {
 	using PlayerList = std::array<PlayerInfo, MAX_ROOM_CAPACITY>;
+	using RoomList = std::array<Room, ROOM_NUM_PER_PAGE>;
 public:
 	NetModule();
 	~NetModule();
@@ -34,6 +35,7 @@ public:
 	void RemovePlayer(SC::packet_remove_player* pck);
 	void UpdateMapIndex(SC::packet_update_map_info* pck);
 	void UpdatePlayerInfo(SC::packet_update_player_info* pck);
+	void UpdateRoomList(SC::packet_room_outside_info* pck);
 
 	void InitPlayerTransform(SC::packet_game_start_success* pck);
 
@@ -49,9 +51,10 @@ public:
 	char GetAdminIndex() const { return mAdminIdx; }
 
 	bool IsAdmin() const { return mPlayerIdx == mAdminIdx; }
-	const PlayerList& GetPlayersInfo() const { return mPlayerList; }
-
 	std::mutex& GetPlayerListMutex() { return mPlayerListMut; }
+
+	PlayerList GetPlayersInfo();
+	RoomList GetRoomList();
 
 	void SetLatency(uint64_t sendTime);
 	void SetUpdateRate();
@@ -75,6 +78,9 @@ private:
 
 	PlayerList mPlayerList;
 	std::mutex mPlayerListMut;
+
+	RoomList mRoomList;
+	std::mutex mRoomListMut;
 
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;

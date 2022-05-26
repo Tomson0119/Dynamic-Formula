@@ -9,7 +9,7 @@ struct Room
 	unsigned char PlayerCount;
 	unsigned char MapID;
 	bool GameStarted;
-	bool Closed;
+	bool Opened;
 };
 
 class NetModule;
@@ -46,12 +46,8 @@ public:
 	virtual void Reset() override;
 
 	virtual UI* GetUI() const override { return mpUI.get(); }
-	const std::array<Room, ROOM_NUM_PER_PAGE>& GetRoomList() const { return mRoomList; }
 
 private:
-	std::array<Room, ROOM_NUM_PER_PAGE> mRoomList;
-	std::mutex mRoomListMut;
-
 	std::unique_ptr<LobbyUI> mpUI;
 	std::atomic_int mPageNum;
 };

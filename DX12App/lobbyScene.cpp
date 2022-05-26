@@ -20,8 +20,15 @@ void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 
 void LobbyScene::ProcessAfterResize()
 {
+	mRoomListMut.lock();
 	for (int i = 0; i < 6; ++i)
-		mpUI->SetRoomInfoTextsIndex(i, mRoomList[i].ID, mRoomList[i].PlayerCount, mRoomList[i].MapID, mRoomList[i].GameStarted, mRoomList[i].Closed);
+		mpUI->SetRoomInfoTextsIndex(i, 
+			mRoomList[i].ID, 
+			mRoomList[i].PlayerCount, 
+			mRoomList[i].MapID, 
+			mRoomList[i].GameStarted,
+			!mRoomList[i].Opened);
+	mRoomListMut.unlock();
 }
 
 void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -169,28 +176,12 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	}
 	case SC::ROOM_OUTSIDE_INFO:
 	{
-		OutputDebugString(L"Received room outside info packet.\n");
-		
+		OutputDebugString(L"Received room outside info packet.\n");		
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
-		mRoomListMut.lock();
-		for (int i = 0; i < ROOM_NUM_PER_PAGE; i++)
-		{
-			mRoomList[i].ID = pck->rooms[i].room_id;
-			mRoomList[i].PlayerCount = pck->rooms[i].player_count;
-			mRoomList[i].MapID = pck->rooms[i].map_id;
-			mRoomList[i].GameStarted = pck->rooms[i].game_started;
-			mRoomList[i].Closed = pck->rooms[i].room_closed;
-
-			OutputDebugStringA(("Room ID: " + std::to_string(mRoomList[i].ID) + "\n").c_str());
-			OutputDebugStringA(("Player count: " + std::to_string(mRoomList[i].PlayerCount)+"\n").c_str());
-			OutputDebugStringA(("Map ID: " + std::to_string(mRoomList[i].MapID)+ "\n").c_str());
-			OutputDebugStringA(("Game Started: " + std::to_string(mRoomList[i].GameStarted)+ "\n").c_str());
-			OutputDebugStringA(("Closed: " + std::to_string(mRoomList[i].Closed)+ "\n").c_str());
-		}
-		mRoomListMut.unlock();
+		mNetPtr->UpdateRoomList(pck);		
 		
 		for (int i = 0; i < 6; ++i)			
-			mpUI->SetRoomInfoTextsIndex(i, mRoomList[i].ID, mRoomList[i].PlayerCount, mRoomList[i].MapID, mRoomList[i].GameStarted, mRoomList[i].Closed);
+			mpUI->SetRoomInfoTextsIndex(i, mRoomList[i].ID, mRoomList[i].PlayerCount, mRoomList[i].MapID, mRoomList[i].GameStarted, !mRoomList[i].Opened);
 		
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
@@ -213,4 +204,6 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 void LobbyScene::Reset()
 {
 	mPageNum = 0;
+	const auto& roomList = mNetPtr->GetRoomList();	
+	mpUI->SetRoomInfoTextsIndex(roomList);
 }

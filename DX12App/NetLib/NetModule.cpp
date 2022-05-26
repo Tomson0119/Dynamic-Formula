@@ -120,6 +120,26 @@ void NetModule::UpdatePlayerInfo(SC::packet_update_player_info* pck)
 	mPlayerListMut.unlock();
 }
 
+void NetModule::UpdateRoomList(SC::packet_room_outside_info* pck)
+{
+	mRoomListMut.lock();
+	for (int i = 0; i < ROOM_NUM_PER_PAGE; i++)
+	{
+		mRoomList[i].ID = pck->rooms[i].room_id;
+		mRoomList[i].PlayerCount = pck->rooms[i].player_count;
+		mRoomList[i].MapID = pck->rooms[i].map_id;
+		mRoomList[i].GameStarted = pck->rooms[i].game_started;
+		mRoomList[i].Opened = pck->rooms[i].room_opened;
+
+		/*OutputDebugStringA(("Room ID: " + std::to_string(mRoomList[i].ID) + "\n").c_str());
+		OutputDebugStringA(("Player count: " + std::to_string(mRoomList[i].PlayerCount) + "\n").c_str());
+		OutputDebugStringA(("Map ID: " + std::to_string(mRoomList[i].MapID) + "\n").c_str());
+		OutputDebugStringA(("Game Started: " + std::to_string(mRoomList[i].GameStarted) + "\n").c_str());
+		OutputDebugStringA(("Closed: " + std::to_string(mRoomList[i].Opened) + "\n\n").c_str());*/
+	}
+	mRoomListMut.unlock();
+}
+
 void NetModule::InitPlayerTransform(SC::packet_game_start_success* pck)
 {
 	mPlayerListMut.lock();
@@ -187,6 +207,22 @@ void NetModule::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes)
 		}
 	}
 }	
+
+NetModule::PlayerList NetModule::GetPlayersInfo()
+{
+	mPlayerListMut.lock();
+	auto lst = mPlayerList;
+	mPlayerListMut.unlock();
+	return lst;
+}
+
+NetModule::RoomList NetModule::GetRoomList()
+{
+	mRoomListMut.lock();
+	auto lst = mRoomList;
+	mRoomListMut.unlock();
+	return lst;
+}
 
 void NetModule::SetLatency(uint64_t sendTime)
 {
