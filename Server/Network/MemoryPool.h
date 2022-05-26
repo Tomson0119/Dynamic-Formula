@@ -1,5 +1,5 @@
 #pragma once
-#include <list>
+#include <deque>
 
 template <typename T>
 class MemoryPool
@@ -24,7 +24,7 @@ public:
 
 		for (int i = 0; i < (int)mBlockCount; i++)
 		{
-			std::byte* ptr = reinterpret_cast<std::byte*>(mPool + i);
+			void* ptr = reinterpret_cast<void*>(mPool + i);
 			mMemAddrs.push_front(ptr);
 		}
 	}
@@ -37,17 +37,22 @@ public:
 		auto ptr = mMemAddrs.front();
 		mMemAddrs.pop_front();
 
-		return reinterpret_cast<void*>(ptr);
+		return ptr;
 	}
 
 	void Dealloc(void* p)
 	{
 		if (p)
 		{
-			auto ptr = reinterpret_cast<std::byte*>(p);
+			auto ptr = reinterpret_cast<void*>(p);
 			p = nullptr;
 			mMemAddrs.push_front(ptr);
 		}
+	}
+
+	void* GetMemStartAddr()
+	{
+		return mPool;
 	}
 
 	size_t GetTotalSize()
@@ -62,7 +67,7 @@ public:
 
 private:
 	T* mPool = nullptr;
-	std::list<std::byte*> mMemAddrs;
+	std::deque<void*> mMemAddrs;
 
 	size_t mBlockCount = 0;
 	size_t mPoolSize = 0;
