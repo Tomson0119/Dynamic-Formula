@@ -55,7 +55,7 @@ public:
 	~InGameServer() = default;
 
 	void Init(LoginServer* loginPtr, RoomList& roomList);
-	void PrepareToStartGame(int roomID);
+	void PrepareToStartGame(int roomID, char mapIdx);
 
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
@@ -78,7 +78,7 @@ private:
 	
 	std::unique_ptr<BtCarShape> mBtCarShape;
 	std::unique_ptr<BtMissileShape> mMissileShape;
-	std::unique_ptr<BtMapShape> mMapShape;
+	std::array<std::unique_ptr<BtMapShape>, 2> mMapShapes;
 	std::unique_ptr<CheckpointShape> mCheckpointShape;
 
 	std::shared_ptr<GameConstant> mGameConstants;
