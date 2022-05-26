@@ -773,6 +773,8 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	case SC::GAME_END:
 	{
 		SC::packet_game_end* pck = reinterpret_cast<SC::packet_game_end*>(packet);
+
+		const auto& playerInfo = mNetPtr->GetPlayersInfo();
 		mpUI->GetMutex().lock();
 		for (int i = 0, idx=0; i < mPlayerObjects.size(); i++)
 		{
@@ -781,7 +783,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 				mpUI->SetScoreboardInfo(
 					idx, (int)pck->rank[i], pck->point[i],
 					(int)pck->lap_count[i], (int)pck->hit_count[i],
-					mNetPtr->GetPlayersInfo()[i].Name);
+					playerInfo[i].Name);
 				idx += 1;
 			}
 		}

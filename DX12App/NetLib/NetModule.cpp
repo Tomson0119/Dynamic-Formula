@@ -17,7 +17,7 @@ NetModule::NetModule()
 		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
 
 	mNetClient = std::make_unique<NetClient>();
-	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance(2, 10);
+	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance(2);
 }
 
 NetModule::~NetModule()
@@ -206,22 +206,22 @@ void NetModule::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes)
 			break;
 		}
 	}
-}	
+}
 
 NetModule::PlayerList NetModule::GetPlayersInfo()
 {
 	mPlayerListMut.lock();
-	auto lst = mPlayerList;
+	auto ret = mPlayerList;
 	mPlayerListMut.unlock();
-	return lst;
+	return ret;
 }
 
 NetModule::RoomList NetModule::GetRoomList()
 {
 	mRoomListMut.lock();
-	auto lst = mRoomList;
+	auto ret = mRoomList;
 	mRoomListMut.unlock();
-	return lst;
+	return ret;
 }
 
 void NetModule::SetLatency(uint64_t sendTime)

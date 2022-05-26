@@ -261,11 +261,8 @@ void RoomUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 
 void RoomUI::Update(float GTime)
 {
-    auto& mut = mNetRef.GetPlayerListMutex();
-    mut.lock();
     const auto& playerList = mNetRef.GetPlayersInfo();
-    mut.unlock();
-    
+     
     if (mNetRef.IsAdmin())
         GetTextBlock()[0].strText.assign("Start");
     else

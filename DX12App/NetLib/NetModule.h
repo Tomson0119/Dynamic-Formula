@@ -12,6 +12,15 @@ struct PlayerInfo
 	XMFLOAT4 StartRotation;
 };
 
+struct Room
+{
+	int ID;
+	unsigned char PlayerCount;
+	unsigned char MapID;
+	bool GameStarted;
+	bool Opened;
+};
+
 class Scene;
 
 class NetModule
@@ -43,7 +52,7 @@ public:
 	void SetInterface(Scene* scenePtr) { mScenePtr = scenePtr; }
 	NetClient* Client() const { return mNetClient.get(); }
 
-	void SetRoomID(int roomID) { mRoomID = roomID; }	
+	void SetRoomID(int roomID) { mRoomID = roomID; }
 	int GetRoomID() const { return mRoomID; }
 
 	char GetPlayerIndex() const { return mPlayerIdx; }
@@ -51,7 +60,6 @@ public:
 	char GetAdminIndex() const { return mAdminIdx; }
 
 	bool IsAdmin() const { return mPlayerIdx == mAdminIdx; }
-	std::mutex& GetPlayerListMutex() { return mPlayerListMut; }
 
 	PlayerList GetPlayersInfo();
 	RoomList GetRoomList();

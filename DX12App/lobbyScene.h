@@ -3,14 +3,7 @@
 #include "scene.h"
 #include "lobbyUI.h"
 
-struct Room
-{
-	int ID;
-	unsigned char PlayerCount;
-	unsigned char MapID;
-	bool GameStarted;
-	bool Opened;
-};
+
 
 class NetModule;
 
