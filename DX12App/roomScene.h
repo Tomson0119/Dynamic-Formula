@@ -35,6 +35,7 @@ public:
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame) override;
 	
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
+	virtual void Reset() override { }
 	virtual UI* GetUI() const override { return mpUI.get(); }
 
 private:

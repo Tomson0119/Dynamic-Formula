@@ -34,6 +34,8 @@ public:
 	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y);
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
+
+	virtual void Reset() override;
 	
 	virtual UI* GetUI() const override { return mpUI.get(); }
 

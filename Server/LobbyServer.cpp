@@ -226,7 +226,7 @@ void LobbyServer::RevertScene(int hostID, bool logout)
 		if (logout == false)
 		{
 			IncreasePlayerCount();
-			SendExistingRoomList(hostID, 0);
+			SendExistingRoomList(hostID);
 		}
 		break;
 	}
