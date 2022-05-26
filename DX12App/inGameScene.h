@@ -42,7 +42,7 @@ public:
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
 
 	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
-
+	virtual void Reset() override { }
 
 public:
 	void UpdateLight(float elapsed);
