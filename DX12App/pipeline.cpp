@@ -508,12 +508,13 @@ void StreamOutputPipeline::AppendObject(ID3D12Device* device, const std::shared_
 
 void StreamOutputPipeline::CreateStreamOutputDesc()
 {
-	mSODeclarations.push_back({ 0, "POSITION",  0, 0, 3, 0 });
-	mSODeclarations.push_back({ 0, "SIZE",      0, 0, 2, 0 });
-	mSODeclarations.push_back({ 0, "COLOR",     0, 0, 4, 0 });
-	mSODeclarations.push_back({ 0, "VELOCITY",  0, 0, 3, 0 });
-	mSODeclarations.push_back({ 0, "LIFETIME",  0, 0, 2, 0 });
-	mSODeclarations.push_back({ 0, "TYPE",	    0, 0, 1, 0 });
+	mSODeclarations.push_back({ 0, "POSITION",		0, 0, 3, 0 });
+	mSODeclarations.push_back({ 0, "SIZE",			0, 0, 2, 0 });
+	mSODeclarations.push_back({ 0, "COLOR",			0, 0, 4, 0 });
+	mSODeclarations.push_back({ 0, "VELOCITY",		0, 0, 3, 0 });
+	mSODeclarations.push_back({ 0, "LIFETIME",		0, 0, 2, 0 });
+	mSODeclarations.push_back({ 0, "ACCELERATION",  0, 0, 3, 0 });
+	mSODeclarations.push_back({ 0, "TYPE",			0, 0, 1, 0 });
 	
 	mStrides.push_back(sizeof(BillboardVertex));
 
