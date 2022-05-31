@@ -73,11 +73,11 @@ RECT LobbyUI::MakeRect(float left, float top, float right, float bottom)
 
 void LobbyUI::RoomEmptyProcess()
 {
-    /*mIsClosed[0] = false;
+    /*mIsOpened[0] = false;
     */
     for (int i = 1; i < 7; ++i) 
     {
-        if (mIsClosed[i-1]) //mIsClosed[i] 
+        if (!mIsOpened[i-1]) //mIsOpened[i] 
         {
             SetIndexColor(i, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
             SetIndexColor(GetTextCnt() + 3 + i, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
@@ -135,19 +135,19 @@ int LobbyUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
     return -1;
 }
 
-void LobbyUI::SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed)
+void LobbyUI::SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Opened)
 {
     mRoomNums[index] = RoomID;
     //mPlayerCount[index] = PlayerCount;
     //mMapID[index] = MapID;
     mIsGameStarted[index] = GameStarted;
-    mIsClosed[index] = Closed;
+    mIsOpened[index] = Opened;
 }
 
 void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index)
 {
     RECT rc = MakeRect(left, top, right, bottom);
-    if (MouseCollisionCheck(dx, dy, rc) && !mIsClosed[index-1])
+    if (MouseCollisionCheck(dx, dy, rc) && mIsOpened[index-1])
     {
         if (!mIsGameStarted[index-1]) // ¾È ½ÃÀÛ
         {
@@ -162,7 +162,7 @@ void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float ri
             SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
         }
     }
-    else if(!MouseCollisionCheck(dx, dy, rc) && !mIsClosed[index-1])
+    else if(!MouseCollisionCheck(dx, dy, rc) && mIsOpened[index-1])
     {
         if (!mIsGameStarted[index-1] )
         {
@@ -177,7 +177,7 @@ void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float ri
             SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
         }
     }
-    else if (mIsClosed[index - 1])
+    else if (!mIsOpened[index - 1])
     {
         SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
         SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
@@ -272,9 +272,9 @@ void LobbyUI::UpdateRoomIDTexts()
     }
 }
 
-void LobbyUI::UpdateRoomIDTextsIndex(int index, int RoomID, bool Closed)
+void LobbyUI::UpdateRoomIDTextsIndex(int index, int RoomID, bool Opened)
 {
-    if (!mIsClosed[index])
+    if (mIsOpened[index])
     {
         mRoomNums[index] = RoomID;
         GetTextBlock()[index + 1].strText.assign(std::to_string(RoomID + 1));
@@ -315,7 +315,7 @@ void LobbyUI::UpdateMapIDTexts()
 
 void LobbyUI::UpdateMapIDTextsIndex(int index, int MapID)
 {
-    if (!mIsClosed[index]) {
+    if (mIsOpened[index]) {
         if (MapID)
             GetTextBlock()[index + 14].strText.assign("day");
         else
@@ -360,10 +360,10 @@ void LobbyUI::UpdateDenyBoxText()
     }
 }
 
-void LobbyUI::SetRoomInfoTextsIndex(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed)
+void LobbyUI::SetRoomInfoTextsIndex(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Opened)
 {
-    UpdateRoomIsClosedIndex(index, Closed);
-    UpdateRoomIDTextsIndex(index, RoomID, Closed);
+    UpdateRoomIsOpenedIndex(index, Opened);
+    UpdateRoomIDTextsIndex(index, RoomID, Opened);
     UpdatePlayerCountTextsIndex(index, PlayerCount);
     UpdateMapIDTextsIndex(index, MapID);
     UpdateGameStartedTextsIndex(index, GameStarted);

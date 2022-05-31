@@ -179,10 +179,11 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room outside info packet.\n");		
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
 		mNetPtr->UpdateRoomList(pck);		
-		
-		/*for (int i = 0; i < 6; ++i)			
-			mpUI->SetRoomInfoTextsIndex(i, mRoomList[i].ID, mRoomList[i].PlayerCount, mRoomList[i].MapID, mRoomList[i].GameStarted, !mRoomList[i].Opened);
-		*/
+		int i = 0;
+		auto RoomList = mNetPtr->GetRoomList();
+		for (auto& Room :RoomList)			
+			mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
+	
 	#ifdef START_GAME_INSTANT
 		mNetPtr->Client()->RequestEnterRoom(0);
 	#endif

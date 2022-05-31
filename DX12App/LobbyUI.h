@@ -3,7 +3,6 @@
 
 
 
-
 class LobbyUI : public UI
 {
 public:
@@ -42,7 +41,7 @@ public:
 	void RoomEmptyProcess();
 
 	void UpdateRoomIDTexts();
-	void UpdateRoomIDTextsIndex(int index, int RoomID, bool Closed);
+	void UpdateRoomIDTextsIndex(int index, int RoomID, bool Opened);
 
 	void UpdatePlayerCountTexts();
 	void UpdatePlayerCountTextsIndex(int index, int PlayerCount);
@@ -54,15 +53,17 @@ public:
 	void UpdateGameStartedTextsIndex(int index, bool IsGameStarted);
 
     
-	void UpdateRoomIsClosedIndex(int index, bool IsClosed) { mIsClosed[index] = IsClosed; }
+	void UpdateRoomIsOpenedIndex(int index, bool IsOpened) { mIsOpened[index] = IsOpened; }
 
-	void SetRoomInfoTextsIndex(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed);
+	void SetRoomInfoTextsIndex(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Opened);
 
-	void SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Closed);
+	void SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Opened);
 private:
 	float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
 	//For Packet
 	// º¸·ù
+
+	
 	std::atomic_char mDenyMessageCode;
 	std::atomic_bool mIsDenyBox = false;
 
@@ -71,7 +72,7 @@ private:
 	/*std::atomic_char mPlayerCount[6];
 	std::atomic_char mMapID[6];*/
 	std::atomic_bool mIsGameStarted[6] = {false, false, false, false, false, false};
-	std::atomic_bool mIsClosed[6] = {true, true, true, true, true, true};
+	std::atomic_bool mIsOpened[6] = {false, false, false, false, false, false };
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
