@@ -40,13 +40,10 @@ public:
 	void SetIndexRoomNums(int index, int RoomID) { mRoomNums[index] = RoomID; }
 	void RoomEmptyProcess();
 
-	void UpdateRoomIDTexts();
 	void UpdateRoomIDTextsIndex(int index, int RoomID, bool Opened);
 
-	void UpdatePlayerCountTexts();
 	void UpdatePlayerCountTextsIndex(int index, int PlayerCount);
 
-	void UpdateMapIDTexts();
 	void UpdateMapIDTextsIndex(int index, int MapID);
 
 	void UpdateGameStartedTexts();
