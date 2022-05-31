@@ -117,6 +117,14 @@ void LobbyScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mpUI->Update(timer.TotalTime());
+	if (mNetPtr->GetIsUpdatedRoomList()) 
+	{
+		int i = 0;
+		auto RoomList = mNetPtr->GetRoomList();
+		for (auto& Room : RoomList)
+			mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
+		mNetPtr->SetIsUpdatedRoomList(false);
+	}
 }
 
 void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)

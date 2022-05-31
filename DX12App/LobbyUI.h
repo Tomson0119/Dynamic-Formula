@@ -1,8 +1,6 @@
 #pragma once
 #include "UI.h"
 
-
-
 class LobbyUI : public UI
 {
 public:

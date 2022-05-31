@@ -101,6 +101,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		OutputDebugString(L"Received room outside info packet.\n");
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
 		mNetPtr->UpdateRoomList(pck);
+		mNetPtr->SetIsUpdatedRoomList(true);
 		break;
 	}
 	case SC::UPDATE_PLAYER_INFO:

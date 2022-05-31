@@ -55,6 +55,9 @@ public:
 	void SetRoomID(int roomID) { mRoomID = roomID; }
 	int GetRoomID() const { return mRoomID; }
 
+	void SetIsUpdatedRoomList(bool IsUpdatedRoomList) { mIsUpdatedRoomList = IsUpdatedRoomList; }
+	bool GetIsUpdatedRoomList() const { return mIsUpdatedRoomList; }
+
 	char GetPlayerIndex() const { return mPlayerIdx; }
 	char GetMapIndex() const { return mMapIdx; }
 	char GetAdminIndex() const { return mAdminIdx; }
@@ -89,6 +92,7 @@ private:
 
 	RoomList mRoomList;
 	std::mutex mRoomListMut;
+	std::atomic_bool mIsUpdatedRoomList;
 
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;
