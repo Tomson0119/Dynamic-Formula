@@ -287,7 +287,7 @@ void ThirdPersonCamera::Update(float elapsedTime)
 
 		float length = Vector3::Length(direction);
 		//float timeLagScale = (mTimeLag) ? elapsedTime * (1.0f / mTimeLag) : 0.1f;
-		mPosition = Vector3::Lerp(mPosition, position, elapsedTime * 2.0f);
+		mPosition = Vector3::Lerp(mPosition, position, elapsedTime * 8);
 
 		XMFLOAT3 camLook = mPlayer->GetPosition();
 		camLook.y = mPosition.y;
