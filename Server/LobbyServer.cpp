@@ -127,15 +127,15 @@ bool LobbyServer::TryOpenRoom(int hostID)
 		return false;
 	}
 
-	if (int roomCount = mRoomCount; mRooms[roomCount]->OpenRoom())
+	if (int idx = FindEmptyRoom(); mRooms[idx]->OpenRoom())
 	{
 		if (gClients[hostID]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
 		{
-			mRooms[roomCount]->CloseRoom();	// if it fails : logic error
+			mRooms[idx]->CloseRoom();	// if it fails : logic error
 			//mLoginPtr->Disconnect(hostID);
 			return false;
 		}
-		return mRooms[roomCount]->AddPlayer(hostID); // if it fails : logic error
+		return mRooms[idx]->AddPlayer(hostID); // if it fails : logic error
 	}
 	return false; // logic error
 }
@@ -333,6 +333,16 @@ int LobbyServer::FindPageNumOfRoom(int roomId)
 		if (roomId == i) return cnt / ROOM_NUM_PER_PAGE;
 		if (mRooms[i]->Closed()) continue;
 		cnt += 1;
+	}
+	return -1;
+}
+
+int LobbyServer::FindEmptyRoom()
+{
+	for (int i = 0; i < mRooms.size(); i++)
+	{
+		if (mRooms[i]->Closed())
+			return i;
 	}
 	return -1;
 }

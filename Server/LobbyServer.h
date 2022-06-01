@@ -32,6 +32,7 @@ public:
 
 private:
 	int FindPageNumOfRoom(int roomId);
+	int FindEmptyRoom();
 
 public:
 	void IncreasePlayerCount() { mLobbyPlayerCount.fetch_add(1); }
