@@ -37,7 +37,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	#endif
 		CS::packet_inquire_room* pck = reinterpret_cast<CS::packet_inquire_room*>(packet);
 		gClients[id]->SetPageNum(pck->page_num);
-		SendExistingRoomList(id, pck->page_num);
+		SendExistingRoomList(id);
 		break;
 	}
 	case CS::OPEN_ROOM:
