@@ -32,7 +32,7 @@ struct GeoOut
 float4 PSRender(GeoOut pin) : SV_Target
 {
     float3 uvw = float3(pin.TexCoord, pin.PrimID % 4);
-    float4 diffuse = gTexture.Sample(gAnisotropicWrap, uvw) * pin.Color + float4(0.6f, 0.3f, 0.0f, 0.0f);
+    float4 diffuse = gTexture.Sample(gAnisotropicWrap, uvw) * pin.Color;
     
     clip(diffuse.a - 0.1f);
     

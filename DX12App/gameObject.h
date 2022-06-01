@@ -352,7 +352,10 @@ public:
 
 	void SetLocalOffset(XMFLOAT3 offset);
 
+	void SetParticleEnable(bool enable) { mParticleEnable = enable; }
+
 private:
 	GameObject& mParent;
 	XMFLOAT3 mLocalOffset = {0.0f, 0.0f, 0.0f};
+	int32_t mParticleEnable = false;
 };

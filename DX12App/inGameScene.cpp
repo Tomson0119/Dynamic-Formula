@@ -494,7 +494,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
 			BuildCarObject(info.StartPosition, info.StartRotation, info.Color, isPlayer, cmdList, physics, i);
-			//BuildMissileObject(cmdList, info.StartPosition, i);
+			BuildMissileObject(cmdList, info.StartPosition, i);
 			playerCount += 1;
 		}
 		i++;
@@ -604,6 +604,20 @@ void InGameScene::BuildMissileObject(
 		mMissileObjects[idx]->LoadModel(mDevice.Get(), cmdList, L"Models\\Missile.obj");
 		mMeshList["Missile"] = mMissileObjects[idx]->GetMeshes();
 		mTextureList["Missile"] = mMissileObjects[idx]->GetTextures();
+
+
+		XMFLOAT3 offset = XMFLOAT3( 0.0f, 0.0f, -1.0f);
+
+		auto obj = std::make_shared<SOParticleObject>(*mPlayer);
+
+		auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, -10.0f, -5.0f), 0.02f, 100);
+		obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\MissileTrail.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
+		obj->SetMesh(particleEmittor);
+		obj->SetLocalOffset(offset);
+
+		Pipeline* p = mPipelines[Layer::MissileParticle].get();
+		auto particlePipeline = dynamic_cast<StreamOutputPipeline*>(p);
+		particlePipeline->AppendObject(mDevice.Get(), obj);
 	}
 	else
 	{
@@ -874,7 +888,11 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if (wParam == VK_SHIFT)
 		{
-			mDriftParticleEnable = false;
+			for (int i = 0; i < mPipelines[Layer::DriftParticle]->GetRenderObjects().size(); ++i)
+			{
+				std::shared_ptr<SOParticleObject>& obj = std::static_pointer_cast<SOParticleObject>(mPipelines[Layer::DriftParticle]->GetRenderObjects()[i]);
+				obj->SetParticleEnable(false);
+			}
 		}
 		if (wParam == 'I')
 		{
@@ -891,7 +909,11 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 		if (wParam == VK_SHIFT)
 		{
-			mDriftParticleEnable = true;
+			for (int i = 0; i < mPipelines[Layer::DriftParticle]->GetRenderObjects().size(); ++i)
+			{
+				std::shared_ptr<SOParticleObject>& obj = std::static_pointer_cast<SOParticleObject>(mPipelines[Layer::DriftParticle]->GetRenderObjects()[i]);
+				obj->SetParticleEnable(true);
+			}
 		}
 		if ((wParam == 'Z' || wParam == 'X'))
 		{
@@ -990,7 +1012,6 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	mDirectorCamera->Update(elapsed);
 	
 	UpdateConstants(timer);
-	cmdList->SetGraphicsRoot32BitConstants(8, 1, &mDriftParticleEnable, 4);
 	
 	mpUI.get()->Update(elapsed, mPlayer);
 }
@@ -1009,7 +1030,7 @@ void InGameScene::BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 		{
 			auto obj = std::make_shared<SOParticleObject>(*mPlayer);
 
-			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, -10.0f, -5.0f), 0.02f, 100);
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0.6f, 0.3f, 0.0f), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, -10.0f, -5.0f), 0.02f, 100);
 			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 			obj->SetMesh(particleEmittor);
 			obj->SetLocalOffset(offset[i]);

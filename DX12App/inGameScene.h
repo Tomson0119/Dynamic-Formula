@@ -195,8 +195,6 @@ private:
 
 	bool mVolumetricEnable = true;
 
-	int32_t mDriftParticleEnable = false;
-
 	btRigidBody* mTrackRigidBody = NULL;
 
 	/*float mVolumetricOuter = 7.0f;

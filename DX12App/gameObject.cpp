@@ -977,6 +977,7 @@ void SOParticleObject::Update(float elapsedTime, float updateRate)
 void SOParticleObject::Draw(ID3D12GraphicsCommandList* cmdList, UINT rootMatIndex, UINT rootCbvIndex, UINT rootSrvIndex, UINT64 matGPUAddress, UINT64 byteOffset, bool isSO)
 {
 	cmdList->SetGraphicsRootDescriptorTable(rootCbvIndex, mCbvGPUAddress);
+	cmdList->SetGraphicsRoot32BitConstants(8, 1, &mParticleEnable, 4);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle{};
 	for (int i = 0; i < mMeshes.size(); i++)
