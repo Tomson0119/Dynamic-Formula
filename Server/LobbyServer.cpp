@@ -45,14 +45,14 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received open room packet\n";
 	#endif
-		if (TryOpenRoom(id))
+		if (int roomID = TryOpenRoom(id); roomID >= 0)
 		{
 			/*mOpenRoomIdsMut.lock();
 			mOpenRoomIds.push_back(mRoomCount);
 			std::sort(mOpenRoomIds.begin(), mOpenRoomIds.end());
 			mOpenRoomIdsMut.unlock();*/
 
-			AcceptEnterRoom(mRoomCount, id);
+			AcceptEnterRoom(roomID, id);
 			mRoomCount.fetch_add(1);
 		}
 		break;
@@ -119,12 +119,12 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 	return true;
 }
 
-bool LobbyServer::TryOpenRoom(int hostID)
+int LobbyServer::TryOpenRoom(int hostID)
 {
 	if (mRoomCount >= MAX_ROOM_SIZE)
 	{
 		gClients[hostID]->SendAccessRoomDeny(ROOM_STAT::MAX_ROOM_REACHED);
-		return false;
+		return -1;
 	}
 
 	if (int idx = FindEmptyRoom(); mRooms[idx]->OpenRoom())
@@ -133,11 +133,11 @@ bool LobbyServer::TryOpenRoom(int hostID)
 		{
 			mRooms[idx]->CloseRoom();	// if it fails : logic error
 			//mLoginPtr->Disconnect(hostID);
-			return false;
+			return -1;
 		}
-		return mRooms[idx]->AddPlayer(hostID); // if it fails : logic error
+		return (mRooms[idx]->AddPlayer(hostID)) ? idx : -1; // if it fails : logic error
 	}
-	return false; // logic error
+	return -1; // logic error
 }
 
 void LobbyServer::AcceptEnterRoom(int roomID, int hostID)

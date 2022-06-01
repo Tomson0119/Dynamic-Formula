@@ -19,7 +19,7 @@ public:
 
 	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
 
-	bool TryOpenRoom(int hostID);
+	int TryOpenRoom(int hostID);
 	bool TryEnterRoom(int roomID, int hostID);
 	void AcceptEnterRoom(int roomID, int hostID);
 	void RevertScene(int hostID, bool logout=false);
