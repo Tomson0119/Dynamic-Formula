@@ -13,7 +13,9 @@ public:
 		XMFLOAT4 rotation;
 
 		Entry()
-			: empty{ true }
+			: empty{ true },
+			  position{},
+			  rotation{}
 		{
 		}
 
@@ -63,7 +65,6 @@ public:
 		mEntryQueueMut.unlock();
 
 		mProgress += dt;
-		Print("mProgress: ", mProgress);
 		float timeBetween = GetDurationSec(next.timeStamp, mPrevEntry.timeStamp);
 		float progress = std::min(1.0f, mProgress / timeBetween);
 
