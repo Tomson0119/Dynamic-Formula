@@ -85,31 +85,31 @@ void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HA
 	mpUI->Draw(nFrame);
 }
 
-bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
+bool RoomScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes)
 {
 	switch (type)
-	{	
-	case SC::ROOM_INSIDE_INFO:
+	{
+	case SC::PCK_TYPE::ROOM_INSIDE_INFO:
 	{
 		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);		
 		break;
 	}
-	case SC::ROOM_OUTSIDE_INFO:
+	case SC::PCK_TYPE::ROOM_OUTSIDE_INFO:
 	{
 		OutputDebugString(L"Received room outside info packet.\n");
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
 		mNetPtr->UpdateRoomList(pck);
 		break;
 	}
-	case SC::UPDATE_PLAYER_INFO:
+	case SC::PCK_TYPE::UPDATE_PLAYER_INFO:
 	{
 		SC::packet_update_player_info* pck = reinterpret_cast<SC::packet_update_player_info*>(packet);
 		mNetPtr->UpdatePlayerInfo(pck);
 		break;
 	}
-	case SC::UPDATE_MAP_INFO:
+	case SC::PCK_TYPE::UPDATE_MAP_INFO:
 	{
 		OutputDebugString(L"Received update map info packet.\n");
 		SC::packet_update_map_info* pck = reinterpret_cast<SC::packet_update_map_info*>(packet);
@@ -117,7 +117,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		//mpUI->SetMapID(static_cast<int>(pck->map_id));
 		break;
 	}
-	case SC::REMOVE_PLAYER:
+	case SC::PCK_TYPE::REMOVE_PLAYER:
 	{
 		OutputDebugString(L"Received remove player packet.\n");
 
@@ -125,7 +125,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mNetPtr->RemovePlayer(pck);
 		break;
 	}
-	case SC::GAME_START_SUCCESS:
+	case SC::PCK_TYPE::GAME_START_SUCCESS:
 	{
 		OutputDebugString(L"Received game start packet.\n");
 
@@ -135,14 +135,14 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		//mpUI->SetMyReadyOff();
 		break;
 	}
-	case SC::GAME_START_FAIL:
+	case SC::PCK_TYPE::GAME_START_FAIL:
 	{		
 		SC::packet_game_start_fail* pck = reinterpret_cast<SC::packet_game_start_fail*>(packet);
 		OutputDebugStringA("Not everyone is ready.\n");
 		//mpUI->SetStateFail(0); // please multithread error!!!!!!!!!
 		break;
 	}
-	case SC::FORCE_LOGOUT:
+	case SC::PCK_TYPE::FORCE_LOGOUT:
 	{
 		OutputDebugString(L"Received force logout packet.\n");
 		SetSceneChangeFlag(SCENE_CHANGE_FLAG::LOGOUT);

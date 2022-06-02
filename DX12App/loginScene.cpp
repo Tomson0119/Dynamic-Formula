@@ -150,18 +150,18 @@ void LoginScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_H
 	mpUI->Draw(nFrame);
 }
 
-bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)
+bool LoginScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes)
 {
 	switch (type)
 	{
-	case SC::LOGIN_RESULT:
+	case SC::PCK_TYPE::LOGIN_RESULT:
 	{
 		OutputDebugString(L"Received login result packet.\n");
 		
 		SC::packet_login_result* pck = reinterpret_cast<SC::packet_login_result*>(packet);
 		if (pck->result == static_cast<char>(LOGIN_STAT::ACCEPTED))
 		{
-			mNetPtr->Client()->BindUDPSocket(pck->port);
+			//mNetPtr->Client()->BindUDPSocket(pck->port);
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		}
 		else if (pck->result == static_cast<char>(LOGIN_STAT::INVALID_IDPWD))
@@ -172,7 +172,7 @@ bool LoginScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::REGISTER_RESULT:
+	case SC::PCK_TYPE::REGISTER_RESULT:
 	{
 		OutputDebugStringW(L"Received register result packet.\n");
 		

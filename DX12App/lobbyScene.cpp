@@ -124,11 +124,11 @@ void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_H
 	mpUI->Draw(nFrame);
 }
 
-bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
+bool LobbyScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes)
 {
 	switch (type)
 	{
-	case SC::ACCESS_ROOM_ACCEPT:
+	case SC::PCK_TYPE::ACCESS_ROOM_ACCEPT:
 	{
 		OutputDebugString(L"Received access room accept packet.\n");
 
@@ -137,7 +137,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mNetPtr->SetRoomID(pck->room_id);
 		break;
 	}
-	case SC::ACCESS_ROOM_DENY:
+	case SC::PCK_TYPE::ACCESS_ROOM_DENY:
 	{
 		OutputDebugString(L"Received access room deny packet.\n");
 		
@@ -166,7 +166,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::ROOM_INSIDE_INFO:
+	case SC::PCK_TYPE::ROOM_INSIDE_INFO:
 	{
 		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
@@ -174,7 +174,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		
 		break;
 	}
-	case SC::ROOM_OUTSIDE_INFO:
+	case SC::PCK_TYPE::ROOM_OUTSIDE_INFO:
 	{
 		OutputDebugString(L"Received room outside info packet.\n");		
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
@@ -188,7 +188,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, char type, int bytes)
 	#endif
 		break;
 	}
-	case SC::FORCE_LOGOUT:
+	case SC::PCK_TYPE::FORCE_LOGOUT:
 	{
 		OutputDebugString(L"Received force logout packet.\n");
 		SetSceneChangeFlag(SCENE_CHANGE_FLAG::LOGOUT);

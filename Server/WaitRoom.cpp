@@ -171,7 +171,7 @@ void WaitRoom::SendGameStartFail(bool instSend)
 {
 	SC::packet_game_start_fail pck{};
 	pck.size = sizeof(SC::packet_game_start_fail);
-	pck.type = SC::GAME_START_FAIL;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::GAME_START_FAIL);
 	
 	const int hostID = mPlayers[mAdminIndex]->ID;
 	gClients[hostID]->PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
@@ -187,7 +187,7 @@ void WaitRoom::SendUpdatePlayerInfoToAll(int target, int ignore, bool instSend)
 #endif
 	SC::packet_update_player_info pck{};
 	pck.size = sizeof(SC::packet_update_player_info);
-	pck.type = SC::UPDATE_PLAYER_INFO;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::UPDATE_PLAYER_INFO);
 	pck.player_idx = idx;
 	pck.admin_idx = mAdminIndex;
 	strncpy_s(pck.player_info.name, mPlayers[idx]->Name, MAX_NAME_SIZE - 1);
@@ -206,7 +206,7 @@ void WaitRoom::SendRemovePlayerInfoToAll(int target, bool instSend)
 #endif
 	SC::packet_remove_player pck{};
 	pck.size = sizeof(SC::packet_remove_player);
-	pck.type = SC::REMOVE_PLAYER;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::REMOVE_PLAYER);
 	pck.player_idx = idx;
 	pck.admin_idx = mAdminIndex;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, target, instSend);
@@ -219,7 +219,7 @@ void WaitRoom::SendUpdateMapInfoToAll(int ignore, bool instSend)
 #endif
 	SC::packet_update_map_info pck{};
 	pck.size = sizeof(SC::packet_update_map_info);
-	pck.type = SC::UPDATE_MAP_INFO;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::UPDATE_MAP_INFO);
 	pck.map_id = mMapIndex;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, -1, instSend);	
 }
@@ -231,7 +231,7 @@ void WaitRoom::SendRoomInsideInfoToAll()
 #endif
 	SC::packet_room_inside_info pck{};
 	pck.size = sizeof(SC::packet_room_inside_info);
-	pck.type = SC::ROOM_INSIDE_INFO;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::ROOM_INSIDE_INFO);
 	pck.map_id = mMapIndex;
 	pck.admin_idx = mAdminIndex;
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
@@ -261,7 +261,7 @@ void WaitRoom::SendRoomInsideInfo(int id, bool instSend)
 #endif
 	SC::packet_room_inside_info pck{};
 	pck.size = sizeof(SC::packet_room_inside_info);
-	pck.type = SC::ROOM_INSIDE_INFO;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::ROOM_INSIDE_INFO);
 	pck.map_id = mMapIndex;
 	pck.player_idx = gClients[id]->PlayerIndex;
 	pck.admin_idx = mAdminIndex;
