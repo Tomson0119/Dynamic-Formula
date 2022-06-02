@@ -292,10 +292,10 @@ void Pipeline::SortMeshes()
 	}
 }
 
-void Pipeline::Update(float elapsed, float updateRate, Camera* camera)
+void Pipeline::Update(float elapsed, Camera* camera)
 {
 	for (const auto& obj : mRenderObjects)
-		obj->Update(elapsed, updateRate);
+		obj->Update(elapsed);
 }
 
 void Pipeline::UpdateConstants(Camera* camera, DrawType type, bool culling)

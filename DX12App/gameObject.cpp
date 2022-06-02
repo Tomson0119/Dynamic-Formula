@@ -318,7 +318,7 @@ void GameObject::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& 
 	}
 }
 
-void GameObject::Update(float elapsedTime, float updateRate)
+void GameObject::Update(float elapsedTime)
 {
 	RotateDirectionVectors();
 
@@ -326,12 +326,12 @@ void GameObject::Update(float elapsedTime, float updateRate)
 
 	if (mBtRigidBody)
 	{
-		InterpolateRigidBody(elapsedTime, updateRate);
+		InterpolateRigidBody(elapsedTime);
 		SetWorldByMotionState();
 	}
 	else
 	{
-		InterpolateWorldTransform(elapsedTime, updateRate);
+		InterpolateWorldTransform(elapsedTime);
 		UpdateTransform();
 	}
 
@@ -497,7 +497,7 @@ void GameObject::SortMeshes()
 	);
 }
 
-void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
+void GameObject::InterpolateRigidBody(float elapsed)
 {
 	//auto rigid = mBtRigidBody;
 	//if (rigid == nullptr) return;
@@ -541,7 +541,7 @@ void GameObject::InterpolateRigidBody(float elapsed, float updateRate)
 	//rigid->setWorldTransform(nextTransform);
 }
 
-void GameObject::InterpolateWorldTransform(float elapsed, float updateRate)
+void GameObject::InterpolateWorldTransform(float elapsed)
 {
 	mInterpolator.Interpolate(elapsed, mPosition, mQuaternion);
 
@@ -943,15 +943,15 @@ void MissileObject::SetActive(bool state)
 	mActive = state;
 }
 
-void MissileObject::Update(float elapsedTime, float updateRate)
+void MissileObject::Update(float elapsedTime)
 {
 	if (mActive)
 	{
-		GameObject::Update(elapsedTime, updateRate);
+		GameObject::Update(elapsedTime);
 	}
 }
 
-void StaticObject::Update(float elapsedTime, float updateRate)
+void StaticObject::Update(float elapsedTime)
 {
 	RotateDirectionVectors();
 
@@ -964,7 +964,7 @@ SOParticleObject::SOParticleObject(GameObject& parent) : GameObject(), mParent{ 
 {
 }
 
-void SOParticleObject::Update(float elapsedTime, float updateRate)
+void SOParticleObject::Update(float elapsedTime)
 {
 	mPosition = mLocalOffset;
 

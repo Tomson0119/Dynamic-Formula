@@ -25,7 +25,7 @@ public:
 
 	void BuildSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
 
-	virtual void Update(float elapsedTime, float updateRate);
+	virtual void Update(float elapsedTime);
 
 	virtual void Draw(
 		ID3D12GraphicsCommandList* cmdList,
@@ -52,8 +52,8 @@ protected:
 
 	void Animate(float elapsedTime);
 
-	void InterpolateRigidBody(float elapsed, float updateRate);
-	void InterpolateWorldTransform(float elapsed, float updateRate);
+	void InterpolateRigidBody(float elapsed);
+	void InterpolateWorldTransform(float elapsed);
 
 public:
 	virtual void LoadModel(
@@ -307,7 +307,7 @@ public:
 	MissileObject(const XMFLOAT3& position);
 	virtual ~MissileObject();
 
-	virtual void Update(float elapsedTime, float updateRate) override;
+	virtual void Update(float elapsedTime) override;
 
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
@@ -332,7 +332,7 @@ public:
 	StaticObject() = default;
 	virtual ~StaticObject() = default;
 
-	virtual void Update(float elapsedTime, float updateRate) override;
+	virtual void Update(float elapsedTime) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -343,7 +343,7 @@ class SOParticleObject : public GameObject
 public:
 	SOParticleObject(GameObject& parent);
 	virtual ~SOParticleObject() = default;
-	virtual void Update(float elapsedTime, float updateRate) override;
+	virtual void Update(float elapsedTime) override;
 
 	virtual void Draw(
 		ID3D12GraphicsCommandList* cmdList,
