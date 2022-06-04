@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "EndPoint.h"
 
-EndPoint::EndPoint(const std::string& ip, short port)
+EndPoint::EndPoint(const std::string& ip, u_short port)
 {
 	mAddress.sin_family = AF_INET;
 	mAddress.sin_port = htons(port);
@@ -22,7 +22,7 @@ std::string EndPoint::GetIPAddress() const
 	return EndPoint::GetIPAddress(mAddress);
 }
 
-short EndPoint::GetPortNumber() const
+u_short EndPoint::GetPortNumber() const
 {
 	return EndPoint::GetPortNumber(mAddress);
 }
@@ -37,12 +37,12 @@ std::string EndPoint::GetIPAddress(const sockaddr_in& sckaddr)
 	return std::string(ip);
 }
 
-short EndPoint::GetPortNumber(const sockaddr_in& sckaddr)
+u_short EndPoint::GetPortNumber(const sockaddr_in& sckaddr)
 {
 	return ntohs(sckaddr.sin_port);
 }
 
-EndPoint EndPoint::Any(short port)
+EndPoint EndPoint::Any(u_short port)
 {
 	EndPoint ep;
 	ep.mAddress.sin_family = AF_INET;

@@ -36,7 +36,7 @@ public:
 	int RecvFrom(WSAOVERLAPPEDEX& over, EndPoint& hostEp);
 
 	std::string GetIPAddress() const;
-	short GetPortNumber() const;
+	u_short GetPortNumber() const;
 
 	static std::optional<sockaddr_in> GetSocketName(SOCKET handle);
 

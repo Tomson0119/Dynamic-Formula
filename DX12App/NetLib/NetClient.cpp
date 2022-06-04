@@ -20,7 +20,7 @@ NetClient::~NetClient()
 	Disconnect();
 }
 
-bool NetClient::Connect(const char* ip, short port)
+bool NetClient::Connect(const char* ip, u_short port)
 {
 	mServerEp = EndPoint(ip, port);
 	mIsConnected = mTCPSocket.Connect(mServerEp);
@@ -48,7 +48,7 @@ void NetClient::Disconnect()
 	}
 }
 
-void NetClient::BindUDPSocket(short port)
+void NetClient::BindUDPSocket(u_short port)
 {
 	auto ep = EndPoint::Any(port);
 	mUDPSocket.Bind(ep);

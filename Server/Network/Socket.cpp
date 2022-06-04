@@ -164,7 +164,7 @@ std::string Socket::GetIPAddress() const
 	return "Wrong Socket Handle";
 }
 
-short Socket::GetPortNumber() const
+u_short Socket::GetPortNumber() const
 {
 	auto sckName = Socket::GetSocketName(mSckHandle);
 	if (sckName.has_value())

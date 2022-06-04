@@ -7,10 +7,10 @@ public:
 	~NetClient();
 
 public:
-	bool Connect(const char* ip, short port);
+	bool Connect(const char* ip, u_short port);
 	void Disconnect();
 
-	void BindUDPSocket(short port);
+	void BindUDPSocket(u_short port);
 
 	void PushPacket(std::byte* pck, int bytes, bool udp=false);
 	void SendMsg(std::byte* pck, int bytes, bool udp=false);
@@ -38,7 +38,7 @@ public:
 	SOCKET GetTCPSocket() const { return mTCPSocket.GetSocket(); }
 	SOCKET GetUDPSocket() const { return mUDPSocket.GetSocket(); }
 
-	short GetTCPSckPort() const { return mTCPSocket.GetPortNumber(); }
+	u_short GetTCPSckPort() const { return mTCPSocket.GetPortNumber(); }
 	bool IsConnected() const { return mIsConnected; }
 
 private:
