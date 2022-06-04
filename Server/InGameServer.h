@@ -57,7 +57,7 @@ public:
 	void Init(LoginServer* loginPtr, RoomList& roomList);
 	void PrepareToStartGame(int roomID, char mapIdx);
 
-	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
+	bool ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int id, int bytes);
 
 	void StartMatch(int roomID);
 	void RemovePlayer(int roomID, int hostID);

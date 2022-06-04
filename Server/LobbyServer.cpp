@@ -25,12 +25,11 @@ void LobbyServer::TakeOverNewPlayer(int hostID)
 	SendExistingRoomList(hostID);
 }
 
-bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
+bool LobbyServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int id, int bytes)
 {
-	Client* client = gClients[id].get();
 	switch (type)
 	{
-	case CS::INQUIRE_ROOM:
+	case CS::PCK_TYPE::INQUIRE_ROOM:
 	{
 	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received inquire room packet\n";
@@ -40,7 +39,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		SendExistingRoomList(id, pck->page_num);
 		break;
 	}
-	case CS::OPEN_ROOM:
+	case CS::PCK_TYPE::OPEN_ROOM:
 	{
 	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received open room packet\n";
@@ -57,7 +56,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		}
 		break;
 	}
-	case CS::ENTER_ROOM:
+	case CS::PCK_TYPE::ENTER_ROOM:
 	{
 #ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received enter room packet\n";
@@ -76,7 +75,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 
 		break;
 	}
-	case CS::SWITCH_MAP:
+	case CS::PCK_TYPE::SWITCH_MAP:
 	{
 	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received switch map packet.\n";
@@ -92,7 +91,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		mRooms[roomID]->SwitchMap(id);
 		break;
 	}
-	case CS::PRESS_READY:
+	case CS::PCK_TYPE::PRESS_READY:
 	{
 		CS::packet_press_ready* pck = reinterpret_cast<CS::packet_press_ready*>(packet);
 		
@@ -105,7 +104,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		PressStartOrReady(roomID, id);		
 		break;
 	}
-	case CS::REVERT_SCENE:
+	case CS::PCK_TYPE::REVERT_SCENE:
 	{
 	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received revert scene.\n";
@@ -298,7 +297,7 @@ void LobbyServer::SendExistingRoomList(int id, bool instSend)
 #endif
 	SC::packet_room_outside_info pck{};
 	pck.size = sizeof(SC::packet_room_outside_info);
-	pck.type = SC::ROOM_OUTSIDE_INFO;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::ROOM_OUTSIDE_INFO);
 
 	int startCnt = gClients[id]->GetPageNum() * ROOM_NUM_PER_PAGE + 1;
 	int endCnt = startCnt + ROOM_NUM_PER_PAGE;

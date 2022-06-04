@@ -1,4 +1,3 @@
-#include "EndPoint.h"
 #include "stdafx.h"
 #include "EndPoint.h"
 
@@ -16,6 +15,31 @@ EndPoint::EndPoint(const sockaddr_in& addr)
 
 EndPoint::~EndPoint()
 {
+}
+
+std::string EndPoint::GetIPAddress() const
+{
+	return EndPoint::GetIPAddress(mAddress);
+}
+
+short EndPoint::GetPortNumber() const
+{
+	return EndPoint::GetPortNumber(mAddress);
+}
+
+std::string EndPoint::GetIPAddress(const sockaddr_in& sckaddr)
+{
+	const int MAX_IPV4_LEN = 256;
+	char ip[MAX_IPV4_LEN];
+	auto p = inet_ntop(AF_INET, &sckaddr.sin_addr, ip, MAX_IPV4_LEN);
+
+	if (p == nullptr) return "Wrong Socket Name";
+	return std::string(ip);
+}
+
+short EndPoint::GetPortNumber(const sockaddr_in& sckaddr)
+{
+	return ntohs(sckaddr.sin_port);
 }
 
 EndPoint EndPoint::Any(short port)

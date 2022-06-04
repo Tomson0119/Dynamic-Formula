@@ -141,15 +141,46 @@ int Socket::RecvFrom(WSAOVERLAPPEDEX& over, EndPoint& hostEp)
 	DWORD flag = 0;
 	DWORD bytes = 0;
 
-	int ip_len = sizeof(hostEp.mAddress);
+	int ipLen = sizeof(hostEp.mAddress);
 
 	if (WSARecvFrom(mSckHandle,
 		&over.WSABuffer, 1, &bytes, &flag,
-		reinterpret_cast<sockaddr*>(&hostEp.mAddress), &ip_len,
+		reinterpret_cast<sockaddr*>(&hostEp.mAddress), &ipLen,
 		&over.Overlapped, NULL) != 0)
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
 			return -1;
 	}
 	return (int)bytes;
+}
+
+std::string Socket::GetIPAddress() const 
+{
+	auto sckName = Socket::GetSocketName(mSckHandle);
+	if (sckName.has_value())
+	{
+		return EndPoint::GetIPAddress(sckName.value());
+	}
+	return "Wrong Socket Handle";
+}
+
+short Socket::GetPortNumber() const
+{
+	auto sckName = Socket::GetSocketName(mSckHandle);
+	if (sckName.has_value())
+	{
+		return EndPoint::GetPortNumber(sckName.value());
+	}
+	return -1;
+}
+
+std::optional<sockaddr_in> Socket::GetSocketName(SOCKET handle)
+{
+	sockaddr_in sckAddr;
+	int len = sizeof(sckAddr);
+
+	if (getsockname(handle, reinterpret_cast<sockaddr*>(&sckAddr), &len) < 0)
+		return std::nullopt;
+	
+	return sckAddr;
 }

@@ -17,7 +17,7 @@ public:
 	void Init(LoginServer* ptr);
 	void TakeOverNewPlayer(int hostID);
 
-	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
+	bool ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int id, int bytes);
 
 	bool TryOpenRoom(int hostID);
 	bool TryEnterRoom(int roomID, int hostID);

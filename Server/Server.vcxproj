@@ -229,6 +229,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">common.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="UDPReceiver.cpp" />
     <ClCompile Include="WaitRoom.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">common.h</PrecompiledHeaderFile>
@@ -252,6 +253,7 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="UDPReceiver.h" />
     <ClInclude Include="WaitRoom.h" />
   </ItemGroup>
   <ItemGroup>

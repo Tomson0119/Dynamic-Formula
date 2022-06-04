@@ -93,7 +93,6 @@ void GameWorld::UpdatePhysicsWorld()
 	mUpdateTick += 1;
 	if (mUpdateTick == 4)
 	{
-		//std::cout << "Sending.\n";
 		BroadcastAllTransform();
 		mUpdateTick = 0;
 	}
@@ -140,7 +139,6 @@ void GameWorld::UpdateInvincibleState(int idx, float elapsed)
 		}
 		if (duration <= 0.0f)
 		{
-			// TODO: need test if client calculation matches servers
 			player.ReleaseInvincible();
 			player.ChangeVehicleMaskGroup(OBJ_MASK_GROUP::VEHICLE, mPhysics);
 		}
@@ -208,7 +206,7 @@ void GameWorld::SendGameStartSuccess()
 #endif
 	SC::packet_game_start_success info_pck{};
 	info_pck.size = sizeof(SC::packet_game_start_success);
-	info_pck.type = SC::GAME_START_SUCCESS;
+	info_pck.type = static_cast<uint8_t>(SC::PCK_TYPE::GAME_START_SUCCESS);
 
 	for (int i = 0; i < MAX_ROOM_CAPACITY; i++)
 	{
@@ -228,7 +226,7 @@ void GameWorld::SendReadySignal()
 #endif
 	SC::packet_ready_signal pck{};
 	pck.size = sizeof(SC::packet_ready_signal);
-	pck.type = SC::READY_SIGNAL;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::READY_SIGNAL);
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -239,7 +237,7 @@ void GameWorld::SendStartSignal(uint64_t latency)
 #endif
 	SC::packet_start_signal pck{};
 	pck.size = sizeof(SC::packet_start_signal);
-	pck.type = SC::START_SIGNAL;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::START_SIGNAL);
 	pck.running_time_sec = (int)mConstantPtr->GameRunningTime.count();
 	pck.delay_time_msec = (int)latency;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
@@ -262,10 +260,10 @@ void GameWorld::BroadcastAllTransform()
 		if (mPlayerList[receiver]->Empty == false)
 		{
 			PushUiInfoPacket(receiver);
-
+			
 			int id = mPlayerList[receiver]->ID;
 			if (id < 0) continue;
-			gClients[id]->SendMsg(true);
+			gClients[id]->SendMeasureRTTPacket(0);
 		}
 	}
 }
@@ -274,7 +272,7 @@ void GameWorld::PushVehicleTransformPacketToAll(int target)
 {
 	SC::packet_player_transform pck{};
 	pck.size = sizeof(SC::packet_player_transform);
-	pck.type = SC::PLAYER_TRANSFORM;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::PLAYER_TRANSFORM);
 	pck.player_idx = target;
 
 	const auto& vehicle = mPlayerList[target]->GetVehicleRigidBody();
@@ -300,7 +298,7 @@ void GameWorld::PushMissileTransformPacketToAll(int target)
 
 	SC::packet_missile_transform pck{};
 	pck.size = sizeof(SC::packet_missile_transform);
-	pck.type = SC::MISSILE_TRANSFORM;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::MISSILE_TRANSFORM);
 	pck.missile_idx = target;
 
 	const auto& missile = mPlayerList[target]->GetMissileRigidBody();
@@ -321,7 +319,7 @@ void GameWorld::PushUiInfoPacket(int target)
 {
 	SC::packet_ui_info pck{};
 	pck.size = sizeof(SC::packet_ui_info);
-	pck.type = SC::UI_INFO;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::UI_INFO);
 	pck.gauge = (int)(mPlayerList[target]->GetDriftGauge() * 100.0f);
 	pck.speed = (int)(round(mPlayerList[target]->GetCurrentSpeed()));
 
@@ -337,7 +335,7 @@ void GameWorld::SendMissileLaunchPacket(int target)
 #endif
 	SC::packet_missile_launched pck{};
 	pck.size = sizeof(SC::packet_missile_launched);
-	pck.type = SC::MISSILE_LAUNCHED;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::MISSILE_LAUNCHED);
 	pck.missile_idx = target;
 
 	// send vehicle tranform since missile is not updated.
@@ -358,7 +356,7 @@ void GameWorld::SendMissileRemovePacket(int target)
 #endif
 	SC::packet_remove_missile pck{};
 	pck.size = sizeof(SC::packet_remove_missile);
-	pck.type = SC::REMOVE_MISSILE;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::REMOVE_MISSILE);
 	pck.missile_idx = target;
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
@@ -370,7 +368,7 @@ void GameWorld::SendInvincibleOnPacket(int target)
 #endif
 	SC::packet_invincible_on pck{};
 	pck.size = sizeof(SC::packet_invincible_on);
-	pck.type = SC::INVINCIBLE_ON;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::INVINCIBLE_ON);
 	pck.player_idx = target;
 	pck.duration = (int)(mConstantPtr->InvincibleDuration * 10.0f);
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size);
@@ -383,7 +381,7 @@ void GameWorld::SendSpawnPacket(int target)
 #endif
 	SC::packet_spawn_transform pck{};
 	pck.size = sizeof(SC::packet_spawn_transform);
-	pck.type = SC::SPAWN_TRANSFORM;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::SPAWN_TRANSFORM);
 	pck.player_idx = target;
 	
 	const auto& vehicle = mPlayerList[target]->GetVehicleRigidBody();
@@ -403,7 +401,7 @@ void GameWorld::SendWarningMsgPacket(int target, bool instSend)
 #endif
 	SC::packet_warning_message pck{};
 	pck.size = sizeof(SC::packet_warning_message);
-	pck.type = SC::WARNING_MESSAGE;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::WARNING_MESSAGE);
 
 	int id = mPlayerList[target]->ID;
 	if (id < 0) return;
@@ -419,7 +417,7 @@ void GameWorld::SendInGameInfoPacket(int target, bool instSend)
 #endif
 	SC::packet_ingame_info pck{};
 	pck.size = sizeof(SC::packet_ingame_info);
-	pck.type = SC::INGAME_INFO;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::INGAME_INFO);
 	pck.player_idx = target;
 	pck.rank = mCurrRanks[target];
 	pck.lap_count = mPlayerList[target]->GetLapCount();
@@ -439,7 +437,7 @@ void GameWorld::SendGameEndPacket()
 #endif
 	SC::packet_game_end pck{};
 	pck.size = sizeof(SC::packet_game_end);
-	pck.type = SC::GAME_END;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::GAME_END);
 	
 	for (int i = 0; i < mPlayerList.size(); i++)
 	{
@@ -458,7 +456,7 @@ void GameWorld::SendItemCountPacket(int target, bool instSend)
 #endif
 	SC::packet_item_count pck{};
 	pck.size = sizeof(SC::packet_item_count);
-	pck.type = SC::ITEM_COUNT;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::ITEM_COUNT);
 	pck.player_idx = target;
 	pck.item_count = mPlayerList[target]->GetItemCount();
 
