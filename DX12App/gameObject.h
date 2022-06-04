@@ -301,43 +301,6 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
-class MissileObject : public GameObject
-{
-public:
-	MissileObject(const XMFLOAT3& position);
-	virtual ~MissileObject();
-
-	virtual void Update(float elapsedTime, float updateRate) override;
-
-	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
-	float GetDuration() { return mDuration; }
-
-	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
-
-public:
-	void SetActive(bool state);
-	bool IsActive() const { return mActive; }
-
-private:
-	float mDuration = 3.0f;
-	std::atomic_bool mActive;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-
-class StaticObject : public GameObject
-{
-public:
-	StaticObject() = default;
-	virtual ~StaticObject() = default;
-
-	virtual void Update(float elapsedTime, float updateRate) override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-
 class SOParticleObject : public GameObject
 {
 public:
@@ -356,6 +319,47 @@ public:
 
 private:
 	GameObject& mParent;
-	XMFLOAT3 mLocalOffset = {0.0f, 0.0f, 0.0f};
+	XMFLOAT3 mLocalOffset = { 0.0f, 0.0f, 0.0f };
 	int32_t mParticleEnable = false;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class MissileObject : public GameObject
+{
+public:
+	MissileObject(const XMFLOAT3& position);
+	virtual ~MissileObject();
+
+	virtual void Update(float elapsedTime, float updateRate) override;
+
+	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
+	float GetDuration() { return mDuration; }
+
+	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
+
+	void SetParticle(const std::shared_ptr<SOParticleObject>& particle) { mParticle = particle; }
+	std::shared_ptr<SOParticleObject> GetParticle() { return mParticle; }
+
+public:
+	void SetActive(bool state);
+	bool IsActive() const { return mActive; }
+
+private:
+	float mDuration = 3.0f;
+	std::atomic_bool mActive;
+	std::shared_ptr<SOParticleObject> mParticle;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class StaticObject : public GameObject
+{
+public:
+	StaticObject() = default;
+	virtual ~StaticObject() = default;
+
+	virtual void Update(float elapsedTime, float updateRate) override;
 };
