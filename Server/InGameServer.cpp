@@ -45,26 +45,6 @@ void InGameServer::PrepareToStartGame(int roomID, char mapIdx)
 			continue;
 		}
 
-		// test
-		/*if (i == 0)
-		{
-			msWorlds[roomID]->SetPlayerTransform(i, 
-				mGameConstants->StartPosition,
-				mGameConstants->StartRotation);
-		}
-		else if(i == 1)
-		{
-			btQuaternion rot = mGameConstants->StartRotation;
-			rot.setRotation(btVector3{ 0.0f,1.0f,0.0f }, (btScalar)Math::PI / 2);
-			msWorlds[roomID]->SetPlayerTransform(i, mGameConstants->StartPosition, rot);
-		}
-		else
-		{
-			msWorlds[roomID]->SetPlayerTransform(i, 
-				mGameConstants->StartPosition, 
-				mGameConstants->StartRotation);
-		}*/
-
 		btVector3 offset = mOffset;
 		offset.setX(offset.x() * i);
 		if (i % 2 == 1)
@@ -83,17 +63,22 @@ void InGameServer::PrepareToStartGame(int roomID, char mapIdx)
 	msWorlds[roomID]->SendGameStartSuccess();
 }
 
-bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
+bool InGameServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int id, int bytes)
 {
 	switch (type)
 	{
-	case CS::TRANSFER_TIME:
+	case CS::PCK_TYPE::MEASURE_RTT:
 	{
-		CS::packet_transfer_time* pck = reinterpret_cast<CS::packet_transfer_time*>(packet);
-		gClients[id]->SetLatency(pck->send_time);
+		std::cout << id << " Received measure rtt packet.\n";
+
+		/*
+		CS::packet_measure_rtt* pck = reinterpret_cast<CS::packet_measure_rtt*>(packet);
+		gClients[id]->SetLatency(pck->s_send_time);
+		gClients[id]->SendMeasureRTTPacket(pck->c_send_time);*/
+
 		break;
 	}
-	case CS::LOAD_DONE:
+	case CS::PCK_TYPE::LOAD_DONE:
 	{
 		CS::packet_load_done* pck = reinterpret_cast<CS::packet_load_done*>(packet);
 		if (pck->room_id < 0 || pck->room_id != gClients[id]->RoomID)
@@ -101,14 +86,12 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 			mLoginPtr->Disconnect(id);
 			break;
 		}
-		
-		gClients[id]->ReturnSendTimeBack(pck->send_time);
 
 		bool res = msWorlds[pck->room_id]->CheckIfAllLoaded(gClients[id]->PlayerIndex);
 		if (res) StartMatch(pck->room_id);
 		break;
 	}
-	case CS::KEY_INPUT:
+	case CS::PCK_TYPE::KEY_INPUT:
 	{
 		CS::packet_key_input* pck = reinterpret_cast<CS::packet_key_input*>(packet);
 		
@@ -119,7 +102,6 @@ bool InGameServer::ProcessPacket(std::byte* packet, char type, int id, int bytes
 			mLoginPtr->Disconnect(id);
 			break;
 		}
-		gClients[id]->ReturnSendTimeBack(pck->send_time);
 		msWorlds[roomID]->HandleKeyInput(idx, pck->key, pck->pressed);
 		break;
 	}
