@@ -69,7 +69,7 @@ bool InGameServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, in
 	{
 	case CS::PCK_TYPE::MEASURE_RTT:
 	{
-		std::cout << id << " Received measure rtt packet.\n";
+		//std::cout << id << " Received measure rtt packet.\n";
 
 		/*
 		CS::packet_measure_rtt* pck = reinterpret_cast<CS::packet_measure_rtt*>(packet);

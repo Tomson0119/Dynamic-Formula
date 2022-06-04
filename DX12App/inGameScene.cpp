@@ -494,7 +494,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
 			BuildCarObject(info.StartPosition, info.StartRotation, info.Color, isPlayer, cmdList, physics, i);
-			//BuildMissileObject(cmdList, info.StartPosition, i);
+			BuildMissileObject(cmdList, info.StartPosition, i);
 			playerCount += 1;
 		}
 		i++;
@@ -689,7 +689,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		auto& missile = mMissileObjects[pck->missile_idx];
 		if (missile)
 		{
-			//OutputDebugStringA("Missile launched packet.\n");
 			auto pos = Compressor::DecodePos(pck->position);
 			auto quat = Compressor::DecodeQuat(pck->quaternion);
 			missile->SetPosition(XMFLOAT3{ pos[0], pos[1], pos[2] });
@@ -705,7 +704,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		
 		if (missile && missile->IsActive())
 		{
-			OutputDebugStringA("Missile transform packet.\n");
 			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
 		}
 		break;
@@ -1320,7 +1318,6 @@ void InGameScene::UpdateMissileObject()
 		{
 		case UPDATE_FLAG::CREATE:
 		{
-			OutputDebugStringA("Missile created.\n");
 			flag = true;
 			missile->SetActive(true);
 			mPipelines[Layer::Default]->AppendObject(mMissileObjects[i]);
@@ -1329,7 +1326,6 @@ void InGameScene::UpdateMissileObject()
 		}
 		case UPDATE_FLAG::REMOVE:
 		{
-			OutputDebugStringA("Missile removed.\n");
 			flag = true;
 			missile->SetActive(false);
 			missile->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Default]);
