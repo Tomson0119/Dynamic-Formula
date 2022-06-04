@@ -32,11 +32,13 @@ public:
 	void SendLoadSequenceDone(int roomID);
 	void SendKeyInput(int roomID, int key, bool pressed);
 
-	void ReturnSendTimeBack(uint64_t sendTime);
+	void SendMeasureRTTPacket(uint64_t s_send_time);
 
 public:
 	SOCKET GetTCPSocket() const { return mTCPSocket.GetSocket(); }
 	SOCKET GetUDPSocket() const { return mUDPSocket.GetSocket(); }
+
+	short GetTCPSckPort() const { return mTCPSocket.GetPortNumber(); }
 	bool IsConnected() const { return mIsConnected; }
 
 private:
@@ -50,6 +52,7 @@ private:
 	WSAOVERLAPPEDEX mUDPRecvOverlapped;
 
 	EndPoint mServerEp;
+	EndPoint mSenderEp;
 
 	std::atomic_bool mIsConnected;
 };
