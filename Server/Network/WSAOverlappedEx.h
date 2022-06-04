@@ -46,7 +46,8 @@ struct WSAOVERLAPPEDEX
 			WSABuffer.buf = reinterpret_cast<char*>(NetBuffer.BufStartPtr());
 			WSABuffer.len = (ULONG)bytes;
 		}
-		else {
+		else 
+		{
 			WSABuffer.buf = reinterpret_cast<char*>(NetBuffer.BufWritePtr());
 			WSABuffer.len = (ULONG)NetBuffer.GetLeftBufLen();
 		}
