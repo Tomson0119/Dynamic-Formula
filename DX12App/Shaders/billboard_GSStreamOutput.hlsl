@@ -7,12 +7,13 @@ Texture2DArray gTexture : register(t0);
 
 struct VertexIn
 {
-    float3 PosL      : POSITION;
-    float2 Size      : SIZE;
-    float4 Color     : COLOR;
-    float3 Velocity  : VELOCITY;
-    float2 Age       : LIFETIME;
-    uint   Type      : TYPE;
+    float3 PosL         : POSITION;
+    float2 Size         : SIZE;
+    float4 Color        : COLOR;
+    float3 Velocity     : VELOCITY;
+    float2 Age          : LIFETIME;
+    float3 Acceleration : ACCELERATION;
+    uint   Type         : TYPE;
 };
 
 struct GeoOut
@@ -54,9 +55,11 @@ void GSStreamOutput(point VertexIn gin[1],
             
                 vertex.Velocity = particle.Velocity;
                 
-                vertex.Velocity.x *= randFloat[i];
+                vertex.Velocity.x += randFloat[i];
                 vertex.Velocity.y *= gRandFloat4.w;
                 vertex.Velocity.z *= gRandFloat4.w;
+                
+                vertex.Acceleration = particle.Acceleration;
                 
                 vertex.Type = PARTICLE_TYPE_FLARE;
                 vertex.Age.x = 0.0f;
@@ -79,8 +82,9 @@ void GSStreamOutput(point VertexIn gin[1],
     }
     else if (particle.Type == PARTICLE_TYPE_FLARE && particle.Age.x <= particle.Age.y)
     {
-        particle.Velocity.y = particle.Velocity.y + (-10.0f) * gElapsedTime;
-        particle.Velocity.z = particle.Velocity.z + (-5.0f) * gElapsedTime;
+        particle.Velocity.x = particle.Velocity.x + particle.Acceleration.x * gElapsedTime;
+        particle.Velocity.y = particle.Velocity.y + particle.Acceleration.y * gElapsedTime;
+        particle.Velocity.z = particle.Velocity.z + particle.Acceleration.z * gElapsedTime;
         particle.PosL += particle.Velocity * gElapsedTime;
         pointStream.Append(particle);
     }

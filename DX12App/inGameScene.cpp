@@ -465,9 +465,9 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
 #ifdef STANDALONE
-	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
-	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-	LoadLights(cmdList, L"Map\\Lights.tmap");
+	LoadWorldMap(cmdList, physics, "Map\\MapData_night.tmap");
+	LoadCheckPoint(cmdList, L"Map\\CheckPoint_night.tmap");
+	LoadLights(cmdList, L"Map\\Lights_night.tmap");
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
@@ -1008,7 +1008,7 @@ void InGameScene::BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 		{
 			auto obj = std::make_shared<SOParticleObject>(*mPlayer);
 
-			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), 0.02f, 100);
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, -10.0f, -5.0f), 0.02f, 100);
 			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 			obj->SetMesh(particleEmittor);
 			obj->SetLocalOffset(offset[i]);
@@ -1378,7 +1378,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	FILE* file = nullptr;
 	fopen_s(&file, path.c_str(), "r");
 
-	//btCompoundShape* compound = new btCompoundShape();
+	btCompoundShape* compound = new btCompoundShape();
 
 	char buf[250];
 	while (fgets(buf, 250, file))
@@ -1434,7 +1434,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			if (i->get()->GetMeshShape())
 			{
 				i->get()->GetMeshShape()->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
-				//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
 #endif
@@ -1473,7 +1473,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			{
 				if (i->get()->GetMeshShape())
 				{
-					//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+					compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 				}
 			}
 #endif
@@ -1494,7 +1494,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	btTransform btObjectTransform;
 	btObjectTransform.setIdentity();
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
-	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
 #endif
 	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
 
@@ -1612,7 +1612,42 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 
 			mLights.push_back(bundle);
 		}
-		else if (type == "P")
+		else if (type == "P_Tunnel")
+		{
+			XMFLOAT3 pos;
+			ss >> pos.x >> pos.y >> pos.z;
+
+			XMFLOAT3 direction;
+			ss >> direction.x >> direction.y >> direction.z;
+
+			LightBundle bundle;
+			LightInfo l;
+
+			l.SetInfo(
+				XMFLOAT3(1.0f, 0.5f, 0.0f),
+				pos,
+				XMFLOAT3{0.0f, 0.0f, 0.0f},
+				10.0f, 20.0f, 0.0f,
+				0.0f, POINT_LIGHT);;
+
+			bundle.light = l;
+
+			VolumetricInfo v;
+
+			v.Direction = XMFLOAT3{ 0.0f, -1.0f, 0.0f };
+			v.Position = pos;
+			v.Range = 30.0f;
+			v.VolumetricStrength = 0.2f;
+			v.outerCosine = cos(10.0f);
+			v.innerCosine = cos(9.0f);
+			v.Color = XMFLOAT3(1.0f, 0.5f, 0.0f);
+			v.Type = SPOT_LIGHT;
+
+			bundle.volumetric = v;
+
+			mLights.push_back(bundle);
+		}
+		else if (type == "P_Deco")
 		{
 			
 		}
