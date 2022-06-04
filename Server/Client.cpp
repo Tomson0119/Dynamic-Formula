@@ -15,7 +15,6 @@ Client::Client(int id, Socket* udpSck)
 	  mTCPSendOverlapped{ nullptr },
 	  mTCPRecvOverlapped{ OP::RECV },
 	  mUDPSendOverlapped{ nullptr },
-	  mUDPRecvOverlapped{ OP::RECV },
 	  mHostEp{}	  
 {
 	mTCPSocket.Init(SocketType::TCP);
@@ -49,7 +48,6 @@ void Client::AssignAcceptedID(int id, SOCKET sck, sockaddr_in* addr)
 	mTCPSocket.SetSocket(sck);
 	mIsConnected = true;
 	
-	addr->sin_port = htons(CLIENT_PORT + id); // test	
 	SetHostEp(EndPoint(*addr));
 }
 
@@ -88,27 +86,20 @@ void Client::SendMsg(bool udp)
 	}
 }
 
-void Client::RecvMsg(bool udp)
+void Client::RecvMsg()
 {	
-	if (udp && mUDPSocketPtr)
-	{
-		mUDPRecvOverlapped.NetBuffer.Clear();
-		mUDPRecvOverlapped.Reset(OP::RECV);
-		mUDPSocketPtr->RecvFrom(mUDPRecvOverlapped, mHostEp);
-	}
-	else
-	{
-		mTCPRecvOverlapped.Reset(OP::RECV);
-		mTCPSocket.Recv(mTCPRecvOverlapped);
-	}
+	mTCPRecvOverlapped.Reset(OP::RECV);
+	mTCPSocket.Recv(mTCPRecvOverlapped);
 }
 
 void Client::SetLatency(uint64_t sendTime)
 {
-	using namespace std::chrono;
-	auto duration = Clock::now().time_since_epoch();
-	auto now = duration_cast<milliseconds>(duration).count();
-	mLatency = (now - sendTime) / 2;
+	if (sendTime > 0)
+	{
+		auto now = Clock::now().time_since_epoch().count();
+		mLatency = ((now - sendTime) / 2) / 1'000'000;
+		std::cout << "Latency: " << mLatency << "\n";
+	}
 }
 
 bool Client::ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired)
@@ -123,7 +114,7 @@ void Client::SendLoginResult(LOGIN_STAT result, bool instSend)
 #endif
 	SC::packet_login_result pck{};
 	pck.size = sizeof(SC::packet_login_result);
-	pck.type = SC::LOGIN_RESULT;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::LOGIN_RESULT);
 	pck.result = (char)result;
 	// TODO: Shouldn't send port in real life enviroment.
 	pck.port = ntohs(mHostEp.mAddress.sin_port);
@@ -138,7 +129,7 @@ void Client::SendRegisterResult(REGI_STAT result, bool instSend)
 #endif
 	SC::packet_register_result pck{};
 	pck.size = sizeof(SC::packet_register_result);
-	pck.type = SC::REGISTER_RESULT;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::REGISTER_RESULT);
 	pck.result = (char)result;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if(instSend) SendMsg();
@@ -151,7 +142,7 @@ void Client::SendAccessRoomAccept(int roomID, bool instSend)
 #endif
 	SC::packet_access_room_accept pck{};
 	pck.size = sizeof(SC::packet_access_room_accept);
-	pck.type = SC::ACCESS_ROOM_ACCEPT;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::ACCESS_ROOM_ACCEPT);
 	pck.room_id = roomID;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if (instSend) SendMsg();
@@ -164,7 +155,7 @@ void Client::SendAccessRoomDeny(ROOM_STAT reason, bool instSend)
 #endif
 	SC::packet_access_room_deny pck{};
 	pck.size = sizeof(SC::packet_access_room_deny);
-	pck.type = SC::ACCESS_ROOM_DENY;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::ACCESS_ROOM_DENY);
 	pck.reason = (char)reason;
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	if(instSend) SendMsg();
@@ -177,21 +168,21 @@ void Client::SendForceLogout()
 #endif
 	SC::packet_force_logout pck{};
 	pck.size = sizeof(SC::packet_force_logout);
-	pck.type = SC::FORCE_LOGOUT;
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::FORCE_LOGOUT);
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
 	SendMsg();
 }
 
-void Client::ReturnSendTimeBack(uint64_t sendTime)
+void Client::SendMeasureRTTPacket(uint64_t send_time)
 {
-	SC::packet_transfer_time pck{};
-	pck.size = sizeof(SC::packet_transfer_time);
-	pck.type = SC::TRANSFER_TIME;
-	pck.c_send_time = sendTime;
+	SC::packet_measure_rtt pck{};
+	pck.size = sizeof(SC::packet_measure_rtt);
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::MEASURE_RTT);
 
-	auto duration = Clock::now().time_since_epoch();
-	pck.s_send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+	uint64_t now = Clock::now().time_since_epoch().count();
+	pck.s_send_time = now;
+	pck.c_send_time = send_time;
 
-	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
-	SendMsg();
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
+	SendMsg(true);
 }
