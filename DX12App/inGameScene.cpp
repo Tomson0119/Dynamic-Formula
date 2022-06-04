@@ -1043,11 +1043,11 @@ void InGameScene::BuildParticleObject(ID3D12GraphicsCommandList* cmdList)
 	{
 		if (info.Empty == false)
 		{
-			XMFLOAT3 offset = XMFLOAT3(0.0f, 0.0f, -1.0f);
+			XMFLOAT3 offset = XMFLOAT3(0.0f, 0.0f, -5.0f);
 
 			auto particle = std::make_shared<SOParticleObject>(*mMissileObjects[i]);
 
-			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(3.0f, 3.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 0.5f, 100);
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT2(3.0f, 3.0f), XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), 0.1f, 100);
 			if (mTextureList["MissileParticle"].empty())
 			{
 				particle->LoadTexture(mDevice.Get(), cmdList, L"Resources\\MissileTrail.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
