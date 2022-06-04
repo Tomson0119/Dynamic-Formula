@@ -2,6 +2,7 @@
 
 #include "LobbyServer.h"
 #include "DBHandler.h"
+#include "UDPReceiver.h"
 
 class Client;
 
@@ -25,7 +26,7 @@ public:
 
 	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes);
 	void ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes);
-	bool ProcessPacket(std::byte* packet, char type, int id, int bytes);
+	bool ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int id, int bytes);
 
 	static void SignalHandler(int signal);
 	static void NetworkThreadFunc(LoginServer& server);	
@@ -34,7 +35,7 @@ public:
 
 private:
 	Socket mListenSck;
-	std::unique_ptr<Socket> mUDPSck;
+	UDPReceiver mUDPReceiver;
 
 	static IOCP msIOCP;
 
