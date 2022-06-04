@@ -1043,7 +1043,7 @@ void InGameScene::BuildParticleObject(ID3D12GraphicsCommandList* cmdList)
 	{
 		if (info.Empty == false)
 		{
-			XMFLOAT3 offset = XMFLOAT3(0.0f, 0.0f, -5.0f);
+			XMFLOAT3 offset = XMFLOAT3(0.0f, 0.0f, -3.0f);
 
 			auto particle = std::make_shared<SOParticleObject>(*mMissileObjects[i]);
 
