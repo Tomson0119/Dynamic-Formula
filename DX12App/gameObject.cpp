@@ -316,6 +316,8 @@ void GameObject::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& 
 		}
 		idx += 1;
 	}
+
+	mInterpolator.Clear();
 }
 
 void GameObject::Update(float elapsedTime)

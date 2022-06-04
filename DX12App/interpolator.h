@@ -82,6 +82,17 @@ public:
 		}
 	}
 
+	void Clear()
+	{
+		mEntryQueueMut.lock();
+		std::queue<Entry> temp;
+		std::swap(mEntryQueue, temp);
+		mEntryQueueMut.unlock();
+
+		mProgress = 0.0f;
+		mPrevEntry = Entry{};
+	}
+
 private:
 	static float GetDurationSec(Clock::time_point& a, Clock::time_point& b)
 	{
