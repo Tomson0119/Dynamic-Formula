@@ -1437,7 +1437,9 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	FILE* file = nullptr;
 	fopen_s(&file, path.c_str(), "r");
 
+#ifdef STANDALONE	
 	btCompoundShape* compound = new btCompoundShape();
+#endif
 
 	char buf[250];
 	while (fgets(buf, 250, file))
