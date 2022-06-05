@@ -1,6 +1,28 @@
 #include "common.h"
 #include "UDPReceiver.h"
 
+constexpr bool operator==(const EndPoint& a, const EndPoint& b)
+{
+	return ((a.GetIPAddress() == b.GetIPAddress()) 
+		&& (a.GetPortNumber() == b.GetPortNumber()));
+}
+
+size_t EpHash::operator()(const EndPoint& ep) const
+{
+	size_t key = 0;
+	std::string ip = ep.GetIPAddress();
+	for (char c : ip)
+	{
+		key = ((key >> 5) + c);
+	}
+	key += ep.GetPortNumber();
+	key += (key >> 16);
+	key ^= (key << 11);
+	key += (key >> 6);
+	return key;
+}
+
+
 UDPReceiver::UDPReceiver()
 	: mSenderEp{ }
 {
@@ -16,7 +38,7 @@ void UDPReceiver::Bind(const EndPoint& ep)
 
 void UDPReceiver::AssignId(const EndPoint& ep, int id)
 {
-	//mHostIdMap.insert({ ep, id });
+	mHostIdMap.insert({ ep, id });
 }
 
 void UDPReceiver::RecvMsg()
@@ -24,4 +46,13 @@ void UDPReceiver::RecvMsg()
 	mUDPRecvOverlapped.NetBuffer.Clear();
 	mUDPRecvOverlapped.Reset(OP::RECV);
 	mUDPSocket->RecvFrom(mUDPRecvOverlapped, mSenderEp);
+}
+
+std::optional<int> UDPReceiver::GetLastReceivedId()
+{
+	if (mHostIdMap.find(mSenderEp) != mHostIdMap.end())
+	{
+		return mHostIdMap[mSenderEp];
+	}
+	return std::nullopt;
 }

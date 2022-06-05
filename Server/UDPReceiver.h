@@ -1,5 +1,10 @@
 #pragma once
-#include <map>
+#include <unordered_map>
+
+struct EpHash
+{
+	size_t operator()(const EndPoint& ep) const;
+};
 
 class UDPReceiver
 {
@@ -12,11 +17,13 @@ public:
 	void AssignId(const EndPoint& ep, int id);
 	void RecvMsg();
 
+	std::optional<int> GetLastReceivedId();
+
 public:
 	Socket* GetSocket() const { return mUDPSocket.get(); }
 
 private:
-	//std::map<EndPoint, int> mHostIdMap;
+	std::unordered_map<EndPoint, int, EpHash> mHostIdMap;
 
 	std::unique_ptr<Socket> mUDPSocket;
 	WSAOVERLAPPEDEX mUDPRecvOverlapped;
