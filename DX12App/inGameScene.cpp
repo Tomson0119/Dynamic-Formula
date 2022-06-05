@@ -668,8 +668,12 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	case SC::PCK_TYPE::MEASURE_RTT:
 	{
 		SC::packet_measure_rtt* pck = reinterpret_cast<SC::packet_measure_rtt*>(packet);
+		if (pck->c_send_time == 0)
+		{
+			mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
+			break;
+		}
 		mNetPtr->SetLatency(pck->c_send_time);
-		mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
 		break;
 	}
 	case SC::PCK_TYPE::PLAYER_TRANSFORM:
@@ -1374,7 +1378,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	FILE* file = nullptr;
 	fopen_s(&file, path.c_str(), "r");
 
-	btCompoundShape* compound = new btCompoundShape();
+	//btCompoundShape* compound = new btCompoundShape();
 
 	char buf[250];
 	while (fgets(buf, 250, file))

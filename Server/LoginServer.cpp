@@ -147,18 +147,12 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 		sockaddr_in* remote = reinterpret_cast<sockaddr_in*>(
 			over->NetBuffer.BufStartPtr() + sizeof(SOCKET) + sizeof(sockaddr_in) + 16);
 
-		// test
-		char ip[256];
-		inet_ntop(AF_INET, &remote->sin_addr, ip, 256);
-		std::cout << ip << " " << ntohs(remote->sin_port) <<"\n";
-		//
-
 		int i = GetAvailableID();
 		if (i == -1) 
 			std::cout << "Session's full\n";
-		else {
+		else
 			AcceptNewClient(i, clientSck, remote);
-		}
+
 		mListenSck.AsyncAccept(over);
 		break;
 	}
@@ -188,7 +182,7 @@ void LoginServer::Logout(int id)
 	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 
 #ifdef USE_DATABASE
-	int thread_id = ThreadIdMap::GetInstance().GetId(std::this_thread::get_id());
+	int thread_id = ThreadIdMap::GetInstance().GetLastReceivedId(std::this_thread::get_id());
 	mDBHandlers[thread_id].SaveUserInfo(id);
 #endif
 }
@@ -208,6 +202,8 @@ void LoginServer::AcceptNewClient(int id, SOCKET sck, sockaddr_in* remote)
 	std::cout << "[" << id << "] Accepted client.\n";
 #endif
 	gClients[id]->AssignAcceptedID(id, sck, remote);
+	mUDPReceiver.AssignId(gClients[id]->GetHostEp(), id);
+
 	msIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
 }
@@ -252,7 +248,7 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
 		
 	#ifdef USE_DATABASE
-		int thread_id = ThreadIdMap::GetInstance().GetId(std::this_thread::get_id());
+		int thread_id = ThreadIdMap::GetInstance().GetLastReceivedId(std::this_thread::get_id());
 		int	conn_id = mDBHandlers[thread_id].SearchIdAndPwd(pck->name, pck->pwd, id);
 	#else
 		int conn_id = (int)LOGIN_STAT::INVALID_IDPWD;
@@ -297,12 +293,23 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 		}
 
 	#ifdef USE_DATABASE
-		int thread_id = ThreadIdMap::GetInstance().GetId(std::this_thread::get_id());
+		int thread_id = ThreadIdMap::GetInstance().GetLastReceivedId(std::this_thread::get_id());
 		if (mDBHandlers[thread_id].RegisterIdAndPwd(pck->name, pck->pwd))
 			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
 		else
 			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
 	#endif
+		break;
+	}
+	case CS::PCK_TYPE::MEASURE_RTT:
+	{
+		CS::packet_measure_rtt* pck = reinterpret_cast<CS::packet_measure_rtt*>(packet);
+		auto id = mUDPReceiver.GetLastReceivedId();
+		if (id.has_value())
+		{
+			gClients[id.value()]->SetLatency(pck->s_send_time);
+			gClients[id.value()]->SendMeasureRTTPacket(pck->c_send_time);
+		}
 		break;
 	}
 	default:
