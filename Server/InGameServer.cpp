@@ -67,17 +67,6 @@ bool InGameServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, in
 {
 	switch (type)
 	{
-	case CS::PCK_TYPE::MEASURE_RTT:
-	{
-		//std::cout << id << " Received measure rtt packet.\n";
-
-		/*
-		CS::packet_measure_rtt* pck = reinterpret_cast<CS::packet_measure_rtt*>(packet);
-		gClients[id]->SetLatency(pck->s_send_time);
-		gClients[id]->SendMeasureRTTPacket(pck->c_send_time);*/
-
-		break;
-	}
 	case CS::PCK_TYPE::LOAD_DONE:
 	{
 		CS::packet_load_done* pck = reinterpret_cast<CS::packet_load_done*>(packet);

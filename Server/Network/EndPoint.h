@@ -13,7 +13,6 @@ public:
 
 	static std::string GetIPAddress(const sockaddr_in& sckaddr);
 	static u_short GetPortNumber(const sockaddr_in& sckaddr);
-
 	static EndPoint Any(u_short port);
 
 public:
