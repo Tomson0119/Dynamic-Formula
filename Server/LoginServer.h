@@ -37,6 +37,8 @@ private:
 	Socket mListenSck;
 	UDPReceiver mUDPReceiver;
 
+	std::map<std::thread::id, int> mThreadIdMap;
+
 	static IOCP msIOCP;
 
 	std::array<DBHandler, MAX_THREAD_COUNT> mDBHandlers;

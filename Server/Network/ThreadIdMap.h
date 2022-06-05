@@ -25,7 +25,7 @@ public:
 		mIdMap.insert({ threadId, idx });
 	}
 
-	int GetId(const std::thread::id& threadId)
+	int GetLastReceivedId(const std::thread::id& threadId)
 	{
 		assert(mIdMap.find(threadId) != mIdMap.end());
 		return mIdMap[threadId];

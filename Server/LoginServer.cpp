@@ -2,7 +2,6 @@
 #include "LoginServer.h"
 #include "InGameServer.h"
 #include "Client.h"
-#include "ThreadIdMap.h"
 #include "MemoryPool.h"
 
 std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
@@ -61,11 +60,11 @@ void LoginServer::Run()
 	for (int i = 0; i < mThreads.size(); i++)
 	{
 		mThreads[i] = std::thread{ NetworkThreadFunc, std::ref(*this) };
-		ThreadIdMap::GetInstance().AssignId(mThreads[i].get_id(), i);	
+		mThreadIdMap.insert({ mThreads[i].get_id(), i });
 	}
 
 	// Assign main thread id as 0
-	ThreadIdMap::GetInstance().AssignId(std::this_thread::get_id(), 0);
+	mThreadIdMap.insert({ std::this_thread::get_id(), 0 });
 
 	std::cout << "Listening to clients...\n";
 	for (std::thread& thrd : mThreads) thrd.join();
@@ -248,7 +247,7 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
 		
 	#ifdef USE_DATABASE
-		int thread_id = ThreadIdMap::GetInstance().GetLastReceivedId(std::this_thread::get_id());
+		int thread_id = mThreadIdMap[std::this_thread::get_id()];
 		int	conn_id = mDBHandlers[thread_id].SearchIdAndPwd(pck->name, pck->pwd, id);
 	#else
 		int conn_id = (int)LOGIN_STAT::INVALID_IDPWD;
@@ -293,7 +292,7 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 		}
 
 	#ifdef USE_DATABASE
-		int thread_id = ThreadIdMap::GetInstance().GetLastReceivedId(std::this_thread::get_id());
+		int thread_id = mThreadIdMap[std::this_thread::get_id()];
 		if (mDBHandlers[thread_id].RegisterIdAndPwd(pck->name, pck->pwd))
 			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
 		else
