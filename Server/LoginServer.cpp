@@ -307,7 +307,8 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 		if (id.has_value())
 		{
 			gClients[id.value()]->SetLatency(pck->s_send_time);
-			gClients[id.value()]->SendMeasureRTTPacket(pck->c_send_time);
+			auto latency = gClients[id.value()]->GetLatency();
+			gClients[id.value()]->SendMeasureRTTPacket(latency);
 		}
 		break;
 	}

@@ -233,10 +233,6 @@ void NetClient::SendMeasureRTTPacket(uint64_t s_send_time)
 	CS::packet_measure_rtt pck{};
 	pck.size = sizeof(CS::packet_measure_rtt);
 	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::MEASURE_RTT);
-
-	uint64_t now = Clock::now().time_since_epoch().count();
-	pck.c_send_time = now;
 	pck.s_send_time = s_send_time;
-
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }

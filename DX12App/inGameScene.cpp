@@ -659,7 +659,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	}
 	case SC::PCK_TYPE::REMOVE_MISSILE:
 	{
-		//OutputDebugStringA("Missile remove packet.\n");
 		SC::packet_remove_missile* pck = reinterpret_cast<SC::packet_remove_missile*>(packet);
 		const auto& missile = mMissileObjects[pck->missile_idx];
 		if (missile) missile->SetUpdateFlag(UPDATE_FLAG::REMOVE);
@@ -668,12 +667,12 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	case SC::PCK_TYPE::MEASURE_RTT:
 	{
 		SC::packet_measure_rtt* pck = reinterpret_cast<SC::packet_measure_rtt*>(packet);
-		if (pck->c_send_time == 0)
+		if (pck->latency == 0)
 		{
 			mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
 			break;
 		}
-		mNetPtr->SetLatency(pck->c_send_time);
+		mNetPtr->SetLatency(pck->latency);
 		break;
 	}
 	case SC::PCK_TYPE::PLAYER_TRANSFORM:

@@ -44,7 +44,7 @@ public:
 	void SendAccessRoomDeny(ROOM_STAT reason, bool instSend=true);
 	void SendForceLogout();
 
-	void SendMeasureRTTPacket(uint64_t send_time);
+	void SendMeasureRTTPacket(uint64_t latency);
 	
 public:
 	int ID;

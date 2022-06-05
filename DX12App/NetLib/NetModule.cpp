@@ -224,17 +224,6 @@ NetModule::RoomList NetModule::GetRoomList()
 	return ret;
 }
 
-void NetModule::SetLatency(uint64_t sendTime)
-{
-	if (sendTime > 0)
-	{
-		auto now = Clock::now().time_since_epoch().count();
-		mLatency = ((now - sendTime) / 2) / 1'000'000;
-
-		Print("Latency", mLatency);
-	}
-}
-
 void NetModule::Init()
 {
 	mIOCP.RegisterDevice(mNetClient->GetTCPSocket(), 0);

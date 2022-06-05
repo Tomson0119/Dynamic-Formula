@@ -130,7 +130,6 @@ namespace CS
 	struct packet_measure_rtt : packet_header
 	{
 		uint64_t s_send_time;
-		uint64_t c_send_time;
 	};
 }
 
@@ -334,7 +333,7 @@ namespace SC
 	struct packet_measure_rtt : packet_header
 	{
 		uint64_t s_send_time;
-		uint64_t c_send_time;
+		uint64_t latency;
 	};
 }
 #pragma pack(pop)

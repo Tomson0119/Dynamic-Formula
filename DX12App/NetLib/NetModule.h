@@ -64,7 +64,7 @@ public:
 	PlayerList GetPlayersInfo();
 	RoomList GetRoomList();
 
-	void SetLatency(uint64_t sendTime);
+	void SetLatency(uint64_t latency) { mLatency = latency; }
 	float GetLatency() const { return (float)mLatency / 1000.0f; }
 
 	void SetServerIP(const std::string& ip) { mServerIPAddress = ip; }

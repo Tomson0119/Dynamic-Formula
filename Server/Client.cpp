@@ -98,7 +98,6 @@ void Client::SetLatency(uint64_t sendTime)
 	{
 		auto now = Clock::now().time_since_epoch().count();
 		mLatency = ((now - sendTime) / 2) / 1'000'000;
-		std::cout << "Latency: " << mLatency << "\n";
 	}
 }
 
@@ -173,7 +172,7 @@ void Client::SendForceLogout()
 	SendMsg();
 }
 
-void Client::SendMeasureRTTPacket(uint64_t send_time)
+void Client::SendMeasureRTTPacket(uint64_t latency)
 {
 	SC::packet_measure_rtt pck{};
 	pck.size = sizeof(SC::packet_measure_rtt);
@@ -181,7 +180,7 @@ void Client::SendMeasureRTTPacket(uint64_t send_time)
 
 	uint64_t now = Clock::now().time_since_epoch().count();
 	pck.s_send_time = now;
-	pck.c_send_time = send_time;
+	pck.latency = latency;
 
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 	SendMsg(true);
