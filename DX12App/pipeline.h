@@ -21,7 +21,8 @@ enum class Layer : int
 	Color,
 	CheckPoint,
 	Transparent,
-	DriftParticle
+	DriftParticle,
+	MissileParticle
 };
 
 enum class DrawType : int
