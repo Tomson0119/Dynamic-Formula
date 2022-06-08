@@ -38,6 +38,13 @@ void RoomUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12Command
     SetMyReadyOff();
 }
 
+void RoomUI::SetLodingScene()
+{
+    //Reset();
+    IsLodingScene = true;
+}
+
+
 void RoomUI::SetVectorSize(UINT nFrame)
 {
     UI::SetVectorSize(nFrame);
@@ -294,6 +301,18 @@ void RoomUI::Update(float GTime)
         SetIndexReady(mNetRef.GetPlayerIndex());
     else
         SetIndexNotReady(mNetRef.GetPlayerIndex());
+
+    if(IsLodingScene)
+    {
+        for (int i = 1; i < GetTextCnt(); ++i)
+            GetTextBlock()[i].strText.clear();
+        SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+        BuildSolidBrush(GetColors());
+        GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.7f, GetFrameHeight() * 0.85f, GetFrameWidth() * 0.975f, GetFrameHeight() * 0.99f);
+        GetTextBlock()[0].strText.assign("Loding...");
+    }
+
+
 }
 
 void RoomUI::Draw(UINT nFrame)
@@ -508,10 +527,18 @@ void RoomUI::Draw(UINT nFrame)
     bool IsOutlined[13] = { false,false,false,false,false,false,false,false,false,false,false,false, false };
 
     BeginDraw(nFrame); 
-    DrawBmp(LTRB, 0, 1, BitmapOpacities);
-    RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
-    DrawBmp(LTRB, 1, 8, BitmapOpacities);
-    TextDraw(GetTextBlock());
+    if (!IsLodingScene) 
+    {
+        DrawBmp(LTRB, 0, 1, BitmapOpacities);
+        RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
+        DrawBmp(LTRB, 1, 8, BitmapOpacities);
+        TextDraw(GetTextBlock());
+    }
+    else
+    {
+        //DrawBmp(LTRB, 0, 1, BitmapOpacities);
+        TextDraw(GetTextBlock());
+    }
     EndDraw(nFrame);
 }
 

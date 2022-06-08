@@ -39,6 +39,7 @@ public:
 	void CreateFontFormat();
 	void SetStateFail(int result);
 	void SetStateNotFail();
+	void SetLodingScene();
 	//For Packet
 	// BackgroundCarVisible, BackgoundCarInvisible
 	void SetIndexCar(int index) { BitmapOpacities[index + 1] = 1.0f; }
@@ -66,6 +67,7 @@ private:
 	float BitmapOpacities[9] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 	std::atomic_bool mIsReady = false;
 	NetModule& mNetRef;
+	std::atomic_bool IsLodingScene = false;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };
 

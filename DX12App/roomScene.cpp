@@ -3,7 +3,7 @@
 #include "NetLib/NetModule.h"
 
 RoomScene::RoomScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::ROOM, (XMFLOAT4)Colors::White, netPtr }
+	: Scene{ hwnd, SCENE_STAT::ROOM, (XMFLOAT4)Colors::Black, netPtr }
 {
 	OutputDebugStringW(L"Room Scene Entered.\n");
 }
@@ -132,6 +132,12 @@ bool RoomScene::ProcessPacket(std::byte* packet, char type, int bytes)
 
 		SC::packet_game_start_success* pck = reinterpret_cast<SC::packet_game_start_success*>(packet);		
 		mNetPtr->InitPlayerTransform(pck);
+
+
+		//Scene Delete and TextOut
+		mpUI->SetLodingScene();
+
+
 		SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		//mpUI->SetMyReadyOff();
 		break;
