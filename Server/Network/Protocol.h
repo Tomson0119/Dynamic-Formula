@@ -43,7 +43,7 @@ enum class ROOM_STAT : char
 struct packet_header 
 {
 	uint16_t size;
-	char type;
+	uint8_t type;
 };
 
 struct vec3
@@ -63,17 +63,20 @@ struct quat3
 
 namespace CS
 {
-	const char LOGIN		= 1;
-	const char REGISTER		= 2;
-	const char INQUIRE_ROOM = 3;
-	const char OPEN_ROOM	= 4;
-	const char ENTER_ROOM	= 5;
-	const char REVERT_SCENE = 6;
-	const char SWITCH_MAP   = 7;
-	const char PRESS_READY  = 8;
-	const char LOAD_DONE	= 9;
-	const char KEY_INPUT	= 10;
-	const char TRANSFER_TIME = 11;
+	enum class PCK_TYPE : uint8_t
+	{
+		LOGIN,
+		REGISTER,
+		INQUIRE_ROOM,
+		OPEN_ROOM,
+		ENTER_ROOM,
+		REVERT_SCENE,
+		SWITCH_MAP,
+		PRESS_READY,
+		LOAD_DONE,
+		KEY_INPUT,
+		MEASURE_RTT
+	};
 
 	struct packet_login : packet_header
 	{
@@ -97,7 +100,6 @@ namespace CS
 	struct packet_enter_room : packet_header
 	{
 		int room_id;
-		//uint64_t send_time;
 	};	
 
 	struct packet_revert_scene : packet_header { };
@@ -116,7 +118,6 @@ namespace CS
 	struct packet_load_done : packet_header
 	{
 		int room_id;
-		uint64_t send_time;
 	};
 
 	struct packet_key_input : packet_header
@@ -124,12 +125,11 @@ namespace CS
 		int room_id;
 		uint8_t key;
 		bool pressed;
-		uint64_t send_time;
 	};
 
-	struct packet_transfer_time : packet_header
+	struct packet_measure_rtt : packet_header
 	{
-		uint64_t send_time;
+		uint64_t s_send_time;
 	};
 }
 
@@ -152,32 +152,35 @@ namespace SC
 		bool room_opened : 1;
 	};
 
-	const char FORCE_LOGOUT		  = 0;
-	const char LOGIN_RESULT		  = 1;
-	const char REGISTER_RESULT	  = 2;
-	const char ACCESS_ROOM_ACCEPT = 3;
-	const char ACCESS_ROOM_DENY   = 4;
-	const char ROOM_INSIDE_INFO   = 5;
-	const char ROOM_OUTSIDE_INFO  = 6;
-	const char UPDATE_PLAYER_INFO = 7;
-	const char UPDATE_MAP_INFO    = 8;
-	const char REMOVE_PLAYER	  = 9;
-	const char GAME_START_FAIL	  = 10;
-	const char GAME_START_SUCCESS = 11;
-	const char READY_SIGNAL		  = 12;
-	const char START_SIGNAL		  = 13;
-	const char TRANSFER_TIME	  = 14;
-	const char PLAYER_TRANSFORM	  = 15;
-	const char MISSILE_LAUNCHED	  = 16;
-	const char MISSILE_TRANSFORM  = 17;
-	const char UI_INFO			  = 18;
-	const char REMOVE_MISSILE	  = 19;
-	const char INVINCIBLE_ON	  = 20;
-	const char SPAWN_TRANSFORM	  = 21;
-	const char WARNING_MESSAGE	  = 22;
-	const char INGAME_INFO		  = 23;
-	const char GAME_END			  = 24;
-	const char ITEM_COUNT		  = 25;
+	enum class PCK_TYPE : uint8_t
+	{
+		FORCE_LOGOUT,
+		LOGIN_RESULT,
+		REGISTER_RESULT,
+		ACCESS_ROOM_ACCEPT,
+		ACCESS_ROOM_DENY,
+		ROOM_INSIDE_INFO,
+		ROOM_OUTSIDE_INFO,
+		UPDATE_PLAYER_INFO,
+		UPDATE_MAP_INFO,
+		REMOVE_PLAYER,
+		GAME_START_FAIL,
+		GAME_START_SUCCESS,
+		READY_SIGNAL,
+		START_SIGNAL,
+		PLAYER_TRANSFORM ,
+		MISSILE_LAUNCHED,
+		MISSILE_TRANSFORM,
+		UI_INFO,
+		REMOVE_MISSILE,
+		INVINCIBLE_ON,
+		SPAWN_TRANSFORM,
+		WARNING_MESSAGE,
+		INGAME_INFO,
+		GAME_END,
+		ITEM_COUNT,
+		MEASURE_RTT
+	};
 
 	struct packet_force_logout : packet_header { };
 
@@ -254,12 +257,6 @@ namespace SC
 		int delay_time_msec;
 	};
 
-	struct packet_transfer_time : packet_header
-	{
-		uint64_t c_send_time;
-		uint64_t s_send_time;
-	};
-
 	struct packet_player_transform : packet_header
 	{
 		uint8_t player_idx : 3;
@@ -331,6 +328,12 @@ namespace SC
 	{
 		uint8_t player_idx : 3;
 		uint8_t item_count : 2;
+	};
+
+	struct packet_measure_rtt : packet_header
+	{
+		uint64_t s_send_time;
+		uint64_t latency;
 	};
 }
 #pragma pack(pop)

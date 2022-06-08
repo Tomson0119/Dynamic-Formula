@@ -11,7 +11,7 @@
 NetModule::NetModule()
 	: mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
 	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 },
-	mLatency{ 0 }, mUpdateRate{ 0 }, mIsUpdatedRoomList{ 0 }
+	  mLatency{ 0 }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
 		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
@@ -195,7 +195,7 @@ void NetModule::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes)
 	while (over->NetBuffer.Readable())
 	{
 		std::byte* packet = over->NetBuffer.BufReadPtr();
-		char type = GetPacketType(packet);
+		SC::PCK_TYPE type = static_cast<SC::PCK_TYPE>(GetPacketType(packet));
 
 		if (packet == nullptr) {
 			over->NetBuffer.Clear();
@@ -224,26 +224,12 @@ NetModule::RoomList NetModule::GetRoomList()
 	return ret;
 }
 
-void NetModule::SetLatency(uint64_t sendTime)
-{
-	auto duration = Clock::now().time_since_epoch();
-	auto now = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-	mLatency = (now - sendTime) / 2;
-}
-
-void NetModule::SetUpdateRate()
-{
-	auto now = Clock::now();
-	mUpdateRate = std::chrono::duration_cast<std::chrono::milliseconds>(now - mTimeStamp).count();
-	mTimeStamp = now;
-}
-
 void NetModule::Init()
 {
 	mIOCP.RegisterDevice(mNetClient->GetTCPSocket(), 0);
 	mNetClient->RecvMsg(false);
 
-	//mNetClient->BindUDPSocket(CLIENT_PORT);
+	mNetClient->BindUDPSocket(mNetClient->GetTCPSckPort());
 	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
 	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };

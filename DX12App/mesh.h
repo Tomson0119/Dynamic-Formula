@@ -221,6 +221,7 @@ public:
 		const XMFLOAT4& color,
 		const XMFLOAT2& size,
 		const XMFLOAT3& velocity,
+		const XMFLOAT3& Acceleration,
 		float lifeTime,
 		int maxParticle);
 

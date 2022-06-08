@@ -20,7 +20,7 @@ NetClient::~NetClient()
 	Disconnect();
 }
 
-bool NetClient::Connect(const char* ip, short port)
+bool NetClient::Connect(const char* ip, u_short port)
 {
 	mServerEp = EndPoint(ip, port);
 	mIsConnected = mTCPSocket.Connect(mServerEp);
@@ -48,9 +48,10 @@ void NetClient::Disconnect()
 	}
 }
 
-void NetClient::BindUDPSocket(short port)
+void NetClient::BindUDPSocket(u_short port)
 {
-	mUDPSocket.Bind(EndPoint::Any(port));
+	auto ep = EndPoint::Any(port);
+	mUDPSocket.Bind(ep);
 	RecvMsg(true);
 }
 
@@ -100,7 +101,7 @@ void NetClient::RecvMsg(bool udp)
 	{
 		mUDPRecvOverlapped.NetBuffer.Clear();
 		mUDPRecvOverlapped.Reset(OP::RECV);
-		mUDPSocket.RecvFrom(mUDPRecvOverlapped, mServerEp);
+		mUDPSocket.RecvFrom(mUDPRecvOverlapped, mSenderEp);
 	}
 	else
 	{
@@ -116,7 +117,7 @@ void NetClient::RequestLogin(const std::string& name, const std::string& pwd)
 #endif
 	CS::packet_login pck{};
 	pck.size = sizeof(CS::packet_login);
-	pck.type = CS::LOGIN;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::LOGIN);
 	strncpy_s(pck.name, name.c_str(), MAX_NAME_SIZE - 1);
 	strncpy_s(pck.pwd, pwd.c_str(), MAX_PWD_SIZE - 1);
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
@@ -129,7 +130,7 @@ void NetClient::RequestRegister(const std::string& name, const std::string& pwd)
 #endif
 	CS::packet_register pck{};
 	pck.size = sizeof(CS::packet_register);
-	pck.type = CS::REGISTER;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::REGISTER);
 	strncpy_s(pck.name, name.c_str(), MAX_NAME_SIZE - 1);
 	strncpy_s(pck.pwd, pwd.c_str(), MAX_PWD_SIZE - 1);
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
@@ -142,7 +143,7 @@ void NetClient::RequestNewRoom()
 #endif
 	CS::packet_open_room pck{};
 	pck.size = sizeof(CS::packet_open_room);
-	pck.type = CS::OPEN_ROOM;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::OPEN_ROOM);
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -154,7 +155,7 @@ void NetClient::RequestEnterRoom(int roomID)
 #endif
 	CS::packet_enter_room pck{};
 	pck.size = sizeof(CS::packet_enter_room);
-	pck.type = CS::ENTER_ROOM;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::ENTER_ROOM);
 	pck.room_id = roomID;
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
@@ -166,7 +167,7 @@ void NetClient::InquireRoomList(int pageNum)
 #endif
 	CS::packet_inquire_room pck{};
 	pck.size = sizeof(CS::packet_inquire_room);
-	pck.type = CS::INQUIRE_ROOM;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::INQUIRE_ROOM);
 	pck.page_num = pageNum;
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
@@ -178,7 +179,7 @@ void NetClient::RevertScene()
 #endif
 	CS::packet_revert_scene pck{};
 	pck.size = sizeof(CS::packet_revert_scene);
-	pck.type = CS::REVERT_SCENE;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::REVERT_SCENE);
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -189,7 +190,7 @@ void NetClient::SwitchMap(int roomID)
 #endif
 	CS::packet_switch_map pck{};
 	pck.size = sizeof(CS::packet_switch_map);
-	pck.type = CS::SWITCH_MAP;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::SWITCH_MAP);
 	pck.room_id = roomID;
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
@@ -198,7 +199,7 @@ void NetClient::ToggleReady(int roomID)
 {
 	CS::packet_press_ready pck{};
 	pck.size = sizeof(CS::packet_press_ready);
-	pck.type = CS::PRESS_READY;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::PRESS_READY);
 	pck.room_id = roomID;
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
@@ -211,12 +212,8 @@ void NetClient::SendLoadSequenceDone(int roomID)
 
 	CS::packet_load_done pck{};
 	pck.size = sizeof(CS::packet_load_done);
-	pck.type = CS::LOAD_DONE;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::LOAD_DONE);
 	pck.room_id = roomID;
-
-	auto duration = Clock::now().time_since_epoch();
-	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
@@ -224,22 +221,18 @@ void NetClient::SendKeyInput(int roomID, int key, bool pressed)
 {
 	CS::packet_key_input pck{};
 	pck.size = sizeof(CS::packet_key_input);
-	pck.type = CS::KEY_INPUT;
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::KEY_INPUT);
 	pck.key = (uint8_t)key;
 	pck.pressed = pressed;
 	pck.room_id = roomID;
-
-	auto duration = Clock::now().time_since_epoch();
-	pck.send_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-	
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
 }
 
-void NetClient::ReturnSendTimeBack(uint64_t sendTime)
+void NetClient::SendMeasureRTTPacket(uint64_t s_send_time)
 {
-	CS::packet_transfer_time pck{};
-	pck.size = sizeof(CS::packet_transfer_time);
-	pck.type = CS::TRANSFER_TIME;
-	pck.send_time = sendTime;
-	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size);
+	CS::packet_measure_rtt pck{};
+	pck.size = sizeof(CS::packet_measure_rtt);
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::MEASURE_RTT);
+	pck.s_send_time = s_send_time;
+	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }

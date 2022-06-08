@@ -7,12 +7,13 @@ Texture2DArray gTexture : register(t0);
 
 struct VertexIn
 {
-    float3 PosL      : POSITION;
-    float2 Size      : SIZE;
-    float4 Color     : COLOR;
-    float3 Velocity  : VELOCITY;
-    float2 Age       : LIFETIME;
-    uint   Type      : TYPE;
+    float3 PosL : POSITION;
+    float2 Size : SIZE;
+    float4 Color : COLOR;
+    float3 Velocity : VELOCITY;
+    float2 Age : LIFETIME;
+    float3 Acceleration : ACCELERATION;
+    uint Type : TYPE;
 };
 
 struct GeoOut

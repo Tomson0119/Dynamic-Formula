@@ -465,9 +465,9 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	//mMeshList["Missile"].push_back(std::make_shared<BoxMesh>(mDevice.Get(), cmdList, 2.0f, 2.0f, 2.0f));
 
 #ifdef STANDALONE
-	LoadWorldMap(cmdList, physics, "Map\\MapData.tmap");
-	LoadCheckPoint(cmdList, L"Map\\CheckPoint.tmap");
-	LoadLights(cmdList, L"Map\\Lights.tmap");
+	LoadWorldMap(cmdList, physics, "Map\\MapData_night.tmap");
+	LoadCheckPoint(cmdList, L"Map\\CheckPoint_night.tmap");
+	LoadLights(cmdList, L"Map\\Lights_night.tmap");
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
@@ -494,7 +494,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		{
 			bool isPlayer = (i == mNetPtr->GetPlayerIndex()) ? true : false;
 			BuildCarObject(info.StartPosition, info.StartRotation, info.Color, isPlayer, cmdList, physics, i);
-			//BuildMissileObject(cmdList, info.StartPosition, i);
+			BuildMissileObject(cmdList, info.StartPosition, i);
 			playerCount += 1;
 		}
 		i++;
@@ -630,17 +630,17 @@ void InGameScene::PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed)
 	mPlayer->SetCubemapSrv(cmdList, 7);
 }
 
-bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
+bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes)
 {
 	switch (type)
 	{
-	case SC::READY_SIGNAL:
+	case SC::PCK_TYPE::READY_SIGNAL:
 	{
 		SC::packet_ready_signal* pck = reinterpret_cast<SC::packet_ready_signal*>(packet);
 		mpUI->ShowStartAnim();
 		break;
 	}
-	case SC::START_SIGNAL:
+	case SC::PCK_TYPE::START_SIGNAL:
 	{
 		SC::packet_start_signal* pck = reinterpret_cast<SC::packet_start_signal*>(packet);
 		mGameStarted = true;
@@ -648,7 +648,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mpUI->SetRunningTime((float)pck->running_time_sec);
 		break;
 	}
-	case SC::REMOVE_PLAYER:
+	case SC::PCK_TYPE::REMOVE_PLAYER:
 	{
 		SC::packet_remove_player* pck = reinterpret_cast<SC::packet_remove_player*>(packet);
 		mNetPtr->RemovePlayer(pck);
@@ -657,40 +657,41 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		if (player)	player->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 		break;
 	}
-	case SC::REMOVE_MISSILE:
+	case SC::PCK_TYPE::REMOVE_MISSILE:
 	{
-		//OutputDebugStringA("Missile remove packet.\n");
 		SC::packet_remove_missile* pck = reinterpret_cast<SC::packet_remove_missile*>(packet);
 		const auto& missile = mMissileObjects[pck->missile_idx];
 		if (missile) missile->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 		break;
 	}
-	case SC::TRANSFER_TIME:
+	case SC::PCK_TYPE::MEASURE_RTT:
 	{
-		SC::packet_transfer_time* pck = reinterpret_cast<SC::packet_transfer_time*>(packet);
-		mNetPtr->SetLatency(pck->c_send_time);
-		mNetPtr->Client()->ReturnSendTimeBack(pck->s_send_time);
+		SC::packet_measure_rtt* pck = reinterpret_cast<SC::packet_measure_rtt*>(packet);
+		if (pck->latency == 0)
+		{
+			mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
+			break;
+		}
+		mNetPtr->SetLatency(pck->latency);
 		break;
 	}
-	case SC::PLAYER_TRANSFORM:
+	case SC::PCK_TYPE::PLAYER_TRANSFORM:
 	{
 		SC::packet_player_transform* pck = reinterpret_cast<SC::packet_player_transform*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
 		
 		if (player)
 		{
-			if (player.get() == mPlayer) mNetPtr->SetUpdateRate();
 			player->SetCorrectionTransform(pck, 0); // test
 		}
 		break;
 	}
-	case SC::MISSILE_LAUNCHED:
+	case SC::PCK_TYPE::MISSILE_LAUNCHED:
 	{
 		SC::packet_missile_launched* pck = reinterpret_cast<SC::packet_missile_launched*>(packet);
 		auto& missile = mMissileObjects[pck->missile_idx];
 		if (missile)
 		{
-			//OutputDebugStringA("Missile launched packet.\n");
 			auto pos = Compressor::DecodePos(pck->position);
 			auto quat = Compressor::DecodeQuat(pck->quaternion);
 			missile->SetPosition(XMFLOAT3{ pos[0], pos[1], pos[2] });
@@ -699,19 +700,18 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::MISSILE_TRANSFORM:
+	case SC::PCK_TYPE::MISSILE_TRANSFORM:
 	{
 		SC::packet_missile_transform* pck = reinterpret_cast<SC::packet_missile_transform*>(packet);
 		const auto& missile = mMissileObjects[pck->missile_idx];
 		
 		if (missile && missile->IsActive())
 		{
-			OutputDebugStringA("Missile transform packet.\n");
 			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
 		}
 		break;
 	}
-	case SC::UI_INFO:
+	case SC::PCK_TYPE::UI_INFO:
 	{
 		SC::packet_ui_info* pck = reinterpret_cast<SC::packet_ui_info*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
@@ -722,7 +722,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::INVINCIBLE_ON:
+	case SC::PCK_TYPE::INVINCIBLE_ON:
 	{
 		SC::packet_invincible_on* pck = reinterpret_cast<SC::packet_invincible_on*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
@@ -733,7 +733,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::ITEM_COUNT:
+	case SC::PCK_TYPE::ITEM_COUNT:
 	{
 		SC::packet_item_count* pck = reinterpret_cast<SC::packet_item_count*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
@@ -744,21 +744,21 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::SPAWN_TRANSFORM:
+	case SC::PCK_TYPE::SPAWN_TRANSFORM:
 	{
 		SC::packet_spawn_transform* pck = reinterpret_cast<SC::packet_spawn_transform*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
 		if (player) player->SetSpawnTransform(pck);
 		break;
 	}
-	case SC::WARNING_MESSAGE:
+	case SC::PCK_TYPE::WARNING_MESSAGE:
 	{
 		SC::packet_warning_message* pck = reinterpret_cast<SC::packet_warning_message*>(packet);
 		OutputDebugStringA("Reverse drive warning!\n");
 		mpUI->ShowWarning();
 		break;
 	}
-	case SC::INGAME_INFO:
+	case SC::PCK_TYPE::INGAME_INFO:
 	{
 		SC::packet_ingame_info* pck = reinterpret_cast<SC::packet_ingame_info*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
@@ -770,7 +770,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		}
 		break;
 	}
-	case SC::GAME_END:
+	case SC::PCK_TYPE::GAME_END:
 	{
 		SC::packet_game_end* pck = reinterpret_cast<SC::packet_game_end*>(packet);
 
@@ -795,7 +795,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, char type, int bytes)
 		mRevertTime = Clock::now() + std::chrono::seconds(WAIT_TO_REVERT); // waits for 5 seconds before revert.
 		break;
 	}
-	case SC::ROOM_INSIDE_INFO:
+	case SC::PCK_TYPE::ROOM_INSIDE_INFO:
 	{
 		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
@@ -985,7 +985,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	mShadowMapRenderer->UpdateDepthCamera(cmdList);
 
 	for (const auto& [_, pso] : mPipelines)
-		pso->Update(elapsed, mNetPtr->GetUpdateRate(), mCurrentCamera);
+		pso->Update(elapsed, mCurrentCamera);
 	mMainCamera->Update(elapsed);
 	mDirectorCamera->Update(elapsed);
 	
@@ -1009,7 +1009,7 @@ void InGameScene::BuildDriftParticleObject(ID3D12GraphicsCommandList* cmdList)
 		{
 			auto obj = std::make_shared<SOParticleObject>(*mPlayer);
 
-			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), 0.02f, 100);
+			auto particleEmittor = std::make_shared<ParticleMesh>(mDevice.Get(), cmdList, XMFLOAT3(0, 0, 0), XMFLOAT4(0.6f, 0.3f, 0.0f, 1.0f), XMFLOAT2(0.1f, 0.1f), XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, -10.0f, -5.0f), 0.02f, 100);
 			obj->LoadTexture(mDevice.Get(), cmdList, L"Resources\\Particle.dds", D3D12_SRV_DIMENSION_TEXTURE2D);
 			obj->SetMesh(particleEmittor);
 			obj->SetLocalOffset(offset[i]);
@@ -1321,7 +1321,6 @@ void InGameScene::UpdateMissileObject()
 		{
 		case UPDATE_FLAG::CREATE:
 		{
-			OutputDebugStringA("Missile created.\n");
 			flag = true;
 			missile->SetActive(true);
 			mPipelines[Layer::Default]->AppendObject(mMissileObjects[i]);
@@ -1330,7 +1329,6 @@ void InGameScene::UpdateMissileObject()
 		}
 		case UPDATE_FLAG::REMOVE:
 		{
-			OutputDebugStringA("Missile removed.\n");
 			flag = true;
 			missile->SetActive(false);
 			missile->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Default]);
@@ -1435,7 +1433,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			if (i->get()->GetMeshShape())
 			{
 				i->get()->GetMeshShape()->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
-				//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+				compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 			}
 		}
 #endif
@@ -1450,7 +1448,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		obj->Scale(scale);
 		obj->SetName(objName);
 
-		obj->Update(0, 0);
+		obj->Update(0);
 		obj->UpdateInverseWorld();
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
@@ -1474,7 +1472,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			{
 				if (i->get()->GetMeshShape())
 				{
-					//compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
+					compound->addChildShape(btLocalTransform, i->get()->GetMeshShape().get());
 				}
 			}
 #endif
@@ -1483,7 +1481,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			transparentObj->Scale(scale);
 			transparentObj->SetName(objName + "_Transparent");
 
-			transparentObj->Update(0, 0);
+			transparentObj->Update(0);
 			transparentObj->UpdateInverseWorld();
 			
 			mPipelines[Layer::Transparent]->AppendObject(transparentObj);
@@ -1495,7 +1493,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 	btTransform btObjectTransform;
 	btObjectTransform.setIdentity();
 	btObjectTransform.setOrigin(btVector3(0, 0, 0));
-	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
+	mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
 #endif
 	//mTrackRigidBody = physics->CreateRigidBody(0.0f, btObjectTransform, compound);
 
@@ -1613,7 +1611,42 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 
 			mLights.push_back(bundle);
 		}
-		else if (type == "P")
+		else if (type == "P_Tunnel")
+		{
+			XMFLOAT3 pos;
+			ss >> pos.x >> pos.y >> pos.z;
+
+			XMFLOAT3 direction;
+			ss >> direction.x >> direction.y >> direction.z;
+
+			LightBundle bundle;
+			LightInfo l;
+
+			l.SetInfo(
+				XMFLOAT3(1.0f, 0.5f, 0.0f),
+				pos,
+				XMFLOAT3{0.0f, 0.0f, 0.0f},
+				10.0f, 20.0f, 0.0f,
+				0.0f, POINT_LIGHT);;
+
+			bundle.light = l;
+
+			VolumetricInfo v;
+
+			v.Direction = XMFLOAT3{ 0.0f, -1.0f, 0.0f };
+			v.Position = pos;
+			v.Range = 30.0f;
+			v.VolumetricStrength = 0.2f;
+			v.outerCosine = cos(10.0f);
+			v.innerCosine = cos(9.0f);
+			v.Color = XMFLOAT3(1.0f, 0.5f, 0.0f);
+			v.Type = SPOT_LIGHT;
+
+			bundle.volumetric = v;
+
+			mLights.push_back(bundle);
+		}
+		else if (type == "P_Deco")
 		{
 			
 		}

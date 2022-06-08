@@ -35,6 +35,11 @@ public:
 	int SendTo(WSAOVERLAPPEDEX& over, const EndPoint& hostEp);
 	int RecvFrom(WSAOVERLAPPEDEX& over, EndPoint& hostEp);
 
+	std::string GetIPAddress() const;
+	u_short GetPortNumber() const;
+
+	static std::optional<sockaddr_in> GetSocketName(SOCKET handle);
+
 public:
 	void SetSocket(SOCKET sck) { mSckHandle = sck; }
 	SOCKET GetSocket() const { return mSckHandle; }

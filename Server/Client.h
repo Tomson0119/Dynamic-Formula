@@ -21,7 +21,7 @@ public:
 	void PushPacket(std::byte* pck, int bytes, bool udp=false);
 
 	void SendMsg(bool udp=false);
-	void RecvMsg(bool udp=false);
+	void RecvMsg();
 
 public:
 	void SetLatency(uint64_t sendTime);
@@ -44,7 +44,7 @@ public:
 	void SendAccessRoomDeny(ROOM_STAT reason, bool instSend=true);
 	void SendForceLogout();
 
-	void ReturnSendTimeBack(uint64_t sendTime);
+	void SendMeasureRTTPacket(uint64_t latency);
 	
 public:
 	int ID;
@@ -66,7 +66,6 @@ private:
 	WSAOVERLAPPEDEX mTCPRecvOverlapped;
 
 	WSAOVERLAPPEDEX* mUDPSendOverlapped;
-	WSAOVERLAPPEDEX mUDPRecvOverlapped;
 
 	EndPoint mHostEp;
 };

@@ -67,11 +67,8 @@ public:
 	PlayerList GetPlayersInfo();
 	RoomList GetRoomList();
 
-	void SetLatency(uint64_t sendTime);
-	void SetUpdateRate();
-
+	void SetLatency(uint64_t latency) { mLatency = latency; }
 	float GetLatency() const { return (float)mLatency / 1000.0f; }
-	float GetUpdateRate() const { return (float)mUpdateRate / 1000.0f; }
 
 	void SetServerIP(const std::string& ip) { mServerIPAddress = ip; }
 	const std::string& GetServerIP() const { return mServerIPAddress; }
@@ -99,7 +96,6 @@ private:
 
 	Clock::time_point mTimeStamp;
 	std::atomic_uint64_t mLatency;
-	std::atomic_uint64_t mUpdateRate;
 
 	IOCP mIOCP;
 	Scene* mScenePtr;

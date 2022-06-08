@@ -33,7 +33,7 @@ public:
 	virtual void OnProcessMouseMove(WPARAM btnState, int x, int y);
 	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y);
 
-	virtual bool ProcessPacket(std::byte* packet, char type, int bytes) override;
+	virtual bool ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes) override;
 
 	virtual void Reset() override;
 	

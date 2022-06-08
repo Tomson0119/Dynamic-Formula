@@ -122,7 +122,6 @@ float3 ComputePointLight(Light light, Material mat, float3 pos, float3 normal, f
     if (d > light.FalloffEnd)
         bCompute = false;
     
-    
     if (bCompute)
     {
         lightVec /= d;

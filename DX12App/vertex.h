@@ -38,5 +38,6 @@ struct BillboardVertex
 	XMFLOAT4 Color;
 	XMFLOAT3 Velocity;
 	XMFLOAT2 Age;
+	XMFLOAT3 Acceleration;
 	UINT     Type;
 };

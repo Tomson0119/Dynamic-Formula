@@ -34,32 +34,26 @@
     <Filter Include="소스 파일\Physics\Shapes">
       <UniqueIdentifier>{3da6a9ec-b0ef-4688-9bf8-e56fd743edd5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="헤더 파일\GameObject">
+    <Filter Include="헤더 파일\Helper">
+      <UniqueIdentifier>{f4a0f34f-9701-41ca-9254-fa7725871f33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Core">
+      <UniqueIdentifier>{3df4665f-6b0e-4cd2-8040-308b038d3c69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Core\GameObject">
       <UniqueIdentifier>{c610a933-ef9f-4b13-ad5a-ac2b364a31b0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\GameObject">
+    <Filter Include="소스 파일\Helper">
+      <UniqueIdentifier>{dfe8283a-85e5-4604-9ecc-3a7f0071af3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Core">
+      <UniqueIdentifier>{247ed467-5efc-4acd-ba3d-df6dcea5f09d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Core\GameObject">
       <UniqueIdentifier>{d0119eda-9eb3-4611-bf87-1dba0b336451}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Timer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="DBHandler.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="common.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Client.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="WaitRoom.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="InGameServer.cpp">
       <Filter>소스 파일\Server</Filter>
     </ClCompile>
@@ -81,32 +75,38 @@
     <ClCompile Include="BtCollisionShape.cpp">
       <Filter>소스 파일\Physics\Shapes</Filter>
     </ClCompile>
-    <ClCompile Include="GameWorld.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Player.cpp">
-      <Filter>소스 파일\GameObject</Filter>
+      <Filter>소스 파일\Core\GameObject</Filter>
     </ClCompile>
     <ClCompile Include="Map.cpp">
-      <Filter>소스 파일\GameObject</Filter>
+      <Filter>소스 파일\Core\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>소스 파일\Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="common.cpp">
+      <Filter>소스 파일\Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="DBHandler.cpp">
+      <Filter>소스 파일\Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="WaitRoom.cpp">
+      <Filter>소스 파일\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Client.cpp">
+      <Filter>소스 파일\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GameWorld.cpp">
+      <Filter>소스 파일\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>소스 파일\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="UDPReceiver.cpp">
+      <Filter>소스 파일\Helper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Timer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="DBHandler.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Client.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="WaitRoom.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="InGameServer.h">
       <Filter>헤더 파일\Server</Filter>
     </ClInclude>
@@ -131,20 +131,38 @@
     <ClInclude Include="BtCompoundShape.h">
       <Filter>헤더 파일\Physics\Shapes</Filter>
     </ClInclude>
-    <ClInclude Include="GameWorld.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Player.h">
-      <Filter>헤더 파일\GameObject</Filter>
+      <Filter>헤더 파일\Core\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="Map.h">
-      <Filter>헤더 파일\GameObject</Filter>
+      <Filter>헤더 파일\Core\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="GameObject.h">
-      <Filter>헤더 파일\GameObject</Filter>
+      <Filter>헤더 파일\Core\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="ObjectMask.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.h">
+      <Filter>헤더 파일\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="GameWorld.h">
+      <Filter>헤더 파일\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="WaitRoom.h">
+      <Filter>헤더 파일\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>헤더 파일\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="DBHandler.h">
+      <Filter>헤더 파일\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>헤더 파일\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="UDPReceiver.h">
+      <Filter>헤더 파일\Helper</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

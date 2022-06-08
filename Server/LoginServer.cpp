@@ -2,7 +2,6 @@
 #include "LoginServer.h"
 #include "InGameServer.h"
 #include "Client.h"
-#include "ThreadIdMap.h"
 #include "MemoryPool.h"
 
 std::array<std::unique_ptr<Client>, MAX_PLAYER_SIZE> gClients;
@@ -22,13 +21,11 @@ LoginServer::LoginServer(const EndPoint& ep)
 	}
 
 	mLobby.Init(this);
-	
-	mUDPSck = std::make_unique<Socket>();
-	mUDPSck->Init(SocketType::UDP);
-	mUDPSck->Bind(ep);
 
+	mUDPReceiver.Bind(ep);
+	
 	for (int i = 0; i < gClients.size(); i++)
-		gClients[i] = std::make_unique<Client>(i, mUDPSck.get());
+		gClients[i] = std::make_unique<Client>(i, mUDPReceiver.GetSocket());
 
 	mListenSck.Init(SocketType::TCP);
 	mListenSck.Bind(ep);
@@ -52,8 +49,10 @@ void LoginServer::Run()
 {
 	mListenSck.Listen();
 	msIOCP.RegisterDevice(mListenSck.GetSocket(), 0);
-	msIOCP.RegisterDevice(mUDPSck->GetSocket(), MAX_PLAYER_SIZE);
-	std::cout << "Listening to clients...\n";
+
+	mUDPReceiver.RecvMsg();
+	auto udpSck = mUDPReceiver.GetSocket();
+	msIOCP.RegisterDevice(udpSck->GetSocket(), MAX_PLAYER_SIZE);
 
 	WSAOVERLAPPEDEX acceptEx;
 	mListenSck.AsyncAccept(&acceptEx);
@@ -61,12 +60,13 @@ void LoginServer::Run()
 	for (int i = 0; i < mThreads.size(); i++)
 	{
 		mThreads[i] = std::thread{ NetworkThreadFunc, std::ref(*this) };
-		ThreadIdMap::GetInstance().AssignId(mThreads[i].get_id(), i);	
+		mThreadIdMap.insert({ mThreads[i].get_id(), i });
 	}
 
 	// Assign main thread id as 0
-	ThreadIdMap::GetInstance().AssignId(std::this_thread::get_id(), 0);
+	mThreadIdMap.insert({ std::this_thread::get_id(), 0 });
 
+	std::cout << "Listening to clients...\n";
 	for (std::thread& thrd : mThreads) thrd.join();
 }
 
@@ -110,15 +110,24 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	{
 	case OP::RECV:
 	{
-		if (bytes == 0)
+		if (id < MAX_PLAYER_SIZE && bytes == 0)
 		{
 			Disconnect(id);
 			break;
 		}
-		Client* client = gClients[id].get();
+
 		over->NetBuffer.ShiftWritePtr(bytes);
 		ReadRecvBuffer(over, id, bytes);
-		client->RecvMsg();
+
+		if (id < MAX_PLAYER_SIZE)
+		{
+			Client* client = gClients[id].get();
+			client->RecvMsg();
+		}
+		else
+		{
+			mUDPReceiver.RecvMsg();
+		}
 		break;
 	}
 	case OP::SEND:
@@ -140,9 +149,9 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 		int i = GetAvailableID();
 		if (i == -1) 
 			std::cout << "Session's full\n";
-		else {
+		else
 			AcceptNewClient(i, clientSck, remote);
-		}
+
 		mListenSck.AsyncAccept(over);
 		break;
 	}
@@ -172,7 +181,7 @@ void LoginServer::Logout(int id)
 	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 
 #ifdef USE_DATABASE
-	int thread_id = ThreadIdMap::GetInstance().GetId(std::this_thread::get_id());
+	int thread_id = ThreadIdMap::GetInstance().GetLastReceivedId(std::this_thread::get_id());
 	mDBHandlers[thread_id].SaveUserInfo(id);
 #endif
 }
@@ -192,6 +201,8 @@ void LoginServer::AcceptNewClient(int id, SOCKET sck, sockaddr_in* remote)
 	std::cout << "[" << id << "] Accepted client.\n";
 #endif
 	gClients[id]->AssignAcceptedID(id, sck, remote);
+	mUDPReceiver.AssignId(gClients[id]->GetHostEp(), id);
+
 	msIOCP.RegisterDevice(sck, id);
 	gClients[id]->RecvMsg();
 }
@@ -211,7 +222,7 @@ void LoginServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
 	while (over->NetBuffer.Readable())
 	{
 		std::byte* packet = over->NetBuffer.BufReadPtr();
-		char type = GetPacketType(packet);
+		CS::PCK_TYPE type = static_cast<CS::PCK_TYPE>(GetPacketType(packet));
 
 		if (packet == nullptr) {
 			over->NetBuffer.Clear();
@@ -224,11 +235,11 @@ void LoginServer::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int id, int bytes)
 	}
 }
 
-bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
+bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int id, int bytes)
 {
 	switch (type)
 	{
-	case CS::LOGIN:
+	case CS::PCK_TYPE::LOGIN:
 	{
 	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received login packet\n";
@@ -236,7 +247,7 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		CS::packet_login* pck = reinterpret_cast<CS::packet_login*>(packet);
 		
 	#ifdef USE_DATABASE
-		int thread_id = ThreadIdMap::GetInstance().GetId(std::this_thread::get_id());
+		int thread_id = mThreadIdMap[std::this_thread::get_id()];
 		int	conn_id = mDBHandlers[thread_id].SearchIdAndPwd(pck->name, pck->pwd, id);
 	#else
 		int conn_id = (int)LOGIN_STAT::INVALID_IDPWD;
@@ -264,7 +275,7 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		}
 		break;
 	}
-	case CS::REGISTER:
+	case CS::PCK_TYPE::REGISTER:
 	{
 	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received register packet.\n";
@@ -281,12 +292,24 @@ bool LoginServer::ProcessPacket(std::byte* packet, char type, int id, int bytes)
 		}
 
 	#ifdef USE_DATABASE
-		int thread_id = ThreadIdMap::GetInstance().GetId(std::this_thread::get_id());
+		int thread_id = mThreadIdMap[std::this_thread::get_id()];
 		if (mDBHandlers[thread_id].RegisterIdAndPwd(pck->name, pck->pwd))
 			gClients[id]->SendRegisterResult(REGI_STAT::ACCEPTED);
 		else
 			gClients[id]->SendRegisterResult(REGI_STAT::ALREADY_EXIST);
 	#endif
+		break;
+	}
+	case CS::PCK_TYPE::MEASURE_RTT:
+	{
+		CS::packet_measure_rtt* pck = reinterpret_cast<CS::packet_measure_rtt*>(packet);
+		auto id = mUDPReceiver.GetLastReceivedId();
+		if (id.has_value())
+		{
+			gClients[id.value()]->SetLatency(pck->s_send_time);
+			auto latency = gClients[id.value()]->GetLatency();
+			gClients[id.value()]->SendMeasureRTTPacket(latency);
+		}
 		break;
 	}
 	default:
