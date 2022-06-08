@@ -60,5 +60,5 @@ private:
 	concurrency::concurrent_queue<void*> mMemAddrs;
 
 	size_t mBlockCount = 0;
-	size_t mPoolSize = 0;
+	std::atomic_size_t mPoolSize = 0;
 };

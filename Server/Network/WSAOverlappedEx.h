@@ -4,7 +4,6 @@
 #include "Socket.h"
 #include "Protocol.h"
 #include "BufferQueue.h"
-#include "ThreadIdMap.h"
 #include "MemoryPoolManager.h"
 
 enum class OP : char
@@ -64,11 +63,19 @@ struct WSAOVERLAPPEDEX
 
 	void* operator new(size_t size)
 	{
-		return MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Allocate();
+		if (MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().GetPoolSize() > 0)
+		{
+			auto p = MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Allocate();
+			if (p) return p;
+		}
+		return ::operator new(size);
 	}
 
 	void operator delete(void* ptr)
 	{
-		MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Deallocate(ptr);
+		if (MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().GetPoolSize() > 0)
+			MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Deallocate(ptr);
+		else
+			::operator delete(ptr);
 	}
 };
