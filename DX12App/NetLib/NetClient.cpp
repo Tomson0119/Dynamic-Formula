@@ -4,6 +4,7 @@
 NetClient::NetClient()
 	: mIsConnected{ false },
 	  mServerEp{},
+	  mSenderEp{},
 	  mTCPSendOverlapped{ nullptr },
 	  mTCPRecvOverlapped{ OP::RECV },
 	  mUDPSendOverlapped{ nullptr },
@@ -50,7 +51,7 @@ void NetClient::Disconnect()
 
 void NetClient::BindUDPSocket(u_short port)
 {
-	auto ep = EndPoint::Any(port);
+	auto ep = EndPoint::Any(CLIENT_PORT);
 	mUDPSocket.Bind(ep);
 	RecvMsg(true);
 }

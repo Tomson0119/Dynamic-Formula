@@ -48,6 +48,7 @@ void Client::AssignAcceptedID(int id, SOCKET sck, sockaddr_in* addr)
 	mTCPSocket.SetSocket(sck);
 	mIsConnected = true;
 	
+	addr->sin_port = htons(CLIENT_PORT);
 	SetHostEp(EndPoint(*addr));
 }
 
