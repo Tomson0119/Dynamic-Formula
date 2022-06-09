@@ -79,6 +79,7 @@ public:
 
 			mPrevEntry = next;
 			mProgress -= timeBetween;
+			Interpolate(0.0f, targetPos, targetRot);
 		}
 	}
 
