@@ -31,7 +31,7 @@ LoginServer::LoginServer(const EndPoint& ep)
 	mListenSck.Bind(ep);
 
 	// Pre-allocate memory pools.
-	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance(MAX_PLAYER_SIZE * MAX_THREAD_COUNT);
+	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Init(10 * MAX_THREAD_COUNT);
 }
 
 LoginServer::~LoginServer()
@@ -132,9 +132,9 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	}
 	case OP::SEND:
 	{
-		if (bytes != over->WSABuffer.len)
+		if (id < MAX_PLAYER_SIZE && bytes != over->WSABuffer.len)
 		{
-			Disconnect(id);
+			//Disconnect(id);
 		}
 		delete over;
 		break;
@@ -302,14 +302,14 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 	}
 	case CS::PCK_TYPE::MEASURE_RTT:
 	{
-		CS::packet_measure_rtt* pck = reinterpret_cast<CS::packet_measure_rtt*>(packet);
+		/*CS::packet_measure_rtt* pck = reinterpret_cast<CS::packet_measure_rtt*>(packet);
 		auto id = mUDPReceiver.GetLastReceivedId();
 		if (id.has_value())
 		{
 			gClients[id.value()]->SetLatency(pck->s_send_time);
 			auto latency = gClients[id.value()]->GetLatency();
 			gClients[id.value()]->SendMeasureRTTPacket(latency);
-		}
+		}*/
 		break;
 	}
 	default:

@@ -17,7 +17,7 @@ NetModule::NetModule()
 		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
 
 	mNetClient = std::make_unique<NetClient>();
-	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance(2);
+	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Init(10);
 }
 
 NetModule::~NetModule()
@@ -130,12 +130,6 @@ void NetModule::UpdateRoomList(SC::packet_room_outside_info* pck)
 		mRoomList[i].MapID = pck->rooms[i].map_id;
 		mRoomList[i].GameStarted = pck->rooms[i].game_started;
 		mRoomList[i].Opened = pck->rooms[i].room_opened;
-
-		/*OutputDebugStringA(("Room ID: " + std::to_string(mRoomList[i].ID) + "\n").c_str());
-		OutputDebugStringA(("Player count: " + std::to_string(mRoomList[i].PlayerCount) + "\n").c_str());
-		OutputDebugStringA(("Map ID: " + std::to_string(mRoomList[i].MapID) + "\n").c_str());
-		OutputDebugStringA(("Game Started: " + std::to_string(mRoomList[i].GameStarted) + "\n").c_str());
-		OutputDebugStringA(("Closed: " + std::to_string(mRoomList[i].Opened) + "\n\n").c_str());*/
 	}
 	mRoomListMut.unlock();
 }
@@ -182,7 +176,7 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
 		if (bytes != over->WSABuffer.len)
 		{
 			// NEED TEST
-			// PostDisconnect();
+			PostDisconnect();
 		}
 		delete over;
 		break;
@@ -233,6 +227,4 @@ void NetModule::Init()
 	mIOCP.RegisterDevice(mNetClient->GetUDPSocket(), 1);
 	
 	mNetThread = std::thread{ NetworkFunc, std::ref(*this) };
-	ThreadIdMap::GetInstance().AssignId(mNetThread.get_id(), 0);
-	ThreadIdMap::GetInstance().AssignId(std::this_thread::get_id(), 1);
 }

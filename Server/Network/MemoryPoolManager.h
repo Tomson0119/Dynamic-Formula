@@ -7,24 +7,26 @@ template<typename T>
 class MemoryPoolManager
 {
 public:
-	static MemoryPoolManager& GetInstance(size_t poolSize = 0)
+	static MemoryPoolManager& GetInstance()
 	{
-		static MemoryPoolManager instance(poolSize);
+		static MemoryPoolManager instance;
 		return instance;
 	}
 
 private:
-	MemoryPoolManager(size_t poolSize)
-	{
-		assert(poolSize > 0);
-		mMemPool.Init(poolSize);
-	}
+	MemoryPoolManager() = default;
 	MemoryPoolManager(const MemoryPoolManager&) = delete;
 	MemoryPoolManager& operator=(const MemoryPoolManager&) = delete;
 	MemoryPoolManager(MemoryPoolManager&&) = delete;
 	MemoryPoolManager& operator=(MemoryPoolManager&&) = delete;
 
 public:
+	void Init(size_t poolSize)
+	{
+		assert(poolSize > 0);
+		mMemPool.Init(poolSize);
+	}
+
 	void* Allocate()
 	{
 		void* ptr = mMemPool.Alloc();
@@ -34,6 +36,11 @@ public:
 	void Deallocate(void* ptr)
 	{
 		mMemPool.Dealloc(ptr);
+	}
+
+	size_t GetPoolSize()
+	{
+		return mMemPool.GetTotalSize();
 	}
 
 private:

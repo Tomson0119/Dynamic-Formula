@@ -4,6 +4,7 @@
 NetClient::NetClient()
 	: mIsConnected{ false },
 	  mServerEp{},
+	  mSenderEp{},
 	  mTCPSendOverlapped{ nullptr },
 	  mTCPRecvOverlapped{ OP::RECV },
 	  mUDPSendOverlapped{ nullptr },

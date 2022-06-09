@@ -1044,7 +1044,7 @@ void BloomPipeline::Dispatch(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetComputeRootDescriptorTable(0, mSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 	cmdList->SetComputeRootDescriptorTable(1, uavHandle[0]);
 
-	float mergeCoefficient = 0.75;
+	float mergeCoefficient = 1.0f;
 	cmdList->SetComputeRoot32BitConstants(2, 1, &mergeCoefficient, 0);
 
 	cmdList->Dispatch(numGroupX, numGroupY, 1);
