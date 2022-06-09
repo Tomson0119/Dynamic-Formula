@@ -60,7 +60,8 @@ void RoomScene::OnProcessMouseUp(WPARAM btnState, int x, int y)
 	// 맵 변경 버튼
 	if (mpUI->OnProcessMouseClick(btnState, x, y) == -1) // 맵변경
 	{
-
+		auto RoomID = mNetPtr->GetRoomID();
+		mNetPtr->Client()->SwitchMap(RoomID);
 	}
 	else if (mpUI->OnProcessMouseClick(btnState, x, y) == -2) // 나가기
 	{

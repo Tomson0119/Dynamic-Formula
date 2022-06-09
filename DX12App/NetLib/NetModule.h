@@ -59,7 +59,9 @@ public:
 	bool GetIsUpdatedRoomList() const { return mIsUpdatedRoomList; }
 
 	char GetPlayerIndex() const { return mPlayerIdx; }
+
 	char GetMapIndex() const { return mMapIdx; }
+
 	char GetAdminIndex() const { return mAdminIdx; }
 
 	bool IsAdmin() const { return mPlayerIdx == mAdminIdx; }

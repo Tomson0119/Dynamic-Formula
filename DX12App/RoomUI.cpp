@@ -272,11 +272,17 @@ void RoomUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 void RoomUI::Update(float GTime)
 {
     const auto& playerList = mNetRef.GetPlayersInfo();
-     
+
     if (mNetRef.IsAdmin())
         GetTextBlock()[0].strText.assign("Start");
     else
         GetTextBlock()[0].strText.assign("Ready");
+
+    if (mNetRef.GetMapIndex())
+        GetTextBlock()[2].strText.assign("Night");
+    else
+        GetTextBlock()[2].strText.assign("Day");
+
 
     for (int i = 0; i < playerList.size(); ++i)
     {
@@ -650,7 +656,7 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     SetTextRect(); 
 
     GetTextBlock()[1].strText.assign("Out");
-    GetTextBlock()[2].strText.assign("Map");
+    //GetTextBlock()[2].strText.assign("Map");
 
     SetStateNotFail();
 

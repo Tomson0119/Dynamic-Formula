@@ -307,11 +307,12 @@ void LobbyUI::UpdatePlayerCountTextsIndex(int index, int PlayerCount)
 
 void LobbyUI::UpdateMapIDTextsIndex(int index, int MapID)
 {
+    //
     if (mIsOpened[index]) {
         if (MapID)
-            GetTextBlock()[index + 14].strText.assign("day");
+            GetTextBlock()[index + 14].strText.assign("");
         else
-            GetTextBlock()[index + 14].strText.assign("night");
+            GetTextBlock()[index + 14].strText.assign("");
     }
     else
         GetTextBlock()[index + 14].strText.assign("");
