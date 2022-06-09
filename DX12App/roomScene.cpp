@@ -78,6 +78,8 @@ void RoomScene::OnProcessMouseUp(WPARAM btnState, int x, int y)
 void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mpUI->Update(timer.TotalTime());
+	if (mpUI->GetLodingUpdated())
+		SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 }
 
 void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
@@ -137,8 +139,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int b
 		//Scene Delete and TextOut
 		mpUI->SetLodingScene();
 
-
-		SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+		
 		//mpUI->SetMyReadyOff();
 		break;
 	}

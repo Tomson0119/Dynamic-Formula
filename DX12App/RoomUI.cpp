@@ -165,8 +165,11 @@ void RoomUI::OnProcessMouseMove(WPARAM btnState, int x, int y)
     else
         SetIndexColor(1, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 
-    if (MouseCollisionCheck(dx, dy, GetTextBlock()[2]))
-        SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 0.4f));
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[2])) // Map
+    {
+        if (mNetRef.IsAdmin())
+            SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 0.4f));
+    }
     else
         SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 
@@ -308,8 +311,9 @@ void RoomUI::Update(float GTime)
             GetTextBlock()[i].strText.clear();
         SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
         BuildSolidBrush(GetColors());
-        GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.7f, GetFrameHeight() * 0.85f, GetFrameWidth() * 0.975f, GetFrameHeight() * 0.99f);
+        GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.67f, GetFrameHeight() * 0.85f, GetFrameWidth() * 0.975f, GetFrameHeight() * 0.99f);
         GetTextBlock()[0].strText.assign("Loding...");
+        SetLodingUpdated();
     }
 
 

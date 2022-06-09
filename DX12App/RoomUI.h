@@ -40,6 +40,8 @@ public:
 	void SetStateFail(int result);
 	void SetStateNotFail();
 	void SetLodingScene();
+	void SetLodingUpdated() { mIsLodingUpdated = true; }
+	bool GetLodingUpdated() const { return mIsLodingUpdated; }
 	//For Packet
 	// BackgroundCarVisible, BackgoundCarInvisible
 	void SetIndexCar(int index) { BitmapOpacities[index + 1] = 1.0f; }
@@ -62,10 +64,12 @@ public:
 	void SetIndexIsAdmin(int index);
 	//Start->ReadyOff
 	void SetMyReadyOff() { mIsReady = false; }
+	
 
 private:
 	float BitmapOpacities[9] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 	std::atomic_bool mIsReady = false;
+	std::atomic_bool mIsLodingUpdated = false;
 	NetModule& mNetRef;
 	std::atomic_bool IsLodingScene = false;
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
