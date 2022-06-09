@@ -46,11 +46,6 @@ bool LobbyServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 	#endif
 		if (int roomID = TryOpenRoom(id); roomID >= 0)
 		{
-			/*mOpenRoomIdsMut.lock();
-			mOpenRoomIds.push_back(mRoomCount);
-			std::sort(mOpenRoomIds.begin(), mOpenRoomIds.end());
-			mOpenRoomIdsMut.unlock();*/
-
 			AcceptEnterRoom(roomID, id);
 			mRoomCount.fetch_add(1);
 		}

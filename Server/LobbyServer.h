@@ -43,8 +43,6 @@ private:
 	std::atomic_int mLobbyPlayerCount;
 
 	RoomList mRooms;
-	/*std::deque<int> mOpenRoomIds;
-	std::mutex mOpenRoomIdsMut;*/
 	/*
 		인게임서버는 여러 개가 존재할 수 있으며, 
 		지정한 개수만큼의 방에 대해 로직을 계산하여 처리한다.
