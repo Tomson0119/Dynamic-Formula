@@ -191,10 +191,6 @@ bool LobbyScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		auto RoomList = mNetPtr->GetRoomList();
 		for (auto& Room :RoomList)			
 			mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
-	
-	#ifdef START_GAME_INSTANT
-		mNetPtr->Client()->RequestEnterRoom(0);
-	#endif
 		break;
 	}
 	case SC::PCK_TYPE::FORCE_LOGOUT:
