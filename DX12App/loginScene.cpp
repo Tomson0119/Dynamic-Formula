@@ -197,6 +197,14 @@ bool LoginScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		}
 		break;
 	}
+	case SC::PCK_TYPE::ROOM_OUTSIDE_INFO:
+	{
+		OutputDebugString(L"Received room outside info packet.\n");
+		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
+		mNetPtr->UpdateRoomList(pck);
+		mNetPtr->SetIsUpdatedRoomList(true);
+		break;
+	}
 	default:
 		OutputDebugStringW(L"Invalid packet.\n");
 		return false;
