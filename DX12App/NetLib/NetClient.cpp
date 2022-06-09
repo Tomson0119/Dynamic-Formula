@@ -51,7 +51,7 @@ void NetClient::Disconnect()
 
 void NetClient::BindUDPSocket(u_short port)
 {
-	auto ep = EndPoint::Any(CLIENT_PORT);
+	auto ep = EndPoint::Any(port);
 	mUDPSocket.Bind(ep);
 	RecvMsg(true);
 }
