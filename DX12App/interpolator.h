@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <queue>
 
 class Interpolator
 {
@@ -7,8 +6,6 @@ public:
 	struct Entry
 	{
 		bool empty;
-		Clock::time_point timeStamp;
-
 		XMFLOAT3 position;
 		XMFLOAT4 rotation;
 
@@ -22,7 +19,6 @@ public:
 		Entry(const XMFLOAT3& pos, const XMFLOAT4& rot)
 			: empty{ false } 
 		{
-			timeStamp = Clock::now();
 			position = pos;
 			rotation = rot;
 		}
@@ -30,81 +26,98 @@ public:
 
 public:
 	Interpolator()
-		: mProgress{ 0.0f } 
+		: mCurrentTime{ 0 }, mPrevTimePoint{ 0 }
 	{
 	}
 
-	void Enqueue(const XMFLOAT3& pos, const XMFLOAT4& rot)
+	void Enqueue(uint64_t timePoint, const XMFLOAT3& pos, const XMFLOAT4& rot)
 	{
-		mEntryQueueMut.lock();
-		mEntryQueue.push(Entry(pos, rot));
-		mEntryQueueMut.unlock();
+		mEntryMapMut.lock();
+		mEntries.insert({ timePoint, Entry(pos, rot) });
+		mEntryMapMut.unlock();
 	}
 
 	void Interpolate(float dt, XMFLOAT3& targetPos, XMFLOAT4& targetRot)
 	{
-		mEntryQueueMut.lock();
-		if (mEntryQueue.empty())
+		mEntryMapMut.lock();
+		if (mEntries.empty())
 		{
-			mEntryQueueMut.unlock();
+			mEntryMapMut.unlock();
 			return;
 		}
+		mEntryMapMut.unlock();
 
-		Entry next = mEntryQueue.front();
 		if (mPrevEntry.empty)
 		{
-			mEntryQueue.pop();
-			mEntryQueueMut.unlock();
+			EraseOldEntries();
 
-			mPrevEntry = next;
-			targetPos = next.position;
-			targetRot = next.rotation;
+			if (mPrevEntry.empty)
+			{
+				mEntryMapMut.lock();
+				mPrevTimePoint = mEntries.begin()->first;
+				mPrevEntry = mEntries.begin()->second;
+				mEntryMapMut.unlock();
+			}		
+			targetPos = mPrevEntry.position;
+			targetRot = mPrevEntry.rotation;
 			return;
 		}
 
-		mEntryQueueMut.unlock();
+		mEntryMapMut.lock();
+		uint64_t nextTp = mEntries.begin()->first;
+		Entry next = mEntries.begin()->second;
+		mCurrentTime = (uint64_t)((mCurrentTime * PCT) + (mEntries.rbegin()->first * (1.0f - PCT)));
+		mEntryMapMut.unlock();
 
-		mProgress += dt;
-		float timeBetween = GetDurationSec(next.timeStamp, mPrevEntry.timeStamp);
-		float progress = std::min(1.0f, mProgress / timeBetween);
+		uint64_t timeBetween = nextTp - mPrevTimePoint;
+		float progress = (float)(mCurrentTime - mPrevTimePoint) / timeBetween;
+
+		Print("CurrentTime: ", mCurrentTime);
+		Print("timeBetween: ", timeBetween);
+		Print("Progress: ", progress);
 
 		targetPos = Vector3::Lerp(mPrevEntry.position, next.position, progress);
 		targetRot = Vector4::Slerp(mPrevEntry.rotation, next.rotation, progress);
 
-		if (progress >= 1.0f)
-		{
-			mEntryQueueMut.lock();
-			mEntryQueue.pop();
-			mEntryQueueMut.unlock();
-
-			mPrevEntry = next;
-			mProgress -= timeBetween;
-		}
+		EraseOldEntries();
 	}
 
 	void Clear()
 	{
-		mEntryQueueMut.lock();
-		std::queue<Entry> temp;
-		std::swap(mEntryQueue, temp);
-		mEntryQueueMut.unlock();
+		mEntryMapMut.lock();
+		mEntries.clear();
+		mEntryMapMut.unlock();
 
-		mProgress = 0.0f;
+		mCurrentTime = 0;
 		mPrevEntry = Entry{};
 	}
 
 private:
-	static float GetDurationSec(Clock::time_point& a, Clock::time_point& b)
+	static float GetDurationSec(uint64_t a, uint64_t b)
 	{
-		auto msec = std::chrono::duration_cast<std::chrono::milliseconds>
-			(a - b).count();
-		return (float)msec / 1000.0f;
+		return (float)(a - b) / 1'000'000'000.f;
+	}
+
+	void EraseOldEntries()
+	{
+		mEntryMapMut.lock();
+		while (mEntries.empty() == false && mCurrentTime > mEntries.begin()->first)
+		{
+			mPrevTimePoint = mEntries.begin()->first;
+			mPrevEntry = mEntries.begin()->second;
+			mEntries.erase(mEntries.begin());
+		}
+
+		mEntryMapMut.unlock();
 	}
 
 private:
-	std::queue<Entry> mEntryQueue;
-	std::mutex mEntryQueueMut;
+	std::map<uint64_t, Entry> mEntries;
+	std::mutex mEntryMapMut;
 
+	uint64_t mCurrentTime;
+	uint64_t mPrevTimePoint;
 	Entry mPrevEntry;
-	float mProgress;
+
+	const float PCT = 0.5f;
 };

@@ -124,7 +124,7 @@ public:
 
 	void BuildCameras();
 
-	void SetCorrectionTransform(SC::packet_player_transform* pck, float latency);
+	void SetCorrectionTransform(SC::packet_player_transform* pck, uint64_t timePoint, float latency);
 
 private:
 	void UpdateInvincibleState(float elapsed);

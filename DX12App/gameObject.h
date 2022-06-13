@@ -186,7 +186,7 @@ protected:
 
 	// Members for interpolation.
 	std::mutex mProgressMut; // TEST
-	float mProgress = 0.0f;
+	float mCurrentTime = 0.0f;
 
 	AtomicFloat3 mPrevOrigin;
 	AtomicFloat4 mPrevQuat;
@@ -338,7 +338,7 @@ public:
 	void SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward, XMFLOAT3 position, std::shared_ptr<BulletWrapper> physics);
 	float GetDuration() { return mDuration; }
 
-	void SetCorrectionTransform(SC::packet_missile_transform* pck, float latency);
+	void SetCorrectionTransform(SC::packet_missile_transform* pck, uint64_t timePoint, float latency);
 
 	void SetParticle(const std::shared_ptr<SOParticleObject>& particle) { mParticle = particle; }
 	std::shared_ptr<SOParticleObject> GetParticle() { return mParticle; }

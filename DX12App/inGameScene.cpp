@@ -669,8 +669,9 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	case SC::PCK_TYPE::MEASURE_RTT:
 	{
 		SC::packet_measure_rtt* pck = reinterpret_cast<SC::packet_measure_rtt*>(packet);
-		Print("rtt packet: ", pck->latency);
+		//Print("udp packet id: ", pck->id);
 		mNetPtr->SetLatency(pck->latency);
+		mNetPtr->SetTimePoint(pck->s_send_time);
 		mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
 		break;
 	}
@@ -681,7 +682,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		
 		if (player)
 		{
-			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
+			player->SetCorrectionTransform(pck, mNetPtr->GetTimePoint(), mNetPtr->GetLatency());
 		}
 		break;
 	}
@@ -706,7 +707,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		
 		if (missile && missile->IsActive())
 		{
-			missile->SetCorrectionTransform(pck, mNetPtr->GetLatency());
+			missile->SetCorrectionTransform(pck, mNetPtr->GetTimePoint(), mNetPtr->GetLatency());
 		}
 		break;
 	}
@@ -1126,7 +1127,7 @@ void InGameScene::UpdateLightConstants()
 	}
 
 	mMainLight.Lights[0] = mDirectionalLight.light;
-	mMainLight.numLights = mLights.size() + 1 < MAX_LIGHTS ? mLights.size() + 1 : MAX_LIGHTS;
+	mMainLight.numLights = (mLights.size() + 1 < MAX_LIGHTS) ? (int)mLights.size() + 1 : MAX_LIGHTS;
 	
 	mLightCB->CopyData(0, mMainLight);
 }
@@ -1150,7 +1151,7 @@ void InGameScene::UpdateVolumetricConstant()
 		volumeConst.frstumSplit[i] = mShadowMapRenderer->GetSplit(i + 1);
 	}		
 
-	volumeConst.numLights = mLights.size() + 1 < MAX_LIGHTS ? mLights.size() + 1 : MAX_LIGHTS;
+	volumeConst.numLights = (mLights.size() + 1 < MAX_LIGHTS) ? (int)mLights.size() + 1 : MAX_LIGHTS;
 	
 	volumeConst.Lights[0] = mDirectionalLight.volumetric;
 	for (int i = 1; i < volumeConst.numLights; ++i)

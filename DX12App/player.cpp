@@ -800,10 +800,10 @@ void PhysicsPlayer::BuildCameras()
 	}
 }
 
-void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, float latency)
+void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, uint64_t timePoint, float latency)
 {
 	mProgressMut.lock();
-	mProgress = 0.0f;
+	mCurrentTime = 0.0f;
 	mProgressMut.unlock();
 
 	mPrevOrigin = mCorrectionOrigin;
@@ -818,7 +818,7 @@ void PhysicsPlayer::SetCorrectionTransform(SC::packet_player_transform* pck, flo
 
 	mCorrectionQuat.SetValue(pck->quaternion);
 
-	mInterpolator.Enqueue(mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
+	mInterpolator.Enqueue(timePoint, mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
 
 	mLinearVelocity.SetValue(
 		pck->linear_vel[0] / POS_FLOAT_PRECISION, 

@@ -64,6 +64,9 @@ public:
 	PlayerList GetPlayersInfo();
 	RoomList GetRoomList();
 
+	void SetTimePoint(uint64_t timePoint) { mTimePoint = timePoint; }
+	uint64_t GetTimePoint() const { return mTimePoint; }
+
 	void SetLatency(uint64_t latency) { mLatency = latency; }
 	float GetLatency() const { return (float)mLatency / 1000.0f; }
 
@@ -80,7 +83,6 @@ private:
 	std::atomic_char mPlayerIdx;
 	std::atomic_char mAdminIdx;
 	std::atomic_char mMapIdx;
-
 	PlayerList mPlayerList;
 	std::mutex mPlayerListMut;
 
@@ -90,7 +92,7 @@ private:
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;
 
-	Clock::time_point mTimeStamp;
+	std::atomic_uint64_t mTimePoint;
 	std::atomic_uint64_t mLatency;
 
 	IOCP mIOCP;

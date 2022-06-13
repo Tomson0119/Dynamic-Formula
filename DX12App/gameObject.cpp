@@ -28,7 +28,7 @@ void GameObject::LoadModel(
 	bool collider)
 {
 	std::ifstream in_file{ path, std::ios::binary };
-	assert(in_file.is_open(), L"No such file in path [" + path + L"]");
+	assert(in_file.is_open());
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
@@ -923,9 +923,9 @@ void MissileObject::SetMesh(const std::shared_ptr<Mesh>& mesh, btVector3 forward
 	mBtRigidBody->setLinearVelocity(forward * 1000.0f);
 }
 
-void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, float latency)
+void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, uint64_t timePoint, float latency)
 {
-	mProgress = 0;
+	mCurrentTime = 0;
 	mPrevOrigin = mCorrectionOrigin;
 
 	mCorrectionOrigin.SetValue(
@@ -937,7 +937,7 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, fl
 		pck->linear_vel_z / POS_FLOAT_PRECISION,
 		latency);
 
-	mInterpolator.Enqueue(mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
+	mInterpolator.Enqueue(timePoint, mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
 }
 
 void MissileObject::SetActive(bool state)
