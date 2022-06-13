@@ -98,7 +98,7 @@ void Client::SetLatency(uint64_t sendTime)
 	if (sendTime > 0)
 	{
 		auto now = Clock::now().time_since_epoch().count();
-		mLatency = ((now - sendTime) / 2) / 1'000'000;
+		mLatency = ((now - sendTime) / 2) / 1'000'000; // convert ns to ms
 	}
 }
 
@@ -173,7 +173,7 @@ void Client::SendForceLogout()
 	SendMsg();
 }
 
-void Client::SendMeasureRTTPacket(uint64_t latency)
+void Client::SendMeasureRTTPacket(bool udp, bool instSend)
 {
 	SC::packet_measure_rtt pck{};
 	pck.size = sizeof(SC::packet_measure_rtt);
@@ -181,8 +181,8 @@ void Client::SendMeasureRTTPacket(uint64_t latency)
 
 	uint64_t now = Clock::now().time_since_epoch().count();
 	pck.s_send_time = now;
-	pck.latency = latency;
+	pck.latency = GetLatency();
 
-	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, true);
-	SendMsg(true);
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, udp);
+	if(instSend) SendMsg(udp);
 }

@@ -43,8 +43,7 @@ public:
 	void SendAccessRoomAccept(int roomID, bool instSend=true);
 	void SendAccessRoomDeny(ROOM_STAT reason, bool instSend=true);
 	void SendForceLogout();
-
-	void SendMeasureRTTPacket(uint64_t latency);
+	void SendMeasureRTTPacket(bool udp=false, bool instSend=true);
 	
 public:
 	int ID;

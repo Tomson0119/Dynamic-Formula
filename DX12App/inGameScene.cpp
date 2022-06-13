@@ -669,12 +669,9 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	case SC::PCK_TYPE::MEASURE_RTT:
 	{
 		SC::packet_measure_rtt* pck = reinterpret_cast<SC::packet_measure_rtt*>(packet);
-		if (pck->latency == 0)
-		{
-			mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
-			break;
-		}
+		Print("rtt packet: ", pck->latency);
 		mNetPtr->SetLatency(pck->latency);
+		mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
 		break;
 	}
 	case SC::PCK_TYPE::PLAYER_TRANSFORM:
@@ -684,7 +681,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		
 		if (player)
 		{
-			player->SetCorrectionTransform(pck, 0); // test
+			player->SetCorrectionTransform(pck, mNetPtr->GetLatency());
 		}
 		break;
 	}

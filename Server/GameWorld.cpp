@@ -251,6 +251,9 @@ void GameWorld::BroadcastAllTransform()
 	{
 		if (mPlayerList[target]->Empty == false)
 		{
+			int id = mPlayerList[target]->ID;
+			gClients[id]->SendMeasureRTTPacket(true, false);
+
 			PushVehicleTransformPacketToAll(target);
 			PushMissileTransformPacketToAll(target);
 		}
@@ -263,7 +266,7 @@ void GameWorld::BroadcastAllTransform()
 			
 			int id = mPlayerList[receiver]->ID;
 			if (id < 0) continue;
-			gClients[id]->SendMeasureRTTPacket(0);
+			gClients[id]->SendMsg(true);
 		}
 	}
 }
