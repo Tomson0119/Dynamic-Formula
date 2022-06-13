@@ -23,6 +23,7 @@ public:
 	Socket* GetSocket() const { return mUDPSocket.get(); }
 
 private:
+	std::mutex mHostIdMapMut;
 	std::unordered_map<EndPoint, int, EpHash> mHostIdMap;
 
 	std::unique_ptr<Socket> mUDPSocket;

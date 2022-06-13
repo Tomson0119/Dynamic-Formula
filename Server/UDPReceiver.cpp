@@ -38,6 +38,7 @@ void UDPReceiver::Bind(const EndPoint& ep)
 
 void UDPReceiver::AssignId(const EndPoint& ep, int id)
 {
+	std::unique_lock<std::mutex> lock{ mHostIdMapMut };
 	mHostIdMap.insert({ ep, id });
 }
 
@@ -50,6 +51,7 @@ void UDPReceiver::RecvMsg()
 
 std::optional<int> UDPReceiver::GetLastReceivedId()
 {
+	std::unique_lock<std::mutex> lock{ mHostIdMapMut };
 	if (mHostIdMap.find(mSenderEp) != mHostIdMap.end())
 	{
 		return mHostIdMap[mSenderEp];
