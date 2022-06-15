@@ -306,7 +306,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 		mMaxEngineForce = mBoosterEngineForce;
 
 		accel = true;
-		mMaxSpeed = 400.0f;
+		mMaxSpeed = 220.0f;
 		mEngineForce = mMaxEngineForce;
 		mBoosterLeft -= Elapsed;
 
@@ -317,7 +317,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 	{
 		mMaxEngineForce = mBaseEngineForce;
 
-		mMaxSpeed = 350.0f;
+		mMaxSpeed = 180.0f;
 		mBoosterLeft = 0.0f;
 
 		mRimLightOn = false;
@@ -640,9 +640,9 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
 	btCarTransform.setRotation(btQuaternion(mQuaternion.x, mQuaternion.y, mQuaternion.z, mQuaternion.w));
 
-	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", btVector3(0, 0.1, 0), physics);
+	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", btVector3(0, 0.0f, 0), physics);
 
-	mBtRigidBody = physics->CreateRigidBody(3000.0f, btCarTransform, mBtCollisionShape);
+	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, mBtCollisionShape);
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld);
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 	mBtRigidBody = mVehicle->getRigidBody();
