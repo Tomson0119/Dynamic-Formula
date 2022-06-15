@@ -148,7 +148,7 @@ private:
 	static const int RtvCounts = 12;
 	static const float TransparentInterval;
 	
-	const float mWheelFriction = 5.0f;
+	const float mWheelFriction = 15.0f;
 	const float mWheelDriftFriction = 0.0f;
 
 	ULONG mCubeMapSize = 500;
@@ -183,9 +183,9 @@ private:
 
 	float mEngineForce = 0.f;
 
-	float mMaxEngineForce = 2000.f;
-	const float mBoosterEngineForce = 6000.f;
-	const float mBaseEngineForce = 2000.f;
+	float mMaxEngineForce = 6000.f;
+	const float mBoosterEngineForce = 18000.f;
+	const float mBaseEngineForce = 6000.f;
 
 	float mVehicleSteering = 0.f;
 	float mSteeringIncrement = 5.0f;

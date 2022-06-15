@@ -486,7 +486,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #endif
 
 #ifdef STANDALONE
-	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
+	BuildCarObject({ -306.5f, 3.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
 #else
 	int playerCount = 0;
 	const auto& players = mNetPtr->GetPlayersInfo();
@@ -1507,7 +1507,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
 		convexObjPath.assign(tmpstr.begin(), tmpstr.end());
 
-		obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", physics);
+		obj->LoadConvexHullShape(convexObjPath + L"_Convex_Hull.obj", btVector3(0, 0, 0), physics);
 		obj->SetQuaternion(quaternion);
 		obj->SetPosition(pos);
 		obj->Scale(scale);

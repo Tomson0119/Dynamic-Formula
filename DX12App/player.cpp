@@ -553,6 +553,12 @@ void PhysicsPlayer::Update(float elapsedTime)
 		}
 	}
 
+	auto linearVelocity = mBtRigidBody->getLinearVelocity();
+	if (linearVelocity.y() > 2)
+	{
+		mVehicle->getRigidBody()->setLinearVelocity(btVector3(linearVelocity.x(), linearVelocity.y() / 2, linearVelocity.z()));
+	}
+
 	UpdateFrontLight();
 
 	//btVector3 linearVel = mBtRigidBody->getLinearVelocity();
@@ -634,9 +640,9 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	btCarTransform.setOrigin(btVector3(mPosition.x, mPosition.y, mPosition.z));
 	btCarTransform.setRotation(btQuaternion(mQuaternion.x, mQuaternion.y, mQuaternion.z, mQuaternion.w));
 
-	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", physics);
+	LoadConvexHullShape(L"Models\\Car_Body_Convex_Hull.obj", btVector3(0, 0.1, 0), physics);
 
-	mBtRigidBody = physics->CreateRigidBody(1000.0f, btCarTransform, mBtCollisionShape);
+	mBtRigidBody = physics->CreateRigidBody(3000.0f, btCarTransform, mBtCollisionShape);
 	mVehicleRayCaster = std::make_shared<btDefaultVehicleRaycaster>(dynamicsWorld);
 	mVehicle = std::make_shared<btRaycastVehicle>(mTuning, mBtRigidBody, mVehicleRayCaster.get());
 	mBtRigidBody = mVehicle->getRigidBody();
@@ -644,7 +650,6 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	mBtRigidBody->setActivationState(DISABLE_DEACTIVATION);
 	//mBtRigidBody->setGravity(btVector3(0, -20, 0));
 	dynamicsWorld->addVehicle(mVehicle.get());
-
 	mVehicle->setCoordinateSystem(0, 1, 2);
 
 	btVector3 wheelDirectionCS0(0, -1, 0);
@@ -653,9 +658,9 @@ void PhysicsPlayer::BuildRigidBody(const std::shared_ptr<BulletWrapper>& physics
 	float wheelWidth = wheelExtents.x;
 	float wheelRadius = wheelExtents.z;
 	float wheelFriction = mWheelFriction;
-	float suspensionStiffness = 20.0f;
-	float suspensionDamping = 2.5f;
-	float suspensionCompression = 4.4f;
+	float suspensionStiffness = 40.0f;
+	float suspensionDamping = 20.0f;
+	float suspensionCompression = 4.0f;
 	float rollInfluence = 0.001f;  //1.0f;
 
 	// ¾Õ¹ÙÄû

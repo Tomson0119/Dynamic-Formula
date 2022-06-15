@@ -235,7 +235,7 @@ void GameObject::LoadTexture(
 }
 
 // Scale을 설정한 뒤 호출할 것!
-bool GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared_ptr<BulletWrapper>& physics)
+bool GameObject::LoadConvexHullShape(const std::wstring& path, const btVector3& origin, const std::shared_ptr<BulletWrapper>& physics)
 {
 	std::ifstream in_file{ path, std::ios::binary };
 
@@ -274,7 +274,7 @@ bool GameObject::LoadConvexHullShape(const std::wstring& path, const std::shared
 
 			btTransform localTransform;
 			localTransform.setIdentity();
-			localTransform.setOrigin(btVector3(0, 0, 0));
+			localTransform.setOrigin(origin);
 
 			physics->AddShape(convexHull);
 			mBtCollisionShape->addChildShape(localTransform, convexHull);
