@@ -42,3 +42,8 @@ inline std::wstring CharToWString(const char* str)
 	MultiByteToWideChar(CP_ACP, 0, &s_str[0], (int)s_str.size(), &wstr[0], size);
 	return wstr;
 }
+
+inline uint64_t ConvertNsToMs(uint64_t ns)
+{
+	return (uint64_t)((double)ns / 1'000'000.0);
+}

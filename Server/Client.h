@@ -25,7 +25,7 @@ public:
 
 public:
 	void SetLatency(uint64_t sendTime);
-	uint64_t GetLatency() const { return mLatency; }
+	uint64_t GetLatency() const { return mLatencyMs; }
 
 	bool ChangeState(CLIENT_STAT expected, const CLIENT_STAT& desired);
 	void SetState(const CLIENT_STAT& stat) { mState = stat; }
@@ -56,7 +56,7 @@ private:
 	std::atomic_int mLobbyPageNum;
 	
 	std::atomic_bool mIsConnected;
-	std::atomic_uint64_t mLatency;
+	std::atomic_uint64_t mLatencyMs;
 
 	Socket mTCPSocket;
 	Socket* mUDPSocketPtr;

@@ -333,7 +333,7 @@ namespace SC
 	struct packet_measure_rtt : packet_header
 	{
 		uint64_t s_send_time;
-		uint64_t latency;
+		uint64_t latency_ms;
 	};
 }
 #pragma pack(pop)

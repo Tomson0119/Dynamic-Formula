@@ -10,7 +10,7 @@ Client::Client(int id, Socket* udpSck)
 	  mState{ CLIENT_STAT::EMPTY },
 	  mLobbyPageNum{ 0 },
 	  mIsConnected{ false },
-	  mLatency{ 0 },
+	  mLatencyMs{ 0 },
 	  mUDPSocketPtr{ udpSck },
 	  mTCPSendOverlapped{ nullptr },
 	  mTCPRecvOverlapped{ OP::RECV },
@@ -98,7 +98,8 @@ void Client::SetLatency(uint64_t sendTime)
 	if (sendTime > 0)
 	{
 		auto now = Clock::now().time_since_epoch().count();
-		mLatency = ((now - sendTime) / 2) / 1'000'000; // convert ns to ms
+		double latencyNs = (double)(now - sendTime) / 2.0;
+		mLatencyMs = ConvertNsToMs(latencyNs);
 	}
 }
 
@@ -181,7 +182,7 @@ void Client::SendMeasureRTTPacket(bool udp, bool instSend)
 
 	uint64_t now = Clock::now().time_since_epoch().count();
 	pck.s_send_time = now;
-	pck.latency = GetLatency();
+	pck.latency_ms = GetLatency();
 
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, udp);
 	if(instSend) SendMsg(udp);
