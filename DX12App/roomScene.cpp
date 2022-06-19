@@ -3,7 +3,7 @@
 #include "NetLib/NetModule.h"
 
 RoomScene::RoomScene(HWND hwnd, NetModule* netPtr)
-	: Scene{ hwnd, SCENE_STAT::ROOM, (XMFLOAT4)Colors::White, netPtr }
+	: Scene{ hwnd, SCENE_STAT::ROOM, (XMFLOAT4)Colors::Black, netPtr }
 {
 	OutputDebugStringW(L"Room Scene Entered.\n");
 }
@@ -60,7 +60,8 @@ void RoomScene::OnProcessMouseUp(WPARAM btnState, int x, int y)
 	// 맵 변경 버튼
 	if (mpUI->OnProcessMouseClick(btnState, x, y) == -1) // 맵변경
 	{
-
+		auto RoomID = mNetPtr->GetRoomID();
+		mNetPtr->Client()->SwitchMap(RoomID);
 	}
 	else if (mpUI->OnProcessMouseClick(btnState, x, y) == -2) // 나가기
 	{
@@ -78,6 +79,8 @@ void RoomScene::OnProcessMouseUp(WPARAM btnState, int x, int y)
 void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mpUI->Update(timer.TotalTime());
+	if (mpUI->GetLodingUpdated())
+		SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 }
 
 void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
@@ -101,6 +104,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int b
 		OutputDebugString(L"Received room outside info packet.\n");
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
 		mNetPtr->UpdateRoomList(pck);
+		mNetPtr->SetIsUpdatedRoomList(true);
 		break;
 	}
 	case SC::PCK_TYPE::UPDATE_PLAYER_INFO:
@@ -131,7 +135,12 @@ bool RoomScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int b
 
 		SC::packet_game_start_success* pck = reinterpret_cast<SC::packet_game_start_success*>(packet);		
 		mNetPtr->InitPlayerTransform(pck);
-		SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+
+
+		//Scene Delete and TextOut
+		mpUI->SetLodingScene();
+
+		
 		//mpUI->SetMyReadyOff();
 		break;
 	}

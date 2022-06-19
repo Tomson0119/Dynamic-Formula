@@ -36,7 +36,7 @@ bool LobbyServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 	#endif
 		CS::packet_inquire_room* pck = reinterpret_cast<CS::packet_inquire_room*>(packet);
 		gClients[id]->SetPageNum(pck->page_num);
-		SendExistingRoomList(id, pck->page_num);
+		SendExistingRoomList(id);
 		break;
 	}
 	case CS::PCK_TYPE::OPEN_ROOM:
@@ -44,14 +44,9 @@ bool LobbyServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 	#ifdef DEBUG_PACKET_TRANSFER
 		std::cout << "[" << id << "] Received open room packet\n";
 	#endif
-		if (TryOpenRoom(id))
+		if (int roomID = TryOpenRoom(id); roomID >= 0)
 		{
-			/*mOpenRoomIdsMut.lock();
-			mOpenRoomIds.push_back(mRoomCount);
-			std::sort(mOpenRoomIds.begin(), mOpenRoomIds.end());
-			mOpenRoomIdsMut.unlock();*/
-
-			AcceptEnterRoom(mRoomCount, id);
+			AcceptEnterRoom(roomID, id);
 			mRoomCount.fetch_add(1);
 		}
 		break;
@@ -118,25 +113,25 @@ bool LobbyServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 	return true;
 }
 
-bool LobbyServer::TryOpenRoom(int hostID)
+int LobbyServer::TryOpenRoom(int hostID)
 {
 	if (mRoomCount >= MAX_ROOM_SIZE)
 	{
 		gClients[hostID]->SendAccessRoomDeny(ROOM_STAT::MAX_ROOM_REACHED);
-		return false;
+		return -1;
 	}
 
-	if (int roomCount = mRoomCount; mRooms[roomCount]->OpenRoom())
+	if (int idx = FindEmptyRoom(); mRooms[idx]->OpenRoom())
 	{
 		if (gClients[hostID]->ChangeState(CLIENT_STAT::LOBBY, CLIENT_STAT::IN_ROOM) == false)
 		{
-			mRooms[roomCount]->CloseRoom();	// if it fails : logic error
+			mRooms[idx]->CloseRoom();	// if it fails : logic error
 			//mLoginPtr->Disconnect(hostID);
-			return false;
+			return -1;
 		}
-		return mRooms[roomCount]->AddPlayer(hostID); // if it fails : logic error
+		return (mRooms[idx]->AddPlayer(hostID)) ? idx : -1; // if it fails : logic error
 	}
-	return false; // logic error
+	return -1; // logic error
 }
 
 void LobbyServer::AcceptEnterRoom(int roomID, int hostID)
@@ -332,6 +327,16 @@ int LobbyServer::FindPageNumOfRoom(int roomId)
 		if (roomId == i) return cnt / ROOM_NUM_PER_PAGE;
 		if (mRooms[i]->Closed()) continue;
 		cnt += 1;
+	}
+	return -1;
+}
+
+int LobbyServer::FindEmptyRoom()
+{
+	for (int i = 0; i < mRooms.size(); i++)
+	{
+		if (mRooms[i]->Closed())
+			return i;
 	}
 	return -1;
 }

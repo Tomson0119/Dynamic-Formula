@@ -38,6 +38,13 @@ void RoomUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12Command
     SetMyReadyOff();
 }
 
+void RoomUI::SetLodingScene()
+{
+    //Reset();
+    IsLodingScene = true;
+}
+
+
 void RoomUI::SetVectorSize(UINT nFrame)
 {
     UI::SetVectorSize(nFrame);
@@ -158,8 +165,11 @@ void RoomUI::OnProcessMouseMove(WPARAM btnState, int x, int y)
     else
         SetIndexColor(1, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 
-    if (MouseCollisionCheck(dx, dy, GetTextBlock()[2]))
-        SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 0.4f));
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[2])) // Map
+    {
+        if (mNetRef.IsAdmin())
+            SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 0.4f));
+    }
     else
         SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 
@@ -262,11 +272,17 @@ void RoomUI::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 void RoomUI::Update(float GTime)
 {
     const auto& playerList = mNetRef.GetPlayersInfo();
-     
+
     if (mNetRef.IsAdmin())
         GetTextBlock()[0].strText.assign("Start");
     else
         GetTextBlock()[0].strText.assign("Ready");
+
+    if (mNetRef.GetMapIndex())
+        GetTextBlock()[2].strText.assign("Night");
+    else
+        GetTextBlock()[2].strText.assign("Day");
+
 
     for (int i = 0; i < playerList.size(); ++i)
     {
@@ -294,6 +310,19 @@ void RoomUI::Update(float GTime)
         SetIndexReady(mNetRef.GetPlayerIndex());
     else
         SetIndexNotReady(mNetRef.GetPlayerIndex());
+
+    if(IsLodingScene)
+    {
+        for (int i = 1; i < GetTextCnt(); ++i)
+            GetTextBlock()[i].strText.clear();
+        SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+        BuildSolidBrush(GetColors());
+        GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.67f, GetFrameHeight() * 0.85f, GetFrameWidth() * 0.975f, GetFrameHeight() * 0.99f);
+        GetTextBlock()[0].strText.assign("Loding...");
+        SetLodingUpdated();
+    }
+
+
 }
 
 void RoomUI::Draw(UINT nFrame)
@@ -508,10 +537,18 @@ void RoomUI::Draw(UINT nFrame)
     bool IsOutlined[13] = { false,false,false,false,false,false,false,false,false,false,false,false, false };
 
     BeginDraw(nFrame); 
-    DrawBmp(LTRB, 0, 1, BitmapOpacities);
-    RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
-    DrawBmp(LTRB, 1, 8, BitmapOpacities);
-    TextDraw(GetTextBlock());
+    if (!IsLodingScene) 
+    {
+        DrawBmp(LTRB, 0, 1, BitmapOpacities);
+        RoundedRectDraw(RectLTRB, FillLTRB, 0, IsOutlined);
+        DrawBmp(LTRB, 1, 8, BitmapOpacities);
+        TextDraw(GetTextBlock());
+    }
+    else
+    {
+        //DrawBmp(LTRB, 0, 1, BitmapOpacities);
+        TextDraw(GetTextBlock());
+    }
     EndDraw(nFrame);
 }
 
@@ -619,7 +656,7 @@ void RoomUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT
     SetTextRect(); 
 
     GetTextBlock()[1].strText.assign("Out");
-    GetTextBlock()[2].strText.assign("Map");
+    //GetTextBlock()[2].strText.assign("Map");
 
     SetStateNotFail();
 

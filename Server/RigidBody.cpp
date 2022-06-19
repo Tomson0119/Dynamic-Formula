@@ -191,7 +191,12 @@ void MissileRigidBody::AppendRigidBody(BPHandler& physics)
 void MissileRigidBody::UpdateRigidBody()
 {
 	if (IsActive())
+	{
+		// Check coordinates.
+		// Check time : 15 seconds.
+
 		RigidBody::UpdateRigidBody();
+	}
 }
 
 void MissileRigidBody::RemoveRigidBody(BPHandler& physics)
@@ -216,7 +221,7 @@ void MissileRigidBody::SetMissileComponents()
 	position += mConstantPtr->MissileOffset;
 
 	btVector3 forward = mVehiclePtr->GetForwardVector();
-	forward.setY(0.0f);
+	if (forward.getY() < 0) forward.setY(0.0f);
 	forward = forward.normalize();
 	forward *= mConstantPtr->MissileForwardMag;
 

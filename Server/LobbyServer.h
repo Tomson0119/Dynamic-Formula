@@ -19,7 +19,7 @@ public:
 
 	bool ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int id, int bytes);
 
-	bool TryOpenRoom(int hostID);
+	int TryOpenRoom(int hostID);
 	bool TryEnterRoom(int roomID, int hostID);
 	void AcceptEnterRoom(int roomID, int hostID);
 	void RevertScene(int hostID, bool logout=false);
@@ -32,6 +32,7 @@ public:
 
 private:
 	int FindPageNumOfRoom(int roomId);
+	int FindEmptyRoom();
 
 public:
 	void IncreasePlayerCount() { mLobbyPlayerCount.fetch_add(1); }
@@ -42,8 +43,6 @@ private:
 	std::atomic_int mLobbyPlayerCount;
 
 	RoomList mRooms;
-	/*std::deque<int> mOpenRoomIds;
-	std::mutex mOpenRoomIdsMut;*/
 	/*
 		인게임서버는 여러 개가 존재할 수 있으며, 
 		지정한 개수만큼의 방에 대해 로직을 계산하여 처리한다.

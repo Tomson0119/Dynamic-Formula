@@ -117,6 +117,14 @@ void LobbyScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
 	mpUI->Update(timer.TotalTime());
+	if (mNetPtr->GetIsUpdatedRoomList()) 
+	{
+		int i = 0;
+		auto RoomList = mNetPtr->GetRoomList();
+		for (auto& Room : RoomList)
+			mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
+		mNetPtr->SetIsUpdatedRoomList(false);
+	}
 }
 
 void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
@@ -179,13 +187,10 @@ bool LobbyScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		OutputDebugString(L"Received room outside info packet.\n");		
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
 		mNetPtr->UpdateRoomList(pck);		
-		
-		/*for (int i = 0; i < 6; ++i)			
-			mpUI->SetRoomInfoTextsIndex(i, mRoomList[i].ID, mRoomList[i].PlayerCount, mRoomList[i].MapID, mRoomList[i].GameStarted, !mRoomList[i].Opened);
-		*/
-	#ifdef START_GAME_INSTANT
-		mNetPtr->Client()->RequestEnterRoom(0);
-	#endif
+		int i = 0;
+		auto RoomList = mNetPtr->GetRoomList();
+		for (auto& Room :RoomList)			
+			mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
 		break;
 	}
 	case SC::PCK_TYPE::FORCE_LOGOUT:
