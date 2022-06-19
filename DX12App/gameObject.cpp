@@ -320,7 +320,7 @@ void GameObject::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& 
 	mInterpolator.Clear();
 }
 
-void GameObject::Update(float elapsedTime)
+void GameObject::Update(float elapsedTime, int64_t clockDelta)
 {
 	RotateDirectionVectors();
 
@@ -333,7 +333,7 @@ void GameObject::Update(float elapsedTime)
 	}
 	else
 	{
-		InterpolateWorldTransform(elapsedTime);
+		InterpolateWorldTransform(elapsedTime, clockDelta);
 		UpdateTransform();
 	}
 
@@ -543,9 +543,9 @@ void GameObject::InterpolateRigidBody(float elapsed)
 	//rigid->setWorldTransform(nextTransform);
 }
 
-void GameObject::InterpolateWorldTransform(float elapsed)
+void GameObject::InterpolateWorldTransform(float elapsed, uint64_t clockDelta)
 {
-	mInterpolator.Interpolate(elapsed, mPosition, mQuaternion);
+	mInterpolator.Interpolate(elapsed, clockDelta, mPosition, mQuaternion);
 
 	//if (updateRate <= 0.0f) return;
 
@@ -945,15 +945,15 @@ void MissileObject::SetActive(bool state)
 	mActive = state;
 }
 
-void MissileObject::Update(float elapsedTime)
+void MissileObject::Update(float elapsedTime, int64_t clockDelta)
 {
 	if (mActive)
 	{
-		GameObject::Update(elapsedTime);
+		GameObject::Update(elapsedTime, clockDelta);
 	}
 }
 
-void StaticObject::Update(float elapsedTime)
+void StaticObject::Update(float elapsedTime, int64_t clockDelta)
 {
 	RotateDirectionVectors();
 
@@ -966,7 +966,7 @@ SOParticleObject::SOParticleObject(GameObject& parent) : GameObject(), mParent{ 
 {
 }
 
-void SOParticleObject::Update(float elapsedTime)
+void SOParticleObject::Update(float elapsedTime, int64_t clockDelta)
 {
 	mPosition = mLocalOffset;
 

@@ -126,7 +126,7 @@ Camera* Player::ChangeCameraMode(int cameraMode)
 	return newCamera;
 }
 
-void Player::Update(float elapsedTime)
+void Player::Update(float elapsedTime, int64_t clockDelta)
 {
 	mVelocity = Vector3::Add(mVelocity, mGravity);
 
@@ -159,7 +159,7 @@ void Player::Update(float elapsedTime)
 	velocity = Vector3::ScalarProduct(mVelocity, -deceleration);
 	mVelocity = Vector3::Add(mVelocity, Vector3::Normalize(velocity));
 
-	GameObject::Update(elapsedTime);
+	GameObject::Update(elapsedTime, clockDelta);
 }
 
 const float PhysicsPlayer::TransparentInterval = 0.3f;
@@ -519,7 +519,7 @@ void PhysicsPlayer::OnPreciseKeyInput(float Elapsed)
 #endif
 }
 
-void PhysicsPlayer::Update(float elapsedTime)
+void PhysicsPlayer::Update(float elapsedTime, int64_t clockDelta)
 {
 	if (mSpawnFlag)
 	{
@@ -533,7 +533,7 @@ void PhysicsPlayer::Update(float elapsedTime)
 		}
 	}
 
-	GameObject::Update(elapsedTime);
+	GameObject::Update(elapsedTime, clockDelta);
 	if (mCamera) mCamera->Update(elapsedTime);
 
 	for (int i = 0; i < 4; ++i)
@@ -548,7 +548,7 @@ void PhysicsPlayer::Update(float elapsedTime)
 		}
 		else
 		{
-			mWheel[i]->Update(elapsedTime);
+			mWheel[i]->Update(elapsedTime, clockDelta);
 			if(i < 2) mWheel[i]->SetSteeringAngle(mVehicleSteering);
 		}
 	}
@@ -941,7 +941,7 @@ void WheelObject::SetSteeringAngle(float angle)
 	mSteeringAngle = angle;
 }
 
-void WheelObject::Update(float elapsedTime)
+void WheelObject::Update(float elapsedTime, int64_t clockDelta)
 {
 	if (mIsStandAlone == false)
 	{

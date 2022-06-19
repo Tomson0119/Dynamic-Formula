@@ -77,7 +77,7 @@ public:
 
 	void SortMeshes();
 
-	void Update(float elapsed, Camera* camera);
+	void Update(float elapsed, int64_t clockDelta, Camera* camera);
 	virtual void SetAndDraw(ID3D12GraphicsCommandList* cmdList, bool drawWiredFrame=false, bool setPipeline=true, bool msaaOff=false, DrawType type = DrawType::Common);
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, bool isSO = false, DrawType type = DrawType::Common);
 

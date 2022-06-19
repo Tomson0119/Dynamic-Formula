@@ -41,7 +41,7 @@ public:
 	virtual float GetCurrentVelocity() { return 0.0f; }
 
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex) {};
-	virtual void Update(float elapsedTime) override;
+	virtual void Update(float elapsedTime, int64_t clockDelta) override;
 	virtual void OnPlayerUpdate(float elapsedTime) final { }
 	virtual void OnCameraUpdate(float elapsedTime) { }
 	virtual std::shared_ptr<btRaycastVehicle> GetVehicle() { return NULL; }
@@ -81,7 +81,7 @@ public:
 	void UpdatePosition(float Elapsed, const btTransform& wheelTransform);
 	void SetSteeringAngle(float angle);
 
-	virtual void Update(float elapsedTime) override;
+	virtual void Update(float elapsedTime, int64_t clockDelta) override;
 
 private:
 	GameObject& mParent;
@@ -97,7 +97,7 @@ public:
 	virtual ~PhysicsPlayer();
 
 	virtual void OnCameraUpdate(float elapsedTime);
-	virtual void Update(float elapsedTime) override;
+	virtual void Update(float elapsedTime, int64_t clockDelta) override;
 	virtual void OnPreciseKeyInput(float Elapsed) override;
 	virtual void SetCubemapSrv(ID3D12GraphicsCommandList* cmdList, UINT srvIndex);
 	virtual Camera* ChangeCameraMode(int cameraMode);
