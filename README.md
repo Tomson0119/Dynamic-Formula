@@ -2,4 +2,4 @@
 >졸업작품 다이나믹 포뮬러
 
 ## 진행상황
-![work_record](/image/work_record.png)
+> [작업일지](image/work_record.png)
