@@ -275,27 +275,29 @@ struct InstancingInfo
 	XMFLOAT4X4 oldWorld;
 };
 
-
-inline void Print(const std::string& info, const XMFLOAT3& vec)
+namespace Log
 {
-	std::stringstream ss;
-	ss << info;
-	ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << "]\n";
-	OutputDebugStringA(ss.str().c_str());
-}
+	inline void Print(const std::string& info, const XMFLOAT3& vec)
+	{
+		std::stringstream ss;
+		ss << info;
+		ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << "]\n";
+		OutputDebugStringA(ss.str().c_str());
+	}
 
-inline void Print(const std::string& info, const XMFLOAT4& vec)
-{
-	std::stringstream ss;
-	ss << info;
-	ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << "]\n";
-	OutputDebugStringA(ss.str().c_str());
-}
+	inline void Print(const std::string& info, const XMFLOAT4& vec)
+	{
+		std::stringstream ss;
+		ss << info;
+		ss << "[" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << "]\n";
+		OutputDebugStringA(ss.str().c_str());
+	}
 
-template<typename T>
-inline void Print(const std::string& info, const T& val)
-{
-	OutputDebugStringA((info + std::to_string(val) + "\n").c_str());
+	template<typename T>
+	inline void Print(const std::string& info, const T& val)
+	{
+		OutputDebugStringA((info + std::to_string(val) + "\n").c_str());
+	}
 }
 
 
