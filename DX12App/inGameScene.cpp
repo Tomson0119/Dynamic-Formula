@@ -510,6 +510,11 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mMainCamera->SetPosition(mPlayer->GetPosition());
 	mMainCamera->SetRotation(mPlayer->GetQuaternion());
 	mCurrentCamera = mMainCamera.get();
+	
+	// TEST
+	//mDirectorCamera->SetPosition(mMainCamera->GetPosition());
+	//mCurrentCamera = mDirectorCamera.get();
+	//
 
 	for (const auto& [_, pso] : mPipelines)
 	{
@@ -669,9 +674,8 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	case SC::PCK_TYPE::MEASURE_RTT:
 	{
 		SC::packet_measure_rtt* pck = reinterpret_cast<SC::packet_measure_rtt*>(packet);
-		//Print("udp packet id: ", pck->id);
-		mNetPtr->SetLatency(pck->latency);
-		mNetPtr->SetTimePoint(pck->s_send_time);
+		mNetPtr->SetLatency(pck->latency_ms);
+		mNetPtr->CalcClockDelta(pck->s_send_time);
 		mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
 		break;
 	}
@@ -682,7 +686,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		
 		if (player)
 		{
-			player->SetCorrectionTransform(pck, mNetPtr->GetTimePoint(), mNetPtr->GetLatency());
+			player->SetCorrectionTransform(pck, mNetPtr->GetServerTimeStamp(), mNetPtr->GetLatency());
 		}
 		break;
 	}
@@ -707,7 +711,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		
 		if (missile && missile->IsActive())
 		{
-			missile->SetCorrectionTransform(pck, mNetPtr->GetTimePoint(), mNetPtr->GetLatency());
+			missile->SetCorrectionTransform(pck, mNetPtr->GetServerTimeStamp(), mNetPtr->GetLatency());
 		}
 		break;
 	}
@@ -880,16 +884,6 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				obj->SetParticleEnable(false);
 			}
 		}
-		if (wParam == 'I')
-		{
-			if (mPlayer)
-			{
-				auto& vel = mPlayer->GetLinearVelocity().GetXMFloat3();
-				float len = Vector3::Length(vel);
-				Print("Player vel: ", vel);
-				OutputDebugStringA(("Player vel length: " + std::to_string(len) + "\n").c_str());
-			}
-		}
 		break;
 
 	case WM_KEYDOWN:
@@ -993,7 +987,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	mShadowMapRenderer->UpdateDepthCamera(cmdList);
 
 	for (const auto& [_, pso] : mPipelines)
-		pso->Update(elapsed, mCurrentCamera);
+		pso->Update(elapsed, mNetPtr->GetClockDelta(), mCurrentCamera);
 	mMainCamera->Update(elapsed);
 	mDirectorCamera->Update(elapsed);
 	
@@ -1511,7 +1505,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		obj->Scale(scale);
 		obj->SetName(objName);
 
-		obj->Update(0);
+		obj->Update(0, 0);
 		obj->UpdateInverseWorld();
 		mPipelines[Layer::Instancing]->AppendObject(obj);
 		static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName]++;
@@ -1544,7 +1538,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			transparentObj->Scale(scale);
 			transparentObj->SetName(objName + "_Transparent");
 
-			transparentObj->Update(0);
+			transparentObj->Update(0, 0);
 			transparentObj->UpdateInverseWorld();
 			
 			mPipelines[Layer::Transparent]->AppendObject(transparentObj);
