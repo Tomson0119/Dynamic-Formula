@@ -608,10 +608,8 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, int mask)
 			auto player = mPlayerList[idx];
 			if (player->IsNextCheckpoint(cpIdx))
 			{
-				std::cout << "lap check: " << cpIdx << "\n";
 				if (player->GetCurrentCPIndex() >= 0 && cpIdx == 0)
 				{
-					std::cout << "Lap finished.\n";
 					player->IncreaseLapCount();
 					player->IncreasePoint(mConstantPtr->LapFinishPoint);
 					HandlePointUpdate(idx);
