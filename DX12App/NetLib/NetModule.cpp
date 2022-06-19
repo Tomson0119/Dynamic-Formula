@@ -11,7 +11,7 @@
 NetModule::NetModule()
 	: mLoop{ true }, mScenePtr{ nullptr }, mRoomID{ -1 },
 	  mAdminIdx{ -1 }, mPlayerIdx{ -1 }, mMapIdx{ -1 },
-	  mLatency{ 0 }
+	  mLatencyMs{ 0 }
 {
 	for (int i = 0; i < mPlayerList.size(); i++)
 		mPlayerList[i] = PlayerInfo{ true, -1, false, "", XMFLOAT3{ 0.0f,0.0f,0.0f } };
@@ -25,7 +25,7 @@ NetModule::~NetModule()
 	if (mNetThread.joinable()) mNetThread.join();
 }
 
-bool NetModule::Connect(const char* ip, short port)
+bool NetModule::Connect(const std::string& ip, u_short port)
 {
 	if (mNetClient->Connect(ip, port))
 	{
@@ -176,7 +176,7 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
 		if (bytes != over->WSABuffer.len)
 		{
 			// NEED TEST
-			PostDisconnect();
+			//PostDisconnect();
 		}
 		delete over;
 		break;
@@ -216,6 +216,13 @@ NetModule::RoomList NetModule::GetRoomList()
 	auto ret = mRoomList;
 	mRoomListMut.unlock();
 	return ret;
+}
+
+void NetModule::CalcClockDelta(uint64_t serverTimeStamp)
+{
+	mServerTimeStamp = ConvertNsToMs(serverTimeStamp);
+	auto clientTimeStampMs = ConvertNsToMs(Clock::now().time_since_epoch().count()) - mLatencyMs;
+	mClockSyncDeltaMs = mServerTimeStamp - clientTimeStampMs;
 }
 
 void NetModule::Init()

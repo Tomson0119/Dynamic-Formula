@@ -31,7 +31,7 @@ public:
 	NetModule();
 	~NetModule();
 
-	bool Connect(const char* ip, short port);
+	bool Connect(const std::string& ip, u_short port);
 	void PostDisconnect();
 
 	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id);
@@ -64,14 +64,12 @@ public:
 	PlayerList GetPlayersInfo();
 	RoomList GetRoomList();
 
-	void SetTimePoint(uint64_t timePoint) { mTimePoint = timePoint; }
-	uint64_t GetTimePoint() const { return mTimePoint; }
+	void CalcClockDelta(uint64_t serverTimeStamp);
+	int64_t GetClockDelta() const { return mClockSyncDeltaMs; }
+	uint64_t GetServerTimeStamp() const { return mServerTimeStamp; }
 
-	void SetLatency(uint64_t latency) { mLatency = latency; }
-	float GetLatency() const { return (float)mLatency / 1000.0f; }
-
-	void SetServerIP(const std::string& ip) { mServerIPAddress = ip; }
-	const std::string& GetServerIP() const { return mServerIPAddress; }
+	void SetLatency(uint64_t latencyMs) { mLatencyMs = latencyMs; }
+	float GetLatency() const { return (float)mLatencyMs / 1000.0f; }
 	
 private:
 	void Init();
@@ -92,11 +90,10 @@ private:
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;
 
-	std::atomic_uint64_t mTimePoint;
-	std::atomic_uint64_t mLatency;
+	std::atomic_uint64_t mServerTimeStamp;
+	std::atomic_int64_t mClockSyncDeltaMs;
+	std::atomic_uint64_t mLatencyMs;
 
 	IOCP mIOCP;
 	Scene* mScenePtr;
-
-	std::string mServerIPAddress;
 };
