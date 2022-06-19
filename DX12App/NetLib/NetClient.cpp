@@ -21,7 +21,7 @@ NetClient::~NetClient()
 	Disconnect();
 }
 
-bool NetClient::Connect(const char* ip, u_short port)
+bool NetClient::Connect(const std::string& ip, u_short port)
 {
 	mServerEp = EndPoint(ip, port);
 	mIsConnected = mTCPSocket.Connect(mServerEp);

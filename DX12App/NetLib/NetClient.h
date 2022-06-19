@@ -7,7 +7,7 @@ public:
 	~NetClient();
 
 public:
-	bool Connect(const char* ip, u_short port);
+	bool Connect(const std::string& ip, u_short port);
 	void Disconnect();
 
 	void BindUDPSocket(u_short port);
