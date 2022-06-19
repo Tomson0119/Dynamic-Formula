@@ -44,7 +44,12 @@ bool D3DFramework::InitFramework()
 		return false;
 
 	mQueryWin->Run();
-	mNetwork->SetServerIP(mQueryWin->GetAnswer());
+	
+	if (mNetwork->Connect(mQueryWin->GetAnswer(), SERVER_PORT) == false)
+	{
+		MessageBox(mHwnd, L"Cannot connect to server", L"Connection Error", MB_OK);
+		return false;
+	}
 #endif
 	return true;
 }

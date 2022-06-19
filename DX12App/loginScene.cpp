@@ -8,12 +8,6 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 {
 	OutputDebugStringW(L"Login Scene Entered.\n");
 	Texts.resize(2);
-#ifndef STANDALONE	
-	if (mNetPtr->Connect(netPtr->GetServerIP().c_str(), SERVER_PORT) == false)
-	{
-		MessageBoxA(hwnd, "Cannot connect to server", "Connection Failed", MB_OK);
-	}
-#endif
 }
 
 void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
