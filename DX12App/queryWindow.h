@@ -15,6 +15,7 @@ public:
 	std::string GetAnswer() const { return mAnswer; }
 
 private:
+	void SetAnswer(bool local=false);
 	void QuitWindow();
 
 public:
