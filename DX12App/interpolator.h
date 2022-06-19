@@ -11,13 +11,13 @@ public:
 
 		Entry()
 			: empty{ true },
-			  position{},
-			  rotation{}
+			position{},
+			rotation{}
 		{
 		}
 
 		Entry(const XMFLOAT3& pos, const XMFLOAT4& rot)
-			: empty{ false } 
+			: empty{ false }
 		{
 			position = pos;
 			rotation = rot;
@@ -37,7 +37,7 @@ public:
 		mEntryMapMut.unlock();
 	}
 
-	void Interpolate(float dt, XMFLOAT3& targetPos, XMFLOAT4& targetRot)
+	void Interpolate(float dt, int64_t clockDelta, XMFLOAT3& targetPos, XMFLOAT4& targetRot)
 	{
 		mEntryMapMut.lock();
 		if (mEntries.empty())
@@ -49,7 +49,7 @@ public:
 
 		if (mPrevEntry.empty)
 		{
-			EraseOldEntries();
+			FindNextEntry();
 
 			if (mPrevEntry.empty)
 			{
@@ -57,29 +57,42 @@ public:
 				mPrevTimePoint = mEntries.begin()->first;
 				mPrevEntry = mEntries.begin()->second;
 				mEntryMapMut.unlock();
-			}		
+			}
 			targetPos = mPrevEntry.position;
 			targetRot = mPrevEntry.rotation;
 			return;
 		}
 
-		mEntryMapMut.lock();
-		uint64_t nextTp = mEntries.begin()->first;
-		Entry next = mEntries.begin()->second;
-		mCurrentTime = (uint64_t)((mCurrentTime * PCT) + (mEntries.rbegin()->first * (1.0f - PCT)));
-		mEntryMapMut.unlock();
+		auto now = Clock::now().time_since_epoch().count();
+		auto now_ms = ConvertNsToMs(now) + clockDelta;
 
-		uint64_t timeBetween = nextTp - mPrevTimePoint;
+		mCurrentTime = (uint64_t)(((float)mCurrentTime * PCT) + (float)now_ms * (1.0f - PCT));
+
+		auto next = FindNextEntry();
+		if (next.has_value() == false) {
+			return;
+		}
+
+		uint64_t nextTp = next.value().first;
+		Entry nextEntry = next.value().second;
+
+		if (nextTp <= mPrevTimePoint) return;
+
+		uint64_t timeBetween = nextTp - mPrevTimePoint;		
 		float progress = (float)(mCurrentTime - mPrevTimePoint) / timeBetween;
 
-		Print("CurrentTime: ", mCurrentTime);
-		Print("timeBetween: ", timeBetween);
-		Print("Progress: ", progress);
+		/*Print("prev time: ", mPrevTimePoint);
+		Print("current time: ", mCurrentTime);
+		Print("next time: ", nextTp);*/
+		Log::Print("progress: ", progress);
 
-		targetPos = Vector3::Lerp(mPrevEntry.position, next.position, progress);
-		targetRot = Vector4::Slerp(mPrevEntry.rotation, next.rotation, progress);
+		targetPos = Vector3::Lerp(mPrevEntry.position, nextEntry.position, progress);
+		targetRot = Vector4::Slerp(mPrevEntry.rotation, nextEntry.rotation, progress);
 
-		EraseOldEntries();
+		/*Print("prev position: ", mPrevEntry.position);
+		Print("current position: ", targetPos);
+		Print("next position: ", nextEntry.position);*/
+		Log::Print("-----------------------------------", 0);
 	}
 
 	void Clear()
@@ -93,22 +106,23 @@ public:
 	}
 
 private:
-	static float GetDurationSec(uint64_t a, uint64_t b)
+	std::optional<std::pair<uint64_t, Entry>> FindNextEntry()
 	{
-		return (float)(a - b) / 1'000'000'000.f;
-	}
-
-	void EraseOldEntries()
-	{
-		mEntryMapMut.lock();
-		while (mEntries.empty() == false && mCurrentTime > mEntries.begin()->first)
+		std::unique_lock lock{ mEntryMapMut };
+		while (mEntries.empty() == false && 
+			(mCurrentTime > mEntries.begin()->first))
 		{
 			mPrevTimePoint = mEntries.begin()->first;
 			mPrevEntry = mEntries.begin()->second;
 			mEntries.erase(mEntries.begin());
 		}
+		
+		Log::Print("Entries size: ", mEntries.size());
 
-		mEntryMapMut.unlock();
+		if (mEntries.empty())
+			return std::nullopt;
+
+		return *mEntries.begin();
 	}
 
 private:
@@ -119,5 +133,5 @@ private:
 	uint64_t mPrevTimePoint;
 	Entry mPrevEntry;
 
-	const float PCT = 0.5f;
+	const float PCT = 0.8f;
 };
