@@ -167,6 +167,9 @@ void InGameScene::BuildObjects(
 
 	BuildParticleObject(cmdList);
 
+	//Sound
+	SetSound();
+
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
 	mNetPtr->Client()->SendLoadSequenceDone(mNetPtr->GetRoomID());
@@ -645,6 +648,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	{
 		SC::packet_ready_signal* pck = reinterpret_cast<SC::packet_ready_signal*>(packet);
 		mpUI->ShowStartAnim();
+		GetSound().Play(1.0f, 0);
 		break;
 	}
 	case SC::PCK_TYPE::START_SIGNAL:
@@ -793,7 +797,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		}
 		mpUI->SortScoreboard();
 		mpUI->GetMutex().unlock();
-
+		GetSound().Stop(0);
 		mpUI->ShowScoreBoard();
 		mGameEnded = true;
 		mRevertTime = Clock::now() + std::chrono::seconds(WAIT_TO_REVERT); // waits for 5 seconds before revert.
@@ -801,7 +805,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	}
 	case SC::PCK_TYPE::ROOM_INSIDE_INFO:
 	{
-		OutputDebugString(L"Received room inside info packet.\n");
+		OutputDebugString(L"Rece	ived room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);
 		break;
@@ -906,6 +910,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				{
 					mPlayer->SetBooster();
 					mPlayer->SetRimLight(true);
+					GetSound().Play(1.0f, 1);
 				}
 			}
 		}
@@ -1708,4 +1713,15 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 			
 		}
 	}
+}
+
+void InGameScene::SetSound()
+{
+	std::vector<std::string> SoundFiles;
+	SoundFiles.push_back("Sound/TestBG.wav");
+	SoundFiles.push_back("Sound/TestEffect.wav");
+	std::vector<FMOD_MODE> modes;
+	modes.push_back(FMOD_LOOP_NORMAL);
+	modes.push_back(FMOD_DEFAULT);
+	GetSound().InitSound(SoundFiles, modes);
 }

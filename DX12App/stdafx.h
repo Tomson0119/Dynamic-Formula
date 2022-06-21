@@ -41,6 +41,9 @@
 #pragma comment(lib, "dxgi.lib")
 
 
+//sound
+#include <fmod.h>	
+
 //D2D11 헤더파일:
 #include <d2d1_3.h>
 #include <d3d11on12.h>
@@ -80,6 +83,7 @@
 #include "dxException.h"
 
 #include "bulletWrap.h"
+
 
 using namespace DirectX;
 using namespace DirectX::PackedVector;

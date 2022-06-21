@@ -109,6 +109,7 @@ private:
 	void LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstring& path);
 
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
+	void SetSound();
 
 private:
 	std::unique_ptr<Camera> mMainCamera;

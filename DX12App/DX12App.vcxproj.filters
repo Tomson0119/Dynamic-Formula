@@ -94,6 +94,9 @@
     <ClCompile Include="atomicFloat.cpp">
       <Filter>소스 파일\Helper</Filter>
     </ClCompile>
+    <ClCompile Include="sound.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vertex.h">
@@ -203,6 +206,9 @@
     </ClInclude>
     <ClInclude Include="interpolator.h">
       <Filter>헤더 파일\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="sound.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

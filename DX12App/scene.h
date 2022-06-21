@@ -3,6 +3,7 @@
 #include "gameTimer.h"
 #include "mesh.h"
 #include "gameObject.h"
+#include "sound.h"
 
 class NetModule;
 class UI;
@@ -71,6 +72,7 @@ public:
 	void SetSceneChangeFlag(SCENE_CHANGE_FLAG flag) { mSceneChangeFlag = flag; }
 	SCENE_STAT GetSceneState() const { return mSceneState; }
 	const XMFLOAT4& GetFrameColor() { return mFrameColor; }
+	Sound& GetSound() { return mSound; }
 
 protected:
 	SCENE_STAT mSceneState;
@@ -82,4 +84,7 @@ protected:
 	ComPtr<ID3D12Device> mDevice;
 
 	HWND mHwnd;
+
+private:
+	Sound mSound;
 };
