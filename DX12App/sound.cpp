@@ -31,6 +31,15 @@ void Sound::Play(float volume, int channelNum)
 	FMOD_Channel_SetVolume(mChannel[channelNum], volume);
 }
 
+bool Sound::PlayCheck(int channelNum)
+{
+	FMOD_BOOL IsPlaying;
+	FMOD_Channel_IsPlaying(mChannel[channelNum], &IsPlaying);
+	if (IsPlaying)
+		return true;
+	return false;
+}
+
 void Sound::Stop(int channelNum)
 {
 	FMOD_Channel_Stop(mChannel[channelNum]);

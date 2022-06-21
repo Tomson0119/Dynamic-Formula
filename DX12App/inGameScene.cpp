@@ -648,7 +648,9 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	{
 		SC::packet_ready_signal* pck = reinterpret_cast<SC::packet_ready_signal*>(packet);
 		mpUI->ShowStartAnim();
-		GetSound().Play(1.0f, 0);
+		GetSound().Play(0.2f, static_cast<int>(SOUND_TRACK::BGM1));
+		GetSound().Play(0.2f, static_cast<int>(SOUND_TRACK::BGM2));
+
 		break;
 	}
 	case SC::PCK_TYPE::START_SIGNAL:
@@ -851,6 +853,7 @@ void InGameScene::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
 void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	auto sound = GetSound();
 	switch (uMsg)
 	{
 	case WM_KEYUP:
@@ -887,6 +890,14 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				std::shared_ptr<SOParticleObject>& obj = std::static_pointer_cast<SOParticleObject>(mPipelines[Layer::DriftParticle]->GetRenderObjects()[i]);
 				obj->SetParticleEnable(false);
 			}
+			if (sound.PlayCheck(static_cast<int>(SOUND_TRACK::DRIFT1)))
+				sound.Stop(static_cast<int>(SOUND_TRACK::DRIFT1));
+			if(sound.PlayCheck(static_cast<int>(SOUND_TRACK::DRIFT2)))
+				sound.Stop(static_cast<int>(SOUND_TRACK::DRIFT2));
+			sound.Play(1.0f, static_cast<int>(SOUND_TRACK::DRIFT3));
+			sound.SetIsDriftStart();
+			if(sound.GetIsDrift())
+				sound.SetIsDrift();
 		}
 		break;
 
@@ -897,6 +908,23 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				std::shared_ptr<SOParticleObject>& obj = std::static_pointer_cast<SOParticleObject>(mPipelines[Layer::DriftParticle]->GetRenderObjects()[i]);
 				obj->SetParticleEnable(true);
+			}
+			if (!sound.GetIsDriftStart())
+			{
+				sound.Play(1.0f, static_cast<int>(SOUND_TRACK::DRIFT1));
+				sound.SetIsDriftStart();
+			}
+			else
+			{
+				if (!sound.PlayCheck(static_cast<int>(SOUND_TRACK::DRIFT1)))
+				{
+					if (!sound.GetIsDrift())
+					{
+						sound.Play(1.0f, static_cast<int>(SOUND_TRACK::DRIFT2));
+						sound.SetIsDrift();
+					}
+				}
+				
 			}
 		}
 		if ((wParam == 'Z' || wParam == 'X'))
@@ -910,7 +938,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				{
 					mPlayer->SetBooster();
 					mPlayer->SetRimLight(true);
-					GetSound().Play(1.0f, 1);
+					GetSound().Play(1.0f, static_cast<int>(SOUND_TRACK::TEST_EFFECT));
 				}
 			}
 		}
@@ -1718,10 +1746,20 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 void InGameScene::SetSound()
 {
 	std::vector<std::string> SoundFiles;
-	SoundFiles.push_back("Sound/TestBG.wav");
+	SoundFiles.push_back("Sound/BGM1.wav");
+	SoundFiles.push_back("Sound/BGM2.wav");
 	SoundFiles.push_back("Sound/TestEffect.wav");
+	SoundFiles.push_back("Sound/CarDrift1.wav");
+	SoundFiles.push_back("Sound/CarDrift2.wav");
+	SoundFiles.push_back("Sound/CarDrift3.wav");
+
 	std::vector<FMOD_MODE> modes;
 	modes.push_back(FMOD_LOOP_NORMAL);
+	modes.push_back(FMOD_LOOP_NORMAL);
 	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_LOOP_NORMAL);
+	modes.push_back(FMOD_DEFAULT);
+
 	GetSound().InitSound(SoundFiles, modes);
 }
