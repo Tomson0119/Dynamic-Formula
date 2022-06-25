@@ -39,7 +39,7 @@ VertexOut VS(VertexIn vin)
     vout.newPosWVP = vout.PosH;
 
     float4x4 tWorld = transpose(gWorld);
-    vout.NormalW = mul((float3x3)tWorld, vin.NormalL);
+    vout.NormalW = mul(float4(vin.NormalL, 0.0f), gWorld).xyz;
     vout.TangentW = mul((float3x3)tWorld, vin.TangentL);
     
     float4 texC = mul(float4(vin.TexCoord, 0.0f, 1.0f), gTexTransform);
