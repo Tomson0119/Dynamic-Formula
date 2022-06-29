@@ -674,7 +674,12 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	{
 		SC::packet_remove_missile* pck = reinterpret_cast<SC::packet_remove_missile*>(packet);
 		const auto& missile = mMissileObjects[pck->missile_idx];
-		if (missile) missile->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+		if (missile) 
+		{
+			missile->SetUpdateFlag(UPDATE_FLAG::REMOVE); 
+			auto& sound = GetSound();
+			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::MISSILE_EXPLOSION));
+		}
 		break;
 	}
 	case SC::PCK_TYPE::MEASURE_RTT:
@@ -890,14 +895,15 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				std::shared_ptr<SOParticleObject>& obj = std::static_pointer_cast<SOParticleObject>(mPipelines[Layer::DriftParticle]->GetRenderObjects()[i]);
 				obj->SetParticleEnable(false);
 			}
-			/*if (sound.PlayCheck(static_cast<int>(SOUND_TRACK::DRIFT1)))
-				sound.Stop(static_cast<int>(SOUND_TRACK::DRIFT1));
-			if(sound.PlayCheck(static_cast<int>(SOUND_TRACK::DRIFT2)))
-				sound.Stop(static_cast<int>(SOUND_TRACK::DRIFT2));
-			sound.Play(1.0f, static_cast<int>(SOUND_TRACK::DRIFT3));
-			sound.SetIsDriftStart();
-			if(sound.GetIsDrift())
-				sound.SetIsDrift();*/
+			auto velocity = mpUI.get()->GetSpeed();
+			auto& sound = GetSound();
+			const auto& channel = sound.GetChannel();
+			FMOD_RESULT res{};
+			if (sound.GetIsDrift())
+			{
+				sound.SetIsDrift();
+				FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(SOUND_TRACK::DRIFT_ORIGIN)], true);
+			}
 		}
 		break;
 
@@ -909,7 +915,17 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				std::shared_ptr<SOParticleObject>& obj = std::static_pointer_cast<SOParticleObject>(mPipelines[Layer::DriftParticle]->GetRenderObjects()[i]);
 				obj->SetParticleEnable(true);
 			}
-			
+			auto velocity = mpUI.get()->GetSpeed();
+			auto& sound = GetSound();
+			const auto& channel = sound.GetChannel();
+			FMOD_RESULT res{};
+			if (!sound.GetIsDrift())
+			{
+				sound.SetIsDrift();
+				sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIFT_ORIGIN));
+				FMOD_Channel_SetPitch(channel[static_cast<int>(SOUND_TRACK::DRIFT_ORIGIN)], 1.2f);
+				FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIFT_ORIGIN)], static_cast<unsigned int>(DRIFT_SOUND_FRAME * 0.355f), FMOD_TIMEUNIT_PCM);
+			}
 		}
 		if ((wParam == 'Z' || wParam == 'X'))
 		{
@@ -922,7 +938,18 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				{
 					mPlayer->SetBooster();
 					mPlayer->SetRimLight(true);
-					GetSound().Play(1.0f, static_cast<int>(SOUND_TRACK::TEST_EFFECT));
+					auto& sound = GetSound();
+					const auto& channel = sound.GetChannel();
+					FMOD_RESULT res{};
+					sound.Play(MAX_VOLUME, static_cast<int>(SOUND_TRACK::BOOSTER));
+					//sound.Play(MAX_VOLUME, static_cast<int>(SOUND_TRACK::BOOSTERBACK));
+					FMOD_Channel_SetPitch(channel[static_cast<int>(SOUND_TRACK::BOOSTER)], 1.2f);
+					//FMOD_Channel_SetPitch(channel[static_cast<int>(SOUND_TRACK::BOOSTERBACK)], 1.2f);
+				}
+				else if (wParam == 'X')
+				{
+					auto& sound = GetSound();
+					sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::MISSILE));
 				}
 			}
 		}
@@ -991,8 +1018,6 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		FMOD_BOOL isPlaying = false;
 		FMOD_Channel_IsPlaying(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], &isPlaying);
 
-		
-
 		if (!sound.GetIsDriving())
 		{
 			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN));
@@ -1031,6 +1056,13 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 				res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_REVERSE)], pos, FMOD_TIMEUNIT_PCM);
 			}
 		}
+		/*else
+		{
+			auto pos = static_cast<unsigned int>((DRIVING_REVERSE_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * ((MAX_SPEED - velocity) / static_cast<float>(MAX_SPEED)));
+
+			if (velocity > 20)
+				res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_REVERSE)], pos, FMOD_TIMEUNIT_PCM);
+		}*/
 	}
 
 	if (GetAsyncKeyState(VK_DOWN) & 0x8001 || GetAsyncKeyState(VK_DOWN)&8000)
@@ -1053,8 +1085,6 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 				auto pos = static_cast<unsigned int>((BRAKE_SKID_SOUND_FRAME * BRAKE_SKID_SOUND_RUNNING_TIME) * (MAX_SPEED - velocity) / static_cast<float>(MAX_SPEED));
 				res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::BRAKE_SKID)], pos, FMOD_TIMEUNIT_PCM);
-
-
 			}
 		}
 	}
@@ -1069,6 +1099,15 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 			FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(SOUND_TRACK::BIKE_BRAKE)], true);
 			FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(SOUND_TRACK::BRAKE_SKID)], true);
 		}
+	}
+
+	if (GetAsyncKeyState(VK_LSHIFT) & 0x8000)
+	{
+		
+	}
+	else
+	{
+		
 	}
 
 #endif
@@ -1841,6 +1880,12 @@ void InGameScene::SetSound()
 	SoundFiles.push_back("Sound/BrakeSkid.wav");
 	SoundFiles.push_back("Sound/BikeBrake.wav");
 
+	SoundFiles.push_back("Sound/Booster.wav");
+	SoundFiles.push_back("Sound/BoosterBack.wav");
+	SoundFiles.push_back("Sound/Missile.wav");
+	SoundFiles.push_back("Sound/MissileExplosion.wav");
+
+
 
 
 	std::vector<FMOD_MODE> modes;
@@ -1848,10 +1893,16 @@ void InGameScene::SetSound()
 	modes.push_back(FMOD_LOOP_NORMAL);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_LOOP_NORMAL);
+	modes.push_back(FMOD_LOOP_NORMAL);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
+
 
 
 	GetSound().InitSound(SoundFiles, modes);
