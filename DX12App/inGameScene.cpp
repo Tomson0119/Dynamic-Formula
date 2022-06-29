@@ -1873,7 +1873,6 @@ void InGameScene::SetSound()
 	std::vector<std::string> SoundFiles;
 	SoundFiles.push_back("Sound/BGM1.wav");
 	SoundFiles.push_back("Sound/BGM2.wav");
-	SoundFiles.push_back("Sound/TestEffect.wav");
 	SoundFiles.push_back("Sound/Driving.wav");
 	SoundFiles.push_back("Sound/CarDrift.wav");
 	SoundFiles.push_back("Sound/DrivingReverse.mp3");
@@ -1891,7 +1890,6 @@ void InGameScene::SetSound()
 	std::vector<FMOD_MODE> modes;
 	modes.push_back(FMOD_LOOP_NORMAL);
 	modes.push_back(FMOD_LOOP_NORMAL);
-	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_LOOP_NORMAL);
 	modes.push_back(FMOD_LOOP_NORMAL);
