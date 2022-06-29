@@ -981,6 +981,8 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		std::wstring text{ std::to_wstring(velocity) };
 		OutputDebugStringW(text.c_str());
 		auto& sound = GetSound();
+		if(sound.GetIsDecelerating())
+			sound.SetIsDecelerating();
 
 		const auto& channel = sound.GetChannel();
 		FMOD_Channel_SetPaused(channel[static_cast<int>(SOUND_TRACK::DRIVING_REVERSE)], true);
@@ -1006,7 +1008,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 			auto pos = static_cast<unsigned int>((DRIVING_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED)));
 			if (pos > 78112) pos = 78112;
 			res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], pos, FMOD_TIMEUNIT_PCM);
-			FMOD_Channel_SetPitch(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], 0.8f + (1.0f * (velocity * (0.3f / MAX_SPEED))));
+			FMOD_Channel_SetPitch(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], 0.5f + (1.0f * (velocity * (0.7f / MAX_SPEED))));
 		}
 	}
 	else 
@@ -1031,23 +1033,41 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		}
 	}
 
-	if (GetAsyncKeyState(VK_DOWN) & 0x8001)
+	if (GetAsyncKeyState(VK_DOWN) & 0x8001 || GetAsyncKeyState(VK_DOWN)&8000)
 	{
 		auto velocity = mpUI.get()->GetSpeed();
 		auto& sound = GetSound();
 		const auto& channel = sound.GetChannel();
 		FMOD_RESULT res{};
-
-		if (velocity>20)
+		if (!sound.GetIsDecelerating()) 
 		{
-			/*FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], true);
-			sound.SetIsDriving();
-			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_REVERSE));
+			sound.SetIsDecelerating();
+			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::BIKE_BRAKE));
 
-			auto pos = static_cast<unsigned int>((DRIVING_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * ((MAX_SPEED - velocity) / static_cast<float>(MAX_SPEED)));
-			if (pos < 8000) pos = 8000;
-			res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_REVERSE)], pos, FMOD_TIMEUNIT_PCM);*/
+			auto pos = static_cast<unsigned int>((BIKE_BRAKE_SOUND_FRAME * BIKE_BRAKE_SOUND_RUNNING_TIME) * (MAX_SPEED - velocity) / static_cast<float>(MAX_SPEED));
+			res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::BIKE_BRAKE)], pos, FMOD_TIMEUNIT_PCM);
 
+			if (velocity > 50)
+			{
+				sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::BRAKE_SKID));
+
+				auto pos = static_cast<unsigned int>((BRAKE_SKID_SOUND_FRAME * BRAKE_SKID_SOUND_RUNNING_TIME) * (MAX_SPEED - velocity) / static_cast<float>(MAX_SPEED));
+				res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::BRAKE_SKID)], pos, FMOD_TIMEUNIT_PCM);
+
+
+			}
+		}
+	}
+	else
+	{
+		auto velocity = mpUI.get()->GetSpeed();
+		auto& sound = GetSound();
+		const auto& channel = sound.GetChannel();
+		FMOD_RESULT res{};
+		if (sound.GetIsDecelerating())
+		{
+			FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(SOUND_TRACK::BIKE_BRAKE)], true);
+			FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(SOUND_TRACK::BRAKE_SKID)], true);
 		}
 	}
 
@@ -1818,6 +1838,9 @@ void InGameScene::SetSound()
 	SoundFiles.push_back("Sound/Driving.wav");
 	SoundFiles.push_back("Sound/CarDrift.wav");
 	SoundFiles.push_back("Sound/DrivingReverse.mp3");
+	SoundFiles.push_back("Sound/BrakeSkid.wav");
+	SoundFiles.push_back("Sound/BikeBrake.wav");
+
 
 
 	std::vector<FMOD_MODE> modes;
@@ -1827,6 +1850,9 @@ void InGameScene::SetSound()
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+
 
 	GetSound().InitSound(SoundFiles, modes);
 }
