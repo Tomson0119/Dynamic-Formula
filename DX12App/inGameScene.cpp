@@ -963,32 +963,28 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 			// Key pressed
 			val = true;
 			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
-			if (key == VK_UP)
-			{
-				
-				
-			}
+			
 		}
 		else if (input == 0 && val == true)
 		{
 			// Key released
 			val = false;
 			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
-			if (key == VK_UP)
-			{
-				
-				
-
-			}
+			
 		}
 	}
+	
 	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
+
 		auto velocity = mpUI.get()->GetSpeed();
 		std::wstring text{ std::to_wstring(velocity) };
 		OutputDebugStringW(text.c_str());
 		auto& sound = GetSound();
+
 		const auto& channel = sound.GetChannel();
+		FMOD_Channel_SetPaused(channel[static_cast<int>(SOUND_TRACK::DRIVING_REVERSE)], true);
+
 		FMOD_RESULT res{};
 		FMOD_BOOL isPlaying = false;
 		FMOD_Channel_IsPlaying(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], &isPlaying);
@@ -998,25 +994,60 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		if (!sound.GetIsDriving())
 		{
 			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN));
-			FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], static_cast<unsigned int>((DRIVING_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED))), FMOD_TIMEUNIT_PCM);
+			auto pos = static_cast<unsigned int>((DRIVING_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED)));
+			if (pos > 78112) pos = 78112;
+			FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], pos, FMOD_TIMEUNIT_PCM);
 			FMOD_Channel_SetPitch(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], 0.8f + (1.0f * (velocity * (0.3f / MAX_SPEED))));
 			sound.SetIsDriving();
 		}
 		else if (!isPlaying)
 		{
 			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN));
-			res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], static_cast<unsigned int>((static_cast<float>(DRIVING_SOUND_FRAME) * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED))), FMOD_TIMEUNIT_PCM);
+			auto pos = static_cast<unsigned int>((DRIVING_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED)));
+			if (pos > 78112) pos = 78112;
+			res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], pos, FMOD_TIMEUNIT_PCM);
 			FMOD_Channel_SetPitch(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], 0.8f + (1.0f * (velocity * (0.3f / MAX_SPEED))));
 		}
 	}
-	else
+	else 
 	{
-		auto velocity = mPlayer->GetCurrentVelocity();
+		auto velocity = mpUI.get()->GetSpeed();
 		auto& sound = GetSound();
+		const auto& channel = sound.GetChannel();
+		FMOD_RESULT res{};
+
 		if (sound.GetIsDriving())
 		{
 			FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], true);
 			sound.SetIsDriving();
+			if (velocity > 20)
+			{
+				sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_REVERSE));
+
+				auto pos = static_cast<unsigned int>((DRIVING_REVERSE_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * ((MAX_SPEED - velocity) / static_cast<float>(MAX_SPEED)));
+				if (pos < 8000) pos = 8000;
+				res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_REVERSE)], pos, FMOD_TIMEUNIT_PCM);
+			}
+		}
+	}
+
+	if (GetAsyncKeyState(VK_DOWN) & 0x8001)
+	{
+		auto velocity = mpUI.get()->GetSpeed();
+		auto& sound = GetSound();
+		const auto& channel = sound.GetChannel();
+		FMOD_RESULT res{};
+
+		if (velocity>20)
+		{
+			/*FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], true);
+			sound.SetIsDriving();
+			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_REVERSE));
+
+			auto pos = static_cast<unsigned int>((DRIVING_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * ((MAX_SPEED - velocity) / static_cast<float>(MAX_SPEED)));
+			if (pos < 8000) pos = 8000;
+			res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_REVERSE)], pos, FMOD_TIMEUNIT_PCM);*/
+
 		}
 	}
 
@@ -1784,27 +1815,15 @@ void InGameScene::SetSound()
 	SoundFiles.push_back("Sound/BGM1.wav");
 	SoundFiles.push_back("Sound/BGM2.wav");
 	SoundFiles.push_back("Sound/TestEffect.wav");
-	SoundFiles.push_back("Sound/CarDrift1.wav");
-	SoundFiles.push_back("Sound/CarDrift2.wav");
-	SoundFiles.push_back("Sound/CarDrift3.wav");
-	SoundFiles.push_back("Sound/Driving1.wav");
-	SoundFiles.push_back("Sound/Driving2.wav");
-	SoundFiles.push_back("Sound/Driving3.wav");
-	SoundFiles.push_back("Sound/Driving4.wav");
 	SoundFiles.push_back("Sound/Driving.wav");
 	SoundFiles.push_back("Sound/CarDrift.wav");
+	SoundFiles.push_back("Sound/DrivingReverse.mp3");
 
 
 	std::vector<FMOD_MODE> modes;
 	modes.push_back(FMOD_LOOP_NORMAL);
 	modes.push_back(FMOD_LOOP_NORMAL);
 	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_LOOP_NORMAL);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_LOOP_NORMAL);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);

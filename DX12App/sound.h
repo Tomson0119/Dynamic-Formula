@@ -5,7 +5,8 @@ constexpr int MAX_CHANNEL = 16; // 동시 재생 가능한 사운드 수
 constexpr float MAX_VOLUME = 1.0f;
 constexpr float MIN_VOLUME = 0.0f;
 constexpr float NORMAL_VOLUME = 0.5f;
-constexpr int DRIVING_SOUND_FRAME = 32000;
+constexpr int DRIVING_SOUND_FRAME = 48000;
+constexpr int DRIVING_REVERSE_SOUND_FRAME = 32000;
 constexpr int MAX_SPEED = 250;
 constexpr float DRIVING_SOUND_RUNNING_TIME = 3.964f;
 
@@ -13,15 +14,9 @@ enum class SOUND_TRACK {
 	BGM1 = 0,
 	BGM2,
 	TEST_EFFECT,
-	DRIFT1,
-	DRIFT2,
-	DRIFT3,
-	DRIVING1,
-	DRIVING2,
-	DRIVING3,
-	DRIVING4,
 	DRIVING_ORIGIN,
-	DRIFT_ORIGIN
+	DRIFT_ORIGIN,
+	DRIVING_REVERSE
 };
 
 class Sound
