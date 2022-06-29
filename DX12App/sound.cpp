@@ -21,12 +21,17 @@ void Sound::InitSound(std::vector<std::string>& SoundFilePath, std::vector<FMOD_
 	FMOD_System_Init(mSoundSystem, MAX_CHANNEL, FMOD_INIT_NORMAL, NULL);
 	mSoundFile.resize(SoundFilePath.size());
 	mChannel.resize(SoundFilePath.size());
+	FMOD_RESULT res{};
 	for (int i = 0; i < SoundFilePath.size(); ++i)
-		FMOD_System_CreateSound(mSoundSystem, SoundFilePath[i].c_str(), mode[i], 0, &mSoundFile[i]);
+	{
+		res = FMOD_System_CreateSound(mSoundSystem, SoundFilePath[i].c_str(), mode[i], 0, &mSoundFile[i]);
+		if (res == FMOD_OK)
+			continue;
+	}
 }
 
 void Sound::Play(float volume, int channelNum)
-{
+{	
 	FMOD_System_PlaySound(mSoundSystem, mSoundFile[channelNum], NULL, 0, &mChannel[channelNum]);
 	FMOD_Channel_SetVolume(mChannel[channelNum], volume);
 }
@@ -48,4 +53,10 @@ void Sound::Stop(int channelNum)
 void Sound::Update()
 {
 	FMOD_System_Update(mSoundSystem);
+}
+
+void Sound::SetIsDriftStart()
+{
+	if (mIsDriftStart) mIsDriftStart = false; 
+	else mIsDriftStart = true;
 }

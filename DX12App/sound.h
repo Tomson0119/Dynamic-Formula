@@ -2,6 +2,12 @@
 #include "stdafx.h"
 
 constexpr int MAX_CHANNEL = 16; // 동시 재생 가능한 사운드 수
+constexpr float MAX_VOLUME = 1.0f;
+constexpr float MIN_VOLUME = 0.0f;
+constexpr float NORMAL_VOLUME = 0.5f;
+constexpr int DRIVING_SOUND_FRAME = 32000;
+constexpr int MAX_SPEED = 250;
+constexpr float DRIVING_SOUND_RUNNING_TIME = 3.964f;
 
 enum class SOUND_TRACK {
 	BGM1 = 0,
@@ -9,7 +15,13 @@ enum class SOUND_TRACK {
 	TEST_EFFECT,
 	DRIFT1,
 	DRIFT2,
-	DRIFT3
+	DRIFT3,
+	DRIVING1,
+	DRIVING2,
+	DRIVING3,
+	DRIVING4,
+	DRIVING_ORIGIN,
+	DRIFT_ORIGIN
 };
 
 class Sound
@@ -18,8 +30,12 @@ private:
 	FMOD_SYSTEM* mSoundSystem;
 	std::vector<FMOD_SOUND*> mSoundFile;
 	std::vector<FMOD_CHANNEL*> mChannel;
+
 	bool mIsDriftStart = false;
 	bool mIsDrift = false;
+	bool mIsDriving = false;
+
+
 public:
 	Sound();
 	Sound(std::vector<std::string>& SoundFilePath, std::vector<FMOD_MODE>& mode);
@@ -30,9 +46,15 @@ public:
 	bool PlayCheck(int channelNum);
 	void Stop(int channelNum);
 	void Update();
-	void SetIsDriftStart() { mIsDriftStart = !mIsDriftStart; }
+
+	void SetIsDriftStart();
+	void SetIsDrift() { if (mIsDrift) mIsDrift = false; else mIsDrift = true; }
+	void SetIsDriving() { if (mIsDriving) mIsDriving = false; else mIsDriving = true; }
+
 	bool GetIsDriftStart() const { return mIsDriftStart; }
-	void SetIsDrift() { mIsDrift= !mIsDrift; }
 	bool GetIsDrift() const { return mIsDrift; }
+	bool GetIsDriving() const { return mIsDriving; }
+	const std::vector<FMOD_CHANNEL*>& GetChannel() { return mChannel; }
+	FMOD_SYSTEM* GetSystem() { return mSoundSystem; }
 };
 

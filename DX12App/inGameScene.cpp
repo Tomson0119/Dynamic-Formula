@@ -890,14 +890,14 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				std::shared_ptr<SOParticleObject>& obj = std::static_pointer_cast<SOParticleObject>(mPipelines[Layer::DriftParticle]->GetRenderObjects()[i]);
 				obj->SetParticleEnable(false);
 			}
-			if (sound.PlayCheck(static_cast<int>(SOUND_TRACK::DRIFT1)))
+			/*if (sound.PlayCheck(static_cast<int>(SOUND_TRACK::DRIFT1)))
 				sound.Stop(static_cast<int>(SOUND_TRACK::DRIFT1));
 			if(sound.PlayCheck(static_cast<int>(SOUND_TRACK::DRIFT2)))
 				sound.Stop(static_cast<int>(SOUND_TRACK::DRIFT2));
 			sound.Play(1.0f, static_cast<int>(SOUND_TRACK::DRIFT3));
 			sound.SetIsDriftStart();
 			if(sound.GetIsDrift())
-				sound.SetIsDrift();
+				sound.SetIsDrift();*/
 		}
 		break;
 
@@ -909,23 +909,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				std::shared_ptr<SOParticleObject>& obj = std::static_pointer_cast<SOParticleObject>(mPipelines[Layer::DriftParticle]->GetRenderObjects()[i]);
 				obj->SetParticleEnable(true);
 			}
-			if (!sound.GetIsDriftStart())
-			{
-				sound.Play(1.0f, static_cast<int>(SOUND_TRACK::DRIFT1));
-				sound.SetIsDriftStart();
-			}
-			else
-			{
-				if (!sound.PlayCheck(static_cast<int>(SOUND_TRACK::DRIFT1)))
-				{
-					if (!sound.GetIsDrift())
-					{
-						sound.Play(1.0f, static_cast<int>(SOUND_TRACK::DRIFT2));
-						sound.SetIsDrift();
-					}
-				}
-				
-			}
+			
 		}
 		if ((wParam == 'Z' || wParam == 'X'))
 		{
@@ -967,26 +951,71 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		if (GetAsyncKeyState(VK_LSHIFT) & 0x8000)
 			mDirectorCamera->Upward(-dist * elapsed);
 	}
-		
 	if (mPlayer) mPlayer->OnPreciseKeyInput(elapsed);
 
 #ifndef STANDALONE
 	for (auto& [key, val] : mKeyMap)
 	{
 		auto input = GetAsyncKeyState(key);
+		
 		if (input && val == false)
 		{
 			// Key pressed
 			val = true;
 			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
+			if (key == VK_UP)
+			{
+				
+				
+			}
 		}
 		else if (input == 0 && val == true)
 		{
 			// Key released
 			val = false;
 			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
+			if (key == VK_UP)
+			{
+				
+				
+
+			}
 		}
 	}
+	if (GetAsyncKeyState(VK_UP) & 0x8000)
+	{
+		auto velocity = mpUI.get()->GetSpeed();
+		std::wstring text{ std::to_wstring(velocity) };
+		OutputDebugStringW(text.c_str());
+		auto& sound = GetSound();
+		const auto& channel = sound.GetChannel();
+		FMOD_RESULT res{};
+		FMOD_BOOL isPlaying = false;
+		FMOD_Channel_IsPlaying(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], &isPlaying);
+
+		if (!sound.GetIsDriving())
+		{
+			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN));
+			FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], static_cast<unsigned int>((DRIVING_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED))), FMOD_TIMEUNIT_PCM);
+			sound.SetIsDriving();
+		}
+		else if (!isPlaying)
+		{
+			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN));
+			res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], static_cast<unsigned int>((static_cast<float>(DRIVING_SOUND_FRAME) * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED))), FMOD_TIMEUNIT_PCM);
+		}
+	}
+	else
+	{
+		auto velocity = mPlayer->GetCurrentVelocity();
+		auto& sound = GetSound();
+		if (sound.GetIsDriving())
+		{
+			FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], true);
+			sound.SetIsDriving();
+		}
+	}
+
 #endif
 }
 
@@ -1026,6 +1055,8 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	
 	UpdateConstants(timer);
 	
+	auto sound = GetSound();
+	sound.Update();
 	mpUI.get()->Update(elapsed, mPlayer);
 }
 
@@ -1752,6 +1783,13 @@ void InGameScene::SetSound()
 	SoundFiles.push_back("Sound/CarDrift1.wav");
 	SoundFiles.push_back("Sound/CarDrift2.wav");
 	SoundFiles.push_back("Sound/CarDrift3.wav");
+	SoundFiles.push_back("Sound/Driving1.wav");
+	SoundFiles.push_back("Sound/Driving2.wav");
+	SoundFiles.push_back("Sound/Driving3.wav");
+	SoundFiles.push_back("Sound/Driving4.wav");
+	SoundFiles.push_back("Sound/Driving.wav");
+	SoundFiles.push_back("Sound/CarDrift.wav");
+
 
 	std::vector<FMOD_MODE> modes;
 	modes.push_back(FMOD_LOOP_NORMAL);
@@ -1759,6 +1797,12 @@ void InGameScene::SetSound()
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_LOOP_NORMAL);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_LOOP_NORMAL);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 
 	GetSound().InitSound(SoundFiles, modes);

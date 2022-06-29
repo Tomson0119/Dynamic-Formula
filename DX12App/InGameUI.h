@@ -81,6 +81,7 @@ public:
     void ShowGoAnim(); 
 
     std::mutex& GetMutex() { return mScoreboardMutex; }
+    float GetSpeed() const { return mCurrentSpeed; }
 
     void SetTimeMinSec(int& m, int& s);
     //void SetWarningText() { GetTextBlock()[7].strText.assign("WARNING"); }
