@@ -993,16 +993,20 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		FMOD_BOOL isPlaying = false;
 		FMOD_Channel_IsPlaying(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], &isPlaying);
 
+		
+
 		if (!sound.GetIsDriving())
 		{
 			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN));
 			FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], static_cast<unsigned int>((DRIVING_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED))), FMOD_TIMEUNIT_PCM);
+			FMOD_Channel_SetPitch(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], 0.8f + (1.0f * (velocity * (0.3f / MAX_SPEED))));
 			sound.SetIsDriving();
 		}
 		else if (!isPlaying)
 		{
 			sound.Play(NORMAL_VOLUME, static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN));
 			res = FMOD_Channel_SetPosition(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], static_cast<unsigned int>((static_cast<float>(DRIVING_SOUND_FRAME) * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED))), FMOD_TIMEUNIT_PCM);
+			FMOD_Channel_SetPitch(channel[static_cast<int>(SOUND_TRACK::DRIVING_ORIGIN)], 0.8f + (1.0f * (velocity * (0.3f / MAX_SPEED))));
 		}
 	}
 	else
