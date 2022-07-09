@@ -201,6 +201,11 @@ void LoginServer::AcceptNewClient(int id, SOCKET sck, sockaddr_in* remote)
 	std::cout << "[" << id << "] Accepted client.\n";
 #endif
 	gClients[id]->AssignAcceptedID(id, sck, remote);
+	
+	const EndPoint& hostEp = gClients[id]->GetHostEp();
+	std::cout << "IP: " << hostEp.GetIPAddress() << "\n";
+	std::cout << "Port: " << hostEp.GetPortNumber() << "\n";
+
 	mUDPReceiver.AssignId(gClients[id]->GetHostEp(), id);
 
 	msIOCP.RegisterDevice(sck, id);
