@@ -14,6 +14,13 @@ enum class OP : char
 	PHYSICS
 };
 
+// TODO: WSAOVERLAPPEDEX의 크기가 너무 크기 때문에
+// BufferQueue를 분리하는 것이 바람직하다.
+// Push 함수는 multiple threads에서 접근할 수 있기 때문에
+// Thread-safe하도록 수정하는 것이 필요하다.
+//		1. Send thread 사용
+//		2. Push 시 concurrent_queue 사용.
+//		3. 혹은 mutex lock.
 struct WSAOVERLAPPEDEX
 {
 	WSAOVERLAPPED Overlapped;

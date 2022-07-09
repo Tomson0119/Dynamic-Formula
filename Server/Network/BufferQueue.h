@@ -2,6 +2,9 @@
 
 #include "Protocol.h"
 
+// NOTE: BufferQueue is not thread-safe.
+// Should be careful to use it especially Push method.
+
 class BufferQueue
 {
 public:
