@@ -5,11 +5,11 @@
 
 #include <iostream>
 
-WSAInit gWSAInstance;
+WSAInit Socket::gWSAInstance;
 
 Socket::Socket()
 	: mSckHandle{},
-	  mSckType{}
+	  mSckType{} 
 {
 	if (!gWSAInstance.Init())
 		throw NetException("WSAData Initialize failed");
