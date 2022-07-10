@@ -17,6 +17,8 @@ public:
 	void AssignId(const EndPoint& ep, int id);
 	void RecvMsg();
 
+	void PrintLastReceivedEp();
+
 	std::optional<int> GetLastReceivedId();
 
 public:

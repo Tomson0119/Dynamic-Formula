@@ -49,6 +49,13 @@ void UDPReceiver::RecvMsg()
 	mUDPSocket->RecvFrom(mUDPRecvOverlapped, mSenderEp);
 }
 
+void UDPReceiver::PrintLastReceivedEp()
+{
+	std::cout << "UDP Sender Endpoint: ("
+		<< mSenderEp.GetIPAddress() << ", "
+		<< mSenderEp.GetPortNumber() << ")\n";
+}
+
 std::optional<int> UDPReceiver::GetLastReceivedId()
 {
 	std::unique_lock<std::mutex> lock{ mHostIdMapMut };
