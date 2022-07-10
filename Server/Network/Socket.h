@@ -47,4 +47,6 @@ private:
 
 	SOCKET mSckHandle;
 	SocketType mSckType;
+
+	std::mutex mSendMut;
 };

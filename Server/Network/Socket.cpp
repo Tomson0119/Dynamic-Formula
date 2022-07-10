@@ -96,6 +96,9 @@ int Socket::Send(WSAOVERLAPPEDEX& over)
 {
 	DWORD bytes = 0;
 
+	// TCP Send는 Thread safe하지 않기 때문에 lock을 건다.
+	std::unique_lock<std::mutex> lock{ mSendMut };
+
 	if (WSASend(mSckHandle,
 		&over.WSABuffer, 1, &bytes, 0,
 		&over.Overlapped, NULL) != 0)
