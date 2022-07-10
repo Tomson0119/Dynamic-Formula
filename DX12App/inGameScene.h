@@ -211,4 +211,7 @@ private:
 	Clock::time_point mRevertTime;
 
 	std::unique_ptr<InGameUI> mpUI;
+
+	// for calculate server tick
+	Clock::time_point mPrevTimepoint;
 };
