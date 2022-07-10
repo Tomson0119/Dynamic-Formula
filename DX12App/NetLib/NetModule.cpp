@@ -191,8 +191,7 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
 	{
 		if (bytes != over->WSABuffer.len)
 		{
-			// NEED TEST
-			//PostDisconnect();
+			PostDisconnect();
 		}
 		delete over;
 		break;
