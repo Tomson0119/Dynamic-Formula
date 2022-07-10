@@ -648,8 +648,21 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	{
 		SC::packet_ready_signal* pck = reinterpret_cast<SC::packet_ready_signal*>(packet);
 		mpUI->ShowStartAnim();
-		GetSound().Play(0.2f, static_cast<int>(SOUND_TRACK::BGM1));
-		GetSound().Play(0.2f, static_cast<int>(SOUND_TRACK::BGM2));
+		auto mapIndex = mNetPtr->GetMapIndex();
+		switch (int(mapIndex))
+		{
+		case 0:
+			GetSound().Play(0.2f, static_cast<int>(SOUND_TRACK::BGM1));
+			break;
+		case 1:
+			GetSound().Play(0.2f, static_cast<int>(SOUND_TRACK::BGM2));
+			break;
+		default:
+			GetSound().Play(0.2f, static_cast<int>(SOUND_TRACK::BGM1));
+			break;
+		}
+		//GetSound().Play(0.2f, static_cast<int>(SOUND_TRACK::BGM1));
+		//GetSound().Play(0.2f, static_cast<int>(SOUND_TRACK::BGM2));
 
 		break;
 	}
@@ -1866,7 +1879,7 @@ void InGameScene::SetSound()
 {
 	std::vector<std::string> SoundFiles;
 	SoundFiles.push_back("Sound/BGM1.wav");
-	SoundFiles.push_back("Sound/BGM2.wav");
+	SoundFiles.push_back("Sound/edmBGM2.mp3");
 	SoundFiles.push_back("Sound/CarEngine2.wav");
 	SoundFiles.push_back("Sound/CarDrift.wav");
 	SoundFiles.push_back("Sound/DrivingReverse.mp3");
