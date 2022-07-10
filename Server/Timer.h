@@ -1,5 +1,6 @@
 #pragma once
 
+#include <queue>
 
 class Timer
 {
@@ -22,8 +23,7 @@ private:
 
 enum class EVENT_TYPE : char
 {
-	PHYSICS = 0,
-	BROADCAST
+	PHYSICS
 };
 
 class TimerQueue
@@ -47,13 +47,16 @@ public:
 
 	void Start(class InGameServer* ptr);
 	void AddTimerEvent(const TimerEvent& evnt);
+	bool IsQueueEmpty();
+
 	static void TimerThreadFunc(TimerQueue& timer);
 
 private:
 	std::atomic_bool mLoop;
 	std::thread mThread;
 
-	concurrency::concurrent_priority_queue<TimerEvent> mQueue;
+	std::mutex mQueueMut;
+	std::queue<TimerEvent> mQueue;
 
 	class InGameServer* mGameServerPtr;
 };
