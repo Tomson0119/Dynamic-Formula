@@ -823,7 +823,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	}
 	case SC::PCK_TYPE::ROOM_INSIDE_INFO:
 	{
-		OutputDebugString(L"Rece	ived room inside info packet.\n");
+		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);
 		break;
@@ -1017,7 +1017,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 		auto velocity = mpUI.get()->GetSpeed();
 		std::wstring text{ std::to_wstring(velocity) };
-		OutputDebugStringW(text.c_str());
+		//OutputDebugStringW(text.c_str());
 		auto& sound = GetSound();
 		if(sound.GetIsDecelerating())
 			sound.SetIsDecelerating();
