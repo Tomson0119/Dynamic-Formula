@@ -181,7 +181,7 @@ void LoginServer::Logout(int id)
 	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 
 #ifdef USE_DATABASE
-	int thread_id = ThreadIdMap::GetInstance().GetLastReceivedId(std::this_thread::get_id());
+	int thread_id = mThreadIdMap[std::this_thread::get_id()];
 	mDBHandlers[thread_id].SaveUserInfo(id);
 #endif
 }
