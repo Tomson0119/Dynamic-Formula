@@ -33,6 +33,7 @@ public:
 	void SendKeyInput(int roomID, int key, bool pressed);
 
 	void SendMeasureRTTPacket(uint64_t s_send_time);
+	void SendUDPConnectionPacket();
 
 public:
 	SOCKET GetTCPSocket() const { return mTCPSocket.GetSocket(); }

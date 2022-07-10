@@ -315,6 +315,12 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 		}
 		break;
 	}
+	case CS::PCK_TYPE::UDP_CONNECT:
+	{
+		CS::packet_udp_connection* pck = reinterpret_cast<CS::packet_udp_connection*>(packet);
+		mUDPReceiver.PrintLastReceivedEp();
+		break;
+	}
 	default:
 		return mLobby.ProcessPacket(packet, type, id, bytes);
 	}

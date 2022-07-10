@@ -22,7 +22,13 @@ NetModule::NetModule()
 
 NetModule::~NetModule()
 {
+	if (mHolePunchingThread.joinable()) mHolePunchingThread.join();
 	if (mNetThread.joinable()) mNetThread.join();
+}
+
+void NetModule::StarttHolePunching()
+{
+	mHolePunchingThread = std::thread{ HolePunchingFunc, std::ref(*this) };
 }
 
 bool NetModule::Connect(const std::string& ip, u_short port)
@@ -76,6 +82,16 @@ void NetModule::NetworkFunc(NetModule& net)
 			OutputDebugStringA((str + "\n").c_str());
 		}
 	}
+}
+
+void NetModule::HolePunchingFunc(NetModule& net)
+{
+	while (net.IsHolePunchingDone() == false)
+	{
+		net.Client()->SendUDPConnectionPacket();
+		std::this_thread::sleep_for(20ms);
+	}
+	Log::Print("Hole punching thread exit.");
 }
 
 void NetModule::InitRoomInfo(SC::packet_room_inside_info* pck)

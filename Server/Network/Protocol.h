@@ -74,7 +74,8 @@ namespace CS
 		PRESS_READY,
 		LOAD_DONE,
 		KEY_INPUT,
-		MEASURE_RTT
+		MEASURE_RTT,
+		UDP_CONNECT
 	};
 
 	struct packet_login : packet_header
@@ -130,6 +131,8 @@ namespace CS
 	{
 		uint64_t s_send_time;
 	};
+
+	struct packet_udp_connection : packet_header { };
 }
 
 namespace SC

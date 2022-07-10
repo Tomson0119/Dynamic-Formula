@@ -173,6 +173,7 @@ void InGameScene::BuildObjects(
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
 	mNetPtr->Client()->SendLoadSequenceDone(mNetPtr->GetRoomID());
+	mNetPtr->StarttHolePunching();
 #endif
 }
 
@@ -689,14 +690,15 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		mNetPtr->CalcClockDelta(pck->s_send_time);
 		mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
 
+		mNetPtr->SetHolePunchingDone(true);
 		
-		auto now = Clock::now();
+		/*auto now = Clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
 			now - mPrevTimepoint).count();
 		mPrevTimepoint = now;
 
 		Log::Print("Server tick: ", duration);
-		Log::Print("Latency: ", mNetPtr->GetLatency() * 1000.0f);
+		Log::Print("Latency: ", mNetPtr->GetLatency() * 1000.0f);*/
 		break;
 	}
 	case SC::PCK_TYPE::PLAYER_TRANSFORM:
