@@ -22,9 +22,14 @@ void Sound::InitSound(std::vector<std::string>& SoundFilePath, std::vector<FMOD_
 	mSoundFile.resize(SoundFilePath.size());
 	mChannel.resize(SoundFilePath.size());
 	FMOD_RESULT res{};
+	FMOD_System_CreateDSPByType(mSoundSystem, FMOD_DSP_TYPE_PITCHSHIFT, &mDSP);
+	FMOD_System_SetDSPBufferSize(mSoundSystem, 256, 16);
+
 	for (int i = 0; i < SoundFilePath.size(); ++i)
 	{
 		res = FMOD_System_CreateSound(mSoundSystem, SoundFilePath[i].c_str(), mode[i], 0, &mSoundFile[i]);
+		
+		FMOD_Channel_AddDSP(mChannel[i], i, mDSP);
 		if (res == FMOD_OK)
 			continue;
 	}

@@ -38,6 +38,7 @@ private:
 	FMOD_SYSTEM* mSoundSystem;
 	std::vector<FMOD_SOUND*> mSoundFile;
 	std::vector<FMOD_CHANNEL*> mChannel;
+	FMOD_DSP* mDSP;
 
 	bool mIsDriftStart = false;
 	bool mIsDrift = false;
@@ -66,6 +67,7 @@ public:
 	bool GetIsDriving() const { return mIsDriving; }
 	bool GetIsDecelerating() const { return mIsDecelerating; }
 	const std::vector<FMOD_CHANNEL*>& GetChannel() { return mChannel; }
+	FMOD_DSP* GetDSP() { return mDSP; }
 	FMOD_SYSTEM* GetSystem() { return mSoundSystem; }
 };
 
