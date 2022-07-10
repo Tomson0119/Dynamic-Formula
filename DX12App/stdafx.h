@@ -281,6 +281,11 @@ struct InstancingInfo
 
 namespace Log
 {
+	inline void Print(const std::string& info)
+	{
+		OutputDebugStringA((info+"\n").c_str());
+	}
+
 	inline void Print(const std::string& info, const XMFLOAT3& vec)
 	{
 		std::stringstream ss;
