@@ -545,7 +545,10 @@ void GameObject::InterpolateRigidBody(float elapsed)
 
 void GameObject::InterpolateWorldTransform(float elapsed, uint64_t clockDelta)
 {
-	mInterpolator.Interpolate(elapsed, clockDelta, mPosition, mQuaternion);
+	mPosition = mCorrectionOrigin.GetXMFloat3();
+	mQuaternion = mCorrectionQuat.GetXMFloat4();
+
+	//mInterpolator.Interpolate(elapsed, clockDelta, mPosition, mQuaternion);
 
 	//if (updateRate <= 0.0f) return;
 
@@ -937,7 +940,7 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, ui
 		pck->linear_vel_z / POS_FLOAT_PRECISION,
 		latency);
 
-	mInterpolator.Enqueue(timePoint, mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
+	//mInterpolator.Enqueue(timePoint, mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
 }
 
 void MissileObject::SetActive(bool state)
