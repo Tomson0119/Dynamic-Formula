@@ -12,7 +12,9 @@ constexpr int BIKE_BRAKE_SOUND_FRAME = 44100;
 constexpr int DRIFT_SOUND_FRAME = 48000;
 
 
+constexpr float MIN_DRIVING_SOUND_SPEED = 2.0f;
 constexpr int MAX_SPEED = 250;
+constexpr float MIN_DRIFT_SOUND_SPEED = 30.0f;
 
 constexpr float DRIVING_SOUND_RUNNING_TIME = 3.964f;
 constexpr float BRAKE_SKID_SOUND_RUNNING_TIME = 2.705f;
@@ -60,6 +62,8 @@ public:
 	void SetIsDriftStart();
 	void SetIsDrift() { if (mIsDrift) mIsDrift = false; else mIsDrift = true; }
 	void SetIsDriving() { if (mIsDriving) mIsDriving = false; else mIsDriving = true; }
+	void SetIsDrivingTrue() { mIsDriving = true; }
+	void SetIsDrivingFalse() { mIsDriving = false; }
 	void SetIsDecelerating() { if (mIsDecelerating) mIsDecelerating = false; else mIsDecelerating = true; }
 
 	bool GetIsDriftStart() const { return mIsDriftStart; }
