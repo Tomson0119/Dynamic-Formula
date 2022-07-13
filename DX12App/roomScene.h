@@ -37,6 +37,7 @@ public:
 	virtual bool ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes) override;
 	virtual void Reset() override { }
 	virtual UI* GetUI() const override { return mpUI.get(); }
+	virtual void SetSound();
 
 private:
 	std::unique_ptr<RoomUI> mpUI;

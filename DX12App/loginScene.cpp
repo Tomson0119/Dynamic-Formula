@@ -213,3 +213,24 @@ void LoginScene::Reset()
 	Texts.clear();
 	IsPwd = false;
 }
+
+void LoginScene::SetSound()
+{
+	std::vector<std::string> SoundFiles;
+	SoundFiles.push_back("Sound/LoginSound/ErrorUI.wav");
+	SoundFiles.push_back("Sound/LoginSound/GeneralUI.wav");
+	SoundFiles.push_back("Sound/LoginSound/LoginUI.wav");
+	SoundFiles.push_back("Sound/LoginSound/MouseCollisionCheck.wav");
+	SoundFiles.push_back("Sound/LoginSound/SignUpUI.wav");
+
+
+	std::vector<FMOD_MODE> modes;
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+
+
+	GetSound().InitSound(SoundFiles, modes);
+}

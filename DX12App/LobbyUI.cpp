@@ -785,3 +785,4 @@ void LobbyUI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device>
         LoadBitmapResourceFromFile(GetBitmapFileNames()[i], i);
     BuildObjects(ppd3dRenderTargets, width, height);
 }
+

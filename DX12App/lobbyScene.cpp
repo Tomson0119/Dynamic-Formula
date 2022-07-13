@@ -212,3 +212,22 @@ void LobbyScene::Reset()
 	/*const auto& roomList = mNetPtr->GetRoomList();	
 	mpUI->SetRoomInfoTextsIndex(roomList);*/
 }
+
+void LobbyScene::SetSound()
+{
+	std::vector<std::string> SoundFiles;
+	SoundFiles.push_back("Sound/LobbySound/EnterRoomUI.wav");
+	SoundFiles.push_back("Sound/LobbySound/ErrorUI.wav");
+	SoundFiles.push_back("Sound/LobbySound/GeneralUI.wav");
+	SoundFiles.push_back("Sound/LobbySound/MouseCollisionCheckUI.wav");
+
+
+	std::vector<FMOD_MODE> modes;
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+
+
+	GetSound().InitSound(SoundFiles, modes);
+}

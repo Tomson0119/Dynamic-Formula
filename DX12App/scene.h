@@ -66,7 +66,7 @@ public:
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam);
 
 	virtual ID3D12RootSignature* GetRootSignature() const { return nullptr; }
-
+	virtual void SetSound() = 0;
 public:
 	SCENE_CHANGE_FLAG GetSceneChangeFlag() const { return mSceneChangeFlag; }
 	void SetSceneChangeFlag(SCENE_CHANGE_FLAG flag) { mSceneChangeFlag = flag; }

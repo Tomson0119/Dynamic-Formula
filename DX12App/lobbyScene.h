@@ -39,7 +39,7 @@ public:
 	virtual void Reset() override;
 
 	virtual UI* GetUI() const override { return mpUI.get(); }
-
+	virtual void SetSound();
 private:
 	std::unique_ptr<LobbyUI> mpUI;
 	std::atomic_int mPageNum;

@@ -1878,18 +1878,18 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 void InGameScene::SetSound()
 {
 	std::vector<std::string> SoundFiles;
-	SoundFiles.push_back("Sound/BGM1.wav");
-	SoundFiles.push_back("Sound/edmBGM2.mp3");
-	SoundFiles.push_back("Sound/CarEngine2.wav");
-	SoundFiles.push_back("Sound/DriftLoop.wav");
-	SoundFiles.push_back("Sound/DrivingReverse.mp3");
-	SoundFiles.push_back("Sound/BrakeSkid.wav");
-	SoundFiles.push_back("Sound/BikeBrake.wav");
+	SoundFiles.push_back("Sound/IngameSound/BGM1.wav");
+	SoundFiles.push_back("Sound/IngameSound/edmBGM2.mp3");
+	SoundFiles.push_back("Sound/IngameSound/CarEngine2.wav");
+	SoundFiles.push_back("Sound/IngameSound/DriftLoop.wav");
+	SoundFiles.push_back("Sound/IngameSound/DrivingReverse.mp3");
+	SoundFiles.push_back("Sound/IngameSound/BrakeSkid.wav");
+	SoundFiles.push_back("Sound/IngameSound/BikeBrake.wav");
 
-	SoundFiles.push_back("Sound/CarBoost4.wav");
-	SoundFiles.push_back("Sound/BoosterBack.wav");
-	SoundFiles.push_back("Sound/Missile.wav");
-	SoundFiles.push_back("Sound/MissileExplosion.wav");
+	SoundFiles.push_back("Sound/IngameSound/CarBoost4.wav");
+	SoundFiles.push_back("Sound/IngameSound/BoosterBack.wav");
+	SoundFiles.push_back("Sound/IngameSound/Missile.wav");
+	SoundFiles.push_back("Sound/IngameSound/MissileExplosion.wav");
 
 
 

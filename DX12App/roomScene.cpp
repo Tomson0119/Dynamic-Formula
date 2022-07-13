@@ -163,3 +163,26 @@ bool RoomScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int b
 	}	
 	return true;
 }
+
+void RoomScene::SetSound()
+{
+	std::vector<std::string> SoundFiles;
+	SoundFiles.push_back("Sound/RoomSound/ErrorUI.wav");
+	SoundFiles.push_back("Sound/RoomSound/GameReadyUI.wav");
+	SoundFiles.push_back("Sound/RoomSound/GameStartUI.wav");
+	SoundFiles.push_back("Sound/RoomSound/GeneralUI.wav");
+	SoundFiles.push_back("Sound/RoomSound/MapSelectUI.wav");
+	SoundFiles.push_back("Sound/RoomSound/MouseCollisionCheckUI.wav");
+
+
+	std::vector<FMOD_MODE> modes;
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT);
+
+
+	GetSound().InitSound(SoundFiles, modes);
+}
