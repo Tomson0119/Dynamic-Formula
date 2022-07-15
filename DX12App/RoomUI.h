@@ -67,6 +67,10 @@ public:
 	
 
 private:
+	bool mIsMouseCollisionStartOrReady{};
+	bool mIsMouseCollisionOut{};
+	bool mIsMouseCollisionMap{};
+
 	float BitmapOpacities[9] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 	std::atomic_bool mIsReady = false;
 	std::atomic_bool mIsLodingUpdated = false;

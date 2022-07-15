@@ -1,5 +1,6 @@
 #pragma once
 #include "player.h"
+#include "sound.h"
 
 struct TextBlock
 {
@@ -138,6 +139,9 @@ public:
    void SetgItem(int item) { mgItemCnt = item; }
    //UI
    void SetUICnt() { mUICnt = mRectCnt + mRoundRectCnt + mEllipseCnt; }
+   //Sound
+   Sound& GetSound() { return mSound; }
+   void SetSound(const Sound& sound) { mSound = sound; }
 private:
     float mHeight = 0.0f;
     float mWidth = 0.0f;
@@ -191,4 +195,6 @@ private:
     TCHAR mtcFontName[50];
 
     ComPtr<IWICImagingFactory> mWICFactoryPtr;
+
+    Sound mSound;
 };

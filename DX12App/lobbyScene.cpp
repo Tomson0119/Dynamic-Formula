@@ -15,6 +15,8 @@ void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 {
 	mDevice = device;
 	mpUI = std::make_unique<LobbyUI>(nFrame, mDevice, cmdQueue);
+	SetSound();
+	mpUI->SetSound(GetSound());
 	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
@@ -125,6 +127,7 @@ void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& tim
 			mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
 		mNetPtr->SetIsUpdatedRoomList(false);
 	}
+	GetSound().Update();
 }
 
 void LobbyScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
@@ -141,6 +144,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		OutputDebugString(L"Received access room accept packet.\n");
 
 		SC::packet_access_room_accept* pck = reinterpret_cast<SC::packet_access_room_accept*>(packet);
+		GetSound().Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::ENTER_ROOM));
 		SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		mNetPtr->SetRoomID(pck->room_id);
 		break;
@@ -172,6 +176,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 			mpUI->SetVisibleDenyBox();
 			break;
 		}
+		GetSound().Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::ERR));
 		break;
 	}
 	case SC::PCK_TYPE::ROOM_INSIDE_INFO:
@@ -196,6 +201,7 @@ bool LobbyScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 	case SC::PCK_TYPE::FORCE_LOGOUT:
 	{
 		OutputDebugString(L"Received force logout packet.\n");
+		GetSound().Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::GENERAL));
 		SetSceneChangeFlag(SCENE_CHANGE_FLAG::LOGOUT);
 		break;
 	}
@@ -223,10 +229,10 @@ void LobbyScene::SetSound()
 
 
 	std::vector<FMOD_MODE> modes;
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
 
 
 	GetSound().InitSound(SoundFiles, modes);

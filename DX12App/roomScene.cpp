@@ -14,6 +14,8 @@ void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandL
 {
 	mDevice = device;
 	mpUI = std::make_unique<RoomUI>(nFrame, mDevice, cmdQueue, *mNetPtr);
+	SetSound();
+	mpUI->SetSound(GetSound());
 	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
@@ -61,17 +63,20 @@ void RoomScene::OnProcessMouseUp(WPARAM btnState, int x, int y)
 	if (mpUI->OnProcessMouseClick(btnState, x, y) == -1) // 맵변경
 	{
 		auto RoomID = mNetPtr->GetRoomID();
+		GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::MAPSELECT));
 		mNetPtr->Client()->SwitchMap(RoomID);
 	}
 	else if (mpUI->OnProcessMouseClick(btnState, x, y) == -2) // 나가기
 	{
 		mNetPtr->Client()->RevertScene();
+		GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::GENERAL));
 		SetSceneChangeFlag(SCENE_CHANGE_FLAG::POP);
 	}
 	else if (mpUI->OnProcessMouseClick(btnState, x, y) == 0) // 예외
 		return;
 	else if (mpUI->OnProcessMouseClick(btnState, x, y) == 1)// Ready
 	{
+		GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::GAMEREADY));
 		mNetPtr->Client()->ToggleReady(mNetPtr->GetRoomID());
 	}
 }
@@ -136,7 +141,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int b
 		SC::packet_game_start_success* pck = reinterpret_cast<SC::packet_game_start_success*>(packet);		
 		mNetPtr->InitPlayerTransform(pck);
 
-
+		GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::GAMESTART));
 		//Scene Delete and TextOut
 		mpUI->SetLodingScene();
 
@@ -148,6 +153,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int b
 	{		
 		SC::packet_game_start_fail* pck = reinterpret_cast<SC::packet_game_start_fail*>(packet);
 		OutputDebugStringA("Not everyone is ready.\n");
+		GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::ERR));
 		//mpUI->SetStateFail(0); // please multithread error!!!!!!!!!
 		break;
 	}
@@ -176,12 +182,12 @@ void RoomScene::SetSound()
 
 
 	std::vector<FMOD_MODE> modes;
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
 
 
 	GetSound().InitSound(SoundFiles, modes);

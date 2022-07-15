@@ -155,23 +155,53 @@ void RoomUI::OnProcessMouseMove(WPARAM btnState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
-    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]))
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[0])) //StartOrReady
+    {
+        if (!mIsMouseCollisionStartOrReady)
+        {
+            mIsMouseCollisionStartOrReady = true;
+            GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::MOUSE_COLLISION));
+        }
         SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::FloralWhite, 0.4f));
+    }
     else
+    {
+        mIsMouseCollisionStartOrReady = false;
         SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::FloralWhite, 1.0f));
+    }
 
-    if (MouseCollisionCheck(dx, dy, GetTextBlock()[1]))
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[1])) //Out
+    {
+        if (!mIsMouseCollisionOut)
+        {
+            mIsMouseCollisionOut= true;
+            GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::MOUSE_COLLISION));
+        }
         SetIndexColor(1, D2D1::ColorF(D2D1::ColorF::Beige, 0.4f));
+    }
     else
+    {
+        mIsMouseCollisionOut = false;
         SetIndexColor(1, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+    }
 
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[2])) // Map
     {
         if (mNetRef.IsAdmin())
+        {
+            if (!mIsMouseCollisionMap)
+            {
+                mIsMouseCollisionMap = true;
+                GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::MOUSE_COLLISION));
+            }
             SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 0.4f));
+        }
     }
     else
+    {
+        mIsMouseCollisionMap = false;
         SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+    }
 
     BuildSolidBrush(GetColors());
 }
@@ -182,9 +212,12 @@ void RoomUI::OnProcessMouseDown(WPARAM btnState, int x, int y)
     float dy = static_cast<float>(y);
     
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[19]))
+    {
         SetStateNotFail();
+    }
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]))
     {
+        GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::GAMEREADY));
         if (mIsReady)
             mIsReady = false;
         else

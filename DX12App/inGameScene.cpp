@@ -1903,7 +1903,7 @@ void InGameScene::SetSound()
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 
-	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT );
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);

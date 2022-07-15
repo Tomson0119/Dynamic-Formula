@@ -154,16 +154,19 @@ void LobbyUI::SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsi
 void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float right, float bottom, int index)
 {
     RECT rc = MakeRect(left, top, right, bottom);
+    auto& sound = GetSound();
     if (MouseCollisionCheck(dx, dy, rc) && !mIsOpened[index-1])
     {
         if (!mIsGameStarted[index-1]) // æ» Ω√¿€
         {
+            mIsMouseCollisionRoom[index] = false;
             SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
             SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
             SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
         }
         else 
         {
+            mIsMouseCollisionRoom[index] = false;
             SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
             SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
             SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
@@ -173,12 +176,14 @@ void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float ri
     {
         if (!mIsGameStarted[index-1] )
         {
+            mIsMouseCollisionRoom[index] = false;
             SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
             SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
             SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Gray, 0.7f));
         }
         else
         {
+            mIsMouseCollisionRoom[index] = false;
             SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
             SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
             SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
@@ -188,6 +193,7 @@ void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float ri
     {
         if (mIsGameStarted[index - 1])
         {
+            mIsMouseCollisionRoom[index] = false;
             SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
             SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
             SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Green, 0.7f));
@@ -196,12 +202,18 @@ void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float ri
         {
             if (MouseCollisionCheck(dx, dy, rc)) 
             {
+                if (!mIsMouseCollisionRoom[index])
+                {
+                    sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::MOUSE_COLLISION));
+                    mIsMouseCollisionRoom[index] = true;
+                }
                 SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
                 SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
                 SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.15f));
             }
             else
             {
+                mIsMouseCollisionRoom[index] = false;
                 SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
                 SetIndexColor(GetTextCnt() + 3 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
                 SetIndexColor(GetTextCnt() + 9 + index, D2D1::ColorF(D2D1::ColorF::Blue, 0.3f));
@@ -215,13 +227,24 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
+    auto& sound = GetSound();
     // MakeRoom
     RECT rc = MakeRect(GetTextBlock()[0].d2dLayoutRect.left, GetTextBlock()[0].d2dLayoutRect.top, 
         GetTextBlock()[0].d2dLayoutRect.right, GetTextBlock()[0].d2dLayoutRect.bottom);
     if (MouseCollisionCheck(dx, dy, rc))
+    {
+        if (!mIsMouseCollisionMakeRect)
+        {
+            mIsMouseCollisionMakeRect = true;
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::MOUSE_COLLISION));
+        }
         SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::DarkGray, 0.3f));
+    }
     else
+    {
+        mIsMouseCollisionMakeRect = false;
         SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::DarkGray, 0.9f));
+    }
 
     // Room 1, 2, 3, 4, 5, 6
     RoomMouseCheck(dx, dy, GetFrameWidth() * 0.25f, GetFrameHeight() * 0.23f, GetFrameWidth() * 0.5f, GetFrameHeight() * 0.40f, 1);
@@ -233,16 +256,36 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 
     // LeftArrow
     rc = MakeRect(GetFrameWidth() * 0.44f, GetFrameHeight() * 0.76f, GetFrameWidth() * 0.50f, GetFrameHeight() * 0.82f);
-    if (MouseCollisionCheck(dx, dy, rc)) 
+    if (MouseCollisionCheck(dx, dy, rc))
+    {
+        if (!mIsMouseCollisionLeftArrow)
+        {
+            mIsMouseCollisionLeftArrow = true;
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::MOUSE_COLLISION));
+        }
         aOpacities[2] = 0.2f;
+    }
     else
+    {
+        mIsMouseCollisionLeftArrow = false;
         aOpacities[2] = 0.7f;
+    }
     //Right Arrow
     rc = MakeRect(GetFrameWidth() * 0.52f, GetFrameHeight() * 0.76f, GetFrameWidth() * 0.58f, GetFrameHeight() * 0.82f);
-    if (MouseCollisionCheck(dx, dy, rc)) 
+    if (MouseCollisionCheck(dx, dy, rc))
+    {
+        if (!mIsMouseCollisionRightArrow)
+        {
+            mIsMouseCollisionRightArrow = true;
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::MOUSE_COLLISION));
+        }
         aOpacities[3] = 0.2f;
+    }
     else
+    {
+        mIsMouseCollisionRightArrow = false;
         aOpacities[3] = 0.7f;
+    }
 
     BuildSolidBrush(GetColors());
 }

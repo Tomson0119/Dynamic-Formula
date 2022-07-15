@@ -99,6 +99,21 @@ int LoginUI::OnProcessMouseClick(WPARAM buttonState, int x, int y)
     {
         return 2;
     }
+
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[4])) // Exit
+    {
+        return 3;
+    }
+    
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[2])) // ID
+    {
+        return 4;
+    }
+    
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[3])) // PWD
+    {
+        return 5;
+    }
     /*else 
     { 
         GetColors()[1].a = 1.0f; 
@@ -120,28 +135,88 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
 {
     float dx = static_cast<float>(x);
     float dy = static_cast<float>(y);
+    auto& sound = GetSound();
+    auto& colors = GetColors();
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[2])) // ID
+    {
+        colors[9].a = 0.5f;
+    }
+    else
+    {
+        colors[9].a = 1.0f;
 
+    }
+    
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[3])) // PWD
+    {
+        colors[10].a = 0.5f;
+
+    }
+    else
+    {
+        colors[10].a = 1.0f;
+
+    }
+    
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[1])) // Login
     {
         GetColors()[1].a = 0.5f; // Log-in
+        if (!GetIsMouseCollisionLogin())
+        {
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::MOUSE_COLLISION));
+            SetIsMouseCollisionLoginTrue();
+        }
     }
-    else GetColors()[1].a = 1.0f;
-
+    else 
+    {
+        GetColors()[1].a = 1.0f;
+        SetIsMouseCollisionLoginFalse();
+    }
+    
     if (mIsLoginFail)
     {
         if (MouseCollisionCheck(dx, dy, GetTextBlock()[6])) // LoginFail
         {
             GetColors()[6].a = 0.3f;
-        }
-        else GetColors()[6].a = 1.0f;
-    }
-    if (MouseCollisionCheck(dx, dy, GetTextBlock()[4])) //  Exit
-        GetColors()[4].a = 0.3f;
-    else GetColors()[4].a = 1.0f;
 
+           
+        }
+        else
+        {
+            GetColors()[6].a = 1.0f;
+            
+        }
+    }
+    
+    if (MouseCollisionCheck(dx, dy, GetTextBlock()[4])) //  Exit
+    {
+        GetColors()[4].a = 0.3f;
+        if (!GetIsMouseCollisionExt())
+        {
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::MOUSE_COLLISION));
+            SetIsMouseCollisionExtTrue();
+        }
+    }
+    else 
+    {
+        GetColors()[4].a = 1.0f;
+        SetIsMouseCollisionExtFalse();
+    }
+   
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[5])) // Sign-up
+    {
         GetColors()[5].a = 0.3f;
-    else GetColors()[5].a = 1.0f;
+        if (!GetIsMouseCollisionSignup())
+        {
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::MOUSE_COLLISION));
+            SetIsMouseCollisionSignupTrue();
+        }
+    }
+    else 
+    {
+        GetColors()[5].a = 1.0f;
+        SetIsMouseCollisionSignupFalse();
+    }
 
     BuildSolidBrush(GetColors());
 }
@@ -169,6 +244,7 @@ void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
         SetIndexColor(12, D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
         SetIndexColor(6, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
     }
+    GetSound().Update();
 }
 
 void LoginUI::ChangeTextAlignment(UINT uNum, UINT uState)

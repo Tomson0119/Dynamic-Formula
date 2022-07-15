@@ -29,11 +29,29 @@ public:
 	void SetSignupBool(bool TF) { mIsSignup = TF; }
 	void SetFailMessage(int ResultCode);
 
+	
+	void SetIsMouseCollisionLoginTrue() { mIsMouseCollisionLogin = true; }
+	void SetIsMouseCollisionLoginFalse() { mIsMouseCollisionLogin = false; }
+	bool GetIsMouseCollisionLogin() { return mIsMouseCollisionLogin; }
+	
+	void SetIsMouseCollisionExtTrue() { mIsMouseCollisionExt = true; }
+	void SetIsMouseCollisionExtFalse() { mIsMouseCollisionExt = false; }
+	bool GetIsMouseCollisionExt() { return mIsMouseCollisionExt; }
+	
+	void SetIsMouseCollisionSignupTrue() { mIsMouseCollisionSignup = true; }
+	void SetIsMouseCollisionSignupFalse() { mIsMouseCollisionSignup = false; }
+	bool GetIsMouseCollisionSignup() { return mIsMouseCollisionSignup; }
+
 	//void SetLoginOrSignup(std::string msg) { GetTextBlock()[1].strText = LoginOrSignup = msg; }
 	//void SetLoginOrSignupReverse(std::string msg) { GetTextBlock()[5].strText = LoginOrSignupReverse = msg; }
 private:
 	bool mIsSignup = false;
 	bool mIsLoginFail = false;
+
+	bool mIsMouseCollisionLogin = false;
+	bool mIsMouseCollisionExt = false;
+	bool mIsMouseCollisionSignup = false;
+
 
 	std::vector<D2D1::ColorF> mColors;
 

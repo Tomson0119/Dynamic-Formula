@@ -16,6 +16,8 @@ void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 {	
 	mDevice = device;
 	mpUI = std::make_unique<LoginUI>(nFrame, mDevice, cmdQueue);
+	SetSound();
+	mpUI->SetSound(GetSound());
 	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
@@ -46,6 +48,18 @@ void LoginScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 			mPWD.assign(Texts[1]);
 			mNetPtr->Client()->RequestRegister(mID, mPWD);
 		#endif
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 3) // Exit Button
+		{
+			//exit(0); //Error Occur
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 4) // ID Button
+		{
+			IsPwd = false;
+		}
+		else if (mpUI->OnProcessMouseClick(buttonState, x, y) == 5) // PWD Button
+		{
+			IsPwd = true;
 		}
 	}
 }
@@ -87,7 +101,7 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		
-		if (!( (wParam < 57 && wParam>47) || (wParam > 64 && wParam < 91) || (wParam > 96 && wParam < 123) || wParam == 32) || 
+		if (!( (wParam < 58 && wParam>47) || (wParam > 64 && wParam < 91) || (wParam > 96 && wParam < 123) || wParam == 32) || 
 			Texts[IsPwd].size() > 12 )   //숫자 or 문자가 아닌 경우는 제외, 스페이스는 검사함(32번)
 			break;
 		if (!IsPwd && Texts[IsPwd] == "ID")
@@ -136,6 +150,9 @@ void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& tim
 	for(int i=0;i<Texts.size();++i)
 		vTexts[i].assign(Texts[i].begin(), Texts[i].end());
 
+	auto& sound = GetSound();
+	sound.Update();
+
 	mpUI->Update(timer.TotalTime(), vTexts);
 }
 
@@ -146,6 +163,7 @@ void LoginScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_H
 
 bool LoginScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes)
 {
+	auto& sound = GetSound();
 	switch (type)
 	{
 	case SC::PCK_TYPE::LOGIN_RESULT:
@@ -155,12 +173,14 @@ bool LoginScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		SC::packet_login_result* pck = reinterpret_cast<SC::packet_login_result*>(packet);
 		if (pck->result == static_cast<char>(LOGIN_STAT::ACCEPTED))
 		{
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::LOGIN));
 			//mNetPtr->Client()->BindUDPSocket(pck->port);
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		}
 		else if (pck->result == static_cast<char>(LOGIN_STAT::INVALID_IDPWD))
 		{
 			// INVALID ID OR PASSWOD;
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::ERR));
 			mpUI->SetFailMessage(3); // 3 == Invalid ID or Password
 			mpUI->SetFailBox(1);
 		}
@@ -174,18 +194,21 @@ bool LoginScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		if(pck->result == static_cast<char>(REGI_STAT::ACCEPTED))
 		{
 			//
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::SIGNUP));
 			mpUI->SetFailMessage(2);
 			mpUI->SetFailBox(1);
 		}
 		else if (pck->result == static_cast<char>(REGI_STAT::ALREADY_EXIST))
 		{
 			//
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::ERR));
 			mpUI->SetFailMessage(1);
 			mpUI->SetFailBox(1);
 		}
 		else if (pck->result == static_cast<char>(REGI_STAT::INVALID_IDPWD))
 		{
 			//
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::ERR));
 			mpUI->SetFailMessage(3);
 			mpUI->SetFailBox(1);
 		}
@@ -195,6 +218,8 @@ bool LoginScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 	{
 		OutputDebugString(L"Received room outside info packet.\n");
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
+		sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::GENERAL));
+
 		mNetPtr->UpdateRoomList(pck);
 		mNetPtr->SetIsUpdatedRoomList(true);
 		break;
@@ -220,16 +245,16 @@ void LoginScene::SetSound()
 	SoundFiles.push_back("Sound/LoginSound/ErrorUI.wav");
 	SoundFiles.push_back("Sound/LoginSound/GeneralUI.wav");
 	SoundFiles.push_back("Sound/LoginSound/LoginUI.wav");
-	SoundFiles.push_back("Sound/LoginSound/MouseCollisionCheck.wav");
+	SoundFiles.push_back("Sound/LoginSound/MouseCollisionCheckUI.wav");
 	SoundFiles.push_back("Sound/LoginSound/SignUpUI.wav");
 
 
 	std::vector<FMOD_MODE> modes;
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
+	modes.push_back(FMOD_LOOP_OFF);
 
 
 	GetSound().InitSound(SoundFiles, modes);

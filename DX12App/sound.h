@@ -34,6 +34,30 @@ enum class SOUND_TRACK {
 	MISSILE_EXPLOSION
 };
 
+enum class LOGINUI_SOUND_TRACK {
+	ERR = 0,
+	GENERAL,
+	LOGIN,
+	MOUSE_COLLISION,
+	SIGNUP
+};
+
+enum class LOBBYUI_SOUND_TRACK {
+	ENTER_ROOM = 0,
+	ERR,
+	GENERAL,
+	MOUSE_COLLISION
+};
+
+enum class ROOMUI_SOUND_TRACK {
+	ERR=0,
+	GAMEREADY,
+	GAMESTART,
+	GENERAL,
+	MAPSELECT,
+	MOUSE_COLLISION
+};
+
 class Sound
 {
 private:
@@ -42,11 +66,21 @@ private:
 	std::vector<FMOD_CHANNEL*> mChannel;
 	FMOD_DSP* mDSP;
 
+	//Ingame
 	bool mIsDriftStart = false;
 	bool mIsDrift = false;
 	bool mIsDriving = false;
 
 	bool mIsDecelerating = false;
+
+	//Room
+
+
+	//Lobby
+
+
+	//Login
+	bool mIsMouseCollision{};
 
 public:
 	Sound();
@@ -59,6 +93,7 @@ public:
 	void Stop(int channelNum);
 	void Update();
 
+	//Ingame
 	void SetIsDriftStart();
 	void SetIsDrift() { if (mIsDrift) mIsDrift = false; else mIsDrift = true; }
 	void SetIsDriving() { if (mIsDriving) mIsDriving = false; else mIsDriving = true; }
@@ -70,6 +105,19 @@ public:
 	bool GetIsDrift() const { return mIsDrift; }
 	bool GetIsDriving() const { return mIsDriving; }
 	bool GetIsDecelerating() const { return mIsDecelerating; }
+
+	//Room
+
+
+	//Lobby
+
+
+	//Login
+	void SetIsMouseCollisionTrue() { mIsMouseCollision = true; }
+	void SetIsMouseCollisionFalse() { mIsMouseCollision = false; }
+	bool GetIsMouseCollision() { return mIsMouseCollision; }
+
+
 	const std::vector<FMOD_CHANNEL*>& GetChannel() { return mChannel; }
 	FMOD_DSP* GetDSP() { return mDSP; }
 	FMOD_SYSTEM* GetSystem() { return mSoundSystem; }

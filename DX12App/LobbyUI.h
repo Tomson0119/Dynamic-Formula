@@ -55,6 +55,10 @@ public:
 	void SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Opened);
 private:
 	float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
+	bool mIsMouseCollisionRoom[6] = {false, false, false, false, false ,false};
+	bool mIsMouseCollisionMakeRect{};
+	bool mIsMouseCollisionLeftArrow{};
+	bool mIsMouseCollisionRightArrow{};
 	//For Packet
 	// º¸·ù
 
