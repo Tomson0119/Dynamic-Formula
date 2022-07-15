@@ -5,11 +5,11 @@
 
 #include <iostream>
 
-WSAInit gWSAInstance;
+WSAInit Socket::gWSAInstance;
 
 Socket::Socket()
 	: mSckHandle{},
-	  mSckType{}
+	  mSckType{} 
 {
 	if (!gWSAInstance.Init())
 		throw NetException("WSAData Initialize failed");
@@ -95,6 +95,9 @@ bool Socket::Connect(const EndPoint& ep)
 int Socket::Send(WSAOVERLAPPEDEX& over)
 {
 	DWORD bytes = 0;
+
+	// TCP Send는 Thread safe하지 않기 때문에 lock을 건다.
+	std::unique_lock<std::mutex> lock{ mSendMut };
 
 	if (WSASend(mSckHandle,
 		&over.WSABuffer, 1, &bytes, 0,

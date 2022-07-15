@@ -237,3 +237,14 @@ void NetClient::SendMeasureRTTPacket(uint64_t s_send_time)
 	pck.s_send_time = s_send_time;
 	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size, true);
 }
+
+void NetClient::SendUDPConnectionPacket()
+{
+#ifdef _DEBUG
+	OutputDebugStringW(L"Sending UDP connection packet.\n");
+#endif
+	CS::packet_udp_connection pck{};
+	pck.size = sizeof(CS::packet_udp_connection);
+	pck.type = static_cast<uint8_t>(CS::PCK_TYPE::UDP_CONNECT);
+	SendMsg(reinterpret_cast<std::byte*>(&pck), pck.size, true);
+}

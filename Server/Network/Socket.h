@@ -4,8 +4,6 @@
 #include "WSAOverlappedEx.h"
 #include "EndPoint.h"
 
-extern WSAInit gWSAInstance;
-
 enum class SocketType : char
 {
 	TCP=0,
@@ -45,6 +43,10 @@ public:
 	SOCKET GetSocket() const { return mSckHandle; }
 
 private:
+	static WSAInit gWSAInstance;
+
 	SOCKET mSckHandle;
 	SocketType mSckType;
+
+	std::mutex mSendMut;
 };

@@ -108,7 +108,7 @@ void InGameServer::StartMatch(int roomID)
 		mGameConstants->CountdownTime,
 		mGameConstants->GameRunningTime);
 	msWorlds[roomID]->SendReadySignal();
-	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
+	AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDurationMs);
 }
 
 void InGameServer::RemovePlayer(int roomID, int hostID)
@@ -133,7 +133,7 @@ void InGameServer::RunPhysicsSimulation(int roomID)
 
 	if (msWorlds[roomID]->IsActive())
 	{
-		AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDuration);
+		AddTimerEvent(roomID, EVENT_TYPE::PHYSICS, mPhysicsDurationMs);
 	}
 	else
 	{

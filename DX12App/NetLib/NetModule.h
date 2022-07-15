@@ -31,6 +31,8 @@ public:
 	NetModule();
 	~NetModule();
 
+	void StarttHolePunching();
+
 	bool Connect(const std::string& ip, u_short port);
 	void PostDisconnect();
 
@@ -38,6 +40,7 @@ public:
 	void ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes);
 
 	static void NetworkFunc(NetModule& net);
+	static void HolePunchingFunc(NetModule& net);
 
 public:
 	void InitRoomInfo(SC::packet_room_inside_info* pck);
@@ -59,11 +62,8 @@ public:
 	bool GetIsUpdatedRoomList() const { return mIsUpdatedRoomList; }
 
 	char GetPlayerIndex() const { return mPlayerIdx; }
-
 	char GetMapIndex() const { return mMapIdx; }
-
 	char GetAdminIndex() const { return mAdminIdx; }
-
 	bool IsAdmin() const { return mPlayerIdx == mAdminIdx; }
 
 	PlayerList GetPlayersInfo();
@@ -75,6 +75,9 @@ public:
 
 	void SetLatency(uint64_t latencyMs) { mLatencyMs = latencyMs; }
 	float GetLatency() const { return (float)mLatencyMs / 1000.0f; }
+
+	void SetHolePunchingDone(bool b) { mHolePunchingDone = b; }
+	bool IsHolePunchingDone() { return mHolePunchingDone; }
 	
 private:
 	void Init();
@@ -95,6 +98,9 @@ private:
 
 	std::unique_ptr<NetClient> mNetClient;
 	std::thread mNetThread;
+	std::thread mHolePunchingThread;
+
+	std::atomic_bool mHolePunchingDone;
 
 	std::atomic_uint64_t mServerTimeStamp;
 	std::atomic_int64_t mClockSyncDeltaMs;

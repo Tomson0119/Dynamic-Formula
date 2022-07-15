@@ -44,7 +44,7 @@ void QueryWindow::SetAnswer(bool local)
 	{
 		size_t textLen = GetWindowTextLength(mTextBox);
 		if (textLen == 0) return;
-
+		
 		mAnswer.resize(textLen + 1);
 		GetWindowTextA(mTextBox, (LPSTR)mAnswer.c_str(), (int)mAnswer.size());
 	}

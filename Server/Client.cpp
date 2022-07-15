@@ -73,6 +73,7 @@ void Client::PushPacket(std::byte* pck, int bytes, bool udp)
 void Client::SendMsg(bool udp)
 {
 	if (mIsConnected == false) return;
+
 	if (udp && mUDPSocketPtr && mUDPSendOverlapped)
 	{
 		if (mUDPSocketPtr->SendTo(*mUDPSendOverlapped, mHostEp) < 0)
@@ -98,7 +99,7 @@ void Client::SetLatency(uint64_t sendTime)
 	{
 		auto now = Clock::now().time_since_epoch().count();
 		double latencyNs = (double)(now - sendTime) / 2.0;
-		mLatencyMs = ConvertNsToMs(latencyNs);
+		mLatencyMs = ConvertNsToMs((uint64_t)latencyNs);
 	}
 }
 

@@ -173,6 +173,7 @@ void InGameScene::BuildObjects(
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
 	mNetPtr->Client()->SendLoadSequenceDone(mNetPtr->GetRoomID());
+	mNetPtr->StarttHolePunching();
 #endif
 }
 
@@ -701,6 +702,16 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		mNetPtr->SetLatency(pck->latency_ms);
 		mNetPtr->CalcClockDelta(pck->s_send_time);
 		mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
+
+		mNetPtr->SetHolePunchingDone(true);
+		
+		/*auto now = Clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+			now - mPrevTimepoint).count();
+		mPrevTimepoint = now;
+
+		Log::Print("Server tick: ", duration);
+		Log::Print("Latency: ", mNetPtr->GetLatency() * 1000.0f);*/
 		break;
 	}
 	case SC::PCK_TYPE::PLAYER_TRANSFORM:
@@ -825,7 +836,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	}
 	case SC::PCK_TYPE::ROOM_INSIDE_INFO:
 	{
-		OutputDebugString(L"Rece	ived room inside info packet.\n");
+		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);
 		break;
@@ -1019,7 +1030,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 		auto velocity = mpUI.get()->GetSpeed();
 		std::wstring text{ std::to_wstring(velocity) };
-		
+		//OutputDebugStringW(text.c_str());
 		auto& sound = GetSound();
 		if(sound.GetIsDecelerating())
 			sound.SetIsDecelerating();

@@ -134,7 +134,7 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	{
 		if (id < MAX_PLAYER_SIZE && bytes != over->WSABuffer.len)
 		{
-			//Disconnect(id);
+			Disconnect(id);
 		}
 		delete over;
 		break;
@@ -181,7 +181,7 @@ void LoginServer::Logout(int id)
 	gClients[id]->SetState(CLIENT_STAT::CONNECTED);
 
 #ifdef USE_DATABASE
-	int thread_id = ThreadIdMap::GetInstance().GetLastReceivedId(std::this_thread::get_id());
+	int thread_id = mThreadIdMap[std::this_thread::get_id()];
 	mDBHandlers[thread_id].SaveUserInfo(id);
 #endif
 }
@@ -201,6 +201,11 @@ void LoginServer::AcceptNewClient(int id, SOCKET sck, sockaddr_in* remote)
 	std::cout << "[" << id << "] Accepted client.\n";
 #endif
 	gClients[id]->AssignAcceptedID(id, sck, remote);
+	
+	const EndPoint& hostEp = gClients[id]->GetHostEp();
+	std::cout << "IP: " << hostEp.GetIPAddress() << "\n";
+	std::cout << "Port: " << hostEp.GetPortNumber() << "\n";
+
 	mUDPReceiver.AssignId(gClients[id]->GetHostEp(), id);
 
 	msIOCP.RegisterDevice(sck, id);
@@ -308,6 +313,12 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 		{
 			gClients[id.value()]->SetLatency(pck->s_send_time);
 		}
+		break;
+	}
+	case CS::PCK_TYPE::UDP_CONNECT:
+	{
+		CS::packet_udp_connection* pck = reinterpret_cast<CS::packet_udp_connection*>(packet);
+		mUDPReceiver.PrintLastReceivedEp();
 		break;
 	}
 	default:

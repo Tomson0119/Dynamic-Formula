@@ -75,7 +75,14 @@ void TimerQueue::Start(InGameServer* ptr)
 
 void TimerQueue::AddTimerEvent(const TimerEvent& evnt)
 {
+	std::unique_lock<std::mutex> lock{ mQueueMut };
 	mQueue.push(evnt);
+}
+
+bool TimerQueue::IsQueueEmpty()
+{
+	std::unique_lock<std::mutex> lock{ mQueueMut };
+	return mQueue.empty();
 }
 
 void TimerQueue::TimerThreadFunc(TimerQueue& timer)
@@ -83,22 +90,23 @@ void TimerQueue::TimerThreadFunc(TimerQueue& timer)
 	TimerEvent ev{};
 	while (timer.mLoop)
 	{
-		while (timer.mQueue.empty() == false)
+		while (timer.IsQueueEmpty()==false)
 		{
-			if (timer.mQueue.try_pop(ev) == false)
-				continue;
-
-			if (ev.Type == EVENT_TYPE::PHYSICS)
 			{
+				std::unique_lock<std::mutex> lock{ timer.mQueueMut };
+				ev = timer.mQueue.front();
+
 				auto now = Clock::now();
 				if (ev.StartTime <= now)
 				{
-					timer.mGameServerPtr->PostPhysicsOperation(ev.WorldID);
+					timer.mQueue.pop();
 				}
-				else
-				{
-					timer.mQueue.push(ev);
-				}
+				else continue;
+			}
+
+			if (ev.Type == EVENT_TYPE::PHYSICS)
+			{
+				timer.mGameServerPtr->PostPhysicsOperation(ev.WorldID);
 			}
 		}
 	}
