@@ -881,8 +881,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(ProjectDir)\..\BulletWrap;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)\..\bullet3-master\build\lib\Debug;$(ProjectDir)\..\FMOD\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)\..\bullet3-master\src;$(ProjectDir)\..\BulletWrap;$(ProjectDir)\..\FMOD\src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -979,7 +979,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Bullet2FileLoader_Debug.lib;Bullet3Collision_Debug.lib;Bullet3Common_Debug.lib;Bullet3Dynamics_Debug.lib;Bullet3Geometry_Debug.lib;Bullet3OpenCL_clew_Debug.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;BulletExampleBrowserLib_Debug.lib;BulletFileLoader_Debug.lib;BulletInverseDynamicsUtils_Debug.lib;BulletInverseDynamics_Debug.lib;BulletRobotics_Debug.lib;BulletSoftBody_Debug.lib;BulletWorldImporter_Debug.lib;BulletXmlWorldImporter_Debug.lib;BussIK_Debug.lib;clsocket_Debug.lib;ConvexDecomposition_Debug.lib;GIMPACTUtils_Debug.lib;gtest_Debug.lib;gwen_Debug.lib;HACD_Debug.lib;LinearMath_Debug.lib;OpenGLWindow_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\Server\Network\;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\Server\Network\;$(SolutionDir)\..\FMOD\lib</AdditionalLibraryDirectories>
+      <AdditionalOptions>fmod_vc.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <FxCompile>
       <ObjectFileOutput>$(SolutionDir)/Shaders/%(filename).cso</ObjectFileOutput>

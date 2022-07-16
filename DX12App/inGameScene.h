@@ -110,6 +110,7 @@ private:
 
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
 	virtual void SetSound();
+	void BuildListener(const XMFLOAT4X4& CameraInverseViewMatrix);
 
 private:
 	std::unique_ptr<Camera> mMainCamera;
@@ -214,4 +215,7 @@ private:
 
 	// for calculate server tick
 	Clock::time_point mPrevTimepoint;
+
+	//Listener
+	FMOD_3D_ATTRIBUTES mlistener;
 };

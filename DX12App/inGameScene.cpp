@@ -170,6 +170,9 @@ void InGameScene::BuildObjects(
 	//Sound
 	SetSound();
 
+	//Listener
+	BuildListener(mCurrentCamera->GetInverseView());
+
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
 	mNetPtr->Client()->SendLoadSequenceDone(mNetPtr->GetRoomID());
@@ -1922,4 +1925,11 @@ void InGameScene::SetSound()
 
 
 	GetSound().InitSound(SoundFiles, modes);
+}
+
+void InGameScene::BuildListener(const XMFLOAT4X4& CameraInverseViewMatrix)
+{
+	XMFLOAT4X4 invView = CameraInverseViewMatrix;
+	
+	//mlistener.position = 
 }
