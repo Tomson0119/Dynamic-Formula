@@ -20,7 +20,7 @@ constexpr float DRIVING_SOUND_RUNNING_TIME = 3.964f;
 constexpr float BRAKE_SKID_SOUND_RUNNING_TIME = 2.705f;
 constexpr float BIKE_BRAKE_SOUND_RUNNING_TIME = 3.310f;
 
-enum class SOUND_TRACK {
+enum class IngameUI_SOUND_TRACK {
 	BGM1 = 0,
 	BGM2,
 	DRIVING_ORIGIN,
@@ -34,7 +34,7 @@ enum class SOUND_TRACK {
 	MISSILE_EXPLOSION
 };
 
-enum class LOGINUI_SOUND_TRACK {
+enum class LOGINUI_IngameUI_SOUND_TRACK {
 	ERR = 0,
 	GENERAL,
 	LOGIN,
@@ -42,14 +42,14 @@ enum class LOGINUI_SOUND_TRACK {
 	SIGNUP
 };
 
-enum class LOBBYUI_SOUND_TRACK {
+enum class LOBBYUI_IngameUI_SOUND_TRACK {
 	ENTER_ROOM = 0,
 	ERR,
 	GENERAL,
 	MOUSE_COLLISION
 };
 
-enum class ROOMUI_SOUND_TRACK {
+enum class ROOMUI_IngameUI_SOUND_TRACK {
 	ERR=0,
 	GAMEREADY,
 	GAMESTART,

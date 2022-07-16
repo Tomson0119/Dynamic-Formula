@@ -66,6 +66,7 @@ void LoginScene::OnProcessMouseDown(WPARAM buttonState, int x, int y)
 
 void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
+
 	switch (msg)
 	{
 	case WM_KEYUP:
@@ -76,6 +77,10 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		#else
 			mNetPtr->Client()->RequestLogin("GM", "GM");
 		#endif
+		}
+		else if (wParam == VK_SHIFT) // Shift
+		{
+			IsShift = false;
 		}
 		break;
 
@@ -99,6 +104,9 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 			if(!Texts[IsPwd].empty() && (Texts[0].compare("ID") != 0||Texts[1].compare("Password") != 0))
 				Texts[IsPwd].pop_back();
 			break;
+		case VK_SHIFT:
+			IsShift = true;
+			break;
 		}
 		
 		if (!( (wParam < 58 && wParam>47) || (wParam > 64 && wParam < 91) || (wParam > 96 && wParam < 123) || wParam == 32) || 
@@ -116,14 +124,14 @@ void LoginScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		if ((GetKeyState(VK_CAPITAL) & 0x0001) == 0)
 		{
-			if ((GetAsyncKeyState(VK_SHIFT) & 0x0001) == 1)
+			if (IsShift)
 				Texts[IsPwd].push_back(static_cast<char>(wParam));
 			else
 				Texts[IsPwd].push_back(tolower(static_cast<int>(wParam)));
 		}
 		else
 		{
-			if ((GetAsyncKeyState(VK_SHIFT) & 0x0001) == 1)
+			if (IsShift)
 				Texts[IsPwd].push_back(tolower(static_cast<int>(wParam)));
 			else
 				Texts[IsPwd].push_back(static_cast<char>(wParam));
@@ -152,7 +160,7 @@ void LoginScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& tim
 
 	auto& sound = GetSound();
 	sound.Update();
-
+	mpUI->SetIdPwdUIChecked(IsPwd);
 	mpUI->Update(timer.TotalTime(), vTexts);
 }
 
@@ -173,14 +181,14 @@ bool LoginScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		SC::packet_login_result* pck = reinterpret_cast<SC::packet_login_result*>(packet);
 		if (pck->result == static_cast<char>(LOGIN_STAT::ACCEPTED))
 		{
-			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::LOGIN));
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_IngameUI_SOUND_TRACK::LOGIN));
 			//mNetPtr->Client()->BindUDPSocket(pck->port);
 			SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 		}
 		else if (pck->result == static_cast<char>(LOGIN_STAT::INVALID_IDPWD))
 		{
 			// INVALID ID OR PASSWOD;
-			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::ERR));
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_IngameUI_SOUND_TRACK::ERR));
 			mpUI->SetFailMessage(3); // 3 == Invalid ID or Password
 			mpUI->SetFailBox(1);
 		}
@@ -194,21 +202,21 @@ bool LoginScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		if(pck->result == static_cast<char>(REGI_STAT::ACCEPTED))
 		{
 			//
-			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::SIGNUP));
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_IngameUI_SOUND_TRACK::SIGNUP));
 			mpUI->SetFailMessage(2);
 			mpUI->SetFailBox(1);
 		}
 		else if (pck->result == static_cast<char>(REGI_STAT::ALREADY_EXIST))
 		{
 			//
-			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::ERR));
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_IngameUI_SOUND_TRACK::ERR));
 			mpUI->SetFailMessage(1);
 			mpUI->SetFailBox(1);
 		}
 		else if (pck->result == static_cast<char>(REGI_STAT::INVALID_IDPWD))
 		{
 			//
-			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::ERR));
+			sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_IngameUI_SOUND_TRACK::ERR));
 			mpUI->SetFailMessage(3);
 			mpUI->SetFailBox(1);
 		}
@@ -218,7 +226,7 @@ bool LoginScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 	{
 		OutputDebugString(L"Received room outside info packet.\n");
 		SC::packet_room_outside_info* pck = reinterpret_cast<SC::packet_room_outside_info*>(packet);
-		sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::GENERAL));
+		sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_IngameUI_SOUND_TRACK::GENERAL));
 
 		mNetPtr->UpdateRoomList(pck);
 		mNetPtr->SetIsUpdatedRoomList(true);

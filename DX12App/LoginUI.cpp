@@ -139,22 +139,22 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
     auto& colors = GetColors();
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[2])) // ID
     {
-        colors[9].a = 0.5f;
+        colors[9].a = 0.8f;
     }
     else
     {
-        colors[9].a = 1.0f;
+        colors[9].a = 0.3f;
 
     }
     
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[3])) // PWD
     {
-        colors[10].a = 0.5f;
+        colors[10].a = 0.8f;
 
     }
     else
     {
-        colors[10].a = 1.0f;
+        colors[10].a = 0.3f;
 
     }
     
@@ -163,7 +163,7 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         GetColors()[1].a = 0.5f; // Log-in
         if (!GetIsMouseCollisionLogin())
         {
-            sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::MOUSE_COLLISION));
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
             SetIsMouseCollisionLoginTrue();
         }
     }
@@ -193,7 +193,7 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         GetColors()[4].a = 0.3f;
         if (!GetIsMouseCollisionExt())
         {
-            sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::MOUSE_COLLISION));
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
             SetIsMouseCollisionExtTrue();
         }
     }
@@ -208,7 +208,7 @@ void LoginUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         GetColors()[5].a = 0.3f;
         if (!GetIsMouseCollisionSignup())
         {
-            sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_SOUND_TRACK::MOUSE_COLLISION));
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOGINUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
             SetIsMouseCollisionSignupTrue();
         }
     }
@@ -245,6 +245,23 @@ void LoginUI::Update(float GTime, std::vector <std::string>& Texts)
         SetIndexColor(6, D2D1::ColorF(D2D1::ColorF::White, 0.0f));
     }
     GetSound().Update();
+}
+
+void LoginUI::SetIdPwdUIChecked(bool IsPwd)
+{
+    auto& colors = GetColors();
+    if (IsPwd) //PWDD
+    {
+        SetIndexColor(9, D2D1::ColorF(D2D1::ColorF::Coral, 0.3f));
+        SetIndexColor(10, D2D1::ColorF(D2D1::ColorF::Coral, 0.8f));
+    }
+    else //ID
+    {
+        SetIndexColor(9, D2D1::ColorF(D2D1::ColorF::Coral, 0.8f));
+        SetIndexColor(10, D2D1::ColorF(D2D1::ColorF::Coral, 0.3f));
+
+    }
+    BuildSolidBrush(GetColors());
 }
 
 void LoginUI::ChangeTextAlignment(UINT uNum, UINT uState)
@@ -501,8 +518,8 @@ void LoginUI::BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UIN
     //UI - CenterBigBox, LoginBox, IDBox, PWDBox, ExitBox, Login Fail, Sigu-up Fail, Sign-up IDBox, Sign-up PWDBox
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.9f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 0.8f));
-    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Coral, 0.4f));
-    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Coral, 0.4f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Coral, 0.8f));
+    colorList.push_back(D2D1::ColorF(D2D1::ColorF::Coral, 0.8f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Red, 0.9f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));
     colorList.push_back(D2D1::ColorF(D2D1::ColorF::Black, 0.0f));

@@ -28,7 +28,7 @@ public:
 	void SetFailBox(bool TF) { mIsLoginFail = TF; }
 	void SetSignupBool(bool TF) { mIsSignup = TF; }
 	void SetFailMessage(int ResultCode);
-
+	void SetIdPwdUIChecked(bool IsPwd);
 	
 	void SetIsMouseCollisionLoginTrue() { mIsMouseCollisionLogin = true; }
 	void SetIsMouseCollisionLoginFalse() { mIsMouseCollisionLogin = false; }

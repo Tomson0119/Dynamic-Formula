@@ -160,7 +160,7 @@ void RoomUI::OnProcessMouseMove(WPARAM btnState, int x, int y)
         if (!mIsMouseCollisionStartOrReady)
         {
             mIsMouseCollisionStartOrReady = true;
-            GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::MOUSE_COLLISION));
+            GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
         }
         SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::FloralWhite, 0.4f));
     }
@@ -175,7 +175,7 @@ void RoomUI::OnProcessMouseMove(WPARAM btnState, int x, int y)
         if (!mIsMouseCollisionOut)
         {
             mIsMouseCollisionOut= true;
-            GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::MOUSE_COLLISION));
+            GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
         }
         SetIndexColor(1, D2D1::ColorF(D2D1::ColorF::Beige, 0.4f));
     }
@@ -192,7 +192,7 @@ void RoomUI::OnProcessMouseMove(WPARAM btnState, int x, int y)
             if (!mIsMouseCollisionMap)
             {
                 mIsMouseCollisionMap = true;
-                GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::MOUSE_COLLISION));
+                GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
             }
             SetIndexColor(2, D2D1::ColorF(D2D1::ColorF::Beige, 0.4f));
         }
@@ -217,7 +217,7 @@ void RoomUI::OnProcessMouseDown(WPARAM btnState, int x, int y)
     }
     if (MouseCollisionCheck(dx, dy, GetTextBlock()[0]))
     {
-        GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_SOUND_TRACK::GAMEREADY));
+        GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_IngameUI_SOUND_TRACK::GAMEREADY));
         if (mIsReady)
             mIsReady = false;
         else

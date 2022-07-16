@@ -45,6 +45,7 @@ private:
 	std::string mPWD;
 	std::vector<std::string> Texts;
 	bool IsPwd = false;
+	bool IsShift = false;
 
 	std::unique_ptr<LoginUI> mpUI;
 };

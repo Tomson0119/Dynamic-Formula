@@ -204,7 +204,7 @@ void LobbyUI::RoomMouseCheck(float dx, float dy, float left, float top, float ri
             {
                 if (!mIsMouseCollisionRoom[index])
                 {
-                    sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::MOUSE_COLLISION));
+                    sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
                     mIsMouseCollisionRoom[index] = true;
                 }
                 SetIndexColor(index, D2D1::ColorF(D2D1::ColorF::White, 0.2f));
@@ -236,7 +236,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         if (!mIsMouseCollisionMakeRect)
         {
             mIsMouseCollisionMakeRect = true;
-            sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::MOUSE_COLLISION));
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
         }
         SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::DarkGray, 0.3f));
     }
@@ -261,7 +261,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         if (!mIsMouseCollisionLeftArrow)
         {
             mIsMouseCollisionLeftArrow = true;
-            sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::MOUSE_COLLISION));
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
         }
         aOpacities[2] = 0.2f;
     }
@@ -277,7 +277,7 @@ void LobbyUI::OnProcessMouseMove(WPARAM buttonState, int x, int y)
         if (!mIsMouseCollisionRightArrow)
         {
             mIsMouseCollisionRightArrow = true;
-            sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_SOUND_TRACK::MOUSE_COLLISION));
+            sound.Play(NORMAL_VOLUME, static_cast<int>(LOBBYUI_IngameUI_SOUND_TRACK::MOUSE_COLLISION));
         }
         aOpacities[3] = 0.2f;
     }
