@@ -60,27 +60,6 @@ enum class ROOMUI_IngameUI_SOUND_TRACK {
 
 class Sound
 {
-private:
-	FMOD_SYSTEM* mSoundSystem;
-	std::vector<FMOD_SOUND*> mSoundFile;
-	std::vector<FMOD_CHANNEL*> mChannel;
-	FMOD_DSP* mDSP;
-
-	//Ingame
-	bool mIsDriftStart = false;
-	bool mIsDrift = false;
-	bool mIsDriving = false;
-
-	bool mIsDecelerating = false;
-
-	//Room
-
-
-	//Lobby
-
-
-	//Login
-	bool mIsMouseCollision{};
 
 public:
 	Sound();
@@ -89,6 +68,8 @@ public:
 	void InitSound(std::vector<std::string>& SoundFilePath, std::vector<FMOD_MODE>& mode);
 	//void SetVolume(float volume);
 	void Play(float volume, int channelNum);
+	void Play3D(float volume, int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel);
+	void Set3DPos(int channelNum, const FMOD_VECTOR& soundPos, const FMOD_VECTOR& soundVel);
 	bool PlayCheck(int channelNum);
 	void Stop(int channelNum);
 	void Update();
@@ -121,5 +102,27 @@ public:
 	const std::vector<FMOD_CHANNEL*>& GetChannel() { return mChannel; }
 	FMOD_DSP* GetDSP() { return mDSP; }
 	FMOD_SYSTEM* GetSystem() { return mSoundSystem; }
+private:
+	FMOD_SYSTEM* mSoundSystem;
+	std::vector<FMOD_SOUND*> mSoundFile;
+	std::vector<FMOD_CHANNEL*> mChannel;
+	FMOD_DSP* mDSP;
+	
+	//Ingame
+	bool mIsDriftStart = false;
+	bool mIsDrift = false;
+	bool mIsDriving = false;
+
+	bool mIsDecelerating = false;
+
+	//Room
+
+
+	//Lobby
+
+
+	//Login
+	bool mIsMouseCollision{};
+
 };
 

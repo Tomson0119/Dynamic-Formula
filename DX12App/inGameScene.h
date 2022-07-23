@@ -110,8 +110,8 @@ private:
 
 	void SetMsaaQuality(UINT quality) { mMsaa4xQualityLevels = quality; }
 	virtual void SetSound();
-	void BuildListener(const XMFLOAT4X4& CameraInverseViewMatrix);
-
+	void BuildListener(const XMFLOAT3& CameraPos, const XMFLOAT3& CameraLook, const XMFLOAT3& CameraUp);
+	FMOD_3D_ATTRIBUTES& GetListener() { return mListener; }
 private:
 	std::unique_ptr<Camera> mMainCamera;
 	std::unique_ptr<Camera> mDirectorCamera;
@@ -217,5 +217,5 @@ private:
 	Clock::time_point mPrevTimepoint;
 
 	//Listener
-	FMOD_3D_ATTRIBUTES mlistener;
+	FMOD_3D_ATTRIBUTES mListener;
 };

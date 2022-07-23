@@ -169,9 +169,8 @@ void InGameScene::BuildObjects(
 
 	//Sound
 	SetSound();
-
 	//Listener
-	BuildListener(mCurrentCamera->GetInverseView());
+	BuildListener(mCurrentCamera->GetPosition(), mCurrentCamera->GetLook(), mCurrentCamera->GetUp());
 
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
@@ -724,6 +723,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		
 		if (player)
 		{
+			// set speed atomic
 			player->SetCorrectionTransform(pck, mNetPtr->GetServerTimeStamp(), mNetPtr->GetLatency());
 		}
 		break;
@@ -976,7 +976,23 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				else if (wParam == 'X')
 				{
 					auto& sound = GetSound();
-					sound.Play(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::MISSILE));
+					//Missile Pos, Vel Set to Sound
+					FMOD_VECTOR SoundPos{}, SoundVel{};
+					for (int i = 0; i < mMissileObjects.size(); ++i)
+					{
+						auto Missile = mMissileObjects[i].get();
+						if (Missile == nullptr)
+							continue;
+						auto &missilePos = Missile->GetPosition();
+						auto& missileVel = Missile->GetLinearVelocity();
+						SoundPos.x = missilePos.x;
+						SoundPos.y = missilePos.y;
+						SoundPos.z = missilePos.z;
+						SoundVel.x = missileVel.GetXMFloat3().x;
+						SoundVel.y = missileVel.GetXMFloat3().y;
+						SoundVel.z = missileVel.GetXMFloat3().z;
+					}
+					sound.Play3D(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::MISSILE), SoundPos, SoundVel);
 				}
 			}
 		}
@@ -1154,6 +1170,42 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	UpdateConstants(timer);
 	
 	auto &sound = GetSound();
+	// Set 3dSound Listener Attributes from Camera
+	FMOD_VECTOR Pos{}, Vel{}, Forward{}, Up{};
+
+	Pos.x = mCurrentCamera->GetPosition().x;
+	Pos.y = mCurrentCamera->GetPosition().y;
+	Pos.z = mCurrentCamera->GetPosition().z;
+
+	Forward.x = mCurrentCamera->GetLook().x;
+	Forward.y = mCurrentCamera->GetLook().y;
+	Forward.z = mCurrentCamera->GetLook().z;
+
+	Up.x = mCurrentCamera->GetUp().x;
+	Up.y = mCurrentCamera->GetUp().y;
+	Up.z = mCurrentCamera->GetUp().z;
+
+	Vel.x = mPlayer->GetVelocity().x;
+	Vel.y = mPlayer->GetVelocity().y;
+	Vel.z = mPlayer->GetVelocity().z;
+
+	FMOD_System_Set3DListenerAttributes(sound.GetSystem(), 0, &Pos, &Vel, &Forward, &Up);
+	FMOD_VECTOR SoundPos{}, SoundVel{};
+	for (int i = 0; i < mMissileObjects.size(); ++i)
+	{
+		auto Missile = mMissileObjects[i].get();
+		if (Missile == nullptr)
+			continue;
+		auto& missilePos = Missile->GetPosition();
+		auto& missileVel = Missile->GetLinearVelocity();
+		SoundPos.x = missilePos.x;
+		SoundPos.y = missilePos.y;
+		SoundPos.z = missilePos.z;
+		SoundVel.x = missileVel.GetXMFloat3().x;
+		SoundVel.y = missileVel.GetXMFloat3().y;
+		SoundVel.z = missileVel.GetXMFloat3().z;
+	}
+	sound.Set3DPos(static_cast<int>(IngameUI_SOUND_TRACK::MISSILE), SoundPos, SoundVel);
 	sound.Update();
 
 	auto velocity = mpUI.get()->GetSpeed();
@@ -1919,17 +1971,36 @@ void InGameScene::SetSound()
 
 	modes.push_back(FMOD_DEFAULT );
 	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
-	modes.push_back(FMOD_DEFAULT);
+	modes.push_back(FMOD_DEFAULT | FMOD_3D);
+	modes.push_back(FMOD_DEFAULT | FMOD_3D);
 
 
 
 	GetSound().InitSound(SoundFiles, modes);
 }
 
-void InGameScene::BuildListener(const XMFLOAT4X4& CameraInverseViewMatrix)
+void InGameScene::BuildListener(const XMFLOAT3& CameraPos, const XMFLOAT3& CameraLook, const XMFLOAT3& CameraUp)
 {
-	XMFLOAT4X4 invView = CameraInverseViewMatrix;
+	//mListener Set
+	FMOD_VECTOR ListenerPos{}, ListenerForward{}, ListenerUp{}, ListenerVelocity{};
+
+	ListenerPos.x = CameraPos.x;
+	ListenerPos.y = CameraPos.y;
+	ListenerPos.z = CameraPos.z;
+
+	ListenerForward.x = CameraLook.x;
+	ListenerForward.y = CameraLook.y;
+	ListenerForward.z = CameraLook.z;
+
+	ListenerUp.x = CameraUp.x;
+	ListenerUp.y = CameraUp.y;
+	ListenerUp.z = CameraUp.z;
 	
-	//mlistener.position = 
+	ListenerVelocity = { 0.0f, 0.0f, 0.0f };
+
+	FMOD_System_Set3DListenerAttributes(GetSound().GetSystem(), 0, &ListenerPos, &ListenerForward, &ListenerUp, &ListenerVelocity);
+	FMOD_System_Set3DSettings(GetSound().GetSystem(), 1.0f, 50.0f, 1.0f);
+
+
+
 }
