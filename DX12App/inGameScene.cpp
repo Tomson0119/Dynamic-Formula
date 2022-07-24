@@ -1197,7 +1197,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	auto velocity = mpUI.get()->GetSpeed();
 
 	const auto& channel = sound.GetChannel();
-	FMOD_RESULT res;
+	//FMOD_RESULT res;
 	//FMOD_Channel_SetPosition(channel[static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN)], 48000 * 0.016f, FMOD_TIMEUNIT_PCM);
 	if (velocity < MIN_DRIVING_SOUND_SPEED)
 	{

@@ -346,7 +346,7 @@ void RoomUI::Update(float GTime)
 
     if(IsLodingScene)
     {
-        for (int i = 1; i < GetTextCnt(); ++i)
+        for (UINT i = 1; i < GetTextCnt(); ++i)
             GetTextBlock()[i].strText.clear();
         SetIndexColor(0, D2D1::ColorF(D2D1::ColorF::White, 1.0f));
         BuildSolidBrush(GetColors());

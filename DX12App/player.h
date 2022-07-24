@@ -134,7 +134,7 @@ public:
 	virtual UINT GetNetID() { return mNetID; }
 
 	WheelObject* GetWheel(int index) { return mWheel[index].get(); }
-	virtual float GetCurrentVelocity() { return mCurrentSpeed; }
+	virtual float GetCurrentVelocity() { return static_cast<float>(mCurrentSpeed); }
 
 	virtual void SetItemNum(int num) { mItemNum = num; }
 	virtual int GetItemNum() { return mItemNum; }
