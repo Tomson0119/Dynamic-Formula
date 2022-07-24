@@ -768,7 +768,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		if (player)
 		{
 			if (pck->gauge > 0) mpUI->SetDriftGauge(pck->gauge);
-			if (pck->speed > 0) mpUI->SetSpeed(pck->speed);
 		}
 		break;
 	}
