@@ -2,9 +2,9 @@
 #include "stdafx.h"
 
 constexpr int MAX_CHANNEL = 16; // 동시 재생 가능한 사운드 수
-constexpr float MAX_VOLUME = 0.5f;
+constexpr float MAX_VOLUME = 1.0f;
 constexpr float MIN_VOLUME = 0.0f;
-constexpr float NORMAL_VOLUME = 0.25f;
+constexpr float NORMAL_VOLUME = 0.5f;
 constexpr int DRIVING_SOUND_FRAME = 48000;
 constexpr int DRIVING_REVERSE_SOUND_FRAME = 32000;
 constexpr int BRAKE_SKID_SOUND_FRAME = 44100;
@@ -23,6 +23,9 @@ constexpr float BIKE_BRAKE_SOUND_RUNNING_TIME = 3.310f;
 const float MAP_3D_SOUND_DISTANCE_MIN = 10.0f;
 const float MAP_3D_SOUND_DISTANCE_MAX = 1000.0f;
 
+const float PLAYER_3D_SOUND_DISTANCE_MIN = 5.0f;
+const float PLAYER_3D_SOUND_DISTANCE_MAX = 150.0f;
+
 enum class IngameUI_SOUND_TRACK {
 	BGM1 = 0,
 	BGM2,
@@ -34,7 +37,14 @@ enum class IngameUI_SOUND_TRACK {
 	BOOSTER,
 	BOOSTERBACK,
 	MISSILE,
-	MISSILE_EXPLOSION
+	MISSILE_EXPLOSION,
+	PLAYER1,
+	PLAYER2,
+	PLAYER3,
+	PLAYER4,
+	PLAYER5,
+	PLAYER6,
+	PLAYER7
 };
 
 enum class LOGINUI_IngameUI_SOUND_TRACK {
@@ -73,9 +83,12 @@ public:
 	void Play(float volume, int channelNum);
 	void Play3D(int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel);
 	void Set3DPos(int channelNum, const FMOD_VECTOR& soundPos, const FMOD_VECTOR& soundVel);
+	void Play3DForPlayer(int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel);
 	bool PlayCheck(int channelNum);
 	void Stop(int channelNum);
 	void Update();
+
+	void Update3DSoundForPlayer(int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel, int velocity);
 
 	//Ingame
 	void SetIsDriftStart();
@@ -105,6 +118,10 @@ public:
 	const std::vector<FMOD_CHANNEL*>& GetChannel() { return mChannel; }
 	FMOD_DSP* GetDSP() { return mDSP; }
 	FMOD_SYSTEM* GetSystem() { return mSoundSystem; }
+	void SetPlayerSoundPausedTrue(int idx) { mIsPlayerSoundPaused[idx] = true; }
+	void SetPlayerSoundPausedFalse(int idx) { mIsPlayerSoundPaused[idx] = false; }
+	bool GetPlayerSoundPaused(int idx) { return mIsPlayerSoundPaused[idx]; }
+
 private:
 	FMOD_SYSTEM* mSoundSystem;
 	std::vector<FMOD_SOUND*> mSoundFile;
@@ -117,6 +134,8 @@ private:
 	bool mIsDriving = false;
 
 	bool mIsDecelerating = false;
+
+	bool mIsPlayerSoundPaused[8] = { false, false, false, false, false, false, false, false };
 
 	//Room
 

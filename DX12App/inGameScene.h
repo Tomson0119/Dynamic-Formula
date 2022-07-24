@@ -113,6 +113,7 @@ private:
 	void BuildListener(const XMFLOAT3& CameraPos, const XMFLOAT3& CameraLook, const XMFLOAT3& CameraUp);
 	FMOD_3D_ATTRIBUTES& GetListener() { return mListener; }
 	void Update3DSound();
+	
 private:
 	std::unique_ptr<Camera> mMainCamera;
 	std::unique_ptr<Camera> mDirectorCamera;

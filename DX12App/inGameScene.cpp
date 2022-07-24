@@ -675,6 +675,16 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		mGameStarted = true;
 		mpUI->ShowGoAnim();
 		mpUI->SetRunningTime((float)pck->running_time_sec);
+		auto& sound = GetSound();
+		FMOD_VECTOR SoundPos{}, SoundVel{};
+		for (int i = 0; i < mPlayerObjects.size(); ++i)
+		{
+			if (!mPlayerObjects[i].get()) 
+				continue;
+			if(mPlayerObjects[i].get()!=mPlayer)
+				sound.Play3DForPlayer(static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1) + i, SoundPos, SoundVel);
+		}
+
 		break;
 	}
 	case SC::PCK_TYPE::REMOVE_PLAYER:
@@ -706,6 +716,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 			missile->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			auto& sound = GetSound();
 			sound.Play3D(static_cast<int>(IngameUI_SOUND_TRACK::MISSILE_EXPLOSION), SoundPos, SoundVel);
+			
 			//sound.Play(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::MISSILE_EXPLOSION));
 		}
 		break;
@@ -1943,6 +1954,14 @@ void InGameScene::SetSound()
 	SoundFiles.push_back("Sound/IngameSound/Missile.wav");
 	SoundFiles.push_back("Sound/IngameSound/MissileExplosion.wav");
 
+	SoundFiles.push_back("Sound/IngameSound/CarEngine2.wav");
+	SoundFiles.push_back("Sound/IngameSound/CarEngine2.wav");
+	SoundFiles.push_back("Sound/IngameSound/CarEngine2.wav");
+	SoundFiles.push_back("Sound/IngameSound/CarEngine2.wav");
+	SoundFiles.push_back("Sound/IngameSound/CarEngine2.wav");
+	SoundFiles.push_back("Sound/IngameSound/CarEngine2.wav");
+	SoundFiles.push_back("Sound/IngameSound/CarEngine2.wav");
+
 
 
 
@@ -1959,6 +1978,16 @@ void InGameScene::SetSound()
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT | FMOD_3D);
 	modes.push_back(FMOD_DEFAULT | FMOD_3D);
+
+	modes.push_back(FMOD_LOOP_NORMAL | FMOD_3D);
+	modes.push_back(FMOD_LOOP_NORMAL | FMOD_3D);
+	modes.push_back(FMOD_LOOP_NORMAL | FMOD_3D);
+	modes.push_back(FMOD_LOOP_NORMAL | FMOD_3D);
+	modes.push_back(FMOD_LOOP_NORMAL | FMOD_3D);
+	modes.push_back(FMOD_LOOP_NORMAL | FMOD_3D);
+	modes.push_back(FMOD_LOOP_NORMAL | FMOD_3D);
+
+
 
 
 
@@ -2031,4 +2060,21 @@ void InGameScene::Update3DSound()
 		SoundVel.z = missileVel.GetXMFloat3().z;
 	}
 	sound.Set3DPos(static_cast<int>(IngameUI_SOUND_TRACK::MISSILE), SoundPos, SoundVel);
+
+	//Player 3D Sound Update
+	
+	for (int i=0;i<mPlayerObjects.size();++i)
+	{
+		if (!mPlayerObjects[i])
+			continue;
+		SoundPos.x = mPlayerObjects[i].get()->GetPosition().x;
+		SoundPos.y = mPlayerObjects[i].get()->GetPosition().y;
+		SoundPos.z = mPlayerObjects[i].get()->GetPosition().z;
+		SoundVel.x = 0.0f;
+		SoundVel.y = 0.0f;
+		SoundVel.z = 0.0f;
+		sound.Update3DSoundForPlayer(static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1) + i, SoundPos, SoundVel, mPlayerObjects[i].get()->GetCurrentSpeed());
+	}
+
+
 }
