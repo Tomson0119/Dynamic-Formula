@@ -265,6 +265,7 @@ namespace SC
 		vec3 position;
 		quat3 quaternion;
 		int linear_vel[3];
+		int speed;
 	};
 
 	struct packet_missile_launched : packet_header
@@ -287,7 +288,6 @@ namespace SC
 	{
 		uint8_t player_idx;
 		int gauge;
-		int speed;
 	};
 
 	struct packet_remove_missile : packet_header

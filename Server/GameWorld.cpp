@@ -291,6 +291,8 @@ void GameWorld::PushVehicleTransformPacketToAll(int target)
 	pck.linear_vel[1] = (int)(lvel.y() * QUAT_FLOAT_PRECISION);
 	pck.linear_vel[2] = (int)(lvel.z() * QUAT_FLOAT_PRECISION);
 
+	pck.speed = (int)(round(mPlayerList[target]->GetCurrentSpeed()));
+
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, true, -1, false);
 }
 
@@ -324,7 +326,6 @@ void GameWorld::PushUiInfoPacket(int target)
 	pck.size = sizeof(SC::packet_ui_info);
 	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::UI_INFO);
 	pck.gauge = (int)(mPlayerList[target]->GetDriftGauge() * 100.0f);
-	pck.speed = (int)(round(mPlayerList[target]->GetCurrentSpeed()));
 
 	int hostID = mPlayerList[target]->ID;
 	if (hostID < 0) return;
