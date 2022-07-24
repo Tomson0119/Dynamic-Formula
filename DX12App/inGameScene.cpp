@@ -735,7 +735,14 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 
 		if (player)
 		{
-			// set speed atomic
+			if (pck->speed > 0)
+			{
+				// Set UI information
+				if (player.get() == mPlayer)
+					mpUI->SetSpeed(pck->speed);
+				// Set current speed of player
+				player->SetCurrentSpeed(pck->speed);
+			}
 			player->SetCorrectionTransform(pck, mNetPtr->GetServerTimeStamp(), mNetPtr->GetLatency());
 		}
 		break;
@@ -772,7 +779,6 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		if (player)
 		{
 			if (pck->gauge > 0) mpUI->SetDriftGauge(pck->gauge);
-			if (pck->speed > 0) mpUI->SetSpeed(pck->speed);
 		}
 		break;
 	}

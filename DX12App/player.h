@@ -144,6 +144,9 @@ public:
 
 	LightBundle* GetLightBundle() { return mFrontLight; }
 
+	void SetCurrentSpeed(int speed) { mCurrentSpeed = speed; }
+	int GetCurrentSpeed() { return mCurrentSpeed; }
+
 private:
 	static const int RtvCounts = 12;
 	static const float TransparentInterval;
@@ -191,7 +194,7 @@ private:
 	float mSteeringIncrement = 5.0f;
 	float mSteeringClamp = 0.15f;
 
-	float mCurrentSpeed = 0.0f;
+	std::atomic_int mCurrentSpeed = 0;
 	float mMaxSpeed = 350.0f;
 
 	float mBreakingForce = 0.0f;
