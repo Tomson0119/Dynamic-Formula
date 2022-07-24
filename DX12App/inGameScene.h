@@ -20,7 +20,7 @@ public:
 	virtual ~InGameScene();
 
 public:
-	virtual void OnResize(float aspect) ;
+	virtual void OnResize(float aspect);
 
 	virtual void BuildObjects(
 		ComPtr<ID3D12Device> device,
@@ -32,12 +32,12 @@ public:
 		float Height,
 		float aspect,
 		const std::shared_ptr<BulletWrapper>& physics) override;
-	
+
 	virtual void Update(
-		ID3D12GraphicsCommandList* cmdList, 
+		ID3D12GraphicsCommandList* cmdList,
 		const GameTimer& timer,
 		const std::shared_ptr<BulletWrapper>& physics) override;
-	
+
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame) override;
 	virtual void PreRender(ID3D12GraphicsCommandList* cmdList, float elapsed) override;
 
@@ -59,7 +59,7 @@ public:
 
 	void SetComputeCBV(ID3D12GraphicsCommandList* cmdList);
 
-	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex=0, bool cubeMapping=false);
+	void RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex = 0, bool cubeMapping = false);
 
 	void OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const std::shared_ptr<BulletWrapper>& physics, float elapsed);
 
@@ -86,12 +86,12 @@ private:
 		const XMFLOAT4& rotation,
 		char color,
 		bool isPlayer,
-		ID3D12GraphicsCommandList* cmdList, 
-		const std::shared_ptr<BulletWrapper>& dynamicsWorld, 
+		ID3D12GraphicsCommandList* cmdList,
+		const std::shared_ptr<BulletWrapper>& dynamicsWorld,
 		UINT netID);
 
-	void BuildMissileObject( 
-		ID3D12GraphicsCommandList* cmdList, 
+	void BuildMissileObject(
+		ID3D12GraphicsCommandList* cmdList,
 		const XMFLOAT3& position, int idx);
 
 	void CreateVelocityMapViews();
@@ -112,6 +112,7 @@ private:
 	virtual void SetSound();
 	void BuildListener(const XMFLOAT3& CameraPos, const XMFLOAT3& CameraLook, const XMFLOAT3& CameraUp);
 	FMOD_3D_ATTRIBUTES& GetListener() { return mListener; }
+	void Update3DSound();
 private:
 	std::unique_ptr<Camera> mMainCamera;
 	std::unique_ptr<Camera> mDirectorCamera;
@@ -202,7 +203,7 @@ private:
 	/*float mVolumetricOuter = 7.0f;
 	float mVolumetricInner = 6.0f;
 	float mVolumetricRange = 20.0f;*/
-	
+
 	std::vector<LightBundle> mLights;
 	LightBundle mDirectionalLight;
 

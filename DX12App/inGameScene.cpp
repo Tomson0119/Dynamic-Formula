@@ -36,7 +36,7 @@ InGameScene::~InGameScene()
 
 void InGameScene::OnResize(float aspect)
 {
-	if(mMainCamera)
+	if (mMainCamera)
 		mMainCamera->SetLens(aspect);
 	if (mDirectorCamera)
 		mDirectorCamera->SetLens(aspect);
@@ -61,10 +61,10 @@ void InGameScene::OnResize(float aspect)
 }
 
 void InGameScene::BuildObjects(
-	ComPtr<ID3D12Device> device, 
-	ID3D12GraphicsCommandList* cmdList, 
+	ComPtr<ID3D12Device> device,
+	ID3D12GraphicsCommandList* cmdList,
 	ID3D12CommandQueue* cmdQueue,
-	UINT nFrame, ID3D12Resource** backBuffer, 
+	UINT nFrame, ID3D12Resource** backBuffer,
 	float Width, float Height, float aspect,
 	const shared_ptr<BulletWrapper>& physics)
 {
@@ -75,7 +75,7 @@ void InGameScene::BuildObjects(
 
 	mMainCamera = make_unique<Camera>();
 	mMainCamera->SetLens(0.25f * Math::PI, aspect, 1.0f, 1500.0f);
-	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3( 0.0f,0.0f,0.0f ), XMFLOAT3( 0.0f,1.0f,0.0f ));
+	mMainCamera->LookAt(XMFLOAT3(0.0f, 10.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
 	mMainCamera->SetPosition(0.0f, 0.0f, 0.0f);
 	mMainCamera->Move(mMainCamera->GetLook(), -mCameraRadius);
 
@@ -110,7 +110,7 @@ void InGameScene::BuildObjects(
 	v.Type = DIRECTIONAL_LIGHT;
 
 	mDirectionalLight.volumetric = v;
-	
+
 #else
 	if (mNetPtr->GetMapIndex() == 0)
 	{
@@ -142,7 +142,7 @@ void InGameScene::BuildObjects(
 			direction,
 			0.0f, 0.0f, 0.0f,
 			3000.0f, DIRECTIONAL_LIGHT);
-		
+
 		VolumetricInfo v;
 
 		v.Direction = direction;
@@ -211,7 +211,7 @@ void InGameScene::BuildRootSignature()
 		D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK);
 
 	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = Extension::RootSignatureDesc(_countof(parameters), parameters,
-		_countof(samplerDesc), samplerDesc, 
+		_countof(samplerDesc), samplerDesc,
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT);
 
@@ -234,7 +234,7 @@ void InGameScene::BuildComputeRootSignature()
 	descRanges[0] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
 	descRanges[1] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 	descRanges[2] = Extension::DescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 2);
-	
+
 	D3D12_ROOT_PARAMETER parameters[5];
 	parameters[0] = Extension::DescriptorTable(1, &descRanges[0], D3D12_SHADER_VISIBILITY_ALL);    // Inputs
 	parameters[1] = Extension::DescriptorTable(1, &descRanges[1], D3D12_SHADER_VISIBILITY_ALL);    // Output																   
@@ -275,7 +275,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	//auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.hlsl");
 	//auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.hlsl");
 	//auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.hlsl");
-	
+
 	auto defaultShader = make_unique<DefaultShader>(L"Shaders\\default_VS.cso", L"Shaders\\default_PS.cso");
 	auto instancingShader = make_unique<DefaultShader>(L"Shaders\\Instancing_VS.cso", L"Shaders\\Instancing_PS.cso");
 	auto colorShader = make_unique<DefaultShader>(L"Shaders\\color_VS.cso", L"Shaders\\color_PS.cso");
@@ -287,7 +287,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 	auto blurShader = make_unique<ComputeShader>(L"Shaders\\blur.cso", true);
 	auto bloomMergeShader = make_unique<ComputeShader>(L"Shaders\\bloomMerge.cso", true);
 	auto volumetricScatteringShader = make_unique<ComputeShader>(L"Shaders\\volumetricScattering.cso", true);
-	
+
 	mPipelines[Layer::Default] = make_unique<Pipeline>();
 	//mPipelines[Layer::Terrain] = make_unique<Pipeline>();
 
@@ -296,7 +296,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 #else
 	mPipelines[Layer::SkyBox] = make_unique<SkyboxPipeline>(mDevice.Get(), cmdList, mNetPtr->GetMapIndex());
 #endif
-	
+
 	mPipelines[Layer::Instancing] = make_unique<InstancingPipeline>();
 	mPipelines[Layer::Color] = make_unique<Pipeline>();
 	mPipelines[Layer::Transparent] = make_unique<InstancingPipeline>();
@@ -326,7 +326,7 @@ void InGameScene::BuildShadersAndPSOs(ID3D12GraphicsCommandList* cmdList)
 
 	mPipelines[Layer::Color]->SetAlphaBlending();
 	mPipelines[Layer::Color]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), colorShader.get());
-	
+
 	mPipelines[Layer::Instancing]->BuildPipeline(mDevice.Get(), mRootSignature.Get(), instancingShader.get());
 
 	mPipelines[Layer::SkyBox]->BuildPipeline(mDevice.Get(), mRootSignature.Get());
@@ -364,7 +364,7 @@ void InGameScene::BuildConstantBuffers()
 
 	for (const auto& [_, pso] : mPipelines)
 	{
-		if(pso)
+		if (pso)
 			pso->BuildConstantBuffer(mDevice.Get());
 	}
 }
@@ -483,7 +483,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 		LoadCheckPoint(cmdList, L"Map\\CheckPoint_day.tmap");
 		//LoadLights(cmdList, L"Map\\Lights_day.tmap");
 	}
-	else if(mNetPtr->GetMapIndex() == 1)
+	else if (mNetPtr->GetMapIndex() == 1)
 	{
 		LoadWorldMap(cmdList, physics, "Map\\MapData_night.tmap");
 		LoadCheckPoint(cmdList, L"Map\\CheckPoint_night.tmap");
@@ -492,11 +492,11 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 #endif
 
 #ifdef STANDALONE
-	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f },  0, true, cmdList, physics, 0);
+	BuildCarObject({ -306.5f, 1.0f, 253.7f }, { 0.0f, 0.707107f, 0.0f, -0.707107f }, 0, true, cmdList, physics, 0);
 #else
 	int playerCount = 0;
 	const auto& players = mNetPtr->GetPlayersInfo();
-	for (int i = 0; const PlayerInfo& info : players)
+	for (int i = 0; const PlayerInfo & info : players)
 	{
 		if (info.Empty == false)
 		{
@@ -516,7 +516,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mMainCamera->SetPosition(mPlayer->GetPosition());
 	mMainCamera->SetRotation(mPlayer->GetQuaternion());
 	mCurrentCamera = mMainCamera.get();
-	
+
 	// TEST
 	//mDirectorCamera->SetPosition(mMainCamera->GetPosition());
 	//mCurrentCamera = mDirectorCamera.get();
@@ -534,7 +534,7 @@ void InGameScene::BuildCarObject(
 	const XMFLOAT4& rotation,
 	char color,
 	bool isPlayer,
-	ID3D12GraphicsCommandList* cmdList, 
+	ID3D12GraphicsCommandList* cmdList,
 	const std::shared_ptr<BulletWrapper>& physics,
 	UINT netID)
 {
@@ -591,7 +591,7 @@ void InGameScene::BuildCarObject(
 			{
 				wheelObj->CopyMeshes(mMeshList["Car_Wheel_R.obj"]);
 			}
-		}		
+		}
 		carObj->SetWheel(wheelObj, i);
 		mPipelines[Layer::Color]->AppendObject(wheelObj);
 	}
@@ -603,11 +603,11 @@ void InGameScene::BuildCarObject(
 
 	if (isPlayer) mPlayer = carObj.get();
 	mPipelines[Layer::Color]->AppendObject(carObj);
-	mPlayerObjects[netID] = std::move(carObj);	
+	mPlayerObjects[netID] = std::move(carObj);
 }
 
 void InGameScene::BuildMissileObject(
-	ID3D12GraphicsCommandList* cmdList, 
+	ID3D12GraphicsCommandList* cmdList,
 	const XMFLOAT3& position, int idx)
 {
 	mMissileObjects[idx] = std::make_shared<MissileObject>(position);
@@ -690,11 +690,23 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	{
 		SC::packet_remove_missile* pck = reinterpret_cast<SC::packet_remove_missile*>(packet);
 		const auto& missile = mMissileObjects[pck->missile_idx];
-		if (missile) 
+		if (missile)
 		{
-			missile->SetUpdateFlag(UPDATE_FLAG::REMOVE); 
+			FMOD_VECTOR SoundPos{}, SoundVel{};
+
+			auto& missilePos = missile->GetPosition();
+			auto& missileVel = missile->GetLinearVelocity();
+			SoundPos.x = missilePos.x;
+			SoundPos.y = missilePos.y;
+			SoundPos.z = missilePos.z;
+			SoundVel.x = missileVel.GetXMFloat3().x;
+			SoundVel.y = missileVel.GetXMFloat3().y;
+			SoundVel.z = missileVel.GetXMFloat3().z;
+
+			missile->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			auto& sound = GetSound();
-			sound.Play(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::MISSILE_EXPLOSION));
+			sound.Play3D(static_cast<int>(IngameUI_SOUND_TRACK::MISSILE_EXPLOSION), SoundPos, SoundVel);
+			//sound.Play(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::MISSILE_EXPLOSION));
 		}
 		break;
 	}
@@ -706,7 +718,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		mNetPtr->Client()->SendMeasureRTTPacket(pck->s_send_time);
 
 		mNetPtr->SetHolePunchingDone(true);
-		
+
 		/*auto now = Clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
 			now - mPrevTimepoint).count();
@@ -720,7 +732,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	{
 		SC::packet_player_transform* pck = reinterpret_cast<SC::packet_player_transform*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
-		
+
 		if (player)
 		{
 			// set speed atomic
@@ -746,7 +758,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	{
 		SC::packet_missile_transform* pck = reinterpret_cast<SC::packet_missile_transform*>(packet);
 		const auto& missile = mMissileObjects[pck->missile_idx];
-		
+
 		if (missile && missile->IsActive())
 		{
 			missile->SetCorrectionTransform(pck, mNetPtr->GetServerTimeStamp(), mNetPtr->GetLatency());
@@ -779,7 +791,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	{
 		SC::packet_item_count* pck = reinterpret_cast<SC::packet_item_count*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
-		if(player)
+		if (player)
 		{
 			OutputDebugStringA("Item increased.\n");
 			player->SetItemNum(pck->item_count);
@@ -818,7 +830,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 
 		const auto& playerInfo = mNetPtr->GetPlayersInfo();
 		mpUI->GetMutex().lock();
-		for (int i = 0, idx=0; i < mPlayerObjects.size(); i++)
+		for (int i = 0, idx = 0; i < mPlayerObjects.size(); i++)
 		{
 			if (mPlayerObjects[i])
 			{
@@ -946,7 +958,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			auto& sound = GetSound();
 			const auto& channel = sound.GetChannel();
 			FMOD_RESULT res{};
-			if (!sound.GetIsDrift() && velocity>= MIN_DRIFT_SOUND_SPEED)
+			if (!sound.GetIsDrift() && velocity >= MIN_DRIFT_SOUND_SPEED)
 			{
 				sound.SetIsDrift();
 				sound.Play(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::DRIFT_ORIGIN));
@@ -983,7 +995,7 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 						auto Missile = mMissileObjects[i].get();
 						if (Missile == nullptr)
 							continue;
-						auto &missilePos = Missile->GetPosition();
+						auto& missilePos = Missile->GetPosition();
 						auto& missileVel = Missile->GetLinearVelocity();
 						SoundPos.x = missilePos.x;
 						SoundPos.y = missilePos.y;
@@ -992,7 +1004,8 @@ void InGameScene::OnProcessKeyInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 						SoundVel.y = missileVel.GetXMFloat3().y;
 						SoundVel.z = missileVel.GetXMFloat3().z;
 					}
-					sound.Play3D(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::MISSILE), SoundPos, SoundVel);
+					//sound.Play(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::MISSILE));
+					sound.Play3D(static_cast<int>(IngameUI_SOUND_TRACK::MISSILE), SoundPos, SoundVel);
 				}
 			}
 		}
@@ -1027,23 +1040,23 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 	for (auto& [key, val] : mKeyMap)
 	{
 		auto input = GetAsyncKeyState(key);
-		
+
 		if (input && val == false)
 		{
 			// Key pressed
 			val = true;
 			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
-			
+
 		}
 		else if (input == 0 && val == true)
 		{
 			// Key released
 			val = false;
 			mNetPtr->Client()->SendKeyInput(mNetPtr->GetRoomID(), key, val);
-			
+
 		}
 	}
-	
+
 	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
 
@@ -1051,7 +1064,7 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		std::wstring text{ std::to_wstring(velocity) };
 		//OutputDebugStringW(text.c_str());
 		auto& sound = GetSound();
-		if(sound.GetIsDecelerating())
+		if (sound.GetIsDecelerating())
 			sound.SetIsDecelerating();
 
 		const auto& channel = sound.GetChannel();
@@ -1061,13 +1074,13 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 		FMOD_BOOL isPlaying = false;
 		FMOD_Channel_IsPlaying(channel[static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN)], &isPlaying);
 
-		if (!sound.GetIsDriving() && velocity> MIN_DRIVING_SOUND_SPEED)
+		if (!sound.GetIsDriving() && velocity > MIN_DRIVING_SOUND_SPEED)
 		{
 			sound.Play(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN));
 			//auto pos = static_cast<unsigned int>((DRIVING_SOUND_FRAME * DRIVING_SOUND_RUNNING_TIME) * (velocity / static_cast<float>(MAX_SPEED)));
 			//if (pos > 78112) pos = 78112;
-			
-			
+
+
 
 			//FMOD_Channel_SetPosition(channel[static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN)], pos, FMOD_TIMEUNIT_PCM);
 
@@ -1083,15 +1096,15 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 			//FMOD_Channel_SetPitch(channel[static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN)], 0.5f + (1.0f * (velocity * (0.7f / MAX_SPEED))));
 		}
 	}
-	
 
-	if (GetAsyncKeyState(VK_DOWN) & 0x8001 || GetAsyncKeyState(VK_DOWN)&8000)
+
+	if (GetAsyncKeyState(VK_DOWN) & 0x8001 || GetAsyncKeyState(VK_DOWN) & 8000)
 	{
 		auto velocity = mpUI.get()->GetSpeed();
 		auto& sound = GetSound();
 		const auto& channel = sound.GetChannel();
 		FMOD_RESULT res{};
-		if (!sound.GetIsDecelerating()) 
+		if (!sound.GetIsDecelerating())
 		{
 			sound.SetIsDecelerating();
 			//sound.Play(NORMAL_VOLUME, static_cast<int>(IngameUI_SOUND_TRACK::BIKE_BRAKE));
@@ -1123,11 +1136,11 @@ void InGameScene::OnPreciseKeyInput(ID3D12GraphicsCommandList* cmdList, const st
 
 	if (GetAsyncKeyState(VK_LSHIFT) & 0x8000)
 	{
-		
+
 	}
 	else
 	{
-		
+
 	}
 
 #endif
@@ -1148,7 +1161,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 	float elapsed = timer.ElapsedTime();
 
 #ifdef STANDALONE
-	if(mGameStarted)
+	if (mGameStarted)
 		physics->StepSimulation(elapsed);
 #endif
 	//physics->StepSimulation(elapsed);
@@ -1166,50 +1179,17 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 		pso->Update(elapsed, mNetPtr->GetClockDelta(), mCurrentCamera);
 	mMainCamera->Update(elapsed);
 	mDirectorCamera->Update(elapsed);
-	
+
 	UpdateConstants(timer);
-	
-	auto &sound = GetSound();
+
+	auto& sound = GetSound();
 	// Set 3dSound Listener Attributes from Camera
-	FMOD_VECTOR Pos{}, Vel{}, Forward{}, Up{};
+	Update3DSound();
 
-	Pos.x = mCurrentCamera->GetPosition().x;
-	Pos.y = mCurrentCamera->GetPosition().y;
-	Pos.z = mCurrentCamera->GetPosition().z;
-
-	Forward.x = mCurrentCamera->GetLook().x;
-	Forward.y = mCurrentCamera->GetLook().y;
-	Forward.z = mCurrentCamera->GetLook().z;
-
-	Up.x = mCurrentCamera->GetUp().x;
-	Up.y = mCurrentCamera->GetUp().y;
-	Up.z = mCurrentCamera->GetUp().z;
-
-	Vel.x = mPlayer->GetVelocity().x;
-	Vel.y = mPlayer->GetVelocity().y;
-	Vel.z = mPlayer->GetVelocity().z;
-
-	FMOD_System_Set3DListenerAttributes(sound.GetSystem(), 0, &Pos, &Vel, &Forward, &Up);
-	FMOD_VECTOR SoundPos{}, SoundVel{};
-	for (int i = 0; i < mMissileObjects.size(); ++i)
-	{
-		auto Missile = mMissileObjects[i].get();
-		if (Missile == nullptr)
-			continue;
-		auto& missilePos = Missile->GetPosition();
-		auto& missileVel = Missile->GetLinearVelocity();
-		SoundPos.x = missilePos.x;
-		SoundPos.y = missilePos.y;
-		SoundPos.z = missilePos.z;
-		SoundVel.x = missileVel.GetXMFloat3().x;
-		SoundVel.y = missileVel.GetXMFloat3().y;
-		SoundVel.z = missileVel.GetXMFloat3().z;
-	}
-	sound.Set3DPos(static_cast<int>(IngameUI_SOUND_TRACK::MISSILE), SoundPos, SoundVel);
 	sound.Update();
 
 	auto velocity = mpUI.get()->GetSpeed();
-	
+
 	const auto& channel = sound.GetChannel();
 	FMOD_RESULT res;
 	//FMOD_Channel_SetPosition(channel[static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN)], 48000 * 0.016f, FMOD_TIMEUNIT_PCM);
@@ -1219,11 +1199,11 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 		FMOD_Channel_SetPaused(sound.GetChannel()[static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN)], true);
 	}
 	FMOD_Channel_SetPitch(channel[static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN)], 0.3f + (1.0f * (velocity * (0.8f / MAX_SPEED))));
-	
+
 	float pitch{};
 	FMOD_Channel_GetPitch(channel[static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN)], &pitch);
 	OutputDebugStringW(std::to_wstring(pitch).c_str());
-	
+
 	mpUI.get()->Update(elapsed, mPlayer);
 }
 
@@ -1251,7 +1231,7 @@ void InGameScene::BuildParticleObject(ID3D12GraphicsCommandList* cmdList)
 			{
 				obj->SetTextures(mTextureList["DriftParticle"]);
 			}
-			
+
 			obj->SetMesh(particleEmittor);
 			obj->SetLocalOffset(offset[i]);
 
@@ -1320,9 +1300,9 @@ void InGameScene::UpdateLightConstants()
 		else
 			++i;
 	}
-	
+
 	if (mNetPtr->GetMapIndex() == 1)
-	{	
+	{
 		for (int i = 0; i < mPlayerObjects.size(); ++i)
 		{
 			if (mPlayerObjects[i])
@@ -1347,13 +1327,13 @@ void InGameScene::UpdateLightConstants()
 	for (int i = 1; i < mLights.size() + 1; ++i)
 	{
 		mMainLight.Lights[i] = mLights[i - 1].light;
-		if(i == MAX_LIGHTS - 1)
+		if (i == MAX_LIGHTS - 1)
 			break;
 	}
 
 	mMainLight.Lights[0] = mDirectionalLight.light;
 	mMainLight.numLights = (mLights.size() + 1 < MAX_LIGHTS) ? (int)mLights.size() + 1 : MAX_LIGHTS;
-	
+
 	mLightCB->CopyData(0, mMainLight);
 }
 
@@ -1369,15 +1349,15 @@ void InGameScene::UpdateVolumetricConstant()
 
 	volumeConst.InvProj = Matrix4x4::Transpose(mCurrentCamera->GetInverseProj());
 	volumeConst.View = Matrix4x4::Transpose(mCurrentCamera->GetView());
-	
+
 	for (int i = 0; i < mShadowMapRenderer->GetMapCount(); ++i)
 	{
 		volumeConst.ShadowTransform[i] = Matrix4x4::Transpose(Matrix4x4::Multiply(mShadowMapRenderer->GetView(i), mShadowMapRenderer->GetProj(i)));
 		volumeConst.frstumSplit[i] = mShadowMapRenderer->GetSplit(i + 1);
-	}		
+	}
 
 	volumeConst.numLights = (mLights.size() + 1 < MAX_LIGHTS) ? (int)mLights.size() + 1 : MAX_LIGHTS;
-	
+
 	volumeConst.Lights[0] = mDirectionalLight.volumetric;
 	for (int i = 1; i < volumeConst.numLights; ++i)
 	{
@@ -1551,7 +1531,7 @@ void InGameScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_
 }
 
 void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int cameraCBIndex, bool cubeMapping)
-{	
+{
 	SetGraphicsCBV(cmdList, cameraCBIndex);
 	mShadowMapRenderer->SetShadowMapGraphicsSRV(cmdList, 6);
 
@@ -1583,7 +1563,7 @@ void InGameScene::RenderPipelines(ID3D12GraphicsCommandList* cmdList, int camera
 			}
 			else
 				pso->SetAndDraw(cmdList, (bool)mLODSet, true, cubeMapping, type);
-		}			
+		}
 	}
 }
 
@@ -1603,7 +1583,7 @@ void InGameScene::UpdateMissileObject()
 			missile->SetActive(true);
 			mPipelines[Layer::Default]->AppendObject(mMissileObjects[i]);
 			missile->SetUpdateFlag(UPDATE_FLAG::NONE);
-			
+
 			auto particle = missile->GetParticle();
 			particle->SetParticleEnable(true);
 
@@ -1636,7 +1616,7 @@ void InGameScene::UpdatePlayerObjects()
 		auto player = mPlayerObjects[i].get();
 		if (player == nullptr) continue;
 
-		switch(player->GetUpdateFlag())
+		switch (player->GetUpdateFlag())
 		{
 		case UPDATE_FLAG::CREATE:
 		{
@@ -1646,7 +1626,7 @@ void InGameScene::UpdatePlayerObjects()
 		case UPDATE_FLAG::REMOVE:
 		{
 			removed_flag = true;
-			if(mMissileObjects[i]) mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
+			if (mMissileObjects[i]) mMissileObjects[i]->SetUpdateFlag(UPDATE_FLAG::REMOVE);
 			player->RemoveObject(*mDynamicsWorld, *mPipelines[Layer::Color]);
 			player->SetUpdateFlag(UPDATE_FLAG::NONE);
 			break;
@@ -1694,7 +1674,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 		wstring transparentObjPath;
 		transparentObjPath.assign(transparentpath.begin(), transparentpath.end());
-		
+
 		auto obj = make_shared<StaticObject>();
 		if (static_cast<InstancingPipeline*>(mPipelines[Layer::Instancing].get())->mInstancingCount[objName] == 0)
 		{
@@ -1725,7 +1705,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 			}
 		}
 #endif
-		
+
 		wstring convexObjPath;
 		tmpstr.erase(tmpstr.end() - 4, tmpstr.end());
 		convexObjPath.assign(tmpstr.begin(), tmpstr.end());
@@ -1744,13 +1724,13 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 		if (_access(transparentpath.c_str(), 0) != -1)
 		{
 			auto transparentObj = make_shared<StaticObject>();
-			
+
 #ifdef STANDALONE
 			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, true);
 #else
 			transparentObj->LoadModel(mDevice.Get(), cmdList, transparentObjPath, false);
 #endif
-			
+
 			mMeshList[objName + "_Transparent"] = transparentObj->GetMeshes();
 			mOOBBList[objName + "_Transparent"] = transparentObj->GetBoundingBox();
 
@@ -1771,7 +1751,7 @@ void InGameScene::LoadWorldMap(ID3D12GraphicsCommandList* cmdList, const std::sh
 
 			transparentObj->Update(0, 0);
 			transparentObj->UpdateInverseWorld();
-			
+
 			mPipelines[Layer::Transparent]->AppendObject(transparentObj);
 			static_cast<InstancingPipeline*>(mPipelines[Layer::Transparent].get())->mInstancingCount[objName]++;
 		}
@@ -1913,7 +1893,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 			l.SetInfo(
 				XMFLOAT3(1.0f, 0.5f, 0.0f),
 				pos,
-				XMFLOAT3{0.0f, 0.0f, 0.0f},
+				XMFLOAT3{ 0.0f, 0.0f, 0.0f },
 				10.0f, 20.0f, 0.0f,
 				0.0f, POINT_LIGHT);;
 
@@ -1936,7 +1916,7 @@ void InGameScene::LoadLights(ID3D12GraphicsCommandList* cmdList, const std::wstr
 		}
 		else if (type == "P_Deco")
 		{
-			
+
 		}
 	}
 }
@@ -1969,7 +1949,7 @@ void InGameScene::SetSound()
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 
-	modes.push_back(FMOD_DEFAULT );
+	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT);
 	modes.push_back(FMOD_DEFAULT | FMOD_3D);
 	modes.push_back(FMOD_DEFAULT | FMOD_3D);
@@ -1995,7 +1975,7 @@ void InGameScene::BuildListener(const XMFLOAT3& CameraPos, const XMFLOAT3& Camer
 	ListenerUp.x = CameraUp.x;
 	ListenerUp.y = CameraUp.y;
 	ListenerUp.z = CameraUp.z;
-	
+
 	ListenerVelocity = { 0.0f, 0.0f, 0.0f };
 
 	FMOD_System_Set3DListenerAttributes(GetSound().GetSystem(), 0, &ListenerPos, &ListenerForward, &ListenerUp, &ListenerVelocity);
@@ -2003,4 +1983,46 @@ void InGameScene::BuildListener(const XMFLOAT3& CameraPos, const XMFLOAT3& Camer
 
 
 
+}
+
+void InGameScene::Update3DSound()
+{
+
+	auto& sound = GetSound();
+	FMOD_VECTOR Pos{}, Vel{}, Forward{}, Up{};
+
+	Pos.x = mCurrentCamera->GetPosition().x;
+	Pos.y = mCurrentCamera->GetPosition().y;
+	Pos.z = mCurrentCamera->GetPosition().z;
+
+	Forward.x = mCurrentCamera->GetLook().x;
+	Forward.y = mCurrentCamera->GetLook().y;
+	Forward.z = mCurrentCamera->GetLook().z;
+
+	Up.x = mCurrentCamera->GetUp().x;
+	Up.y = mCurrentCamera->GetUp().y;
+	Up.z = mCurrentCamera->GetUp().z;
+
+	Vel.x = mPlayer->GetLinearVelocity().GetXMFloat3().x;
+	Vel.y = mPlayer->GetLinearVelocity().GetXMFloat3().y;
+	Vel.z = mPlayer->GetLinearVelocity().GetXMFloat3().z;
+
+	FMOD_System_Set3DListenerAttributes(sound.GetSystem(), 0, &Pos, &Vel, &Forward, &Up);
+
+	FMOD_VECTOR SoundPos{}, SoundVel{};
+	for (int i = 0; i < mMissileObjects.size(); ++i)
+	{
+		auto Missile = mMissileObjects[i].get();
+		if (Missile == nullptr)
+			continue;
+		auto& missilePos = Missile->GetPosition();
+		auto& missileVel = Missile->GetLinearVelocity();
+		SoundPos.x = missilePos.x;
+		SoundPos.y = missilePos.y;
+		SoundPos.z = missilePos.z;
+		SoundVel.x = missileVel.GetXMFloat3().x;
+		SoundVel.y = missileVel.GetXMFloat3().y;
+		SoundVel.z = missileVel.GetXMFloat3().z;
+	}
+	sound.Set3DPos(static_cast<int>(IngameUI_SOUND_TRACK::MISSILE), SoundPos, SoundVel);
 }

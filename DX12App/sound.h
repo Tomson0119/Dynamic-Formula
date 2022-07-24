@@ -2,9 +2,9 @@
 #include "stdafx.h"
 
 constexpr int MAX_CHANNEL = 16; // 동시 재생 가능한 사운드 수
-constexpr float MAX_VOLUME = 1.0f;
+constexpr float MAX_VOLUME = 0.5f;
 constexpr float MIN_VOLUME = 0.0f;
-constexpr float NORMAL_VOLUME = 0.5f;
+constexpr float NORMAL_VOLUME = 0.25f;
 constexpr int DRIVING_SOUND_FRAME = 48000;
 constexpr int DRIVING_REVERSE_SOUND_FRAME = 32000;
 constexpr int BRAKE_SKID_SOUND_FRAME = 44100;
@@ -19,6 +19,9 @@ constexpr float MIN_DRIFT_SOUND_SPEED = 30.0f;
 constexpr float DRIVING_SOUND_RUNNING_TIME = 3.964f;
 constexpr float BRAKE_SKID_SOUND_RUNNING_TIME = 2.705f;
 constexpr float BIKE_BRAKE_SOUND_RUNNING_TIME = 3.310f;
+
+const float MAP_3D_SOUND_DISTANCE_MIN = 10.0f;
+const float MAP_3D_SOUND_DISTANCE_MAX = 1000.0f;
 
 enum class IngameUI_SOUND_TRACK {
 	BGM1 = 0,
@@ -50,7 +53,7 @@ enum class LOBBYUI_IngameUI_SOUND_TRACK {
 };
 
 enum class ROOMUI_IngameUI_SOUND_TRACK {
-	ERR=0,
+	ERR = 0,
 	GAMEREADY,
 	GAMESTART,
 	GENERAL,
@@ -68,7 +71,7 @@ public:
 	void InitSound(std::vector<std::string>& SoundFilePath, std::vector<FMOD_MODE>& mode);
 	//void SetVolume(float volume);
 	void Play(float volume, int channelNum);
-	void Play3D(float volume, int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel);
+	void Play3D(int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel);
 	void Set3DPos(int channelNum, const FMOD_VECTOR& soundPos, const FMOD_VECTOR& soundVel);
 	bool PlayCheck(int channelNum);
 	void Stop(int channelNum);
@@ -107,7 +110,7 @@ private:
 	std::vector<FMOD_SOUND*> mSoundFile;
 	std::vector<FMOD_CHANNEL*> mChannel;
 	FMOD_DSP* mDSP;
-	
+
 	//Ingame
 	bool mIsDriftStart = false;
 	bool mIsDrift = false;

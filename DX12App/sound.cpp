@@ -40,16 +40,18 @@ void Sound::InitSound(std::vector<std::string>& SoundFilePath, std::vector<FMOD_
 }
 
 void Sound::Play(float volume, int channelNum)
-{	
+{
 	FMOD_System_PlaySound(mSoundSystem, mSoundFile[channelNum], NULL, 0, &mChannel[channelNum]);
 	FMOD_Channel_SetVolume(mChannel[channelNum], volume);
 }
 
-void Sound::Play3D(float volume, int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel)
+void Sound::Play3D(int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel)
 {
 	FMOD_System_PlaySound(mSoundSystem, mSoundFile[channelNum], NULL, 0, &mChannel[channelNum]);
-	FMOD_Channel_SetVolume(mChannel[channelNum], volume);
+	//FMOD_Channel_SetVolume(mChannel[channelNum], volume);
 	FMOD_Channel_Set3DAttributes(mChannel[channelNum], &channelPos, &channelVel);
+	FMOD_Channel_Set3DMinMaxDistance(mChannel[channelNum], MAP_3D_SOUND_DISTANCE_MIN, MAP_3D_SOUND_DISTANCE_MAX);
+	//FMOD_Channel_Set3DOcclusion(mChannel[channelNum], 1.0f, 1.0f);
 }
 
 void Sound::Set3DPos(int channelNum, const FMOD_VECTOR& soundPos, const FMOD_VECTOR& soundVel)
@@ -78,6 +80,6 @@ void Sound::Update()
 
 void Sound::SetIsDriftStart()
 {
-	if (mIsDriftStart) mIsDriftStart = false; 
+	if (mIsDriftStart) mIsDriftStart = false;
 	else mIsDriftStart = true;
 }
