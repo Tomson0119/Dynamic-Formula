@@ -89,6 +89,7 @@ public:
 	void Update();
 
 	void Update3DSoundForPlayer(int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel, int velocity);
+	void Update3DSoundForOtherPlayers(int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel, int velocity);
 
 	//Ingame
 	void SetIsDriftStart();
@@ -135,7 +136,7 @@ private:
 
 	bool mIsDecelerating = false;
 
-	bool mIsPlayerSoundPaused[8] = { false, false, false, false, false, false, false, false };
+	bool mIsPlayerSoundPaused[8] = { true, true, true, true, true, true, true, true};
 
 	//Room
 

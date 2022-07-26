@@ -69,13 +69,36 @@ void Sound::Update3DSoundForPlayer(int channelNum, const FMOD_VECTOR& channelPos
 	FMOD_Channel_SetPitch(mChannel[channelNum], 0.3f + (1.0f * (velocity * (0.8f / MAX_SPEED))));
 	if (velocity < MIN_DRIVING_SOUND_SPEED)
 	{
-		FMOD_Channel_SetPaused(mChannel[channelNum], true);
+		FMOD_Channel_Stop(mChannel[channelNum]);
+		//Set Volume = 0 , Flag Off
+		//FMOD_Channel_SetVolume(mChannel[channelNum], 0.0f);
+		
 		SetPlayerSoundPausedTrue(channelNum - static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1));
 	}
 	else if (GetPlayerSoundPaused(channelNum - static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1)))
 	{
-		FMOD_System_PlaySound(mSoundSystem, mSoundFile[channelNum], NULL, 0, &mChannel[channelNum]);
+		//FMOD_Channel_SetVolume(mChannel[channelNum], NORMAL_VOLUME);
+		FMOD_System_PlaySound(mSoundSystem, mSoundFile[channelNum], NULL, true, &mChannel[channelNum]);
+		//FMOD_Channel_SetPaused(mChannel[channelNum], false);
+		
+		//FMOD_Channel_SetVolume(mChannel[channelNum], NORMAL_VOLUME);
 		SetPlayerSoundPausedFalse(channelNum - static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1));
+	}
+	
+}
+
+void Sound::Update3DSoundForOtherPlayers(int channelNum, const FMOD_VECTOR& channelPos, const FMOD_VECTOR& channelVel, int velocity)
+{
+	FMOD_Channel_Set3DAttributes(mChannel[channelNum], &channelPos, &channelVel);
+	FMOD_Channel_SetPitch(mChannel[channelNum], 0.3f + (1.0f * (velocity * (0.8f / MAX_SPEED))));
+	if (GetPlayerSoundPaused(channelNum - static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1)))
+	{
+		FMOD_System_PlaySound(mSoundSystem, mSoundFile[channelNum], NULL, true, &mChannel[channelNum]);
+		SetPlayerSoundPausedFalse(channelNum - static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1));
+	}
+	if (velocity > 2)
+	{
+		FMOD_Channel_SetPaused(mChannel[channelNum], false);
 	}
 }
 

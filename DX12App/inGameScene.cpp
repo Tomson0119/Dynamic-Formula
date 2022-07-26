@@ -675,16 +675,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		mGameStarted = true;
 		mpUI->ShowGoAnim();
 		mpUI->SetRunningTime((float)pck->running_time_sec);
-		auto& sound = GetSound();
-		FMOD_VECTOR SoundPos{}, SoundVel{};
-		for (int i = 0; i < mPlayerObjects.size(); ++i)
-		{
-			if (!mPlayerObjects[i].get()) 
-				continue;
-			if(mPlayerObjects[i].get()!=mPlayer)
-				sound.Play3DForPlayer(static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1) + i, SoundPos, SoundVel);
-		}
-
+		
 		break;
 	}
 	case SC::PCK_TYPE::REMOVE_PLAYER:
@@ -2067,13 +2058,25 @@ void InGameScene::Update3DSound()
 	{
 		if (!mPlayerObjects[i])
 			continue;
+		
 		SoundPos.x = mPlayerObjects[i].get()->GetPosition().x;
 		SoundPos.y = mPlayerObjects[i].get()->GetPosition().y;
 		SoundPos.z = mPlayerObjects[i].get()->GetPosition().z;
+		
 		SoundVel.x = 0.0f;
 		SoundVel.y = 0.0f;
 		SoundVel.z = 0.0f;
-		sound.Update3DSoundForPlayer(static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1) + i, SoundPos, SoundVel, mPlayerObjects[i].get()->GetCurrentSpeed());
+		if (mPlayerObjects[i].get() == mPlayer)
+		{
+			SoundPos.x = (mCurrentCamera->GetPosition().x + mPlayerObjects[i].get()->GetPosition().x) / 2.0f;
+			SoundPos.y = (mCurrentCamera->GetPosition().y + mPlayerObjects[i].get()->GetPosition().y) / 2.0f;
+			SoundPos.z = (mCurrentCamera->GetPosition().z + mPlayerObjects[i].get()->GetPosition().z) / 2.0f;
+			sound.Update3DSoundForPlayer(static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1) + i, SoundPos, SoundVel, mPlayerObjects[i].get()->GetCurrentSpeed());
+		}
+		else 
+		{
+			sound.Update3DSoundForOtherPlayers(static_cast<int>(IngameUI_SOUND_TRACK::PLAYER1) + i, SoundPos, SoundVel, mPlayerObjects[i].get()->GetCurrentSpeed());
+		}
 	}
 
 
