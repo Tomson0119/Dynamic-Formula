@@ -82,10 +82,10 @@ public:
 		uint64_t timeBetween = nextTp - mPrevTimePoint;		
 		float progress = (float)(mCurrentTime - mPrevTimePoint) / timeBetween;
 
-		/*Print("prev time: ", mPrevTimePoint);
-		Print("current time: ", mCurrentTime);
-		Print("next time: ", nextTp);*/
-		//Log::Print("progress: ", progress);
+		Log::Print("prev time: ", mPrevTimePoint);
+		Log::Print("current time: ", mCurrentTime);
+		Log::Print("next time: ", nextTp);
+		Log::Print("progress: ", progress);
 
 		targetPos = Vector3::Lerp(mPrevEntry.position, nextEntry.position, progress);
 		targetRot = Vector4::Slerp(mPrevEntry.rotation, nextEntry.rotation, progress);
@@ -123,7 +123,9 @@ private:
 		if (mEntries.empty())
 			return std::nullopt;
 
-		return *mEntries.begin();
+		auto ret = *mEntries.begin();
+		mEntries.erase(mEntries.begin());
+		return ret;
 	}
 
 private:
