@@ -400,7 +400,7 @@ bool Player::ToggleKeyValue(uint8_t key, bool pressed)
 			// for test
 			if (UseItem(key))
 			{
-				if(mItemCount > 0) mItemCount -= 1;
+				mItemCount -= 1;
 				return true;
 			}
 		}
@@ -420,8 +420,7 @@ bool Player::ToggleKeyValue(uint8_t key, bool pressed)
 
 bool Player::IsItemAvailable()
 {
-	//return (mItemCount > 0);
-	return true;
+	return (mItemCount > 0);
 }
 
 bool Player::UseItem(uint8_t key)
