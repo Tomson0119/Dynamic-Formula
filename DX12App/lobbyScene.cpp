@@ -20,19 +20,6 @@ void LobbyScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommand
 	mpUI->BuildObjects(backBuffer, static_cast<UINT>(Width), static_cast<UINT>(Height));
 }
 
-void LobbyScene::ProcessAfterResize()
-{
-	/*mRoomListMut.lock();
-	for (int i = 0; i < 6; ++i)
-		mpUI->SetRoomInfoTextsIndex(i, 
-			mRoomList[i].ID, 
-			mRoomList[i].PlayerCount, 
-			mRoomList[i].MapID, 
-			mRoomList[i].GameStarted,
-			!mRoomList[i].Opened);
-	mRoomListMut.unlock();*/
-}
-
 void LobbyScene::OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -210,6 +197,14 @@ bool LobbyScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		return false;
 	}
 	return true;
+}
+
+void LobbyScene::ProcessAfterResize()
+{
+	int i = 0;
+	auto RoomList = mNetPtr->GetRoomList();
+	for (auto& Room : RoomList)
+		mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
 }
 
 void LobbyScene::Reset()

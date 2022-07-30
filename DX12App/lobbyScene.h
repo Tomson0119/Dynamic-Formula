@@ -33,7 +33,6 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		const GameTimer& timer,
 		const std::shared_ptr<BulletWrapper>& physics) override;
-
 	virtual void Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame) override;
 	virtual bool ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes) override;
 	virtual void Reset() override;
