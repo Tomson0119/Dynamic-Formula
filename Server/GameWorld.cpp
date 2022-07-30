@@ -91,7 +91,7 @@ void GameWorld::UpdatePhysicsWorld()
 		mMap.Update(elapsed, mPhysics);
 	}
 	mUpdateTick += 1;
-	if (mUpdateTick == 1)
+	if (mUpdateTick == 2)
 	{
 		BroadcastAllTransform();
 		mUpdateTick = 0;
@@ -489,7 +489,6 @@ void GameWorld::SetActive(bool active)
 	mActive = active;
 	if (active)
 	{
-		// TODO: Timer needs to be singleton.
 		mTimer.Start();
 	}
 }

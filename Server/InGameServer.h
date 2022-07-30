@@ -84,5 +84,5 @@ private:
 	std::shared_ptr<GameConstant> mGameConstants;
 
 	const btVector3 mOffset = { 10.0f, 0.0f, 4.1f };
-	const int mPhysicsDurationMs = 8;
+	const int mPhysicsDurationMs = 16;
 };
