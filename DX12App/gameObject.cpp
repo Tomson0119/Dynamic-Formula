@@ -548,24 +548,7 @@ void GameObject::InterpolateWorldTransform(float elapsed, uint64_t clockDelta)
 	mPosition = mCorrectionOrigin.GetXMFloat3();
 	mQuaternion = mCorrectionQuat.GetXMFloat4();
 
-	//mInterpolator.Interpolate(elapsed, clockDelta, mPosition, mQuaternion);
-
-	//if (updateRate <= 0.0f) return;
-
-	//mProgressMut.lock();
-	//mProgress += elapsed;
-	//float progress = mProgress / updateRate;
-	//mProgressMut.unlock();
-
-	//const XMFLOAT3& prevOrigin = mPrevOrigin.GetXMFloat3();
-	//const XMFLOAT4& prevQuat = mPrevQuat.GetXMFloat4();
-
-	//// Get correction state of extrapolated server postion/rotation.
-	//const XMFLOAT3& correctOrigin = mCorrectionOrigin.GetXMFloat3();
-	//const XMFLOAT4& correctQuat = mCorrectionQuat.GetXMFloat4();
-
-	//mPosition = Vector3::Lerp(prevOrigin, correctOrigin, progress);
-	//mQuaternion = Vector4::Slerp(prevQuat, correctQuat, progress);
+	mInterpolator.Interpolate(elapsed, clockDelta, mPosition, mQuaternion);
 }
 
 void GameObject::SetPosition(float x, float y, float z)
@@ -940,7 +923,7 @@ void MissileObject::SetCorrectionTransform(SC::packet_missile_transform* pck, ui
 		pck->linear_vel_z / POS_FLOAT_PRECISION,
 		latency);
 
-	//mInterpolator.Enqueue(timePoint, mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
+	mInterpolator.Enqueue(timePoint, mCorrectionOrigin.GetXMFloat3(), mCorrectionQuat.GetXMFloat4());
 }
 
 void MissileObject::SetActive(bool state)

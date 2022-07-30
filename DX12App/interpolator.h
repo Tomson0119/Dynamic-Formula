@@ -66,7 +66,8 @@ public:
 		auto now = Clock::now().time_since_epoch().count();
 		auto now_ms = ConvertNsToMs(now) + clockDelta;
 
-		mCurrentTime = (uint64_t)(((float)mCurrentTime * PCT) + (float)now_ms * (1.0f - PCT));
+		//mCurrentTime = (uint64_t)(((float)mCurrentTime * PCT) + (float)now_ms * (1.0f - PCT));
+		mCurrentTime = now_ms;
 
 		auto next = FindNextEntry();
 		if (next.has_value() == false) {
@@ -84,7 +85,7 @@ public:
 		/*Print("prev time: ", mPrevTimePoint);
 		Print("current time: ", mCurrentTime);
 		Print("next time: ", nextTp);*/
-		Log::Print("progress: ", progress);
+		//Log::Print("progress: ", progress);
 
 		targetPos = Vector3::Lerp(mPrevEntry.position, nextEntry.position, progress);
 		targetRot = Vector4::Slerp(mPrevEntry.rotation, nextEntry.rotation, progress);
@@ -92,7 +93,7 @@ public:
 		/*Print("prev position: ", mPrevEntry.position);
 		Print("current position: ", targetPos);
 		Print("next position: ", nextEntry.position);*/
-		Log::Print("-----------------------------------", 0);
+		//Log::Print("-----------------------------------", 0);
 	}
 
 	void Clear()
@@ -117,7 +118,7 @@ private:
 			mEntries.erase(mEntries.begin());
 		}
 		
-		Log::Print("Entries size: ", mEntries.size());
+		//Log::Print("Entries size: ", mEntries.size());
 
 		if (mEntries.empty())
 			return std::nullopt;
