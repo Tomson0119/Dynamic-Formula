@@ -31,7 +31,7 @@ LoginServer::LoginServer(const EndPoint& ep)
 	mListenSck.Bind(ep);
 
 	// Pre-allocate memory pools.
-	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Init(10 * MAX_THREAD_COUNT);
+	MemoryPoolManager<WSAOVERLAPPEDEX>::GetInstance().Init(100 * MAX_THREAD_COUNT);
 }
 
 LoginServer::~LoginServer()
@@ -134,7 +134,7 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	{
 		if (id < MAX_PLAYER_SIZE && bytes != over->WSABuffer.len)
 		{
-			Disconnect(id);
+			//Disconnect(id);
 		}
 		delete over;
 		break;
