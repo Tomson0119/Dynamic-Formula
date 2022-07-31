@@ -395,8 +395,8 @@ bool Player::ToggleKeyValue(uint8_t key, bool pressed)
 
 	if ((key == 'Z' || key == 'X'))
 	{
-		if(pressed) // for test
-		//if (pressed && IsItemAvailable())
+		//if(pressed) // for test
+		if (pressed && IsItemAvailable())
 		{
 			if (UseItem(key))
 			{
