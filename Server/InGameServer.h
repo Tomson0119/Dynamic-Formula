@@ -44,7 +44,7 @@ struct GameConstant
 	const btQuaternion StartRotation = { 0.0f, 0.707107f, 0.0f, -0.707107f };
 
 	const std::chrono::seconds CountdownTime = 4s; // 4초 후 시작
-	const std::chrono::seconds GameRunningTime = 8s; // 30초 TEST
+	const std::chrono::seconds GameRunningTime = 300s; // 30초 TEST
 };
 
 class InGameServer
@@ -85,5 +85,5 @@ private:
 	std::shared_ptr<GameConstant> mGameConstants;
 
 	const btVector3 mOffset = { 10.0f, 0.0f, 4.1f };
-	const int mPhysicsDurationMs = 16;
+	const int mPhysicsDurationMs = 6;
 };
