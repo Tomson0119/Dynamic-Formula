@@ -159,9 +159,10 @@ void NetModule::InitPlayerTransform(SC::packet_game_start_success* pck)
 		auto& pos = mPlayerList[i].StartPosition;
 		auto& quat = mPlayerList[i].StartRotation;
 
-		pos.x = pck->positions[i].x / POS_FLOAT_PRECISION;
-		pos.y = pck->positions[i].y / POS_FLOAT_PRECISION;
-		pos.z = pck->positions[i].z / POS_FLOAT_PRECISION;
+		auto pos_elems = Compressor::DecodePos(pck->positions[i]);
+		pos.x = pos_elems[0];
+		pos.y = pos_elems[1];
+		pos.z = pos_elems[2];
 
 		auto elems = Compressor::DecodeQuat(pck->quaternions[i]);
 		quat.x = elems[0];
