@@ -53,6 +53,9 @@ public:
 	void SetRoomInfoTextsIndex(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Opened);
 
 	void SetRoomInfo(int index, int RoomID, unsigned char PlayerCount, unsigned char MapID, bool GameStarted, bool Opened);
+
+	void SetIsTextDataMemoryAssigned(bool Assigned) { mIsTextDataMemoryAssigned = Assigned; }
+	bool GetIsTextDataMemoryAssigned() const { return mIsTextDataMemoryAssigned; }
 private:
 	float aOpacities[4] = { 0.5f, 1.0f, 0.7f, 0.7f };
 	bool mIsMouseCollisionRoom[6] = {false, false, false, false, false ,false};
@@ -61,7 +64,7 @@ private:
 	bool mIsMouseCollisionRightArrow{};
 	//For Packet
 	// º¸·ù
-
+	std::atomic_bool mIsTextDataMemoryAssigned = false;
 	
 	std::atomic_char mDenyMessageCode;
 	std::atomic_bool mIsDenyBox = false;
@@ -72,6 +75,7 @@ private:
 	std::atomic_char mMapID[6];*/
 	std::atomic_bool mIsGameStarted[6] = {false, false, false, false, false, false};
 	std::atomic_bool mIsOpened[6] = {false, false, false, false, false, false };
+	
 
 	//ComPtr<ID2D1LinearGradientBrush> md2dLinearGradientBrush;
 };

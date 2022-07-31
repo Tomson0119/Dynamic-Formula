@@ -105,7 +105,17 @@ void LobbyScene::OnProcessMouseUp(WPARAM buttonState, int x, int y)
 
 void LobbyScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& timer, const std::shared_ptr<BulletWrapper>& physics)
 {
+	if (mpUI->GetIsTextDataMemoryAssigned())
+	{
+		int i = 0;
+		auto RoomList = mNetPtr->GetRoomList();
+		for (auto& Room : RoomList)
+			mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
+		mpUI->SetIsTextDataMemoryAssigned(false);
+	}
+
 	mpUI->Update(timer.TotalTime());
+	
 	if (mNetPtr->GetIsUpdatedRoomList()) 
 	{
 		int i = 0;
@@ -181,8 +191,12 @@ bool LobbyScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int 
 		mNetPtr->UpdateRoomList(pck);		
 		int i = 0;
 		auto RoomList = mNetPtr->GetRoomList();
-		for (auto& Room :RoomList)			
-			mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
+		/*if (!mpUI->GetTextBlock().empty())
+		{
+			for (auto& Room : RoomList)
+				mpUI->SetRoomInfoTextsIndex(i++, Room.ID, Room.PlayerCount, Room.MapID, Room.GameStarted, Room.Opened);
+		}*/
+		mpUI->SetIsTextDataMemoryAssigned(true);
 		break;
 	}
 	case SC::PCK_TYPE::FORCE_LOGOUT:

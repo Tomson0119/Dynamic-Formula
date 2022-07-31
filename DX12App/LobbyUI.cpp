@@ -323,6 +323,7 @@ void LobbyUI::SetInvisibleDenyBox()
 void LobbyUI::Update(float GTime)
 {
     BuildSolidBrush(GetColors());
+    
 }
 
 void LobbyUI::UpdateRoomIDTextsIndex(int index, int RoomID, bool Opened)
