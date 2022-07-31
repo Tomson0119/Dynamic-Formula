@@ -201,7 +201,9 @@ void GameWorld::HandleKeyInput(int idx, uint8_t key, bool pressed)
 	}
 	case VK_F10:
 		if (pressed == false)
+		{
 			mManualFinish = true;
+		}
 		break;
 
 	default:
@@ -553,6 +555,7 @@ void GameWorld::CheckRunningTime()
 
 	if (now >= mFinishTime || mManualFinish) // TEST for manual finish
 	{
+		mManualFinish = false;
 		SetActive(false);
 		SendGameEndPacket();
 		std::cout << "Finished\n";
@@ -620,6 +623,7 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, int mask)
 			if (player->IsNextCheckpoint(cpIdx))
 			{
 				std::cout << "Checkpoint: " << cpIdx << "\n";
+
 				if (player->GetCurrentCPIndex() >= 0 && cpIdx == 0)
 				{
 					player->IncreaseLapCount();
