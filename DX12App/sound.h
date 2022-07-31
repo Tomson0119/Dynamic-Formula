@@ -20,11 +20,13 @@ constexpr float DRIVING_SOUND_RUNNING_TIME = 3.964f;
 constexpr float BRAKE_SKID_SOUND_RUNNING_TIME = 2.705f;
 constexpr float BIKE_BRAKE_SOUND_RUNNING_TIME = 3.310f;
 
-const float MAP_3D_SOUND_DISTANCE_MIN = 10.0f;
-const float MAP_3D_SOUND_DISTANCE_MAX = 1000.0f;
+constexpr float MAP_3D_SOUND_DISTANCE_MIN = 10.0f;
+constexpr float MAP_3D_SOUND_DISTANCE_MAX = 1000.0f;
 
-const float PLAYER_3D_SOUND_DISTANCE_MIN = 5.0f;
-const float PLAYER_3D_SOUND_DISTANCE_MAX = 150.0f;
+constexpr float PLAYER_3D_SOUND_DISTANCE_MIN = 5.0f;
+constexpr float PLAYER_3D_SOUND_DISTANCE_MAX = 150.0f;
+
+constexpr int INGAME_SOUND_NUM = 18;
 
 enum class IngameUI_SOUND_TRACK {
 	BGM1 = 0,

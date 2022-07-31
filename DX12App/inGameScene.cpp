@@ -851,7 +851,8 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 		}
 		mpUI->SortScoreboard();
 		mpUI->GetMutex().unlock();
-		GetSound().Stop(0);
+		for(int i=0;i<INGAME_SOUND_NUM;++i)
+			GetSound().Stop(i);
 		mpUI->ShowScoreBoard();
 		mGameEnded = true;
 		mRevertTime = Clock::now() + std::chrono::seconds(WAIT_TO_REVERT); // waits for 5 seconds before revert.
