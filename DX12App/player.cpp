@@ -260,7 +260,7 @@ Camera* PhysicsPlayer::ChangeCameraMode(int cameraMode)
 		mMaxVelocityY = 40.0f;
 
 		mCamera->SetOffset(0.0f, 1.6f, -7.5f);
-		mCamera->SetTimeLag(0.2f);
+		mCamera->SetTimeLag(0.0f);
 		break;
 
 	case CameraMode::TOP_DOWN_CAMERA:
