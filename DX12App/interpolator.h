@@ -47,10 +47,9 @@ public:
 		}
 		mEntryMapMut.unlock();
 
-		/*if (mPrevEntry.empty)
+		if (mPrevEntry.empty)
 		{
 			FindNextEntry();
-
 			if (mPrevEntry.empty)
 			{
 				mEntryMapMut.lock();
@@ -61,7 +60,7 @@ public:
 			targetPos = mPrevEntry.position;
 			targetRot = mPrevEntry.rotation;
 			return;
-		}*/
+		}
 
 		auto now = Clock::now().time_since_epoch().count();
 		auto now_ms = ConvertNsToMs(now) + clockDelta;
@@ -79,7 +78,7 @@ public:
 
 		if (nextTp <= mPrevTimePoint) return;
 
-		uint64_t timeBetween = nextTp - mPrevTimePoint;		
+		uint64_t timeBetween = nextTp - mPrevTimePoint;
 		float progress = (float)(mCurrentTime - mPrevTimePoint) / timeBetween;
 
 		Log::Print("prev time: ", mPrevTimePoint);
@@ -110,21 +109,21 @@ private:
 	std::optional<std::pair<uint64_t, Entry>> FindNextEntry()
 	{
 		std::unique_lock lock{ mEntryMapMut };
-		/*while (mEntries.empty() == false && 
+		while (mEntries.empty() == false &&
 			(mCurrentTime > mEntries.begin()->first))
 		{
 			mPrevTimePoint = mEntries.begin()->first;
 			mPrevEntry = mEntries.begin()->second;
 			mEntries.erase(mEntries.begin());
-		}*/
-		
+		}
+
 		//Log::Print("Entries size: ", mEntries.size());
 
 		if (mEntries.empty())
 			return std::nullopt;
 
 		auto ret = *mEntries.begin();
-		mEntries.erase(mEntries.begin());
+		//mEntries.erase(mEntries.begin());
 		return ret;
 	}
 
@@ -136,5 +135,5 @@ private:
 	uint64_t mPrevTimePoint;
 	Entry mPrevEntry;
 
-	//const float PCT = 0.8f;
+	const float PCT = 0.05f;
 };
