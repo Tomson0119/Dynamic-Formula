@@ -34,14 +34,14 @@ public:
 	{
 	}
 
-	void Enqueue(const XMFLOAT3& pos, const XMFLOAT4& rot)
+	void Enqueue(uint64_t timePoint, const XMFLOAT3& pos, const XMFLOAT4& rot)
 	{
 		mEntryQueueMut.lock();
 		mEntryQueue.push(Entry(pos, rot));
 		mEntryQueueMut.unlock();
 	}
 
-	void Interpolate(float dt, XMFLOAT3& targetPos, XMFLOAT4& targetRot)
+	void Interpolate(float dt, uint64_t clockDelta, XMFLOAT3& targetPos, XMFLOAT4& targetRot)
 	{
 		mEntryQueueMut.lock();
 		if (mEntryQueue.empty())
