@@ -161,9 +161,9 @@ void GameWorld::FlushPhysicsWorld()
 	mGameStarted = false;
 	for (Player* player : GetPlayerList())
 	{
-		if(player) player->Reset(mPhysics);
+		if(player) player->Reset(&mPhysics);
 	}
-	mMap.Reset(mPhysics);
+	mMap.Reset(&mPhysics);
 	mPhysics.Flush();
 }
 

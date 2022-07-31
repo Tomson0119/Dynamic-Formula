@@ -10,7 +10,7 @@ public:
 	virtual ~Map() = default;
 
 	virtual void Update(float elapsed, BPHandler& physics) override;
-	virtual void Reset(BPHandler& physics) override;
+	virtual void Reset(BPHandler* physics) override;
 	virtual int GetMask(const btCollisionObject& obj) const override;
 
 	int GetCheckpointIndex(const btCollisionObject& obj) const;

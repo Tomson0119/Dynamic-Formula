@@ -35,13 +35,16 @@ void Map::Update(float elapsed, BPHandler& physics)
 	}
 }
 
-void Map::Reset(BPHandler& physics)
+void Map::Reset(BPHandler* physics)
 {
-	mTrack.RemoveRigidBody(physics);
+	if (physics)
+		mTrack.RemoveRigidBody(*physics);
 	mTrack.Flush();
 	for (auto& cp : mCheckpoints)
 	{
-		cp.RemoveRigidBody(physics);
+		if (physics)
+			cp.RemoveRigidBody(*physics);
+
 		cp.Flush();
 	}
 	mCheckpoints.clear();

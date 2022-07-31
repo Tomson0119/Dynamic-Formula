@@ -108,11 +108,16 @@ void Player::SetInvincible(float duration)
 	mInvincibleDuration = duration;
 }
 
-void Player::Reset(BPHandler& physics)
+void Player::Reset(BPHandler* physics)
 {
 	LoadDone = false;
-	mVehicleRigidBody.RemoveRigidBody(physics);
-	mMissileRigidBody.RemoveRigidBody(physics);
+	if (physics)
+	{
+		mVehicleRigidBody.RemoveRigidBody(*physics);
+		//mVehicleRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::NONE);
+		mMissileRigidBody.RemoveRigidBody(*physics);
+		//mMissileRigidBody.SetUpdateFlag(RigidBody::UPDATE_FLAG::NONE);
+	}
 	mVehicleRigidBody.Flush();
 	mMissileRigidBody.Flush();
 }
