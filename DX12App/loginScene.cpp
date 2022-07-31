@@ -10,7 +10,7 @@ LoginScene::LoginScene(HWND hwnd, NetModule* netPtr)
 	Texts.resize(2);
 }
 
-void LoginScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+void LoginScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
 	const std::shared_ptr<BulletWrapper>& physics)
 {	

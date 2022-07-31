@@ -8,7 +8,7 @@ RoomScene::RoomScene(HWND hwnd, NetModule* netPtr)
 	OutputDebugStringW(L"Room Scene Entered.\n");
 }
 
-void RoomScene::BuildObjects(ComPtr<ID3D12Device> device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
+void RoomScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12CommandQueue* cmdQueue,
 	UINT nFrame, ID3D12Resource** backBuffer, float Width, float Height, float aspect,
 	const std::shared_ptr<BulletWrapper>& physics)
 {

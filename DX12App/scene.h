@@ -35,7 +35,7 @@ public:
 
 public:
 	virtual void BuildObjects(
-		ComPtr<ID3D12Device> device,
+		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		ID3D12CommandQueue* cmdQueue,
 		UINT nFrame,
@@ -81,7 +81,7 @@ protected:
 	NetModule* mNetPtr;
 
 	std::atomic<SCENE_CHANGE_FLAG> mSceneChangeFlag;
-	ComPtr<ID3D12Device> mDevice;
+	ID3D12Device* mDevice;
 
 	HWND mHwnd;
 
