@@ -174,7 +174,6 @@ void GameWorld::RemovePlayerRigidBody(int idx)
 {
 	if (IsActive())
 	{
-		std::cout << "Hello" << idx << "\n";
 		mPlayerList[idx]->SetRemoveFlag();
 		mPlayerCount -= 1;
 
