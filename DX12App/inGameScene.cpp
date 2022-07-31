@@ -516,7 +516,7 @@ void InGameScene::BuildGameObjects(ID3D12GraphicsCommandList* cmdList, const std
 	mMainCamera->SetPosition(mPlayer->GetPosition());
 	mMainCamera->SetRotation(mPlayer->GetQuaternion());
 	mCurrentCamera = mMainCamera.get();
-	mCurrentCamera->Update(100.0f);
+	//mCurrentCamera->Update(100.0f);
 	// TEST
 	//mDirectorCamera->SetPosition(mMainCamera->GetPosition());
 	//mCurrentCamera = mDirectorCamera.get();

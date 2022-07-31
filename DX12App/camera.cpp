@@ -287,14 +287,14 @@ void ThirdPersonCamera::Update(float elapsedTime)
 
 		float length = Vector3::Length(direction);
 		//float timeLagScale = (mTimeLag) ? elapsedTime * (1.0f / mTimeLag) : 0.1f;
-		//mPosition = Vector3::Lerp(mPosition, position, elapsedTime * 8);
+		mPosition = Vector3::Lerp(mPosition, position, elapsedTime * 8);
 
-		/*XMFLOAT3 camLook = mPlayer->GetPosition();
+		XMFLOAT3 camLook = mPlayer->GetPosition();
 		camLook.y = mPosition.y;
-		LookAt(GetPosition(), camLook, XMFLOAT3(0.0f, 1.0f, 0.0f));*/
+		LookAt(GetPosition(), camLook, XMFLOAT3(0.0f, 1.0f, 0.0f));
 
 		//float length = Vector3::Length(direction);
-		direction = Vector3::Normalize(direction);
+		/*direction = Vector3::Normalize(direction);
 		float timeLagScale = (mTimeLag) ? elapsedTime * (1.0f / mTimeLag) : 1.0f;
 		float distance = length * timeLagScale;
 
@@ -306,7 +306,7 @@ void ThirdPersonCamera::Update(float elapsedTime)
 			XMFLOAT3 camLook = mPlayer->GetPosition();
 			camLook.y = mPosition.y;
 			ThirdPersonCamera::LookAt(GetPosition(), camLook, XMFLOAT3(0.0f,1.0f,0.0f));
-		}
+		}*/
 	}
 	Camera::Update(elapsedTime);
 }
