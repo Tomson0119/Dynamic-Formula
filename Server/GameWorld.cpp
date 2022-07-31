@@ -32,13 +32,19 @@ void GameWorld::InitPhysics(float gravity)
 	mPhysics.Init(gravity);
 }
 
-void GameWorld::InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape)
+void GameWorld::InitMapRigidBody(BtMapShape& mapShape)
 {
+	const auto& cpShape = mapShape.GetCheckpointShape();
 	mMap.CreateTrackRigidBody(mapShape.GetCompoundShape());
 	mMap.CreateCheckpoints(cpShape.GetCollisionShape(), cpShape.GetInfos());
+	for (int i = 0; auto & player : mPlayerList)
+	{
+		player->SetCheckpointCount((int)cpShape.GetInfos().size());
+		i++;
+	}
 }
 
-void GameWorld::InitPlayerList(WaitRoom* room, int cpCount)
+void GameWorld::InitPlayerList(WaitRoom* room)
 {
 	mID = room->GetID();
 
@@ -46,7 +52,7 @@ void GameWorld::InitPlayerList(WaitRoom* room, int cpCount)
 	{
 		player = room->GetPlayerPtr(i);
 		player->SetGameConstant(mConstantPtr);
-		player->SetCheckpointCount(cpCount);
+		//player->SetCheckpointCount(cpCount);
 		i++;
 	}
 }
@@ -91,7 +97,7 @@ void GameWorld::UpdatePhysicsWorld()
 		mMap.Update(elapsed, mPhysics);
 	}
 	mUpdateTick += 1;
-	if (mUpdateTick == 2)
+	if (mUpdateTick == 1)
 	{
 		BroadcastAllTransform();
 		mUpdateTick = 0;
@@ -608,6 +614,7 @@ void GameWorld::HandleCollisionWithMap(int idx, int cpIdx, int mask)
 			auto player = mPlayerList[idx];
 			if (player->IsNextCheckpoint(cpIdx))
 			{
+				std::cout << "Checkpoint: " << cpIdx << "\n";
 				if (player->GetCurrentCPIndex() >= 0 && cpIdx == 0)
 				{
 					player->IncreaseLapCount();

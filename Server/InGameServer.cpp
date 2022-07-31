@@ -12,9 +12,12 @@ InGameServer::InGameServer()
 
 	mBtCarShape = std::make_unique<BtCarShape>("Resource\\Car_Data.bin", "Resource\\Models\\Car_Body_Convex_Hull.obj");
 	mMissileShape = std::make_unique<BtMissileShape>("Resource\\Models\\Missile_Convex_Hull.obj");
+	
 	mMapShapes[0] = std::make_unique<BtMapShape>("Resource\\MapData.tmap");
+	mMapShapes[0]->AddCheckpointShape("Resource\\CheckPoint_day.tmap");
+
 	mMapShapes[1] = std::make_unique<BtMapShape>("Resource\\MapData_night.tmap");
-	mCheckpointShape = std::make_unique<CheckpointShape>("Resource\\CheckPoint.tmap");
+	mMapShapes[1]->AddCheckpointShape("Resource\\Checkpoint_night.tmap");
 }
 
 void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
@@ -26,7 +29,7 @@ void InGameServer::Init(LoginServer* loginPtr, RoomList& roomList)
 	{
 		msWorlds[i] = std::make_unique<GameWorld>(mGameConstants);
 		msWorlds[i]->InitPhysics(-9.8f);	
-		msWorlds[i]->InitPlayerList(roomList[i].get(), (int)mCheckpointShape->GetInfos().size());
+		msWorlds[i]->InitPlayerList(roomList[i].get());
 	}
 }
 
@@ -59,7 +62,7 @@ void InGameServer::PrepareToStartGame(int roomID, char mapIdx)
 		msWorlds[roomID]->CreateRigidbodies(i, 1000.0f, *mBtCarShape, 1.0f, *mMissileShape);
 	}
 	
-	msWorlds[roomID]->InitMapRigidBody(*mMapShapes[mapIdx].get(), *mCheckpointShape.get());
+	msWorlds[roomID]->InitMapRigidBody(*mMapShapes[mapIdx].get());
 	msWorlds[roomID]->SendGameStartSuccess();
 }
 
@@ -129,6 +132,12 @@ void InGameServer::RunPhysicsSimulation(int roomID)
 #ifdef DEBUG_PACKET_TRANSFER
 		//std::cout << "[Room id: " << roomID << "] Running physics simulation.\n";
 #endif
+	if (roomID < 0 || roomID >= msWorlds.size())
+	{
+		std::cout << "Invalid roomID to run physics simulation.\n";
+		return;
+	}
+
 	msWorlds[roomID]->UpdatePhysicsWorld();
 
 	if (msWorlds[roomID]->IsActive())

@@ -41,9 +41,11 @@ public:
 	};
 
 public:
+	CheckpointShape() = default;
 	CheckpointShape(std::string_view filename);
 	virtual ~CheckpointShape() = default;
 
+	void LoadCheckpointShapeData(std::string_view filename);
 	const std::vector<CheckpointInfo>& GetInfos() const { return mInfos; }
 
 private:

@@ -18,8 +18,8 @@ public:
 	~GameWorld() = default;
 	
 	void InitPhysics(float gravity);
-	void InitMapRigidBody(const BtMapShape& mapShape, const CheckpointShape& cpShape);
-	void InitPlayerList(WaitRoom* room, int cpCount);
+	void InitMapRigidBody(BtMapShape& mapShape);
+	void InitPlayerList(WaitRoom* room);
 
 	void SetGameTime(std::chrono::seconds countdownSec, std::chrono::seconds finishSec);
 	void SetPlayerTransform(int idx, const btVector3& pos, const btQuaternion& quat);

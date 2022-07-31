@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BtShapeInterface.h"
+#include "BtCollisionShape.h"
 
 class BtCompoundShape : public BtShapeInterface
 {
@@ -87,6 +88,10 @@ public:
 	virtual void LoadShapeData(std::string_view filename) override { }
 	virtual void BuildCompoundShape(std::string_view filename) override;
 
+	void AddCheckpointShape(std::string_view filename);
+
+	const CheckpointShape& GetCheckpointShape() { return mCheckpointShape; }
+
 private:
 	void LoadModel(
 		std::string_view filename, 
@@ -99,4 +104,5 @@ private:
 
 private:
 	std::vector<BtMeshShape> mMeshShapes;
+	CheckpointShape mCheckpointShape;
 };

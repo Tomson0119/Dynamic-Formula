@@ -365,6 +365,11 @@ void BtMapShape::BuildCompoundShape(std::string_view filename)
 	}
 }
 
+void BtMapShape::AddCheckpointShape(std::string_view filename)
+{
+	mCheckpointShape.LoadCheckpointShapeData(filename);
+}
+
 void BtMapShape::LoadModel(
 	std::string_view filename, 
 	const btTransform& localTransform,

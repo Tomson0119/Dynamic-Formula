@@ -43,14 +43,19 @@ void BtBoxShape::BuildCollisionShape()
 //
 CheckpointShape::CheckpointShape(std::string_view filename)
 {
+	LoadCheckpointShapeData(filename);
+}
+
+void CheckpointShape::LoadCheckpointShapeData(std::string_view filename)
+{
 	std::ifstream file = Helper::OpenFile(filename);
-	
+
 	LoadShapeData(file);
-	BuildCollisionShape();		
-	
+	BuildCollisionShape();
+
 	float px, py, pz;
 	float rx, ry, rz, rw;
-	while (file >> px >> py >> pz >> 
+	while (file >> px >> py >> pz >>
 		rx >> ry >> rz >> rw)
 	{
 		mInfos.emplace_back();

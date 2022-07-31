@@ -32,6 +32,7 @@ struct GameConstant
 	const btVector3 MissileOffset = { 0.0f, 0.5f, 0.0f };
 	const float MissileForwardMag = 5.0f;
 	const btVector3 MissileGravity = { 0.0f, 0.0f, 0.0f };
+	const std::chrono::seconds MissileLifetime = 10s;
 
 	const int MissileHitPoint = 1000;
 	const int LapFinishPoint = 2500;
@@ -79,7 +80,7 @@ private:
 	std::unique_ptr<BtCarShape> mBtCarShape;
 	std::unique_ptr<BtMissileShape> mMissileShape;
 	std::array<std::unique_ptr<BtMapShape>, 2> mMapShapes;
-	std::unique_ptr<CheckpointShape> mCheckpointShape;
+	//std::unique_ptr<CheckpointShape> mCheckpointShape;
 
 	std::shared_ptr<GameConstant> mGameConstants;
 
