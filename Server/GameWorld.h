@@ -44,7 +44,7 @@ public:
 
 private:
 	void CheckCountdownTime();
-	void CheckRunningTime();
+	bool CheckRunningTime();
 	void CheckCollision();
 	void CheckMissileLaunchFlag();
 

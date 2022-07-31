@@ -89,7 +89,8 @@ void GameWorld::UpdatePhysicsWorld()
 	}
 	if (elapsed > 0.0f)
 	{
-		CheckRunningTime();
+		if (CheckRunningTime())
+			return;
 		mPhysics.StepSimulation(elapsed);
 		CheckCollision();
 
@@ -161,7 +162,10 @@ void GameWorld::FlushPhysicsWorld()
 	mGameStarted = false;
 	for (Player* player : GetPlayerList())
 	{
-		if(player) player->Reset(&mPhysics);
+		if (player)
+		{
+			player->Reset(&mPhysics);
+		}
 	}
 	mMap.Reset(&mPhysics);
 	mPhysics.Flush();
@@ -171,6 +175,7 @@ void GameWorld::RemovePlayerRigidBody(int idx)
 {
 	if (IsActive())
 	{
+		std::cout << "Hello" << idx << "\n";
 		mPlayerList[idx]->SetRemoveFlag();
 		mPlayerCount -= 1;
 
@@ -549,7 +554,7 @@ void GameWorld::CheckCountdownTime()
 	}
 }
 
-void GameWorld::CheckRunningTime()
+bool GameWorld::CheckRunningTime()
 {
 	auto now = Clock::now();
 
@@ -559,7 +564,9 @@ void GameWorld::CheckRunningTime()
 		SetActive(false);
 		SendGameEndPacket();
 		std::cout << "Finished\n";
+		return true;
 	}
+	return false;
 }
 
 void GameWorld::CheckCollision()
