@@ -89,8 +89,7 @@ void GameWorld::UpdatePhysicsWorld()
 	}
 	if (elapsed > 0.0f)
 	{
-		if (CheckRunningTime())
-			return;
+		if (CheckRunningTime()) return;
 		mPhysics.StepSimulation(elapsed);
 		CheckCollision();
 
