@@ -39,8 +39,8 @@ public:
 	void CreateFontFormat();
 	void SetStateFail(int result);
 	void SetStateNotFail();
-	void SetLodingScene();
-	void SetLodingUpdated() { mIsLodingUpdated = true; }
+	void SetLodingScene(bool LodingScene);
+	void SetLodingUpdated(bool LodingUpdated) { mIsLodingUpdated = LodingUpdated; }
 	bool GetLodingUpdated() const { return mIsLodingUpdated; }
 	//For Packet
 	// BackgroundCarVisible, BackgoundCarInvisible

@@ -38,10 +38,10 @@ void RoomUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12Command
     SetMyReadyOff();
 }
 
-void RoomUI::SetLodingScene()
+void RoomUI::SetLodingScene(bool LodingScene)
 {
     //Reset();
-    IsLodingScene = true;
+    IsLodingScene = LodingScene;
 }
 
 
@@ -352,7 +352,7 @@ void RoomUI::Update(float GTime)
         BuildSolidBrush(GetColors());
         GetTextBlock()[0].d2dLayoutRect = D2D1::RectF(GetFrameWidth() * 0.67f, GetFrameHeight() * 0.85f, GetFrameWidth() * 0.975f, GetFrameHeight() * 0.99f);
         GetTextBlock()[0].strText.assign("Loding...");
-        SetLodingUpdated();
+        SetLodingUpdated(true);
     }
 
 
@@ -581,6 +581,7 @@ void RoomUI::Draw(UINT nFrame)
     {
         //DrawBmp(LTRB, 0, 1, BitmapOpacities);
         TextDraw(GetTextBlock());
+        SetLodingScene(false);
     }
     EndDraw(nFrame);
 }

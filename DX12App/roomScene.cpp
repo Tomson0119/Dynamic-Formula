@@ -85,7 +85,10 @@ void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& time
 {
 	mpUI->Update(timer.TotalTime());
 	if (mpUI->GetLodingUpdated())
+	{
+		mpUI->SetLodingUpdated(false);
 		SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
+	}
 }
 
 void RoomScene::Draw(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE backBufferview, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, ID3D12Resource* backBuffer, ID3D12Resource* depthBuffer, UINT nFrame)
@@ -102,6 +105,8 @@ bool RoomScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int b
 		OutputDebugString(L"Received room inside info packet.\n");
 		SC::packet_room_inside_info* pck = reinterpret_cast<SC::packet_room_inside_info*>(packet);
 		mNetPtr->InitRoomInfo(pck);		
+		mpUI->SetLodingScene(false);
+		mpUI->SetLodingUpdated(false);
 		break;
 	}
 	case SC::PCK_TYPE::ROOM_OUTSIDE_INFO:
@@ -143,8 +148,7 @@ bool RoomScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int b
 
 		GetSound().Play(NORMAL_VOLUME, static_cast<int>(ROOMUI_IngameUI_SOUND_TRACK::GAMESTART));
 		//Scene Delete and TextOut
-		mpUI->SetLodingScene();
-
+		mpUI->SetLodingScene(true);
 		
 		//mpUI->SetMyReadyOff();
 		break;
