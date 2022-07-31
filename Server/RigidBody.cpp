@@ -185,6 +185,7 @@ void MissileRigidBody::AppendRigidBody(BPHandler& physics)
 	RigidBody::AppendRigidBody(physics);
 	if (mRigidBody) SetMissileComponents();
 	
+	mDestoryTime = Clock::now() + mConstantPtr->MissileLifetime;
 	SetLaunchFlag(true);
 }
 
@@ -192,9 +193,13 @@ void MissileRigidBody::UpdateRigidBody()
 {
 	if (IsActive())
 	{
-		// Check coordinates.
-		// Check time : 15 seconds.
-
+		// Check if lifetime ends
+		auto now = Clock::now();
+		if (now >= mDestoryTime)
+		{
+			Deactivate();
+			SetUpdateFlag(RigidBody::UPDATE_FLAG::REMOVE);
+		}			
 		RigidBody::UpdateRigidBody();
 	}
 }

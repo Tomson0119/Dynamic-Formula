@@ -96,6 +96,7 @@ private:
 private:
 	bool mLaunchFlag;
 	bool mActive;
+	Clock::time_point mDestoryTime;
 	VehicleRigidBody* mVehiclePtr;
 	std::shared_ptr<GameConstant> mConstantPtr;
 };
