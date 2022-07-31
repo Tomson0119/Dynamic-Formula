@@ -35,7 +35,8 @@ bool NetModule::Connect(const std::string& ip, u_short port)
 {
 	if (mNetClient->Connect(ip, port))
 	{
-		Init();	
+		Init();
+		StarttHolePunching();
 		return true;
 	}
 	return false;
@@ -191,7 +192,7 @@ void NetModule::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id)
 	{
 		if (bytes != over->WSABuffer.len)
 		{
-			PostDisconnect();
+			//PostDisconnect();
 		}
 		delete over;
 		break;
@@ -210,11 +211,27 @@ void NetModule::ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes)
 			over->NetBuffer.Clear();
 			break;
 		}
-		if (mScenePtr && mScenePtr->ProcessPacket(packet, type, bytes) == false) {
+		if (ProcessPacket(packet, type, bytes) == false) {
 			over->NetBuffer.Clear();
 			break;
 		}
 	}
+}
+
+bool NetModule::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes)
+{
+	switch (type)
+	{
+	case SC::PCK_TYPE::UDP_CONNECT_ACK:
+	{
+		SC::packet_udp_conn_ack* pck = reinterpret_cast<SC::packet_udp_conn_ack*>(packet);
+		mHolePunchingDone = true;
+		return true;
+	}
+	default:
+		return (mScenePtr && mScenePtr->ProcessPacket(packet, type, bytes));
+	}
+	return false;
 }
 
 NetModule::PlayerList NetModule::GetPlayersInfo()

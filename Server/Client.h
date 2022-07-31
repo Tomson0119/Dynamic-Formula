@@ -44,6 +44,7 @@ public:
 	void SendAccessRoomDeny(ROOM_STAT reason, bool instSend=true);
 	void SendForceLogout();
 	void SendMeasureRTTPacket(bool udp=false, bool instSend=true);
+	void SendHolePunchingAck();
 	
 public:
 	int ID;

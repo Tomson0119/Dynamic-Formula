@@ -187,3 +187,16 @@ void Client::SendMeasureRTTPacket(bool udp, bool instSend)
 	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size, udp);
 	if(instSend) SendMsg(udp);
 }
+
+void Client::SendHolePunchingAck()
+{
+#ifdef DEBUG_PACKET_TRANSFER
+	std::cout << "[" << ID << "] Send udp connection ack packet\n";
+#endif
+	SC::packet_udp_conn_ack pck{};
+	pck.size = sizeof(SC::packet_udp_conn_ack);
+	pck.type = static_cast<uint8_t>(SC::PCK_TYPE::UDP_CONNECT_ACK);
+
+	PushPacket(reinterpret_cast<std::byte*>(&pck), pck.size);
+	SendMsg();
+}

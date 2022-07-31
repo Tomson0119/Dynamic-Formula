@@ -318,7 +318,12 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 	case CS::PCK_TYPE::UDP_CONNECT:
 	{
 		CS::packet_udp_connection* pck = reinterpret_cast<CS::packet_udp_connection*>(packet);
-		mUDPReceiver.PrintLastReceivedEp();
+		//mUDPReceiver.PrintLastReceivedEp();
+		auto id = mUDPReceiver.GetLastReceivedId();
+		if (id.has_value())
+		{
+			gClients[id.value()]->SendHolePunchingAck();
+		}
 		break;
 	}
 	default:

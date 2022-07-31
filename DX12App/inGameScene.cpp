@@ -175,7 +175,7 @@ void InGameScene::BuildObjects(
 	// Let server know that loading sequence is done.
 #ifndef STANDALONE
 	mNetPtr->Client()->SendLoadSequenceDone(mNetPtr->GetRoomID());
-	mNetPtr->StarttHolePunching();
+	/*mNetPtr->StarttHolePunching();*/
 #endif
 }
 
@@ -1210,7 +1210,7 @@ void InGameScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& ti
 
 	float pitch{};
 	FMOD_Channel_GetPitch(channel[static_cast<int>(IngameUI_SOUND_TRACK::DRIVING_ORIGIN)], &pitch);
-	OutputDebugStringW(std::to_wstring(pitch).c_str());
+	//OutputDebugStringW(std::to_wstring(pitch).c_str());
 
 	mpUI.get()->Update(elapsed, mPlayer);
 }

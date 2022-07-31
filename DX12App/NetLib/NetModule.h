@@ -38,6 +38,7 @@ public:
 
 	void HandleCompletionInfo(WSAOVERLAPPEDEX* over, int bytes, int id);
 	void ReadRecvBuffer(WSAOVERLAPPEDEX* over, int bytes);
+	bool ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int bytes);
 
 	static void NetworkFunc(NetModule& net);
 	static void HolePunchingFunc(NetModule& net);

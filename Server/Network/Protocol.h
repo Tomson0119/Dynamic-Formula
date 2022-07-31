@@ -181,7 +181,8 @@ namespace SC
 		INGAME_INFO,
 		GAME_END,
 		ITEM_COUNT,
-		MEASURE_RTT
+		MEASURE_RTT,
+		UDP_CONNECT_ACK
 	};
 
 	struct packet_force_logout : packet_header { };
@@ -336,6 +337,10 @@ namespace SC
 	{
 		uint64_t s_send_time;
 		uint64_t latency_ms;
+	};
+
+	struct packet_udp_conn_ack : packet_header
+	{
 	};
 }
 #pragma pack(pop)
