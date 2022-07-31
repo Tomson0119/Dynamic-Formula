@@ -395,9 +395,9 @@ bool Player::ToggleKeyValue(uint8_t key, bool pressed)
 
 	if ((key == 'Z' || key == 'X'))
 	{
-		if (pressed && IsItemAvailable())
+		if(pressed) // for test
+		//if (pressed && IsItemAvailable())
 		{
-			// for test
 			if (UseItem(key))
 			{
 				mItemCount -= 1;
@@ -448,4 +448,9 @@ bool Player::UseItem(uint8_t key)
 bool Player::CheckMissileExist() const
 {
 	return (mMissileRigidBody.IsActive());
+}
+
+bool Player::MissileTimeOver() const
+{
+	return (mMissileRigidBody.LifeTimeOver());
 }

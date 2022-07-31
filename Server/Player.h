@@ -36,6 +36,7 @@ public:
 
 	bool ToggleKeyValue(uint8_t key, bool pressed);
 	bool CheckMissileExist() const;
+	bool MissileTimeOver() const;
 
 	bool IsNextCheckpoint(int cpIndex);
 	void MarkNextCheckpoint(int cpIndex);

@@ -77,6 +77,8 @@ public:
 		class VehicleRigidBody* vehiclePtr, 
 		std::shared_ptr<GameConstant> constantPtr);
 
+	bool LifeTimeOver() const;
+
 public:
 	virtual void AppendRigidBody(BPHandler& physics) override;
 	virtual void UpdateRigidBody() override;

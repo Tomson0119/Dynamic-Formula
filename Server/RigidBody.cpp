@@ -192,14 +192,7 @@ void MissileRigidBody::AppendRigidBody(BPHandler& physics)
 void MissileRigidBody::UpdateRigidBody()
 {
 	if (IsActive())
-	{
-		// Check if lifetime ends
-		auto now = Clock::now();
-		if (now >= mDestoryTime)
-		{
-			Deactivate();
-			SetUpdateFlag(RigidBody::UPDATE_FLAG::REMOVE);
-		}			
+	{				
 		RigidBody::UpdateRigidBody();
 	}
 }
@@ -216,6 +209,16 @@ void MissileRigidBody::SetGameConstantPtr(
 {
 	mVehiclePtr = vehiclePtr;
 	mConstantPtr = constantPtr;
+}
+
+bool MissileRigidBody::LifeTimeOver() const
+{
+	if (IsActive())
+	{
+		auto now = Clock::now();
+		return (now >= mDestoryTime);
+	}
+	return false;
 }
 
 void MissileRigidBody::SetMissileComponents()

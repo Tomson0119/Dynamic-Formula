@@ -122,6 +122,11 @@ void GameWorld::UpdatePlayers(float elapsed)
 				player->ResetItemFlag();
 				SendItemCountPacket(i);
 			}
+			if (player->MissileTimeOver())
+			{
+				player->DisableMissile();
+				SendMissileRemovePacket(i);
+			}
 		}
 		i += 1;
 	}
