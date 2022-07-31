@@ -86,7 +86,7 @@ void RoomScene::Update(ID3D12GraphicsCommandList* cmdList, const GameTimer& time
 	mpUI->Update(timer.TotalTime());
 	if (mpUI->GetLodingUpdated())
 	{
-		mpUI->SetLodingUpdated(false);
+		//mpUI->SetLodingUpdated(false);
 		SetSceneChangeFlag(SCENE_CHANGE_FLAG::PUSH);
 	}
 }

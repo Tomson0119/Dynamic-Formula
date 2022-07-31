@@ -36,6 +36,9 @@ void RoomUI::SetStatePop(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12Command
 
     BuildObjects(ppd3dRenderTargets, width, height);
     SetMyReadyOff();
+
+    SetLodingScene(false);
+    SetLodingUpdated(false);
 }
 
 void RoomUI::SetLodingScene(bool LodingScene)
@@ -355,7 +358,7 @@ void RoomUI::Update(float GTime)
         SetLodingUpdated(true);
     }
 
-
+   
 }
 
 void RoomUI::Draw(UINT nFrame)
@@ -581,7 +584,7 @@ void RoomUI::Draw(UINT nFrame)
     {
         //DrawBmp(LTRB, 0, 1, BitmapOpacities);
         TextDraw(GetTextBlock());
-        SetLodingScene(false);
+        //SetLodingScene(false);
     }
     EndDraw(nFrame);
 }
