@@ -63,38 +63,38 @@ public:
 			return;
 		}
 
-		auto now = Clock::now().time_since_epoch().count();
-		auto now_ms = ConvertNsToMs(now);
+		//auto now = Clock::now().time_since_epoch().count();
+		//auto now_ms = ConvertNsToMs(now);
 
-		mCurrentTime = (uint64_t)(((float)mCurrentTime * PCT) + (float)now_ms * (1.0f - PCT));
-		mCurrentTime = now_ms;
+		////mCurrentTime = (uint64_t)(((float)mCurrentTime * PCT) + (float)now_ms * (1.0f - PCT));
+		//mCurrentTime = now_ms;
 
-		auto next = FindNextEntry();
-		if (next.has_value() == false) {
-			return;
-		}
+		//auto next = FindNextEntry();
+		//if (next.has_value() == false) {
+		//	return;
+		//}
 
-		uint64_t nextTp = next.value().first;
-		Entry nextEntry = next.value().second;
+		//uint64_t nextTp = next.value().first;
+		//Entry nextEntry = next.value().second;
 
-		if (nextTp <= mPrevTimePoint) return;
+		//if (nextTp <= mPrevTimePoint) return;
 
-		uint64_t timeBetween = nextTp - mPrevTimePoint;
-		float progress = (float)(mCurrentTime - mPrevTimePoint) / timeBetween;
+		//uint64_t timeBetween = nextTp - mPrevTimePoint;
+		//float progress = (float)(mCurrentTime - mPrevTimePoint) / timeBetween;
 
-		Log::Print("Clock Delta: ", clockDelta);
-		Log::Print("prev time: ", mPrevTimePoint);
-		Log::Print("current time: ", mCurrentTime);
-		Log::Print("progress: ", progress);
-		Log::Print("-------------------------------");
+		//Log::Print("Clock Delta: ", clockDelta);
+		//Log::Print("prev time: ", mPrevTimePoint);
+		//Log::Print("current time: ", mCurrentTime);
+		//Log::Print("progress: ", progress);
+		//Log::Print("-------------------------------");
 
-		targetPos = Vector3::Lerp(mPrevEntry.position, nextEntry.position, progress);
-		targetRot = Vector4::Slerp(mPrevEntry.rotation, nextEntry.rotation, progress);
-		
-		if (progress >= 1.0f)
+		//targetPos = Vector3::Lerp(mPrevEntry.position, nextEntry.position, progress);
+		//targetRot = Vector4::Slerp(mPrevEntry.rotation, nextEntry.rotation, progress);
+		//
+		/*if (progress >= 1.0f)
 		{
 			mPrevTimePoint = nextTp;
-		}
+		}*/
 	}
 
 	void Clear()
