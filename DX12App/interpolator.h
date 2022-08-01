@@ -93,7 +93,7 @@ public:
 		
 		if (progress >= 1.0f)
 		{
-			//mPrevTimePoint = nextTp;
+			mPrevTimePoint = nextTp;
 		}
 	}
 
