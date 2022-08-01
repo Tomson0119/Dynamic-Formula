@@ -195,7 +195,7 @@ protected:
 	AtomicFloat4 mCorrectionQuat{};
 	AtomicFloat3 mLinearVelocity{};
 
-	//Interpolator mInterpolator;
+	Interpolator mInterpolator;
 	// Members for interpolation.
 
 	std::atomic<UPDATE_FLAG> mUpdateFlag;

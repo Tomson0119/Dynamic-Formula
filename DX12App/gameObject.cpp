@@ -317,7 +317,7 @@ void GameObject::RemoveObject(btDiscreteDynamicsWorld& dynamicsWorld, Pipeline& 
 		idx += 1;
 	}
 
-	//mInterpolator.Clear();
+	mInterpolator.Clear();
 }
 
 void GameObject::Update(float elapsedTime, int64_t clockDelta)
@@ -548,8 +548,7 @@ void GameObject::InterpolateWorldTransform(float elapsed, uint64_t clockDelta)
 	mPosition = mCorrectionOrigin.GetXMFloat3();
 	mQuaternion = mCorrectionQuat.GetXMFloat4();
 
-	Log::Print("position set ", mPosition);
-	//mInterpolator.Interpolate(elapsed, clockDelta, mPosition, mQuaternion);
+	mInterpolator.Interpolate(elapsed, clockDelta, mPosition, mQuaternion);
 }
 
 void GameObject::SetPosition(float x, float y, float z)
