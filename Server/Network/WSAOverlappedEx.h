@@ -64,7 +64,7 @@ struct WSAOVERLAPPEDEX
 		if (Operation == OP::SEND)
 		{
 			// Multi thread에서 Push를 수행할 수 있으므로 lock.
-			std::unique_lock<std::mutex> lock{ PushMut };
+			//std::unique_lock<std::mutex> lock{ PushMut };
 
 			NetBuffer.Push(data, bytes);
 			WSABuffer.len = (ULONG)NetBuffer.GetFilledBufLen();
@@ -90,5 +90,5 @@ struct WSAOVERLAPPEDEX
 	}
 
 private:
-	std::mutex PushMut;
+	//std::mutex PushMut;
 };
