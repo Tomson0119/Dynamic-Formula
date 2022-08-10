@@ -29,7 +29,7 @@ class InGameUI : public UI
 public:
     InGameUI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     virtual ~InGameUI() = default;
-    virtual void Update(float Elapsed, Player* mPlayer) override ;
+    virtual void Update(float Elapsed, std::shared_ptr<Player> mPlayer) override ;
     virtual void SetVectorSize(UINT nFrame) override;
     virtual void Draw(UINT nFrame) override;
     virtual void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT width, UINT height) override;

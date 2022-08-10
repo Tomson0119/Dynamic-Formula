@@ -601,7 +601,7 @@ void InGameScene::BuildCarObject(
 #endif
 	carObj->BuildDsvRtvView(mDevice);
 
-	if (isPlayer) mPlayer = carObj.get();
+	if (isPlayer) mPlayer = carObj;
 	mPipelines[Layer::Color]->AppendObject(carObj);
 	mPlayerObjects[netID] = std::move(carObj);
 }

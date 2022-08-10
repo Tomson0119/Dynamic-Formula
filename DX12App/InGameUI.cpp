@@ -112,7 +112,7 @@ void InGameUI::SetVisibleStateTextUI()
 	BuildSolidBrush(GetColors());
 }
 
-void InGameUI::Update(float Elapsed, Player* mPlayer)
+void InGameUI::Update(float Elapsed, std::shared_ptr<Player> mPlayer)
 {
 	//Time Set
 	if (mIsStartAnim)

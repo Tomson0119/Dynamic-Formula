@@ -156,7 +156,7 @@ private:
 
 	std::unique_ptr<ShadowMapRenderer> mShadowMapRenderer;
 
-	Player* mPlayer = nullptr;
+	shared_ptr<Player> mPlayer = nullptr;
 	std::array<std::shared_ptr<MissileObject>, MAX_ROOM_CAPACITY> mMissileObjects;
 	std::array<std::shared_ptr<PhysicsPlayer>, MAX_ROOM_CAPACITY> mPlayerObjects;
 
