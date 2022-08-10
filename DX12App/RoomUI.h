@@ -19,7 +19,7 @@ public:
 	virtual ~RoomUI() = default;
 	virtual void Update(float GTime);
 	virtual void Update(float GTime, std::vector<std::string> Texts) {}
-	virtual void Update(float GTime, Player* mPlayer) {}
+	virtual void Update(float GTime, shared_ptr<Player> mPlayer) {}
 	virtual void SetVectorSize(UINT nFrame) override;
 	virtual void Draw(UINT nFrame) override;
 	virtual void SetTextRect() override ;

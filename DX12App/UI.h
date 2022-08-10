@@ -20,7 +20,7 @@ class UI
 public:
     explicit UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
     virtual ~UI();
-    virtual void Update(float GTime, Player* mPlayer) {}
+    virtual void Update(float GTime, std::shared_ptr<Player> mPlayer) {}
     virtual void Update(float GTime, std::vector<std::string>& Texts) {} 
     virtual void Update(std::vector<std::string>& Texts) {}
     virtual void Update(float GTime) {}

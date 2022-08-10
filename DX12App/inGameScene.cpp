@@ -740,7 +740,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 			if (pck->speed > 0)
 			{
 				// Set UI information
-				if (player.get() == mPlayer)
+				if (player == mPlayer)
 					mpUI->SetSpeed(pck->speed);
 				// Set current speed of player
 				player->SetCurrentSpeed(pck->speed);
@@ -824,7 +824,7 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	{
 		SC::packet_ingame_info* pck = reinterpret_cast<SC::packet_ingame_info*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
-		if (player.get() == mPlayer)
+		if (player == mPlayer)
 		{
 			mpUI->SetLap(pck->lap_count);
 			mpUI->SetMyRank(pck->rank);
@@ -2067,7 +2067,7 @@ void InGameScene::Update3DSound()
 		SoundVel.x = 0.0f;
 		SoundVel.y = 0.0f;
 		SoundVel.z = 0.0f;
-		if (mPlayerObjects[i].get() == mPlayer)
+		if (mPlayerObjects[i] == mPlayer)
 		{
 			SoundPos.x = (mCurrentCamera->GetPosition().x + mPlayerObjects[i].get()->GetPosition().x) / 2.0f;
 			SoundPos.y = (mCurrentCamera->GetPosition().y + mPlayerObjects[i].get()->GetPosition().y) / 2.0f;
