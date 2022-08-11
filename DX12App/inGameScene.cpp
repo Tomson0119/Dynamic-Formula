@@ -599,9 +599,11 @@ void InGameScene::BuildCarObject(
 #ifdef STANDALONE
 	carObj->BuildRigidBody(physics);
 #endif
-	carObj->BuildDsvRtvView(mDevice);
-
-	if (isPlayer) mPlayer = std::static_pointer_cast<Player>(carObj);
+	if (isPlayer)
+	{
+		carObj->BuildDsvRtvView(mDevice);
+		mPlayer = std::static_pointer_cast<Player>(carObj);
+	}
 	mPipelines[Layer::Color]->AppendObject(carObj);
 	mPlayerObjects[netID] = std::move(carObj);
 }
