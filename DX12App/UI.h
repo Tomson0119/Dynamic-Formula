@@ -18,7 +18,7 @@ struct GradientColors
 class UI 
 {
 public:
-    explicit UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
+    explicit UI(UINT nFrame, ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue> pd3dCommandQueue);
     virtual ~UI();
     virtual void Update(float GTime, std::shared_ptr<Player> mPlayer) {}
     virtual void Update(float GTime, std::vector<std::string>& Texts) {} 
@@ -38,13 +38,13 @@ public:
     virtual void BuildLinearGradientBrushes(UINT GradientCnt, GradientColors GColors[]);
     virtual void Reset();
     virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
-        ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
+        ComPtr<ID3D12CommandQueue> pd3dCommandQueue, UINT nFrame, UINT width, UINT height);
     virtual void SetVectorSize(UINT nFrame);
     virtual void CreateFontFormat(float vFontSize, const std::vector<std::wstring>& Fonts, const std::vector<DWRITE_TEXT_ALIGNMENT>& Alignment);
     virtual void CreateFontFormat(std::vector<float>& vFontSize, const std::vector<std::wstring>& Fonts, const std::vector<DWRITE_TEXT_ALIGNMENT>& Alignment);
     virtual  void SetTextRect() {}
 
-    virtual void Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue);
+    virtual void Initialize(ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue> pd3dCommandQueue);
     virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) {}
     virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) {}
     virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) {  }

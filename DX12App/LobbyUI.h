@@ -16,7 +16,7 @@ public:
 	virtual void BuildObjects(ID3D12Resource** ppd3dRenderTargets, UINT nWidth, UINT nHeight) override;
 	virtual void Reset() override;
 	virtual void OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
-		ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height) override;
+		ComPtr<ID3D12CommandQueue> pd3dCommandQueue, UINT nFrame, UINT width, UINT height) override;
 	virtual void OnProcessKeyInput(UINT msg, WPARAM wParam, LPARAM lParam) override;
 	virtual void OnProcessMouseMove(WPARAM buttonState, int x, int y) override;
 	virtual void OnProcessMouseDown(WPARAM buttonState, int x, int y) override;

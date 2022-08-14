@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "UI.h"
-UI::UI(UINT nFrame, ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
+UI::UI(UINT nFrame, ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue> pd3dCommandQueue)
 {
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
     UI::Initialize(device, pd3dCommandQueue);
@@ -12,7 +12,7 @@ UI::~UI()
     CoUninitialize();
 }
 
-void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommandQueue)
+void UI::Initialize(ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue> pd3dCommandQueue)
 {
     UINT D3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
     D2D1_FACTORY_OPTIONS D2dFactoryOptions = { };
@@ -22,9 +22,21 @@ void UI::Initialize(ComPtr<ID3D12Device> device, ID3D12CommandQueue* pd3dCommand
     D3d11DeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-    ComPtr<ID3D12CommandQueue> D3dCommandQueues[] = { pd3dCommandQueue };
-    ThrowIfFailed(::D3D11On12CreateDevice(device.Get(), D3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown**>(D3dCommandQueues),
-        _countof(D3dCommandQueues), 0, &mD3d11Device, &mD3d11DeviceContext, nullptr));
+    ID3D12CommandQueue* D3dCommandQueues[] = { pd3dCommandQueue.Get() };
+
+    ThrowIfFailed(D3D11On12CreateDevice(
+        device.Get(),
+        D3d11DeviceFlags,
+        nullptr,
+        0,
+        reinterpret_cast<IUnknown**>(pd3dCommandQueue.GetAddressOf()),
+        1,
+        0,
+        &mD3d11Device,
+        &mD3d11DeviceContext,
+        nullptr
+    ));
+
     ThrowIfFailed(mD3d11Device.As(&mD3d11On12Device));
     
 #if defined(_DEBUG) || defined(DBG)
@@ -366,7 +378,7 @@ void UI::Reset()
 }
 
 void UI::OnResize(ID3D12Resource** ppd3dRenderTargets, ComPtr<ID3D12Device> device,
-    ID3D12CommandQueue* pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
+    ComPtr<ID3D12CommandQueue> pd3dCommandQueue, UINT nFrame, UINT width, UINT height)
 {
     SetVectorSize(nFrame);
     Initialize(device, pd3dCommandQueue);

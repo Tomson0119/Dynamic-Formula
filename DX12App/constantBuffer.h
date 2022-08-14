@@ -71,7 +71,7 @@ public:
 	}
 	/*StructuredBuffer(const StructuredBuffer& rhs) = delete;
 	StructuredBuffer& operator=(const StructuredBuffer& rhs) = delete;*/
-	virtual ~StructuredBuffer() = default;
+	virtual ~StructuredBuffer() {};
 	//{
 	//	/*if (mUploadBuffer)
 	//		mUploadBuffer->Unmap(0, nullptr);
