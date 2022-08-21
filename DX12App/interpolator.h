@@ -6,19 +6,34 @@ public:
 	struct Entry
 	{
 		bool empty;
+		uint64_t timepointS;
+		uint64_t timepointC;
 		XMFLOAT3 position;
 		XMFLOAT4 rotation;
 
 		Entry()
 			: empty{ true },
+			timepointS{ 0 },
+			timepointC{ 0 },
 			position{},
 			rotation{}
 		{
 		}
 
-		Entry(const XMFLOAT3& pos, const XMFLOAT4& rot)
+		Entry(uint64_t tp_s, uint64_t tp_c, const XMFLOAT3& pos, const XMFLOAT4& rot)
 			: empty{ false }
 		{
+			timepointS = tp_s;
+			timepointC = tp_c;
+			position = pos;
+			rotation = rot;
+		}
+
+		void Set(uint64_t tp_s, uint64_t tp_c, const XMFLOAT3& pos, const XMFLOAT4& rot)
+		{
+			empty = false;
+			timepointS = tp_s;
+			timepointC = tp_c;
 			position = pos;
 			rotation = rot;
 		}
@@ -26,114 +41,127 @@ public:
 
 public:
 	Interpolator()
-		: mCurrentTime{ 0 }, mPrevTimePoint{ 0 }
 	{
 	}
 
-	void Enqueue(uint64_t timePoint, const XMFLOAT3& pos, const XMFLOAT4& rot)
+	void Enqueue(uint64_t timePointS, const XMFLOAT3& pos, const XMFLOAT4& rot)
 	{
-		mEntryMapMut.lock();
-		//Log::Print("Time point: ", timePoint);
-		mEntries.insert({ timePoint, Entry(pos, rot) });
-		mEntryMapMut.unlock();
+		mMut.lock();
+		uint64_t time_now = ConvertNsToMs(Clock::now().time_since_epoch().count());
+
+		if (mPrevEntry.empty) {
+			mPrevEntry.Set(timePointS, time_now, pos, rot);
+		}
+		else {
+			if (mEntryQue.empty() && mPrevEntry.timepointS < timePointS) {
+				mEntryQue.push({ timePointS, time_now, pos, rot });
+				Log::Print("queue size: ", mEntryQue.size());
+			} 
+			else if(mEntryQue.empty()==false && mEntryQue.back().timepointS < timePointS) {
+				mEntryQue.push({ timePointS, time_now, pos, rot });
+				Log::Print("queue size: ", mEntryQue.size());
+			}
+			else {
+				Log::Print("Wrong order");
+			}
+		}
+		mMut.unlock();
 	}
 
 	void Interpolate(float dt, int64_t clockDelta, XMFLOAT3& targetPos, XMFLOAT4& targetRot)
 	{
-		mEntryMapMut.lock();
-		if (mEntries.empty())
-		{
-			mEntryMapMut.unlock();
+		mMut.lock();
+		if (mPrevEntry.empty) {
+			mMut.unlock();
 			return;
 		}
-		mEntryMapMut.unlock();
 
-		if (mPrevEntry.empty)
-		{
-			FindNextEntry();
-			if (mPrevEntry.empty)
-			{
-				mEntryMapMut.lock();
-				mPrevTimePoint = mEntries.begin()->first;
-				mPrevEntry = mEntries.begin()->second;
-				mEntryMapMut.unlock();
+		if (mNextEntry.empty) {
+			if (mEntryQue.empty() == false) {
+				mNextEntry = mEntryQue.front();
+				mEntryQue.pop();
 			}
-			targetPos = mPrevEntry.position;
-			targetRot = mPrevEntry.rotation;
-			return;
+			else {
+				targetPos = mPrevEntry.position;
+				targetRot = mNextEntry.rotation;
+				mMut.unlock();
+				return;
+			}
 		}
 
-		//auto now = Clock::now().time_since_epoch().count();
-		//auto now_ms = ConvertNsToMs(now);
+		uint64_t time_now = ConvertNsToMs(Clock::now().time_since_epoch().count());
+		uint64_t between = mNextEntry.timepointS - mPrevEntry.timepointS;
+		uint64_t progress = time_now - mPrevEntry.timepointC;
+		if (mPrevEntry.timepointS < mPrevEntry.timepointC) {
+			uint64_t diff = mPrevEntry.timepointC - mPrevEntry.timepointS;
 
-		////mCurrentTime = (uint64_t)(((float)mCurrentTime * PCT) + (float)now_ms * (1.0f - PCT));
-		//mCurrentTime = now_ms;
+			progress -= diff;
+		}
+		else {
+			uint64_t diff = mPrevEntry.timepointS - mPrevEntry.timepointC;
+			progress += diff;
+		}
 
-		//auto next = FindNextEntry();
-		//if (next.has_value() == false) {
-		//	return;
-		//}
+		if (between <= 0) {
+			if (mEntryQue.empty() == false) {
+				mPrevEntry = mNextEntry;
+				mNextEntry = mEntryQue.front();
+				mEntryQue.pop();
+			}
+			mMut.unlock();
+			return;
+		}
+		
+		if (progress > between) {
+			if (mEntryQue.empty() == false) {
+				mPrevEntry = mNextEntry;
+				mNextEntry = mEntryQue.front();
+				mEntryQue.pop();
 
-		//uint64_t nextTp = next.value().first;
-		//Entry nextEntry = next.value().second;
+				between = mNextEntry.timepointS - mPrevEntry.timepointS;
 
-		//if (nextTp <= mPrevTimePoint) return;
+				progress = time_now - mPrevEntry.timepointC;
+				if (mPrevEntry.timepointS < mPrevEntry.timepointC) {
+					uint64_t diff = mPrevEntry.timepointC - mPrevEntry.timepointS;
+					progress -= diff;
+				}
+				else {
+					uint64_t diff = mPrevEntry.timepointS - mPrevEntry.timepointC;
+					progress += diff;
+				}
 
-		//uint64_t timeBetween = nextTp - mPrevTimePoint;
-		//float progress = (float)(mCurrentTime - mPrevTimePoint) / timeBetween;
+				Log::Print("between: ", between);
+				Log::Print("progress: ", progress);
+			}
+		}
 
-		//Log::Print("Clock Delta: ", clockDelta);
-		//Log::Print("prev time: ", mPrevTimePoint);
-		//Log::Print("current time: ", mCurrentTime);
-		//Log::Print("progress: ", progress);
-		//Log::Print("-------------------------------");
+		float ratio = (float)progress / between;
+		Log::Print("ratio: ", ratio);
 
-		//targetPos = Vector3::Lerp(mPrevEntry.position, nextEntry.position, progress);
-		//targetRot = Vector4::Slerp(mPrevEntry.rotation, nextEntry.rotation, progress);
-		//
-		/*if (progress >= 1.0f)
-		{
-			mPrevTimePoint = nextTp;
-		}*/
+		targetPos = Vector3::Lerp(mPrevEntry.position, mNextEntry.position, ratio);
+		targetRot = Vector4::Slerp(mPrevEntry.rotation, mNextEntry.rotation, ratio);
+		
+		mMut.unlock();
 	}
 
 	void Clear()
 	{
-		mEntryMapMut.lock();
-		mEntries.clear();
-		mEntryMapMut.unlock();
+		mMut.lock();
 
-		mCurrentTime = 0;
-		mPrevEntry = Entry{};
+		mPrevEntry.empty = true;
+		mNextEntry.empty = true;
+		
+		std::queue<Entry> temp{};
+		std::swap(mEntryQue, temp);
+		
+		mMut.unlock();
 	}
 
 private:
-	std::optional<std::pair<uint64_t, Entry>> FindNextEntry()
-	{
-		std::unique_lock lock{ mEntryMapMut };
-		while (mEntries.empty() == false &&
-			(mCurrentTime > mEntries.begin()->first))
-		{
-			mPrevTimePoint = mEntries.begin()->first;
-			mPrevEntry = mEntries.begin()->second;
-			mEntries.erase(mEntries.begin());
-		}
+	std::queue<Entry> mEntryQue;
 
-		if (mEntries.empty())
-			return std::nullopt;
-
-		auto ret = *mEntries.begin();
-		//mEntries.erase(mEntries.begin());
-		return ret;
-	}
-
-private:
-	std::map<uint64_t, Entry> mEntries;
-	std::mutex mEntryMapMut;
-
-	uint64_t mCurrentTime;
-	uint64_t mPrevTimePoint;
 	Entry mPrevEntry;
+	Entry mNextEntry;
 
-	const float PCT = 0.5f;
+	std::mutex mMut;
 };
