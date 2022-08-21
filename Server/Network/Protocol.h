@@ -267,6 +267,7 @@ namespace SC
 		quat3 quaternion;
 		int linear_vel[3];
 		int speed;
+		uint64_t time_stamp;
 	};
 
 	struct packet_missile_launched : packet_header

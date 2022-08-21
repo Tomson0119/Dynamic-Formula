@@ -732,6 +732,13 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 	}
 	case SC::PCK_TYPE::PLAYER_TRANSFORM:
 	{
+		// TEST randomly ignore packets. (ignores 66%)
+		int check = uid(gen);
+		//Log::Print("random check: ", check);
+		if (check < 2) {
+			break;
+		}
+		//
 		SC::packet_player_transform* pck = reinterpret_cast<SC::packet_player_transform*>(packet);
 		const auto& player = mPlayerObjects[pck->player_idx];
 
@@ -745,7 +752,8 @@ bool InGameScene::ProcessPacket(std::byte* packet, const SC::PCK_TYPE& type, int
 				// Set current speed of player
 				player->SetCurrentSpeed(pck->speed);
 			}
-			player->SetCorrectionTransform(pck, mNetPtr->GetServerTimeStamp(), mNetPtr->GetLatency());
+			//player->SetCorrectionTransform(pck, mNetPtr->GetServerTimeStamp(), mNetPtr->GetLatency());
+			player->SetCorrectionTransform(pck, pck->time_stamp, mNetPtr->GetLatency());
 		}
 		break;
 	}

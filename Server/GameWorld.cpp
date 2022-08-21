@@ -309,6 +309,8 @@ void GameWorld::PushVehicleTransformPacketToAll(int target)
 
 	pck.speed = (int)(round(mPlayerList[target]->GetCurrentSpeed()));
 
+	pck.time_stamp = ConvertNsToMs(Clock::now().time_since_epoch().count());
+
 	SendToAllPlayer(reinterpret_cast<std::byte*>(&pck), pck.size, true, -1, false);
 }
 

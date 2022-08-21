@@ -8,6 +8,8 @@
 #include "scene.h"
 #include "InGameUI.h"
 
+#include <random>
+
 class DynamicCubeRenderer;
 class ShadowMapRenderer;
 class NetModule;
@@ -220,4 +222,10 @@ private:
 
 	//Listener
 	FMOD_3D_ATTRIBUTES mListener;
+
+private:
+	// TEST
+	std::random_device rd{};
+	std::mt19937 gen{ rd() };
+	std::uniform_int_distribution<int> uid{ 0,2 };
 };
