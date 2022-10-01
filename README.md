@@ -7,10 +7,18 @@
 
 ## 게임흐름
 ### 로그인
-  - 
+![login](image/login.png)
+ - 유저 등록 및 로그인
 ### 로비
+![lobby](image/lobby.png)
+  - 방 생성 및 참여
 ### 방
+![room](image/room.png)
+  - 맵 선택
+  - 준비 및 시작
 ### 인 게임
+![ingame](image/ingame.png)
+  - 게임 플레이
 
 ## 기술 스택
 ### 클라이언트
