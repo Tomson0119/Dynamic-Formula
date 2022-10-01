@@ -134,7 +134,7 @@ void LoginServer::HandleCompletionInfo(WSAOVERLAPPEDEX* over, int id, int bytes)
 	{
 		if (id < MAX_PLAYER_SIZE && bytes != over->WSABuffer.len)
 		{
-			//Disconnect(id);
+			Disconnect(id);
 		}
 		delete over;
 		break;
@@ -260,7 +260,7 @@ bool LoginServer::ProcessPacket(std::byte* packet, const CS::PCK_TYPE& type, int
 
 		if(conn_id >= (int)LOGIN_STAT::ACCEPTED)
 		{
-			if (conn_id >= 0)
+			if (conn_id >= 0) // 이미 접속된 상태
 			{
 				Logout(conn_id);
 				gClients[conn_id]->SendForceLogout();
