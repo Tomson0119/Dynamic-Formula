@@ -3,6 +3,7 @@
 #include "WSAInit.h"
 #include "WSAOverlappedEx.h"
 #include "EndPoint.h"
+#include <optional>
 
 enum class SocketType : char
 {
