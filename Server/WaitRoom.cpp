@@ -17,7 +17,9 @@ bool WaitRoom::OpenRoom()
 	if (Closed())
 	{
 		// Room can be opened only when room is closed.
-		return ChangeRoomState(ROOM_STAT::ROOM_IS_CLOSED, ROOM_STAT::AVAILABLE);
+		return ChangeRoomState(
+			ROOM_STAT::ROOM_IS_CLOSED, 
+			ROOM_STAT::AVAILABLE);
 	}
 	return false;
 }
